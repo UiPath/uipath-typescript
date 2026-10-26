@@ -51,12 +51,17 @@ import {
   EntityClass,
   EntityCreateExternalSource,
   EntityCreateExternalField,
+  EntityCloneRequest,
+  EntityCloneJob,
+  EntityCloneJobState,
+  EntityCloneMode,
+  EntityCloneScopeType,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints';
 import { FOLDER_KEY, RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
 import { createParams } from '../../utils/http/params';
@@ -72,7 +77,7 @@ import {
   MAX_QUERY_JOINS,
   EntityClassToIdMap,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas, RawEntityCloneJob } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 import { resolveOverride } from '../../utils/overrides/resolve-override';
 
@@ -110,6 +115,20 @@ function externalSourceObjectName(source: Record<string, unknown>): string | und
 function externalSourceFieldName(field: Record<string, unknown>): string | undefined {
   const def = field.fieldDefinition as Record<string, unknown> | undefined;
   return (def?.name ?? def?.Name) as string | undefined;
+}
+
+/** External field name a Federated source field is mapped to (what joins reference). */
+function externalSourceMappedName(field: Record<string, unknown>): string | undefined {
+  const m = (field.externalFieldMappingDetail ?? field.ExternalFieldMappingDetail) as Record<string, unknown> | undefined;
+  return (m?.externalFieldName ?? m?.ExternalFieldName) as string | undefined;
+}
+
+/** Connection id that identifies a Federated source: a connector `connectionId`, or the
+ * `entityId` for a native (entity-backed) source (matching how joins carry it). */
+function sourceConnId(s: Record<string, unknown>): string | undefined {
+  const ext = s.externalConnectionDetail as Record<string, unknown> | undefined;
+  const nat = s.nativeConnectionDetail as Record<string, unknown> | undefined;
+  return (ext?.connectionId as string | undefined) ?? (nat?.entityId as string | undefined);
 }
 
 /**
@@ -170,6 +189,18 @@ function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boo
   throw new ValidationError({
     message: `${callerLabel}: entityRef must supply exactly one of 'id' or 'name'.`,
   });
+}
+
+/** Map the clone-job wire shape to the public type, renaming `createdAt` to `createdTime`. */
+function toEntityCloneJob(raw: RawEntityCloneJob): EntityCloneJob {
+  return {
+    jobId: raw.jobId,
+    state: raw.state as EntityCloneJobState,
+    createdTime: raw.createdAt,
+    failureReasonCode: raw.failureReasonCode,
+    failurePhase: raw.failurePhase,
+    failureMessage: raw.failureMessage,
+  };
 }
 
 /**
@@ -308,17 +339,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
-    // Use the v3 endpoint whenever a folder scope is requested: a folderKey scopes to that
-    // folder via the header, and includeFolderEntities returns tenant + folder entities
-    // together. Only the default (no folderKey and includeFolderEntities omitted) stays on
-    // the v1 endpoint = tenant only, since v3 has no tenant-only listing.
-    const endpoint = options?.folderKey || options?.includeFolderEntities
-      ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3
-      : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
+    // Tenant-only by default via the tenant-marker folder key (v3 has no other tenant filter);
+    // includeFolderEntities opts into cross-scope. folderKey wins over includeFolderEntities.
+    const folderKey = options?.folderKey
+      ?? (options?.includeFolderEntities ? undefined : DATA_FABRIC_TENANT_FOLDER_ID);
 
     const response = await this.get<RawEntityGetResponse[]>(
-      endpoint,
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
     
     // Apply transformations
@@ -478,6 +506,46 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
+  @track('Entities.Clone')
+  async clone(request: EntityCloneRequest): Promise<EntityCloneJob> {
+    const targetFolderKey = request.target?.scopeType === EntityCloneScopeType.Folder
+      ? request.target.folderKey?.trim()
+      : undefined;
+    if (!targetFolderKey) {
+      throw new ValidationError({
+        message: 'clone requires a folder-scoped target with a non-empty folderKey.',
+      });
+    }
+    if (!request.entityIds?.length) {
+      throw new ValidationError({
+        message: 'clone requires at least one entity id in entityIds.',
+      });
+    }
+    // The SDK surfaces the user-facing `folderKey`; the clone API wire shape expects `folderId`.
+    const sourceFolderKey = request.source?.folderKey?.trim();
+    const payload = {
+      source: {
+        scopeType: request.source.scopeType,
+        ...(sourceFolderKey && { folderId: sourceFolderKey }),
+      },
+      target: { scopeType: request.target.scopeType, folderId: targetFolderKey },
+      entityIds: request.entityIds,
+      options: { mode: request.options?.mode ?? EntityCloneMode.SchemaAndData },
+    };
+    const response = await this.post<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE, payload);
+    return toEntityCloneJob(response.data);
+  }
+
+  @track('Entities.GetCloneJob')
+  async getCloneJob(jobId: string): Promise<EntityCloneJob> {
+    const trimmedJobId = jobId?.trim();
+    if (!trimmedJobId) {
+      throw new ValidationError({ message: 'getCloneJob requires a non-empty job id.' });
+    }
+    const response = await this.get<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE_JOB(trimmedJobId));
+    return toEntityCloneJob(response.data);
+  }
+
   @track('Entities.DeleteById')
   async deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void> {
     await this.delete(
@@ -492,18 +560,19 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const hasFederatedChanges = !!(
       opts.addExternalSources?.length ||
       opts.removeExternalSources?.length ||
-      opts.addFieldsToSource?.length ||
-      opts.removeFieldsFromSource?.length ||
-      opts.updateExternalFieldMapping?.length ||
+      opts.addExternalFields?.length ||
+      opts.removeExternalFields?.length ||
       opts.addSourceJoins?.length ||
-      opts.updateSourceJoin?.length
+      opts.updateSourceJoin?.length ||
+      opts.replaceSourceJoins !== undefined ||
+      opts.updateExternalConnection?.length
     );
     const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length) || hasFederatedChanges;
     const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
 
     if (!hasSchemaChanges && !hasMetadataChanges) {
       throw new ValidationError({
-        message: 'updateById requires at least one change — pass addFields, removeFields, updateFields, displayName, description, isRbacEnabled, or a federated source/join delta (addExternalSources, removeExternalSources, addFieldsToSource, removeFieldsFromSource, updateExternalFieldMapping, addSourceJoins, updateSourceJoin).',
+        message: 'updateById requires at least one change — pass addFields, removeFields, updateFields, displayName, description, isRbacEnabled, or a federated source/join delta (addExternalSources, removeExternalSources, addExternalFields, removeExternalFields, addSourceJoins, updateSourceJoin, replaceSourceJoins, updateExternalConnection).',
       });
     }
 
@@ -667,58 +736,95 @@ export class EntityService extends BaseService implements EntityServiceModel {
     let joins = this.translateSourceJoins(raw);
     const entityClassId = raw.entityClass ? EntityClassToIdMap[raw.entityClass] : undefined;
 
-    const findSource = (name: string): Record<string, unknown> | undefined =>
-      externalFields.find(s => externalSourceObjectName(s) === name);
+    // A source is identified by (object name, connection id) — object name alone is
+    // ambiguous, since an entity may have two sources with the same object name on
+    // different connections.
+    const findSource = (ref: { sourceObjectName: string; sourceConnectionId: string }): Record<string, unknown> | undefined =>
+      externalFields.find(s => externalSourceObjectName(s) === ref.sourceObjectName && sourceConnId(s) === ref.sourceConnectionId);
+    const notFound = (action: string, ref: { sourceObjectName: string; sourceConnectionId: string }): ValidationError =>
+      new ValidationError({ message: `Cannot ${action}: no source '${ref.sourceObjectName}' with connection '${ref.sourceConnectionId}' on the entity.` });
+
+    if (options.replaceSourceJoins !== undefined && (options.addSourceJoins?.length || options.updateSourceJoin?.length)) {
+      throw new ValidationError({ message: 'replaceSourceJoins sets the entity\'s complete join set, so it cannot be combined with addSourceJoins or updateSourceJoin.' });
+    }
 
     if (options.addExternalSources?.length) {
       externalFields.push(...await this.buildExternalSourcesPayload(options.addExternalSources));
     }
     if (options.removeExternalSources?.length) {
-      const remove = new Set(options.removeExternalSources);
-      externalFields = externalFields.filter(s => !remove.has(externalSourceObjectName(s) ?? ''));
-      // Cascade: a join can't outlive its source. Drop any join that references a removed
-      // source — otherwise it dangles (and, once the source is gone, can't be targeted by
-      // name to remove later). Join names were resolved from the pre-removal GET.
-      joins = joins.filter(j => !remove.has(j.sourceObjectName as string) && !remove.has(j.relatedSourceObjectName as string));
+      const removeKeys = new Set(options.removeExternalSources.map(r => `${r.sourceObjectName} ${r.sourceConnectionId}`));
+      externalFields = externalFields.filter(s => !removeKeys.has(`${externalSourceObjectName(s) ?? ''} ${sourceConnId(s) ?? ''}`));
+      joins = joins.filter(j =>
+        !removeKeys.has(`${j.sourceObjectName as string} ${j.sourceObjectConnectionId as string}`) &&
+        !removeKeys.has(`${j.relatedSourceObjectName as string} ${j.relatedSourceObjectConnectionId as string}`));
     }
-    if (options.addFieldsToSource?.length) {
-      for (const add of options.addFieldsToSource) {
-        const src = findSource(add.sourceObjectName);
-        if (!src) throw new ValidationError({ message: `Cannot add fields: source '${add.sourceObjectName}' not found on the entity.` });
+    if (options.addExternalFields?.length) {
+      for (const add of options.addExternalFields) {
+        const src = findSource(add);
+        if (!src) throw notFound('add fields', add);
         const builtFields = await this.buildExternalFieldsPayload(add.fields);
         const existing = (src.fields as Array<Record<string, unknown>> | undefined) ?? [];
         src.fields = [...existing, ...builtFields];
       }
     }
-    if (options.removeFieldsFromSource?.length) {
-      for (const rem of options.removeFieldsFromSource) {
-        const src = findSource(rem.sourceObjectName);
-        if (!src) throw new ValidationError({ message: `Cannot remove fields: source '${rem.sourceObjectName}' not found on the entity.` });
+    if (options.removeExternalFields?.length) {
+      for (const rem of options.removeExternalFields) {
+        const src = findSource(rem);
+        if (!src) throw notFound('remove fields', rem);
         const drop = new Set(rem.fieldNames);
-        src.fields = ((src.fields as Array<Record<string, unknown>> | undefined) ?? []).filter(f => !drop.has(externalSourceFieldName(f) ?? ''));
-      }
-    }
-    if (options.updateExternalFieldMapping?.length) {
-      for (const up of options.updateExternalFieldMapping) {
-        const src = findSource(up.sourceObjectName);
-        if (!src) throw new ValidationError({ message: `Cannot update mapping: source '${up.sourceObjectName}' not found on the entity.` });
-        const field = ((src.fields as Array<Record<string, unknown>> | undefined) ?? []).find(f => externalSourceFieldName(f) === up.fieldName);
-        if (!field) throw new ValidationError({ message: `Cannot update mapping: field '${up.fieldName}' not found on source '${up.sourceObjectName}'.` });
-        field.externalFieldMappingDetail = { ...(field.externalFieldMappingDetail as Record<string, unknown>), ...up.mapping };
+        const all = (src.fields as Array<Record<string, unknown>> | undefined) ?? [];
+        const dropExternal = new Set(all.filter(f => drop.has(externalSourceFieldName(f) ?? '')).map(f => externalSourceMappedName(f) ?? ''));
+        src.fields = all.filter(f => !drop.has(externalSourceFieldName(f) ?? ''));
+        joins = joins.filter(j =>
+          !(j.sourceObjectName === rem.sourceObjectName && j.sourceObjectConnectionId === rem.sourceConnectionId && dropExternal.has(j.sourceJoinField as string)) &&
+          !(j.relatedSourceObjectName === rem.sourceObjectName && j.relatedSourceObjectConnectionId === rem.sourceConnectionId && dropExternal.has(j.relatedSourceJoinField as string)));
       }
     }
     if (options.addSourceJoins?.length) {
       joins.push(...options.addSourceJoins.map(j => ({ ...j } as Record<string, unknown>)));
     }
+    if (options.replaceSourceJoins !== undefined) {
+      joins = options.replaceSourceJoins.map(j => ({ ...j } as Record<string, unknown>));
+    }
+
     if (options.updateSourceJoin?.length) {
       for (const up of options.updateSourceJoin) {
-        const join = joins.find(j => j.sourceObjectName === up.sourceObjectName && j.relatedSourceObjectName === up.relatedSourceObjectName);
-        if (!join) throw new ValidationError({ message: `Cannot update join: no join between '${up.sourceObjectName}' and '${up.relatedSourceObjectName}'.` });
+        const join = joins.find(j =>
+          j.sourceObjectName === up.sourceObjectName && j.sourceObjectConnectionId === up.sourceConnectionId &&
+          j.relatedSourceObjectName === up.relatedSourceObjectName && j.relatedSourceObjectConnectionId === up.relatedSourceConnectionId);
+        if (!join) throw new ValidationError({ message: `Cannot update join: no join between '${up.sourceObjectName}' (${up.sourceConnectionId}) and '${up.relatedSourceObjectName}' (${up.relatedSourceConnectionId}).` });
         if (up.sourceJoinField !== undefined) join.sourceJoinField = up.sourceJoinField;
         if (up.relatedSourceJoinField !== undefined) join.relatedSourceJoinField = up.relatedSourceJoinField;
-        if (up.joinType !== undefined) join.joinType = up.joinType;
       }
     }
+    if (options.updateExternalConnection?.length) {
+      for (const swap of options.updateExternalConnection) {
+        const src = findSource(swap);
+        if (!src) throw notFound('replace connection', swap);
+        if (src.nativeConnectionDetail !== undefined) {
+          throw new ValidationError({ message: `Cannot replace connection: source '${swap.sourceObjectName}' is a native (entity-backed) source, not a connector source.` });
+        }
+        const existingConn = src.externalConnectionDetail as Record<string, unknown> | undefined;
+        src.externalConnectionDetail = {
+          ...existingConn,
+          connectionId: swap.newConnectionId,
+          ...(swap.newElementInstanceId !== undefined && { elementInstanceId: swap.newElementInstanceId }),
+          ...(swap.newFolderKey !== undefined && { folderKey: swap.newFolderKey }),
+          ...(swap.newConnectionName !== undefined && { connectionName: swap.newConnectionName }),
+        };
+        const oldConnId = swap.sourceConnectionId;
+        const newConnId = swap.newConnectionId;
+        for (const j of joins) {
+          if (j.sourceObjectName === swap.sourceObjectName && j.sourceObjectConnectionId === oldConnId) j.sourceObjectConnectionId = newConnId;
+          if (j.relatedSourceObjectName === swap.sourceObjectName && j.relatedSourceObjectConnectionId === oldConnId) j.relatedSourceObjectConnectionId = newConnId;
+        }
+      }
+    }
+
+    externalFields = externalFields.map(s => ({
+      ...s,
+      externalObjectDetail: { ...(s.externalObjectDetail as Record<string, unknown>), isPrimarySource: false },
+    }));
 
     return {
       externalFields,

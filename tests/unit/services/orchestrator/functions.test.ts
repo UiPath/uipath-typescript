@@ -2,27 +2,26 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   FunctionService,
-  clearLicenseCache,
-  licenseExpiryMs,
-  MAX_CACHED_LICENSES,
+  buildInvokeRoute,
+  parseExternalReference,
 } from '../../../../src/services/orchestrator/functions/functions';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockRawFunctionTrigger,
-  createMockRawStudioWebLicense,
   createMockTransformedFunctionCollection,
 } from '../../../utils/mocks/functions';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
-import { FunctionGetAllOptions, FunctionHttpMethod } from '../../../../src/models/orchestrator/functions.types';
+import { createHeldSessionLicense } from '../../../utils/mocks/session-license';
+import { FunctionGetAllOptions, FunctionHttpMethod, FunctionRef } from '../../../../src/models/orchestrator/functions.types';
 import { FunctionGetResponse } from '../../../../src/models/orchestrator/functions.models';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import { FUNCTION_TEST_CONSTANTS, FUNCTION_LICENSE_TEST_CONSTANTS } from '../../../utils/constants/functions';
-import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS, STUDIO_WEB_LICENSE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { FUNCTION_TEST_CONSTANTS } from '../../../utils/constants/functions';
+import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID, FOLDER_KEY, JOB_KEY } from '../../../../src/utils/constants/headers';
-import { ValidationError, NotFoundError } from '../../../../src/core/errors';
+import { ValidationError, NotFoundError, ServerError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -46,15 +45,12 @@ describe('FunctionService Unit Tests', () => {
 
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    // The license cache is process-wide by design, so it survives between tests
-    // unless cleared — otherwise one case inherits another's licenses.
-    clearLicenseCache();
-
     functionService = new FunctionService(instance);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('getAll', () => {
@@ -226,32 +222,22 @@ describe('FunctionService Unit Tests', () => {
         functionService.getAll({ folderId: TEST_CONSTANTS.FOLDER_ID })
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should not wait for the session license', async () => {
+      const { license } = createHeldSessionLicense();
+      const { instance } = createServiceTestDependencies({ sessionLicense: license });
+      const mockResponse = createMockTransformedFunctionCollection();
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      await expect(new FunctionService(instance).getAll({ folderId: TEST_CONSTANTS.FOLDER_ID })).resolves.toEqual(mockResponse);
+
+      expect(license.ensure).not.toHaveBeenCalled();
+    });
   });
 
   describe('invoke', () => {
-    // Warm the license cache with a throwaway invocation, so the mocks in each
-    // test line up with the invocation legs alone. The license leg has its own
-    // describe block below.
-    beforeEach(async () => {
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      await functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
-        folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-      });
-      mockApiClient.post.mockReset();
-      mockApiClient.get.mockReset();
-    });
-
-    it('should look up the function, resolve the folder key, and post the input', async () => {
-      mockApiClient.get
-        .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
-        .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
+    it('should look up the function and post the input to the route its trigger declares', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       const result = await functionService.invoke(
@@ -261,36 +247,105 @@ describe('FunctionService Unit Tests', () => {
       );
 
       // Step 1: name lookup on the HttpTriggers endpoint, folder-scoped
-      expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        1,
+      expect(mockApiClient.get).toHaveBeenCalledWith(
         FUNCTION_ENDPOINTS.GET_ALL,
         expect.objectContaining({
           headers: expect.objectContaining({ [FOLDER_ID]: String(TEST_CONSTANTS.FOLDER_ID) }),
           params: expect.objectContaining({
-            '$filter': `Name eq '${FUNCTION_TEST_CONSTANTS.NAME}'`,
+            '$filter': `Name eq '${FUNCTION_TEST_CONSTANTS.NAME}' or endswith(Name,'_${FUNCTION_TEST_CONSTANTS.NAME}')`,
           }),
         })
       );
 
-      // Step 2: folder key resolution
-      expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        2,
-        FOLDER_ENDPOINTS.GET_BY_ID(TEST_CONSTANTS.FOLDER_ID),
-        expect.any(Object)
-      );
+      // The ExternalReference carries the folder key, so no Folders(id) call is made
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
 
-      // Step 3: invoke through the function endpoint
+      // Step 2: invoke through the route and folder key the ExternalReference names
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        FUNCTION_ENDPOINTS.INVOKE(
-          FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-          FUNCTION_TEST_CONSTANTS.PROCESS_SLUG,
-          FUNCTION_TEST_CONSTANTS.SLUG
-        ),
+        FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         expect.any(Object)
       );
 
       expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+    });
+
+    it('should wait for the session license before posting the input', async () => {
+      const { license, release } = createHeldSessionLicense();
+      const { instance } = createServiceTestDependencies({ sessionLicense: license });
+      const service = new FunctionService(instance);
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      const invoking = service.invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+      await vi.waitFor(() => expect(license.ensure).toHaveBeenCalledTimes(1));
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+
+      release();
+
+      await expect(invoking).resolves.toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+    });
+
+    it('should derive the route and look up the folder key when the trigger has no ExternalReference', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger({ ExternalReference: null })] })
+        .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      await functionService.invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        FOLDER_ENDPOINTS.GET_BY_ID(TEST_CONSTANTS.FOLDER_ID),
+        expect.any(Object)
+      );
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        expect.any(Object)
+      );
+    });
+
+    it('should reject a route with path parameters without invoking', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [createMockRawFunctionTrigger({ ExternalReference: FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE_PARAM })],
+      });
+
+      await expect(
+        functionService.invoke(
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
+          FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          { folderId: TEST_CONSTANTS.FOLDER_ID }
+        )
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should reject a derived route with a wildcard without invoking', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [createMockRawFunctionTrigger({ ExternalReference: null, Slug: FUNCTION_TEST_CONSTANTS.WILDCARD_SLUG })],
+      });
+
+      await expect(
+        functionService.invoke(
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
+          FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY }
+        )
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should skip the folder key lookup when folderKey is provided', async () => {
@@ -305,11 +360,7 @@ describe('FunctionService Unit Tests', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        FUNCTION_ENDPOINTS.INVOKE(
-          FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-          FUNCTION_TEST_CONSTANTS.PROCESS_SLUG,
-          FUNCTION_TEST_CONSTANTS.SLUG
-        ),
+        FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         expect.any(Object)
       );
@@ -335,11 +386,7 @@ describe('FunctionService Unit Tests', () => {
         })
       );
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        FUNCTION_ENDPOINTS.INVOKE(
-          FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-          FUNCTION_TEST_CONSTANTS.PROCESS_SLUG,
-          FUNCTION_TEST_CONSTANTS.SLUG
-        ),
+        FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         expect.objectContaining({
           headers: expect.objectContaining({ [JOB_KEY]: FUNCTION_TEST_CONSTANTS.JOB_KEY }),
@@ -366,12 +413,29 @@ describe('FunctionService Unit Tests', () => {
       );
     });
 
+    it('should accept the deprecated refreshLicense option without forwarding it', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      const result = await functionService.invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, refreshLicense: true }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FUNCTION_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.not.objectContaining({ '$refreshLicense': expect.anything() }),
+        })
+      );
+      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+    });
+
     it('should fall back to the SDK folder context when no folder options are given', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
       const service = new FunctionService(instance);
-
-      // No separate warm-up needed: the license cache is shared across service
-      // instances, so the one warmed above already covers this service.
       mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
@@ -392,9 +456,7 @@ describe('FunctionService Unit Tests', () => {
     });
 
     it('should send an empty object body when input is omitted', async () => {
-      mockApiClient.get
-        .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
-        .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       await functionService.invoke(
@@ -413,7 +475,6 @@ describe('FunctionService Unit Tests', () => {
     it('should invoke functions declared with the Get method via query parameters', async () => {
       mockApiClient.get
         .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger({ Method: 'Get' })] })
-        .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY })
         .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       const result = await functionService.invoke(
@@ -424,18 +485,183 @@ describe('FunctionService Unit Tests', () => {
 
       expect(mockApiClient.post).not.toHaveBeenCalled();
       expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        3,
-        FUNCTION_ENDPOINTS.INVOKE(
-          FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-          FUNCTION_TEST_CONSTANTS.PROCESS_SLUG,
-          FUNCTION_TEST_CONSTANTS.SLUG
-        ),
+        2,
+        FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
         expect.objectContaining({
           params: FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
           headers: expect.objectContaining({ [JOB_KEY]: FUNCTION_TEST_CONSTANTS.JOB_KEY }),
         })
       );
       expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+    });
+
+    describe('name resolution', () => {
+      /** Serves the name lookup with `rows`, then answers the invocation. */
+      const mockLookup = (...rows: Record<string, unknown>[]) => {
+        mockApiClient.get.mockResolvedValueOnce({ value: rows });
+        mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      };
+
+      /** Invokes with the folder key, so the lookup is the only GET. */
+      const invokeByRef = (func: FunctionRef) =>
+        functionService.invoke(func, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
+          folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
+        });
+
+      const lookupFilter = () => mockApiClient.get.mock.calls[0][1].params['$filter'];
+
+      it('should resolve a process-prefixed trigger from the name declared in source', async () => {
+        mockLookup(createMockRawFunctionTrigger({ Name: FUNCTION_TEST_CONSTANTS.PREFIXED_NAME }));
+
+        const result = await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME });
+
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
+          FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          expect.any(Object)
+        );
+        expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      });
+
+      it('should resolve the full stored name as returned by getAll', async () => {
+        mockLookup(createMockRawFunctionTrigger({ Name: FUNCTION_TEST_CONSTANTS.PREFIXED_NAME }));
+
+        await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.PREFIXED_NAME });
+
+        expect(lookupFilter()).toBe(
+          `Name eq '${FUNCTION_TEST_CONSTANTS.PREFIXED_NAME}' or endswith(Name,'_${FUNCTION_TEST_CONSTANTS.PREFIXED_NAME}')`
+        );
+        expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+      });
+
+      it('should prefer an exact name match over a process-prefixed one', async () => {
+        mockLookup(
+          createMockRawFunctionTrigger({
+            Name: FUNCTION_TEST_CONSTANTS.OTHER_PREFIXED_NAME,
+            Slug: FUNCTION_TEST_CONSTANTS.OTHER_NAME,
+            Release: { Name: FUNCTION_TEST_CONSTANTS.OTHER_PROCESS_NAME, Slug: FUNCTION_TEST_CONSTANTS.OTHER_PROCESS_NAME },
+          }),
+          createMockRawFunctionTrigger()
+        );
+
+        await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME });
+
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
+          FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          expect.any(Object)
+        );
+      });
+
+      it('should match names case-insensitively, as Orchestrator does', async () => {
+        mockLookup(createMockRawFunctionTrigger({ Name: FUNCTION_TEST_CONSTANTS.PREFIXED_NAME }));
+
+        await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME.toUpperCase() });
+
+        expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+      });
+
+      it('should not treat a different function whose name ends the same way as a match', async () => {
+        // Name lookup returns only the look-alike, then the folder's names are listed for the error.
+        mockApiClient.get
+          .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger({ Name: FUNCTION_TEST_CONSTANTS.LOOKALIKE_NAME })] })
+          .mockResolvedValueOnce({ value: [{ Name: FUNCTION_TEST_CONSTANTS.LOOKALIKE_NAME }] });
+
+        await expect(invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME })).rejects.toBeInstanceOf(NotFoundError);
+        expect(mockApiClient.post).not.toHaveBeenCalled();
+      });
+
+      it('should ask for processName when several processes declare the same function name', async () => {
+        mockLookup(
+          createMockRawFunctionTrigger({ Name: FUNCTION_TEST_CONSTANTS.PREFIXED_NAME }),
+          createMockRawFunctionTrigger({
+            Name: FUNCTION_TEST_CONSTANTS.OTHER_PREFIXED_NAME,
+            Release: { Name: FUNCTION_TEST_CONSTANTS.OTHER_PROCESS_NAME, Slug: FUNCTION_TEST_CONSTANTS.OTHER_PROCESS_NAME },
+          })
+        );
+
+        const invocation = invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME });
+
+        await expect(invocation).rejects.toBeInstanceOf(ValidationError);
+        await expect(invocation).rejects.toThrow(
+          `${FUNCTION_TEST_CONSTANTS.PROCESS_NAME}, ${FUNCTION_TEST_CONSTANTS.OTHER_PROCESS_NAME}. Pass processName`
+        );
+        expect(mockApiClient.post).not.toHaveBeenCalled();
+      });
+
+      it('should narrow the lookup to one process when processName is given', async () => {
+        mockLookup(createMockRawFunctionTrigger({ Name: FUNCTION_TEST_CONSTANTS.PREFIXED_NAME }));
+
+        await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME, processName: FUNCTION_TEST_CONSTANTS.PROCESS_NAME });
+
+        expect(lookupFilter()).toBe(
+          `Release/Name eq '${FUNCTION_TEST_CONSTANTS.PROCESS_NAME}' and ` +
+            `(Name eq '${FUNCTION_TEST_CONSTANTS.NAME}' or Name eq '${FUNCTION_TEST_CONSTANTS.PREFIXED_NAME}')`
+        );
+        expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+      });
+
+      it('should name the process in the error when processName matches nothing', async () => {
+        mockApiClient.get
+          .mockResolvedValueOnce({ value: [] })
+          .mockResolvedValueOnce({ value: [] });
+
+        await expect(
+          invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME, processName: FUNCTION_TEST_CONSTANTS.OTHER_PROCESS_NAME })
+        ).rejects.toThrow(`in process '${FUNCTION_TEST_CONSTANTS.OTHER_PROCESS_NAME}'`);
+      });
+
+      it('should reject an empty processName without calling the API', async () => {
+        await expect(
+          invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME, processName: ' ' })
+        ).rejects.toBeInstanceOf(ValidationError);
+
+        expect(mockApiClient.get).not.toHaveBeenCalled();
+      });
+
+      it('should escape single quotes in the name filter', async () => {
+        mockLookup(createMockRawFunctionTrigger({ Name: FUNCTION_TEST_CONSTANTS.QUOTED_NAME }));
+
+        await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.QUOTED_NAME });
+
+        const escaped = FUNCTION_TEST_CONSTANTS.QUOTED_NAME_ESCAPED;
+        expect(lookupFilter()).toBe(`Name eq '${escaped}' or endswith(Name,'_${escaped}')`);
+      });
+
+      it('should route by the function slug alone when the ExternalReference has no process segment', async () => {
+        mockLookup(
+          createMockRawFunctionTrigger({
+            Name: FUNCTION_TEST_CONSTANTS.PREFIXED_NAME,
+            ExternalReference: FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE_NO_PROCESS_SLUG,
+            Release: { Name: FUNCTION_TEST_CONSTANTS.PROCESS_NAME, Slug: null },
+          })
+        );
+
+        await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME });
+
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.SLUG),
+          FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          expect.any(Object)
+        );
+      });
+
+      it('should derive a slug-only route when there is no ExternalReference and the process has no slug', async () => {
+        mockLookup(
+          createMockRawFunctionTrigger({
+            ExternalReference: null,
+            Release: { Name: FUNCTION_TEST_CONSTANTS.PROCESS_NAME, Slug: null },
+          })
+        );
+
+        await invokeByRef({ name: FUNCTION_TEST_CONSTANTS.NAME });
+
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.SLUG),
+          FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          expect.any(Object)
+        );
+      });
     });
 
     it('should throw NotFoundError when the function does not exist in the folder', async () => {
@@ -488,10 +714,12 @@ describe('FunctionService Unit Tests', () => {
       ).rejects.toThrow(/exposes no functions/);
     });
 
-    it('should keep the original error when the name listing itself fails', async () => {
+    it('should keep the original error and warn when the name listing itself fails', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const listError = createMockError();
       mockApiClient.get
         .mockResolvedValueOnce({ value: [] })
-        .mockRejectedValueOnce(createMockError());
+        .mockRejectedValueOnce(listError);
 
       await expect(
         functionService.invoke(
@@ -500,6 +728,9 @@ describe('FunctionService Unit Tests', () => {
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         )
       ).rejects.toThrow(NotFoundError);
+      expect(warn).toHaveBeenCalledWith(expect.any(String), listError);
+
+      warn.mockRestore();
     });
 
     it('should throw ValidationError when no folder context is available', async () => {
@@ -511,9 +742,7 @@ describe('FunctionService Unit Tests', () => {
     });
 
     it('should propagate errors from the function invocation', async () => {
-      mockApiClient.get
-        .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
-        .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
       mockApiClient.post.mockRejectedValueOnce(createMockError());
 
       await expect(
@@ -526,395 +755,83 @@ describe('FunctionService Unit Tests', () => {
     });
   });
 
-  describe('license acquisition', () => {
-    /** Queues the GETs an invocation makes: the name lookup, then the folder key. */
-    const mockInvocationLookups = () => {
-      mockApiClient.get
-        .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
-        .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
-    };
+  describe('licensing', () => {
+    it('should not acquire a license when invoking', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
-    const licenseCalls = () =>
-      mockApiClient.post.mock.calls.filter(
-        ([endpoint]) => endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-      );
-
-    /** Invokes with the folder key, which needs no Folders({id}) lookup. */
-    const invoke = (options: Record<string, unknown> = {}) =>
-      functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
+      await functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
         folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-        ...options,
       });
 
-    /** Whoever the current token belongs to; each caller gets its own cache entry. */
-    let caller = '';
-
-    const invokeAs = (identity: string) => {
-      caller = identity;
-      return invoke();
-    };
-
-    /**
-     * Serves a token per caller so invocations do not share a cache entry.
-     * `expiredFor` hands that one caller a license that is already expired.
-     */
-    const mockDistinctCallers = (expiredFor?: string) => {
-      const staleSeconds = Math.floor(Date.now() / 1000) - 3600;
-      mockApiClient.getValidToken.mockImplementation(() => Promise.resolve(caller));
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense({}, caller === expiredFor ? { exp: staleSeconds } : {})
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-    };
-
-    /** Fills the cache to its cap, one entry per caller. */
-    const fillCache = async () => {
-      for (let i = 0; i < MAX_CACHED_LICENSES; i++) await invokeAs(`user-${i}`);
-    };
-
-    it('should acquire a license before invoking', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockInvocationLookups();
-
-      const result = await functionService.invoke(
-        { name: FUNCTION_TEST_CONSTANTS.NAME },
-        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
-        { folderId: TEST_CONSTANTS.FOLDER_ID }
-      );
-
-      // Bodyless, and not folder-scoped
-      expect(mockApiClient.post).toHaveBeenNthCalledWith(
-        1,
-        STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE,
-        undefined,
-        expect.any(Object)
-      );
-      expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-    });
-
-    it('should not send refreshLicense to the discovery lookup as a query param', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await invoke({ refreshLicense: true });
-
-      expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        1,
-        FUNCTION_ENDPOINTS.GET_ALL,
-        expect.objectContaining({
-          params: expect.not.objectContaining({ refreshLicense: expect.anything() }),
-        })
-      );
-    });
-
-    it('should reuse a cached license across invocations', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValue(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await invoke();
-      await invoke();
-      await invoke();
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should force a fresh acquisition when refreshLicense is set', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT)
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await invoke();
-      await invoke({ refreshLicense: true });
-
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should re-acquire once a cached license has expired', async () => {
-      // A license that expired an hour ago must not be served from the cache
-      const staleSeconds = Math.floor(Date.now() / 1000) - 3600;
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense({}, { exp: staleSeconds }))
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT)
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await invoke();
-      await invoke();
-
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should collapse concurrent invocations into a single acquisition', async () => {
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await Promise.all([invoke(), invoke(), invoke()]);
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should not invoke when the license cannot be acquired', async () => {
-      mockApiClient.post.mockRejectedValueOnce(
-        createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE)
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await expect(invoke()).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-
-      // Only the acquisition was attempted — the invocation itself never went out
-      expect(licenseCalls()).toHaveLength(1);
       expect(mockApiClient.post).toHaveBeenCalledTimes(1);
-    });
-
-    it('should surface the licensing failure rather than a name lookup failure', async () => {
-      // Acquiring provisions the robot the invocation runs on, so licensing is
-      // the precondition and its error is the more useful one to report.
-      mockApiClient.post.mockRejectedValueOnce(
-        createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE)
-      );
-      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-
-      await expect(invoke()).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-    });
-
-    it('should not cache a failed acquisition', async () => {
-      mockApiClient.post
-        .mockRejectedValueOnce(createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE))
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await expect(invoke()).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-      // The failure was not cached, so the next invocation acquired afresh
-      await expect(invoke()).resolves.toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should share the cache across separately constructed services', async () => {
-      // Consumers routinely build a service per request or per render. If the
-      // cache were an instance field, each would start empty and the licensing
-      // round trip would be paid every time — the case this cache exists for.
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      const { instance } = createServiceTestDependencies();
-      const scope = { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY };
-      const ref = { name: FUNCTION_TEST_CONSTANTS.NAME };
-
-      await new FunctionService(instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-      await new FunctionService(instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should not share a license between tenants', async () => {
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      const scope = { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY };
-      const ref = { name: FUNCTION_TEST_CONSTANTS.NAME };
-
-      const tenantA = createServiceTestDependencies({ tenantName: 'TenantA' });
-      const tenantB = createServiceTestDependencies({ tenantName: 'TenantB' });
-      await new FunctionService(tenantA.instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-      await new FunctionService(tenantB.instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-
-      // Same user, different tenant — the second must not reuse the first
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should still invoke when the license token cannot be decoded', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense({ licenseToken: 'not-a-jwt' }))
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      const result = await invoke();
-
-      expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-    });
-
-    it('should still invoke when the platform issues no license token', async () => {
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense({ licenseToken: null })
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await expect(invoke()).resolves.toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-
-      // No token means no expiry to read, so the fallback lifetime applies and a
-      // second invocation still reuses the license rather than re-acquiring
-      await invoke();
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should return the license with wire fields renamed to the SDK shape', async () => {
-      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense());
-
-      const license = await functionService.acquireLicense();
-
-      expect(license.startedTime).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.STARTED);
-      expect(license.licenseTier).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER);
-      expect(license.licensedUnits).toEqual([...FUNCTION_LICENSE_TEST_CONSTANTS.LICENSED_UNITS]);
-      expect(license.robotType).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPE);
-
-      // The wire names must not survive the transform, and the token itself is
-      // credential-shaped, so it must not reach the SDK shape at all
-      expect('started' in license).toBe(false);
-      expect('ubl' in license).toBe(false);
-      expect('lu' in license).toBe(false);
-      expect('licenseToken' in license).toBe(false);
-    });
-
-    it('should report no tier or expiry when the platform issues no token', async () => {
-      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense({ licenseToken: null }));
-
-      const license = await functionService.acquireLicense();
-
-      expect(license.isLicensed).toBe(true);
-      expect(license.expiresTime).toBeUndefined();
-      expect(license.licenseTier).toBeUndefined();
-      expect(license.licensedUnits).toBeUndefined();
-    });
-
-    it('should evict the oldest entry once the cache is full', async () => {
-      mockDistinctCallers();
-      await fillCache();
-      const atCap = licenseCalls().length;
-
-      // One caller past the cap: room is made by dropping the oldest entry
-      await invokeAs(`user-${MAX_CACHED_LICENSES}`);
-      expect(licenseCalls()).toHaveLength(atCap + 1);
-
-      // The newest caller is still cached, so no further acquisition
-      await invokeAs(`user-${MAX_CACHED_LICENSES}`);
-      expect(licenseCalls()).toHaveLength(atCap + 1);
-
-      // The oldest was evicted, so it has to acquire again
-      await invokeAs('user-0');
-      expect(licenseCalls()).toHaveLength(atCap + 2);
-    });
-
-    it('should drop expired entries before evicting by age', async () => {
-      // Mid-cache, so evicting it cannot be confused with evicting the oldest
-      const expiredFor = `user-${Math.floor(MAX_CACHED_LICENSES / 2)}`;
-      mockDistinctCallers(expiredFor);
-      await fillCache();
-      const atCap = licenseCalls().length;
-
-      await invokeAs(`user-${MAX_CACHED_LICENSES}`);
-
-      // The expired entry made the room, so the oldest live one survived
-      await invokeAs('user-0');
-      expect(licenseCalls()).toHaveLength(atCap + 1);
-    });
-
-    it('should acquire a license without invoking a function', async () => {
-      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense());
-
-      const license = await functionService.acquireLicense();
-
-      expect(license.isLicensed).toBe(true);
-      expect(license.licenseTier).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER);
-      expect(license.startedTime).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.STARTED);
-      // Only the acquisition — nothing was invoked
-      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
-    });
-
-    it('should reuse the cached license when acquiring directly', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawStudioWebLicense());
-
-      await functionService.acquireLicense();
-      await functionService.acquireLicense();
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should keep a refreshed license when an earlier acquisition then fails', async () => {
-      let rejectFirst!: (error: Error) => void;
-      let licenseAttempt = 0;
-      mockApiClient.post.mockImplementation((endpoint: string) => {
-        if (endpoint !== STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE) {
-          return Promise.resolve(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-        }
-        licenseAttempt += 1;
-        return licenseAttempt === 1
-          ? new Promise((_resolve, reject) => { rejectFirst = reject; })
-          : Promise.resolve(createMockRawStudioWebLicense());
-      });
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      const failing = invoke();
-      await vi.waitFor(() => expect(licenseCalls()).toHaveLength(1));
-
-      // A refresh replaces the pending entry before the first one settles
-      await invoke({ refreshLicense: true });
-      rejectFirst(createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE));
-      await expect(failing).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-
-      // The failure must not evict the newer license, so nothing re-acquires
-      await invoke();
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should acquire a fresh license when asked to refresh', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawStudioWebLicense());
-
-      await functionService.acquireLicense();
-      await functionService.acquireLicense({ refresh: true });
-
-      expect(licenseCalls()).toHaveLength(2);
     });
   });
 
-  describe('licenseExpiryMs', () => {
-    it('should return undefined when the license carries no expiry', () => {
-      expect(licenseExpiryMs()).toBeUndefined();
+  describe('parseExternalReference', () => {
+    it('should read the route and a lower-cased folder key', () => {
+      expect(parseExternalReference(FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE)).toEqual({
+        route: FUNCTION_TEST_CONSTANTS.ROUTE,
+        folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
+      });
     });
 
-    it('should return undefined when the expiry cannot be parsed', () => {
-      expect(licenseExpiryMs('not-a-date')).toBeUndefined();
+    it('should read a route without a process segment', () => {
+      expect(parseExternalReference(FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE_NO_PROCESS_SLUG)?.route).toBe(
+        FUNCTION_TEST_CONSTANTS.SLUG
+      );
     });
 
-    it('should renew slightly before the stated expiry', () => {
-      const expiresTime = '2026-08-18T12:00:00.000Z';
+    it('should keep path parameters in the route', () => {
+      expect(parseExternalReference(FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE_PARAM)?.route).toBe(
+        `${FUNCTION_TEST_CONSTANTS.PROCESS_SLUG}/${FUNCTION_TEST_CONSTANTS.PARAM_SLUG}`
+      );
+    });
 
-      expect(licenseExpiryMs(expiresTime)).toBeLessThan(Date.parse(expiresTime));
+    it('should return undefined when the reference is absent', () => {
+      expect(parseExternalReference(null)).toBeUndefined();
+      expect(parseExternalReference(undefined)).toBeUndefined();
+    });
+
+    it('should return undefined when the reference does not end in a folder key', () => {
+      expect(parseExternalReference(`${FUNCTION_TEST_CONSTANTS.METHOD} ${FUNCTION_TEST_CONSTANTS.ROUTE}`)).toBeUndefined();
+    });
+
+    it('should return undefined when the route contains a space', () => {
+      expect(parseExternalReference(FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE_SPACED_ROUTE)).toBeUndefined();
+    });
+
+    it('should return undefined when the route is only slashes', () => {
+      expect(
+        parseExternalReference(`${FUNCTION_TEST_CONSTANTS.METHOD} / ${FUNCTION_TEST_CONSTANTS.FOLDER_KEY}`)
+      ).toBeUndefined();
     });
   });
+
+  describe('buildInvokeRoute', () => {
+    const fn = { name: FUNCTION_TEST_CONSTANTS.NAME, slug: FUNCTION_TEST_CONSTANTS.SLUG, processSlug: FUNCTION_TEST_CONSTANTS.PROCESS_SLUG };
+
+    it('should join the process slug and the function slug', () => {
+      expect(buildInvokeRoute(fn)).toBe(FUNCTION_TEST_CONSTANTS.ROUTE);
+    });
+
+    it('should use the function slug alone when the process slug is null', () => {
+      expect(buildInvokeRoute({ ...fn, processSlug: null })).toBe(FUNCTION_TEST_CONSTANTS.SLUG);
+    });
+
+    it('should use the function slug alone when the process slug is empty', () => {
+      expect(buildInvokeRoute({ ...fn, processSlug: '' })).toBe(FUNCTION_TEST_CONSTANTS.SLUG);
+    });
+
+    it('should strip leading and trailing slashes from both segments', () => {
+      expect(
+        buildInvokeRoute({ ...fn, slug: `/${FUNCTION_TEST_CONSTANTS.SLUG}/`, processSlug: `/${FUNCTION_TEST_CONSTANTS.PROCESS_SLUG}/` })
+      ).toBe(FUNCTION_TEST_CONSTANTS.ROUTE);
+    });
+
+    it('should throw ServerError when the function has no slug', () => {
+      expect(() => buildInvokeRoute({ ...fn, slug: '' })).toThrow(ServerError);
+    });
+  });
+
 });

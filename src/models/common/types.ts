@@ -50,6 +50,24 @@ export enum ConnectionState {
   Failed = 'Failed',
 }
 
+/**
+ * Enum for package types (Orchestrator process types)
+ */
+export enum PackageType {
+  Undefined = 'Undefined',
+  Process = 'Process',
+  ProcessOrchestration = 'ProcessOrchestration',
+  WebApp = 'WebApp',
+  Agent = 'Agent',
+  TestAutomationProcess = 'TestAutomationProcess',
+  Api = 'Api',
+  MCPServer = 'MCPServer',
+  BusinessRules = 'BusinessRules',
+  CaseManagement = 'CaseManagement',
+  Flow = 'Flow',
+  Function = 'Function',
+}
+
 export interface BaseOptions {
   expand?: string;
   select?: string;

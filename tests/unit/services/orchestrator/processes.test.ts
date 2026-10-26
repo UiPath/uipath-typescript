@@ -18,6 +18,7 @@ import {
   PROCESS_TEST_CONSTANTS
 } from '../../../utils/constants';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { createHeldSessionLicense } from '../../../utils/mocks/session-license';
 import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessRef, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
@@ -95,6 +96,17 @@ describe('ProcessService Unit Tests', () => {
 
       expect(result).toEqual(mockResponse);
       expect(result.items).toHaveLength(2);
+    });
+
+    it('should not wait for the session license', async () => {
+      const { license } = createHeldSessionLicense();
+      const { instance } = createServiceTestDependencies({ sessionLicense: license });
+      const mockResponse = { items: createMockOrchestratorProcesses(2), totalCount: 2 };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      await expect(new ProcessService(instance).getAll()).resolves.toEqual(mockResponse);
+
+      expect(license.ensure).not.toHaveBeenCalled();
     });
 
     it('should return all processes without pagination when no pagination options provided', async () => {
@@ -301,6 +313,24 @@ describe('ProcessService Unit Tests', () => {
           params: expect.any(Object)
         })
       );
+    });
+
+    it('should wait for the session license before posting the start request', async () => {
+      const { license, release } = createHeldSessionLicense();
+      const { instance } = createServiceTestDependencies({ sessionLicense: license });
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      const starting = new ProcessService(instance).start(
+        PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+      await vi.waitFor(() => expect(license.ensure).toHaveBeenCalledTimes(1));
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+
+      release();
+
+      await expect(starting).resolves.toHaveLength(1);
+      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
     });
 
     it('should start process by processName successfully with transformations applied', async () => {

@@ -7,6 +7,7 @@ import { UiPathConfig } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from '../auth/token-manager';
 import type { OrganizationIdResolver } from '../organization/organization-id-resolver';
+import type { SessionLicense } from '../licensing/session-license';
 
 /**
  * Private SDK components used by services.
@@ -31,6 +32,16 @@ export interface PrivateSDK {
    * header's folder, and the connection a function uses often lives in another folder.
    */
   metaFolderKey?: string;
+  /**
+   * Serverless robot key, taken from a coded function's `ctx.robot.key`.
+   * Orchestrator needs it to hand a queue item to the function's robot.
+   */
+  robotKey?: string;
+  /**
+   * Studio Web license acquisition for the signed-in user, awaited by the calls that start a new
+   * job. Absent when the SDK authenticates with a secret.
+   */
+  sessionLicense?: SessionLicense;
   /**
    * Organization GUID resolver, created lazily by
    * `SDKInternalsRegistry.getOrganizationIdResolver()` and cached here so every

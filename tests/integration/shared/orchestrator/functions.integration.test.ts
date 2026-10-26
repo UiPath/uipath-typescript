@@ -112,9 +112,9 @@ describeIntegration('Functions - Integration Tests', 'both', modes, () => {
   // TODO: unskip once the Serverless Functions backend is fixed.
   // skip: every invoke returns 500 Serverless.JsFunction.ServiceStartError
   // ("Failed to initialize service"). This is a sustained backend outage, not a
-  // flake — it hit 6 of 6 CI attempts on 2026-09-11 while getAll and
-  // acquireLicense kept passing on the same runs. Bodies are left intact so they
-  // exercise the real API again the moment this is unskipped.
+  // flake — it hit 6 of 6 CI attempts on 2026-09-11 while getAll kept passing
+  // on the same runs. Bodies are left intact so they exercise the real API
+  // again the moment this is unskipped.
   describe.skip('invoke', () => {
     it('should invoke a function by name and return its output', async () => {
       const output = await functions.invoke<Record<string, unknown>, unknown>(
@@ -126,58 +126,27 @@ describeIntegration('Functions - Integration Tests', 'both', modes, () => {
       expect(output).toBeDefined();
     });
 
-    it('should invoke via the bound method on a function response', async () => {
-      const output = await seededFunction.invoke({});
+    it('should invoke by the name declared in source when the stored name is process-prefixed', async () => {
+      // Functions deployed since July 2026 are stored as `<process name>_<name>`;
+      // older ones keep the bare name, which this reduces to unchanged.
+      const prefix = `${seededFunction.processName}_`;
+      const declaredName = seededFunction.name.startsWith(prefix)
+        ? seededFunction.name.slice(prefix.length)
+        : seededFunction.name;
 
-      expect(output).toBeDefined();
-    });
-
-    it('should invoke with a freshly acquired license', async () => {
-      // Licensing is always applied; refreshLicense forces a new acquisition
-      // rather than reusing the one already held for this user.
       const output = await functions.invoke<Record<string, unknown>, unknown>(
-        { name: functionName },
-        {},
-        { folderId, refreshLicense: true },
-      );
-
-      expect(output).toBeDefined();
-    });
-
-    it('should reuse the acquired license across invocations', async () => {
-      // Second invocation is served from the license cache; both must succeed.
-      const first = await functions.invoke<Record<string, unknown>, unknown>(
-        { name: functionName },
-        {},
-        { folderId, refreshLicense: true },
-      );
-      const second = await functions.invoke<Record<string, unknown>, unknown>(
-        { name: functionName },
+        { name: declaredName, processName: seededFunction.processName },
         {},
         { folderId },
       );
 
-      expect(first).toBeDefined();
-      expect(second).toBeDefined();
+      expect(output).toBeDefined();
     });
-  });
 
-  describe('acquireLicense', () => {
-    it('should return the license in the transformed SDK shape', async () => {
-      const license = await functions.acquireLicense({ refresh: true });
+    it('should invoke via the bound method on a function response', async () => {
+      const output = await seededFunction.invoke({});
 
-      expect(license.isLicensed).toBe(true);
-      expect(typeof license.robotType).toBe('string');
-      expect(Array.isArray(license.robotTypes)).toBe(true);
-      // Renamed from the wire field `started`
-      expect(typeof license.startedTime).toBe('string');
-
-      // The wire names must not survive the transform, and the license token is
-      // credential-shaped, so it must not reach the SDK shape at all
-      expect('started' in license).toBe(false);
-      expect('ubl' in license).toBe(false);
-      expect('lu' in license).toBe(false);
-      expect('licenseToken' in license).toBe(false);
+      expect(output).toBeDefined();
     });
   });
 });

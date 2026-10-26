@@ -1,3 +1,8 @@
+---
+description: "SDK service and coding conventions: naming, types, transforms, JSDoc, and service patterns"
+alwaysApply: true
+---
+
 # Service & Coding Conventions
 
 ## Code style
@@ -21,7 +26,7 @@
 
 - Services follow the pattern: extend `BaseService`, call `super(uiPath)`, use `this.get()` / `this.post()` etc. **NEVER** bypass `BaseService` even for passthrough/proxy methods that use raw `fetch()` — extend `BaseService`, get the token via `this.getValidAuthToken()`, and use raw `fetch()` only within the specific method body (e.g., when the method must not throw on non-2xx responses). Services that bypass `BaseService` lose standard auth-flow integration and make tests harder to set up without `as unknown as` casts.
 - Types live in `src/models/{domain}/{domain}.types.ts`. Internal-only types go in `*.internal-types.ts`.
-- Constants live in `src/utils/constants/`. Endpoints are split per domain in `src/utils/constants/endpoints/` (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`).
+- Constants live in `src/utils/constants/`. Endpoints live in one folder per domain under `src/utils/constants/endpoints/`, named after the service folder (e.g., `data-fabric/data-fabric.ts`, `maestro/maestro.ts`, `action-center/tasks.ts`).
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
 - Every public service method that makes an HTTP API call must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive. **Both segments must be PascalCase**: `@track('ConversationalAgent.DownloadCitationSource')`, not `@track('ConversationalAgent.downloadCitationSource')`. Using camelCase for the method name breaks dashboard queries that pattern-match on `ServiceName.*`. **Exception**: methods that are event handlers, window/DOM interactions, or UI-only operations (no HTTP calls) must NOT be tracked — tracking non-API methods causes excessive log ingestion with no diagnostic value. **Delegation anti-pattern**: when a public service method delegates to another service's public `@track`-decorated method, both `@track` decorators fire, causing double telemetry. Fix: extract the shared logic into an internal helper function (no `@track`) and have both public service methods call the helper directly.
 - **Service methods that bypass `ApiClient.request()` and use raw `fetch()` must manually add distributed-tracing headers** — `ApiClient` normally injects `traceparent` and `x-uipath-traceparent-id` on every request; raw `fetch()` callers are invisible to the platform's tracing infrastructure without them. Pattern: generate trace IDs with `crypto.randomUUID()` and set both `TRACEPARENT` and `UIPATH_TRACEPARENT_ID` headers (constants already exported from `src/utils/constants/headers.ts`). **Exception: do NOT add tracing headers to `fetch()` calls targeting third-party services** (e.g., Azure Blob Storage via SAS URLs) — third-party services never forward these headers to UiPath's tracing infrastructure, and doing so leaks internal correlation IDs to an external party. This convention applies only to UiPath service endpoints.
@@ -122,6 +127,13 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent.
 
+**OData `@odata.context` must be destructured out** — OData `getById` responses include an `@odata.context` metadata key (and sometimes other `@odata.*` keys) that must never be forwarded to callers. Destructure and discard it before applying other transforms:
+```typescript
+const { '@odata.context': _ctx, ...data } = response.data as Record<string, unknown>;
+return pascalToCamelCaseKeys(data) as EntityGetResponse;
+```
+Reference implementation: `src/services/orchestrator/attachments/attachments.ts`.
+
 **User-defined nested payloads:** If a response field is typed as an open map (`Record<string, unknown>` / `unknown`) or the contract calls it custom/schema data, split it out and pass it verbatim — `pascalToCamelCaseKeys()` recurses and would rewrite its keys. Transform only the named envelope fields (same principle as the Data Fabric exception above):
 ```typescript
 const { data: userPayload, ...envelope } = response.data;
@@ -130,7 +142,7 @@ return { ...pascalToCamelCaseKeys(envelope), data: userPayload };
 
 ## Endpoint constants
 
-Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`):
+Defined in `src/utils/constants/endpoints/<domain>/`, one folder per domain named after its `src/services/` folder (e.g., `data-fabric/data-fabric.ts`, `maestro/maestro.ts`, `orchestrator/orchestrator.ts`). Pull-request CI uses the folder name to pick the integration suite, so a domain's constants must live in its own folder even when another product serves the API (Action Center tasks are served by Orchestrator but live in `action-center/tasks.ts`). Only the shared `base.ts` sits loose beside the folders. Unit tests check that every endpoint folder matches a `src/services/` folder, that a folder's exports are used only by that domain's code (or by `src/core/`, whose own changes run everything), and that no loose file is used from service or model code. Re-export every new file from `endpoints/index.ts`.
 
 - Static endpoints: string constants — `GET_ALL: '${BASE}/api/v1/processes/summary'`
 - Parameterized endpoints: arrow functions — `GET_BY_ID: (id: string) => '${BASE}/api/v1/instances/${id}'`
@@ -301,3 +313,4 @@ Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None`
 - **NEVER** commit sensitive files — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
 - **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure. Additionally, when the same regex is needed across two or more service files, extract it to a shared constant in `src/utils/` rather than duplicating it — duplicated patterns silently diverge when one copy is updated.
 - **Silent catches must emit a `console.warn`** — when a `try/catch` swallows an error without re-throwing (e.g., best-effort reads from an ambient channel or optional DOM lookup), always call `console.warn(error)` so issues remain observable in the runtime console (browser, Node.js, and Workers). A completely silent catch makes failures invisible during development and debugging.
+- **Validate before mutating shared state** — always run all guard checks (throw `ValidationError` on invalid input) before mutating any object. Mutating first means that when validation fails and throws, the mutation has already applied to any shared reference, corrupting objects reused by callers or test fixtures. Additionally, `{ ...obj }` creates a shallow copy that shares nested object references — when a nested object needs to be mutated, create an explicit shallow copy of that nested object: `const updated = { ...nested, newField: value }; return { ...obj, nested: updated }` rather than assigning directly into `nested`. For array elements, validate first (e.g., with `.some()`) and then produce the modified array with shallow-copied items: `items.map(item => item.id === targetId ? { ...item, flag: true } : item)`. **NEVER** mutate array elements in-place before the not-found check.

@@ -10,6 +10,16 @@ import { ConnectionState } from '../../common/types';
 export { ConnectionState };
 
 /**
+ * Status of a connection OAuth session
+ * @internal
+ */
+export enum ConnectionSessionStatus {
+  Pending = 'pending',
+  Success = 'success',
+  Failed = 'failed',
+}
+
+/**
  * A single connection available for selection
  */
 export interface AvailableConnection {
@@ -64,6 +74,7 @@ export type AvailableConnectionsResponse = AvailableConnectionsItem[];
 
 /**
  * A single connection selection mapping a connector to a chosen connection
+ * @internal
  */
 export interface ConnectionSelection {
   /** Connector key to update */
@@ -74,6 +85,7 @@ export interface ConnectionSelection {
 
 /**
  * Request body for updating the user's connection selections
+ * @internal
  */
 export interface UpdateConnectionSelectionsRequest {
   /** List of connection selections to apply */
@@ -82,6 +94,7 @@ export interface UpdateConnectionSelectionsRequest {
 
 /**
  * Request body for generating a connector-specific auth URL
+ * @internal
  */
 export interface ConnectionAuthRequest {
   /** Connector key to generate the auth URL for */
@@ -90,10 +103,27 @@ export interface ConnectionAuthRequest {
 
 /**
  * Response from the connection auth endpoint
+ * @internal
  */
 export interface ConnectionAuthResponse {
   /** The connector-specific auth URL to open */
   authUrl: string;
-  /** Unix timestamp when the auth URL expires */
+  /** Unique session ID used to poll for OAuth completion */
+  sessionId: string;
+  /** Unix timestamp (ms) when the auth session expires */
+  expiresTime: number;
+}
+
+/**
+ * Status of a connection auth session returned by the polling endpoint.
+ * Poll until `status` is {@link ConnectionSessionStatus.Success} (connection created) or {@link ConnectionSessionStatus.Failed}.
+ * @internal
+ */
+export interface ConnectionSessionStatusResponse {
+  /** Current status of the OAuth session */
+  status: ConnectionSessionStatus;
+  /** ID of the newly created connection, or null when status is not 'success' */
+  connectionId: string | null;
+  /** Unix timestamp (ms) when the session expires */
   expiresTime: number;
 }

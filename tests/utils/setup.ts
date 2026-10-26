@@ -2,9 +2,11 @@ import { vi } from 'vitest';
 import { UiPathConfig } from '../../src/core/config/config';
 import { ExecutionContext } from '../../src/core/context/execution';
 import { TokenManager } from '../../src/core/auth/token-manager';
+import type { TokenInfo } from '../../src/core/auth/types';
 import type { UiPath } from '../../src/core/uipath';
 import type { BaseConfig } from '../../src/core/config/sdk-config';
 import { SDKInternalsRegistry, type PrivateSDK } from '../../src/core/internals';
+import type { SessionLicense } from '../../src/core/licensing/session-license';
 
 /**
  * Interface for mockable UiPath properties used in tests.
@@ -23,6 +25,7 @@ interface MockableTokenManager {
   getToken: () => string | undefined;
   hasValidToken: () => boolean;
   getValidToken: () => Promise<string>;
+  onTokenChange: (listener: (tokenInfo: TokenInfo | undefined) => void) => void;
 }
 
 // Mock console methods to avoid test output noise
@@ -69,6 +72,7 @@ const createMockTokenManager = (overrides?: Partial<MockableTokenManager>): Toke
     getToken: vi.fn().mockReturnValue('mock-access-token'),
     hasValidToken: vi.fn().mockReturnValue(true),
     getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN),
+    onTokenChange: vi.fn(),
     ...overrides,
   };
   return mock as TokenManager;
@@ -100,10 +104,10 @@ export const createMockApiClient = () => ({
  * ```
  */
 export const createMockUiPath = (
-  overrides?: Partial<UiPathConfig> & { folderKey?: string; metaFolderKey?: string },
+  overrides?: Partial<UiPathConfig> & { folderKey?: string; metaFolderKey?: string; robotKey?: string },
   tokenManagerOverrides?: Partial<TokenManager>
 ): UiPath => {
-  const { folderKey, metaFolderKey, ...configOverrides } = overrides ?? {};
+  const { folderKey, metaFolderKey, robotKey, ...configOverrides } = overrides ?? {};
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
   const tokenManager = createMockTokenManager(tokenManagerOverrides);
@@ -125,6 +129,7 @@ export const createMockUiPath = (
     tokenManager,
     folderKey,
     metaFolderKey,
+    robotKey,
   });
 
   return mockInstance;
@@ -147,13 +152,13 @@ export const createMockUiPath = (
  * ```
  */
 export const createServiceTestDependencies = (
-  overrides?: Partial<UiPathConfig> & { folderKey?: string; metaFolderKey?: string },
+  overrides?: Partial<UiPathConfig> & { folderKey?: string; metaFolderKey?: string; robotKey?: string; sessionLicense?: SessionLicense },
   tokenManagerOverrides?: Partial<MockableTokenManager>
 ) => {
   // The folder keys are not on UiPathConfig; they live on PrivateSDK. `folderKey` is the default for
   // calls that need a folder (meta tag or coded-function context); `metaFolderKey` is the meta tag's
   // alone, which Integration Service falls back to.
-  const { folderKey, metaFolderKey, ...configOverrides } = overrides ?? {};
+  const { folderKey, metaFolderKey, robotKey, sessionLicense, ...configOverrides } = overrides ?? {};
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
   const tokenManager = createMockTokenManager(tokenManagerOverrides);
@@ -179,6 +184,8 @@ export const createServiceTestDependencies = (
     tokenManager,
     folderKey,
     metaFolderKey,
+    robotKey,
+    sessionLicense,
   });
 
   return {

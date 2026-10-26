@@ -5,8 +5,14 @@ import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
+import { SessionLicense } from '../../../src/core/licensing/session-license';
+import { AuthService } from '../../../src/core/auth/service';
+import { ApiClient } from '../../../src/core/http/api-client';
+import { MemoryStore } from '../../../src/utils/storage/memory-store';
+import type { TokenInfo } from '../../../src/core/auth/types';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
+import { functionContext } from '../../utils/function-context';
 
 // ===== MOCKING =====
 const mockTokenManagerDestroy = vi.fn();
@@ -14,6 +20,7 @@ const mockTokenManager = {
   getToken: () => 'mock-access-token',
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
+  onTokenChange: vi.fn(),
 };
 
 const mockLogout = vi.fn();
@@ -37,6 +44,7 @@ vi.mock('../../../src/core/auth/service', () => {
 });
 
 vi.mock('../../../src/core/http/api-client');
+vi.mock('../../../src/core/licensing/session-license');
 
 // Mock meta-tag loading so the telemetry tests can drive the org/tenant ids
 // the deployment injects. Defaults to no meta tags (matching server-side use).
@@ -518,6 +526,84 @@ describe('UiPath Core', () => {
     });
   });
 
+  describe('Session license', () => {
+    const oauthConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+      scope: TEST_CONSTANTS.OAUTH_SCOPE,
+    };
+
+    beforeEach(() => {
+      vi.mocked(SessionLicense).mockClear();
+      mockTokenManager.onTokenChange.mockClear();
+    });
+
+    afterEach(() => {
+      mockPlatform.isInActionCenter = false;
+    });
+
+    it('should feed token changes to a session license for a coded app that signs its user in', () => {
+      const sdk = new UiPath(oauthConfig);
+
+      expect(SessionLicense).toHaveBeenCalledExactlyOnceWith(getConfig(sdk), expect.any(ApiClient), expect.any(MemoryStore));
+      expect(mockTokenManager.onTokenChange).toHaveBeenCalledTimes(1);
+
+      const [listener] = mockTokenManager.onTokenChange.mock.calls[0];
+      const tokenInfo: TokenInfo = { token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN, type: 'oauth' };
+      listener(tokenInfo);
+
+      expect(vi.mocked(SessionLicense).mock.instances[0].onTokenChange).toHaveBeenCalledWith(tokenInfo);
+    });
+
+    it('should feed token changes to a session license for a coded app whose host supplies the user token', () => {
+      mockPlatform.isInActionCenter = true;
+
+      void new UiPath(oauthConfig);
+
+      expect(SessionLicense).toHaveBeenCalledTimes(1);
+      expect(mockTokenManager.onTokenChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('should hand the session license to services through the SDK internals', () => {
+      const sdk = new UiPath(oauthConfig);
+
+      expect(getPrivateSDK(sdk).sessionLicense).toBe(vi.mocked(SessionLicense).mock.instances[0]);
+    });
+
+    it('should complete the OAuth sign-in without requiring a personal robot', async () => {
+      vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
+      const sdk = new UiPath(oauthConfig);
+      const license = vi.mocked(SessionLicense).mock.instances[0];
+
+      await expect(sdk.completeOAuth()).resolves.toBe(true);
+
+      expect(sdk.isInitialized()).toBe(true);
+      expect(license.ensure).not.toHaveBeenCalled();
+    });
+
+    it('should not subscribe a session license when the SDK holds its own credential', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+      });
+
+      expect(SessionLicense).not.toHaveBeenCalled();
+      expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
+      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
+    });
+
+    it('should not subscribe a session license inside a coded function', () => {
+      void new UiPath(functionContext());
+
+      expect(SessionLicense).not.toHaveBeenCalled();
+      expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
+    });
+  });
   describe('Telemetry', () => {
     let initializeSpy: ReturnType<typeof vi.spyOn>;
 

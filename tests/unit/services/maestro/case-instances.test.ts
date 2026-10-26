@@ -692,14 +692,15 @@ describe('CaseInstancesService', () => {
       );
     });
 
-    it('should omit itemData from the request body when no options are provided', async () => {
+    it('should default itemData to an empty object when no options are provided', async () => {
       await service.sendMessage(instanceId, folderKey, CaseInstanceMessageName.UserAdhocTrigger);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE,
         {
           name: CaseInstanceMessageName.UserAdhocTrigger,
-          reference: `case-${instanceId}`
+          reference: `case-${instanceId}`,
+          itemData: {}
         },
         {
           headers: expect.objectContaining({

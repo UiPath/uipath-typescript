@@ -37,6 +37,8 @@ import {
   EntityUpsertOptions,
   EntityUpsertResponse,
   EntityRef,
+  EntityCloneRequest,
+  EntityCloneJob,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -1020,6 +1022,11 @@ export interface EntityServiceModel {
   /**
    * Creates a new Data Fabric entity with the given schema
    *
+   * To create a **Federated** entity — a read-only view over one or more external (Integration
+   * Service) or native sources — set `entityClass` to `Federated`, describe each source in
+   * `externalFields`, and pass `[]` for `fields`. A Federated entity with N sources needs N-1
+   * `sourceJoinConditionDetails`, all starting from one source, which becomes the primary source.
+   *
    * @param name - Entity name — must start with a letter, letters/numbers/underscores only
    *   (e.g., `"productCatalog"`).
    * @param fields - Array of field definitions. Each field's `name` must be camelCase —
@@ -1079,13 +1086,79 @@ export interface EntityServiceModel {
    *     }],
    *   }],
    *   // Multi-source: add more entries to `externalFields` and join them:
-   *   // sourceJoinConditionDetails: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>",
-   *   //   joinType: JoinType.LeftJoin, relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>" }],
+   *   // sourceJoinConditionDetails: [{
+   *   //   sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>",
+   *   //   joinType: JoinType.LeftJoin,
+   *   //   relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>",
+   *   // }],
    * });
    * ```
    * @experimental
    */
   create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
+
+  /**
+   * Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full
+   * dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the
+   * job descriptor to poll via {@link EntityServiceModel.getCloneJob}.
+   *
+   * Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData`
+   * (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into
+   * a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-,
+   * Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+   *
+   * `DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes
+   * are required only for `SchemaAndData` mode (which creates the target schema).
+   *
+   * @param request - Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+   * @returns Promise resolving to the {@link EntityCloneJob} descriptor (initial state `Queued`).
+   * @example
+   * ```typescript
+   * import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * const job = await entities.clone({
+   *   source: { scopeType: EntityCloneScopeType.Tenant },
+   *   target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
+   *   entityIds: ["<rootEntityId>", "<choiceSetId>"],
+   *   options: { mode: EntityCloneMode.SchemaAndData },
+   * });
+   *
+   * // Poll to a terminal state.
+   * const terminal = [
+   *   EntityCloneJobState.Done, EntityCloneJobState.Failed,
+   *   EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+   * ];
+   * let status = await entities.getCloneJob(job.jobId);
+   * while (!terminal.includes(status.state)) {
+   *   await new Promise((r) => setTimeout(r, 3000));
+   *   status = await entities.getCloneJob(job.jobId);
+   * }
+   * ```
+   * @experimental
+   */
+  clone(request: EntityCloneRequest): Promise<EntityCloneJob>;
+
+  /**
+   * Gets the current status of a clone job started by {@link EntityServiceModel.clone}; poll until
+   * `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done`
+   * terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+   *
+   * @param jobId - The `jobId` returned when the clone job was started.
+   * @returns Promise resolving to the latest {@link EntityCloneJob}.
+   * @example
+   * ```typescript
+   * import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * const status = await entities.getCloneJob("<jobId>");
+   * if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
+   * ```
+   * @experimental
+   */
+  getCloneJob(jobId: string): Promise<EntityCloneJob>;
 
   /**
    * Deletes a Data Fabric entity and all its records
@@ -1112,13 +1185,29 @@ export interface EntityServiceModel {
    * only when the corresponding fields are provided.
    *
    * For **Federated** entities, pass source/join deltas instead: `addExternalSources`,
-   * `removeExternalSources` (also removes that source's joins), `addFieldsToSource`,
-   * `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, and
-   * `updateSourceJoin`. `addFieldsToSource` maps a field that already exists on the source
-   * (a native entity's column or a connector field); it does not create the underlying field.
+   * `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`,
+   * `updateSourceJoin`, `replaceSourceJoins`, and `updateExternalConnection`.
+   *
+   * - **Identifying things.** A delta that targets an existing source identifies it by **both**
+   *   `sourceObjectName` and `sourceConnectionId` (a connector `connectionId`, or the `entityId`
+   *   for a native source), because an entity may have two sources with the same object name on
+   *   different connections.
+   * - **Joins.** A Federated entity with N sources has exactly N-1 joins, all starting from one
+   *   source, the *primary source*. The primary source is not stored: it is the source on the
+   *   left of every join. A join cannot be removed on its own, since every other source must stay
+   *   joined. To change the primary source, pass the complete new join set to `replaceSourceJoins`.
+   *   To add a source, pass it in `addExternalSources` together with its join in `addSourceJoins`.
+   *   `updateSourceJoin` only changes the join fields of an existing join.
+   * - **Fields.** `addExternalFields` maps a field that already exists on the source (a native
+   *   entity's column or a connector field); it does not create the underlying field. A source must
+   *   keep at least one field, and a field name must be unique across all sources. Mapping settings
+   *   (direction, searchable, sortable) cannot be changed after a source is added.
+   * - **Sources.** A Federated entity always has at least one source: to replace its only source, remove
+   *   it and add the new one in the same call. The saved result is validated by the backend (join graph,
+   *   duplicate sources, duplicate field names, empty sources).
    *
    * @param id - UUID of the entity to update
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, `updateSourceJoin`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, `updateExternalConnection`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    *
    * @example
@@ -1160,28 +1249,42 @@ export interface EntityServiceModel {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    *
-   * // Federated: add a source joined to the existing graph
+   * // Federated: add a source joined to the existing graph. Every source is identified by
+   * // (sourceObjectName, sourceConnectionId) — a connector connectionId, or a native entityId.
    * await entities.updateById(<id>, {
    *   addExternalSources: [{
    *     externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
    *     externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
    *     fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
    *   }],
-   *   addSourceJoins: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+   *   addSourceJoins: [{ sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
    * });
    *
    * // Federated: add a field to an existing source (maps a field that already exists on it)
    * await entities.updateById(<id>, {
-   *   addFieldsToSource: [{ sourceObjectName: "<objectName>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+   *   addExternalFields: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
    * });
    *
-   * // Federated: change an existing join in place
+   * // Federated: change the join fields of an existing join (its sources and direction stay the same)
    * await entities.updateById(<id>, {
-   *   updateSourceJoin: [{ sourceObjectName: "<objectName>", relatedSourceObjectName: "<relatedObjectName>", sourceJoinField: "<externalFieldName>" }],
+   *   updateSourceJoin: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceConnectionId: "<relatedConnectionId>", sourceJoinField: "<externalFieldName>" }],
    * });
    *
-   * // Federated: remove a source (its joins are removed automatically)
-   * await entities.updateById(<id>, { removeExternalSources: ["<relatedObjectName>"] });
+   * // Federated: change the primary source. Pass the complete new join set, rooted at the new
+   * // primary source (here "<newPrimaryObject>"); every other source is the related side of one join.
+   * await entities.updateById(<id>, {
+   *   replaceSourceJoins: [
+   *     { sourceObjectName: "<newPrimaryObject>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<otherObject>", relatedSourceObjectConnectionId: "<otherConnectionId>", relatedSourceJoinField: "<otherExternalFieldName>", joinType: JoinType.LeftJoin },
+   *   ],
+   * });
+   *
+   * // Federated: swap a connector source's connection id
+   * await entities.updateById(<id>, {
+   *   updateExternalConnection: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<currentConnectionId>", newConnectionId: "<newConnectionId>" }],
+   * });
+   *
+   * // Federated: remove a non-primary source (its join is removed with it)
+   * await entities.updateById(<id>, { removeExternalSources: [{ sourceObjectName: "<relatedObjectName>", sourceConnectionId: "<relatedConnectionId>" }] });
    * ```
    * @experimental
    */
@@ -1496,7 +1599,7 @@ export interface EntityMethods {
   /**
    * Updates this entity — schema and/or metadata.
    *
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, `updateSourceJoin`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, `updateExternalConnection`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    * @example
    * ```typescript

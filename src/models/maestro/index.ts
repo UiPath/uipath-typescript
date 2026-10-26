@@ -20,6 +20,9 @@ export * from './cases.models';
 export * from './case-instances.types';
 export * from './case-instances.models';
 
+// Case app types and models
+export * from './case-app.types';
+
 // Business app types and models
 export * from './business-apps.types';
 export * from './business-apps.models';

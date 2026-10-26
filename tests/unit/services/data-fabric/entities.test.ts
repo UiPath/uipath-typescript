@@ -36,8 +36,12 @@ import type {
   EntityUpdateByIdOptions,
   EntityGetRecordByNameOptions,
   EntityRef,
+  EntityCloneRequest,
 } from "../../../../src/models/data-fabric/entities.types";
 import {
+  EntityCloneScopeType,
+  EntityCloneMode,
+  EntityCloneJobState,
   EntityFieldDataType,
   EntityAggregateFunction,
   EntityHavingOperator,
@@ -60,8 +64,7 @@ import {
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
 import { OVERRIDE_TEST_CONSTANTS } from "../../../utils/constants/overrides";
-import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
-import { DATA_FABRIC_TENANT_FOLDER_ID } from "../../../../src/utils/constants/endpoints/data-fabric";
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from "../../../../src/utils/constants/endpoints";
 import { ValidationError } from "../../../../src/core/errors";
 import { SqlFieldType, FieldSchemaPayload, EntityClassId } from "@/models/data-fabric/entities.internal-types";
 
@@ -83,6 +86,8 @@ vi.mock(
 );
 
 // ===== TEST SUITE =====
+const nameOf = (s: { externalObjectDetail?: { externalObjectName?: string } }) => s.externalObjectDetail?.externalObjectName;
+
 describe("EntityService Unit Tests", () => {
   let entityService: EntityService;
   let mockApiClient: any;
@@ -360,10 +365,10 @@ describe("EntityService Unit Tests", () => {
         expect(typeof entity.getAllRecords).toBe("function");
       });
 
-      // Verify the API call — default tenant-only via v1 endpoint
+      // Verify the API call — default tenant-only via the tenant-marker folder key
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        { headers: {} },
+        { headers: { "X-UIPATH-FolderKey": DATA_FABRIC_TENANT_FOLDER_ID } },
       );
 
       expect(result[0].fields).toBeDefined();
@@ -419,10 +424,10 @@ describe("EntityService Unit Tests", () => {
         });
       });
 
-      // Verify the API call — default tenant-only via v1 endpoint
+      // Verify the API call — default tenant-only via the tenant-marker folder key
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        { headers: {} },
+        { headers: { "X-UIPATH-FolderKey": DATA_FABRIC_TENANT_FOLDER_ID } },
       );
     });
 
@@ -435,32 +440,21 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v3 endpoint and pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
         { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
-    it("should call the v3 endpoint when includeFolderEntities is true (cross-scope)", async () => {
+    it("should send no folder header when includeFolderEntities is true (cross-scope)", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ includeFolderEntities: true });
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
-        { headers: {} },
-      );
-    });
-
-    it("should call the v1 endpoint when includeFolderEntities is false (tenant-only)", async () => {
-      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
-
-      await entityService.getAll({ includeFolderEntities: false });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
@@ -468,7 +462,18 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v3 endpoint with the header when both folderKey and includeFolderEntities are provided", async () => {
+    it("should send the tenant-marker folder key when includeFolderEntities is false (tenant-only)", async () => {
+      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
+
+      await entityService.getAll({ includeFolderEntities: false });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        { headers: { "X-UIPATH-FolderKey": DATA_FABRIC_TENANT_FOLDER_ID } },
+      );
+    });
+
+    it("should prefer folderKey when both folderKey and includeFolderEntities are provided", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({
@@ -477,7 +482,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
         { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
@@ -4439,6 +4444,32 @@ describe("EntityService Unit Tests", () => {
         mockApiClient.post.mockResolvedValue(undefined);
       });
 
+      const contactSource = {
+        externalConnectionDetail: { connectionId: "conn-sf", elementInstanceId: 357401, folderKey: "folder-sf", connectorKey: "uipath-salesforce-sfdc", connectorName: "Salesforce" },
+        externalObjectDetail: { externalObjectName: "Contact", primaryKey: "Id", method: "{}" },
+        fields: [
+          { field: { name: "ContactName", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "Name", externalFieldType: "string", directionType: DataDirectionType.ReadOnly } },
+        ],
+      };
+      const accountToContact = {
+        sourceObjectName: "Account",
+        sourceJoinField: "Id",
+        sourceObjectConnectionId: "conn-sf",
+        joinType: JoinType.LeftJoin,
+        relatedSourceObjectName: "Contact",
+        relatedSourceJoinField: "AccountId",
+        relatedSourceObjectConnectionId: "conn-sf",
+      };
+      const accountToInvoice = {
+        sourceObjectName: "Account",
+        sourceJoinField: "Id",
+        sourceObjectConnectionId: "conn-sf",
+        joinType: JoinType.LeftJoin,
+        relatedSourceObjectName: "Invoice",
+        relatedSourceJoinField: "invoiceId",
+        relatedSourceObjectConnectionId: "conn-native",
+      };
+
       it("should preserve external sources and translate joins when updating native fields (bug fix: don't drop joins)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{ name: "note", type: EntityFieldDataType.STRING }],
@@ -4465,84 +4496,147 @@ describe("EntityService Unit Tests", () => {
         ]);
       });
 
-      it("should append a join via addSourceJoins (existing join preserved)", async () => {
+      it("should add a source together with its join (existing join preserved)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addSourceJoins: [
-            {
-              sourceObjectName: "Account",
-              sourceJoinField: "OwnerId",
-              sourceObjectConnectionId: "conn-sf",
-              joinType: JoinType.LeftJoin,
-              relatedSourceObjectName: "Invoice",
-              relatedSourceJoinField: "ownerId",
-              relatedSourceObjectConnectionId: "conn-native",
-            },
-          ],
+          addExternalSources: [contactSource],
+          addSourceJoins: [accountToContact],
         });
 
         const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
-        expect(def.sourceJoinConditionDetails).toHaveLength(2);
-        expect(def.sourceJoinConditionDetails[0].sourceJoinField).toBe("Id");
-        expect(def.sourceJoinConditionDetails[1].sourceJoinField).toBe("OwnerId");
-      });
-
-      it("should add a new external source via addExternalSources", async () => {
-        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addExternalSources: [
-            {
-              externalConnectionDetail: { connectionId: "conn-sf", elementInstanceId: 357401, folderKey: "folder-sf", connectorKey: "uipath-salesforce-sfdc", connectorName: "Salesforce" },
-              externalObjectDetail: { externalObjectName: "Contact", primaryKey: "Id", method: "{}" },
-              fields: [
-                { field: { name: "ContactName", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "Name", externalFieldType: "string", directionType: DataDirectionType.ReadOnly } },
-              ],
-            },
-          ],
-        });
-
-        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
-        expect(def.externalFields).toHaveLength(3);
-        expect(def.externalFields[2].externalObjectDetail.externalObjectName).toBe("Contact");
+        expect(def.externalFields.map(nameOf)).toEqual(["Account", "Invoice", "Contact"]);
         expect(def.externalFields[2].fields[0].fieldDefinition.name).toBe("ContactName");
+        expect(def.sourceJoinConditionDetails).toHaveLength(2);
+        expect(def.sourceJoinConditionDetails[0].relatedSourceObjectName).toBe("Invoice");
+        expect(def.sourceJoinConditionDetails[1].relatedSourceObjectName).toBe("Contact");
       });
 
-      it("should remove a field from a source", async () => {
+      it("should replace a join-key field in one call, re-supplying the joins the removal dropped", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          removeFieldsFromSource: [{ sourceObjectName: "Account", fieldNames: ["IdField"] }],
+          removeExternalFields: [{ sourceObjectName: "Invoice", sourceConnectionId: "conn-native", fieldNames: ["invoiceId"] }],
+          addExternalFields: [{
+            sourceObjectName: "Invoice",
+            sourceConnectionId: "conn-native",
+            fields: [{ field: { name: "invoiceKey", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "invoiceId", externalFieldType: "text", directionType: DataDirectionType.ReadOnly } }],
+          }],
+          replaceSourceJoins: [accountToInvoice],
         });
 
         const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
-        const account = def.externalFields.find((s: { externalObjectDetail?: { externalObjectName?: string } }) => s.externalObjectDetail?.externalObjectName === "Account");
-        expect(account.fields).toHaveLength(0);
+        const invoice = def.externalFields.find((s: { externalObjectDetail?: { externalObjectName?: string } }) => nameOf(s) === "Invoice");
+        expect(invoice.fields).toHaveLength(1);
+        expect(invoice.fields[0].fieldDefinition.name).toBe("invoiceKey");
+        expect(def.sourceJoinConditionDetails).toEqual([accountToInvoice]);
+      });
+
+      it("should drop a join when its key field is removed (join fields are external names, removal is by column name)", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          removeExternalFields: [{ sourceObjectName: "Account", sourceConnectionId: "conn-sf", fieldNames: ["IdField"] }],
+          addExternalFields: [{
+            sourceObjectName: "Account",
+            sourceConnectionId: "conn-sf",
+            fields: [{ field: { name: "AccountName", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "Name", directionType: DataDirectionType.ReadOnly } }],
+          }],
+        });
+
+        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+        expect(def.sourceJoinConditionDetails).toBeUndefined();
+      });
+
+      it("should keep a valid single-source entity when the primary source is removed", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          removeExternalSources: [{ sourceObjectName: "Account", sourceConnectionId: "conn-sf" }],
+        });
+
+        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+        expect(def.externalFields.map(nameOf)).toEqual(["Invoice"]);
+        expect(def.sourceJoinConditionDetails).toBeUndefined();
+      });
+
+      it("should change the primary source via replaceSourceJoins", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          replaceSourceJoins: [{
+            sourceObjectName: "Invoice",
+            sourceJoinField: "invoiceId",
+            sourceObjectConnectionId: "conn-native",
+            joinType: JoinType.LeftJoin,
+            relatedSourceObjectName: "Account",
+            relatedSourceJoinField: "Id",
+            relatedSourceObjectConnectionId: "conn-sf",
+          }],
+        });
+
+        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+        expect(def.sourceJoinConditionDetails).toHaveLength(1);
+        expect(def.sourceJoinConditionDetails[0].sourceObjectName).toBe("Invoice");
+        expect(def.sourceJoinConditionDetails[0].relatedSourceObjectName).toBe("Account");
+      });
+
+      it("should re-root a three-source entity in one call with a new source and a full join set", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          addExternalSources: [contactSource],
+          replaceSourceJoins: [
+            { ...accountToInvoice, sourceObjectName: "Invoice", sourceObjectConnectionId: "conn-native", sourceJoinField: "invoiceId", relatedSourceObjectName: "Account", relatedSourceObjectConnectionId: "conn-sf", relatedSourceJoinField: "Id" },
+            { ...accountToContact, sourceObjectName: "Invoice", sourceObjectConnectionId: "conn-native", sourceJoinField: "invoiceId" },
+          ],
+        });
+
+        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+        expect(def.sourceJoinConditionDetails.map((j: { sourceObjectName: string; relatedSourceObjectName: string }) => `${j.sourceObjectName}>${j.relatedSourceObjectName}`)).toEqual(["Invoice>Account", "Invoice>Contact"]);
+      });
+
+      it("should reject replaceSourceJoins combined with addSourceJoins or updateSourceJoin", async () => {
+        await expect(
+          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, { replaceSourceJoins: [accountToInvoice], addSourceJoins: [accountToInvoice] }),
+        ).rejects.toThrow(/cannot be combined with addSourceJoins or updateSourceJoin/);
+        await expect(
+          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+            replaceSourceJoins: [accountToInvoice],
+            updateSourceJoin: [{ sourceObjectName: "Account", sourceConnectionId: "conn-sf", relatedSourceObjectName: "Invoice", relatedSourceConnectionId: "conn-native", sourceJoinField: "X" }],
+          }),
+        ).rejects.toThrow(/cannot be combined with addSourceJoins or updateSourceJoin/);
+        expect(mockApiClient.post).not.toHaveBeenCalled();
+      });
+
+      it("should apply updateExternalConnection last, re-pointing joins passed in replaceSourceJoins", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          replaceSourceJoins: [accountToInvoice],
+          updateExternalConnection: [{ sourceObjectName: "Account", sourceConnectionId: "conn-sf", newConnectionId: "conn-sf2" }],
+        });
+
+        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+        expect(def.sourceJoinConditionDetails[0].sourceObjectConnectionId).toBe("conn-sf2");
       });
 
       it("should update an existing join in place via updateSourceJoin", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          updateSourceJoin: [{ sourceObjectName: "Account", relatedSourceObjectName: "Invoice", sourceJoinField: "AltKey" }],
+          updateSourceJoin: [{ sourceObjectName: "Account", sourceConnectionId: "conn-sf", relatedSourceObjectName: "Invoice", relatedSourceConnectionId: "conn-native", sourceJoinField: "AltKey" }],
         });
 
         const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
         expect(def.sourceJoinConditionDetails).toHaveLength(1);
         expect(def.sourceJoinConditionDetails[0].sourceJoinField).toBe("AltKey");
+        expect(def.sourceJoinConditionDetails[0].joinType).toBe(JoinType.LeftJoin);
         // Untouched fields on the join are preserved.
         expect(def.sourceJoinConditionDetails[0].relatedSourceJoinField).toBe("invoiceId");
       });
 
       it("should cascade-remove joins when a source is removed (a join can't outlive its source)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          removeExternalSources: ["Invoice"],
+          removeExternalSources: [{ sourceObjectName: "Invoice", sourceConnectionId: "conn-native" }],
         });
 
         const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
         expect(def.externalFields.map((s: { externalObjectDetail?: { externalObjectName?: string } }) => s.externalObjectDetail?.externalObjectName)).toEqual(["Account"]);
-        // The Account→Invoice join is dropped automatically — no separate removeSourceJoins needed.
+        // The Account→Invoice join is dropped with the source.
         expect(def.sourceJoinConditionDetails).toBeUndefined();
       });
 
-      it("should add a field to an existing source via addFieldsToSource", async () => {
+      it("should add a field to an existing source via addExternalFields", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFieldsToSource: [
+          addExternalFields: [
             {
               sourceObjectName: "Account",
+              sourceConnectionId: "conn-sf",
               fields: [
                 {
                   field: { name: "Phone", type: EntityFieldDataType.STRING },
@@ -4560,27 +4654,13 @@ describe("EntityService Unit Tests", () => {
         expect(names).toContain("Phone");
       });
 
-      it("should update a field's mapping in place via updateExternalFieldMapping", async () => {
-        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          updateExternalFieldMapping: [
-            { sourceObjectName: "Account", fieldName: "IdField", mapping: { sortable: false } },
-          ],
-        });
-
-        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
-        const account = def.externalFields.find((s: { externalObjectDetail?: { externalObjectName?: string } }) => s.externalObjectDetail?.externalObjectName === "Account");
-        const idField = account.fields.find((f: { fieldDefinition?: { name?: string } }) => f.fieldDefinition?.name === "IdField");
-        // Existing mapping keys are preserved; only the supplied key changes.
-        expect(idField.externalFieldMappingDetail.sortable).toBe(false);
-        expect(idField.externalFieldMappingDetail.externalFieldName).toBe("Id");
-      });
-
-      it("should throw when addFieldsToSource targets a source that doesn't exist", async () => {
+      it("should throw when addExternalFields targets a source that doesn't exist", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFieldsToSource: [
+            addExternalFields: [
               {
                 sourceObjectName: "Nonexistent",
+                sourceConnectionId: "conn-x",
                 fields: [
                   {
                     field: { name: "X", type: EntityFieldDataType.STRING },
@@ -4590,48 +4670,156 @@ describe("EntityService Unit Tests", () => {
               },
             ],
           }),
-        ).rejects.toThrow(/source 'Nonexistent' not found/);
+        ).rejects.toThrow(/no source 'Nonexistent' with connection 'conn-x'/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
       });
 
-      it("should throw when removeFieldsFromSource targets a source that doesn't exist", async () => {
+      it("should throw when removeExternalFields targets a source that doesn't exist", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            removeFieldsFromSource: [{ sourceObjectName: "Nonexistent", fieldNames: ["X"] }],
+            removeExternalFields: [{ sourceObjectName: "Nonexistent", sourceConnectionId: "conn-x", fieldNames: ["X"] }],
           }),
-        ).rejects.toThrow(/source 'Nonexistent' not found/);
-        expect(mockApiClient.post).not.toHaveBeenCalled();
-      });
-
-      it("should throw when updateExternalFieldMapping targets a field that doesn't exist", async () => {
-        await expect(
-          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            updateExternalFieldMapping: [
-              { sourceObjectName: "Account", fieldName: "Nonexistent", mapping: { sortable: true } },
-            ],
-          }),
-        ).rejects.toThrow(/field 'Nonexistent' not found on source 'Account'/);
-        expect(mockApiClient.post).not.toHaveBeenCalled();
-      });
-
-      it("should throw a source-not-found (not field-not-found) error when updateExternalFieldMapping targets a missing source", async () => {
-        await expect(
-          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            updateExternalFieldMapping: [
-              { sourceObjectName: "Nonexistent", fieldName: "AnyField", mapping: { sortable: true } },
-            ],
-          }),
-        ).rejects.toThrow(/source 'Nonexistent' not found/);
+        ).rejects.toThrow(/no source 'Nonexistent' with connection 'conn-x'/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
       });
 
       it("should throw when updateSourceJoin targets a join that doesn't exist", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            updateSourceJoin: [{ sourceObjectName: "Account", relatedSourceObjectName: "Nonexistent", sourceJoinField: "X" }],
+            updateSourceJoin: [{ sourceObjectName: "Account", sourceConnectionId: "conn-sf", relatedSourceObjectName: "Nonexistent", relatedSourceConnectionId: "conn-x", sourceJoinField: "X" }],
           }),
-        ).rejects.toThrow(/no join between 'Account' and 'Nonexistent'/);
+        ).rejects.toThrow(/no join between 'Account'/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
+      });
+
+      it("should send isPrimarySource false on every source so the backend derives the primary from the joins", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          updateSourceJoin: [{ sourceObjectName: "Account", sourceConnectionId: "conn-sf", relatedSourceObjectName: "Invoice", relatedSourceConnectionId: "conn-native", sourceJoinField: "AltKey" }],
+        });
+
+        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+        for (const s of def.externalFields) {
+          expect(s.externalObjectDetail.isPrimarySource).toBe(false);
+        }
+        expect(federatedRaw.externalFields[0].externalObjectDetail.isPrimarySource).toBe(true);
+      });
+
+      it("should replace a connector source's connection via updateExternalConnection", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          updateExternalConnection: [
+            {
+              sourceObjectName: "Account",
+              sourceConnectionId: "conn-sf",
+              newConnectionId: "conn-sf2",
+              newElementInstanceId: 777,
+              newFolderKey: "fk-2",
+              newConnectionName: "Salesforce 2",
+            },
+          ],
+        });
+
+        const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+        const account = def.externalFields.find((s: { externalObjectDetail?: { externalObjectName?: string } }) => s.externalObjectDetail?.externalObjectName === "Account");
+        expect(account.externalConnectionDetail.connectionId).toBe("conn-sf2");
+        expect(account.externalConnectionDetail.elementInstanceId).toBe(777);
+        expect(account.externalConnectionDetail.folderKey).toBe("fk-2");
+        expect(account.externalConnectionDetail.connectionName).toBe("Salesforce 2");
+        // The join's Account-side connection id is re-pointed at the new connection.
+        expect(def.sourceJoinConditionDetails[0].sourceObjectConnectionId).toBe("conn-sf2");
+      });
+
+      it("should throw when updateExternalConnection targets a native source", async () => {
+        await expect(
+          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+            updateExternalConnection: [
+              { sourceObjectName: "Invoice", sourceConnectionId: "conn-native", newConnectionId: "x" },
+            ],
+          }),
+        ).rejects.toThrow(/native \(entity-backed\) source/);
+        expect(mockApiClient.post).not.toHaveBeenCalled();
+      });
+
+
+      it("should throw when updateExternalConnection targets a source that doesn't exist", async () => {
+        await expect(
+          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+            updateExternalConnection: [
+              { sourceObjectName: "Nonexistent", sourceConnectionId: "conn-x", newConnectionId: "x" },
+            ],
+          }),
+        ).rejects.toThrow(/no source 'Nonexistent' with connection 'conn-x'/);
+        expect(mockApiClient.post).not.toHaveBeenCalled();
+      });
+
+      describe("duplicate object names (same name, different connections)", () => {
+        // A valid federated entity CAN have two sources with the same object name on
+        // different connections — the backend keys sources by (connectionId, objectName).
+        // So a delta must identify the source by BOTH, not by name alone.
+        const dupRaw = {
+          id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          name: "TwoAccounts",
+          displayName: "Two Accounts",
+          description: "",
+          isRbacEnabled: false,
+          isInsightsEnabled: false,
+          entityClass: EntityClass.Federated,
+          fields: [],
+          externalFields: [
+            {
+              externalObjectDetail: { id: "obj-a", externalObjectName: "Account", primaryKey: "Id", isPrimarySource: true },
+              externalConnectionDetail: { connectionId: "conn-a", elementInstanceId: 1, connectorKey: "uipath-salesforce-sfdc" },
+              fields: [{ fieldDefinition: { name: "AId", displayName: "AId", sqlType: { name: "NVARCHAR", lengthLimit: 512 } }, externalFieldMappingDetail: { externalFieldName: "Id", externalFieldType: "string", directionType: DataDirectionType.ReadOnly } }],
+            },
+            {
+              externalObjectDetail: { id: "obj-b", externalObjectName: "Account", primaryKey: "Id", isPrimarySource: false },
+              externalConnectionDetail: { connectionId: "conn-b", elementInstanceId: 2, connectorKey: "uipath-salesforce-sfdc" },
+              fields: [{ fieldDefinition: { name: "BId", displayName: "BId", sqlType: { name: "NVARCHAR", lengthLimit: 512 } }, externalFieldMappingDetail: { externalFieldName: "Id", externalFieldType: "string", directionType: DataDirectionType.ReadOnly } }],
+            },
+          ],
+          sourceJoinCriterias: [
+            { id: "j1", entityId: ENTITY_TEST_CONSTANTS.ENTITY_ID, sourceObjectId: "obj-a", joinFieldName: "Id", joinType: JoinType.LeftJoin, relatedSourceObjectId: "obj-b", relatedSourceFieldName: "Id" },
+          ],
+        };
+
+        it("adds fields to the source matching (objectName, connectionId), not just the name", async () => {
+          mockApiClient.get.mockResolvedValueOnce(dupRaw);
+          await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+            addExternalFields: [
+              {
+                sourceObjectName: "Account",
+                sourceConnectionId: "conn-b",
+                fields: [{ field: { name: "BName", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "Name", directionType: DataDirectionType.ReadOnly } }],
+              },
+            ],
+          });
+          const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+          const namesFor = (connId: string) => def.externalFields
+            .find((s: { externalConnectionDetail?: { connectionId?: string } }) => s.externalConnectionDetail?.connectionId === connId)
+            .fields.map((f: { fieldDefinition?: { name?: string } }) => f.fieldDefinition?.name);
+          // Only the conn-b Account got the new field; conn-a is untouched.
+          expect(namesFor("conn-b")).toContain("BName");
+          expect(namesFor("conn-a")).not.toContain("BName");
+        });
+
+        it("removes only the targeted duplicate, keeping the same-named source on the other connection", async () => {
+          mockApiClient.get.mockResolvedValueOnce(dupRaw);
+          await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+            removeExternalSources: [{ sourceObjectName: "Account", sourceConnectionId: "conn-b" }],
+          });
+          const def = mockApiClient.post.mock.calls[0][1].entityDefinition;
+          expect(def.externalFields).toHaveLength(1);
+          expect(def.externalFields[0].externalConnectionDetail.connectionId).toBe("conn-a");
+        });
+
+        it("throws when the (objectName, connectionId) pair matches no source", async () => {
+          mockApiClient.get.mockResolvedValueOnce(dupRaw);
+          await expect(
+            entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+              removeExternalFields: [{ sourceObjectName: "Account", sourceConnectionId: "conn-zzz", fieldNames: ["AId"] }],
+            }),
+          ).rejects.toThrow(/no source 'Account' with connection 'conn-zzz'/);
+          expect(mockApiClient.post).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -5444,6 +5632,237 @@ describe("EntityService Unit Tests", () => {
         }),
       ).rejects.toThrow(/Cannot update field\(s\).*non-existent-id/);
       expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("clone", () => {
+    const TARGET_FOLDER = "b1b1b1b1-0000-0000-0000-000000000001";
+    const SOURCE_FOLDER = "c1c1c1c1-0000-0000-0000-000000000001";
+    const ENTITY_A = "e1e1e1e1-0000-0000-0000-000000000001";
+    const JOB_ID = "a1a1a1a1-0000-0000-0000-000000000001";
+
+    const cloneRequest: EntityCloneRequest = {
+      source: { scopeType: EntityCloneScopeType.Tenant },
+      target: { scopeType: EntityCloneScopeType.Folder, folderKey: TARGET_FOLDER },
+      entityIds: [ENTITY_A],
+      options: { mode: EntityCloneMode.SchemaAndData },
+    };
+
+    // Wire shape as returned by the API (createdAt); the SDK renames it to createdTime.
+    const queuedJob = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Queued,
+      createdAt: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    const queuedJobResult = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Queued,
+      createdTime: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    it("starts a clone job and returns the job descriptor with createdTime", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      const result = await entityService.clone(cloneRequest);
+
+      expect(result).toEqual(queuedJobResult);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.stringContaining("/api/v3/clone/entities"),
+        expect.objectContaining({
+          entityIds: [ENTITY_A],
+          target: { scopeType: EntityCloneScopeType.Folder, folderId: TARGET_FOLDER },
+          options: { mode: EntityCloneMode.SchemaAndData },
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it("defaults mode to SchemaAndData when options are omitted", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+      const { options: _options, ...withoutOptions } = cloneRequest;
+
+      await entityService.clone(withoutOptions);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ options: { mode: EntityCloneMode.SchemaAndData } }),
+        expect.any(Object),
+      );
+    });
+
+    it("forwards a caller-supplied DataOnly mode", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone({ ...cloneRequest, options: { mode: EntityCloneMode.DataOnly } });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ options: { mode: EntityCloneMode.DataOnly } }),
+        expect.any(Object),
+      );
+    });
+
+    it("rejects when the target is not folder-scoped", async () => {
+      await expect(
+        entityService.clone({
+          ...cloneRequest,
+          target: { scopeType: EntityCloneScopeType.Tenant, folderKey: TARGET_FOLDER } as any,
+        }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("rejects when the target folderKey is missing", async () => {
+      await expect(
+        entityService.clone({
+          ...cloneRequest,
+          target: { scopeType: EntityCloneScopeType.Folder } as any,
+        }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("rejects when the target folderKey is whitespace-only", async () => {
+      await expect(
+        entityService.clone({
+          ...cloneRequest,
+          target: { scopeType: EntityCloneScopeType.Folder, folderKey: "   " },
+        }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("remaps the target folderKey to the wire folderId, trimmed, when it has surrounding whitespace", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone({
+        ...cloneRequest,
+        target: { scopeType: EntityCloneScopeType.Folder, folderKey: `  ${TARGET_FOLDER}  ` },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          target: { scopeType: EntityCloneScopeType.Folder, folderId: TARGET_FOLDER },
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it("remaps a folder-scoped source folderKey to the wire folderId, trimmed", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone({
+        ...cloneRequest,
+        source: { scopeType: EntityCloneScopeType.Folder, folderKey: `  ${SOURCE_FOLDER}  ` },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          source: { scopeType: EntityCloneScopeType.Folder, folderId: SOURCE_FOLDER },
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it("omits folderId from a tenant-scoped source on the wire", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone(cloneRequest);
+
+      const [, sentPayload] = mockApiClient.post.mock.calls[0];
+      expect(sentPayload.source).toEqual({ scopeType: EntityCloneScopeType.Tenant });
+      expect(sentPayload.source).not.toHaveProperty("folderId");
+    });
+
+    it("rejects when no entity ids are supplied", async () => {
+      await expect(
+        entityService.clone({ ...cloneRequest, entityIds: [] }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("propagates API errors", async () => {
+      mockApiClient.post.mockRejectedValue(
+        createMockError(TEST_CONSTANTS.ERROR_MESSAGE),
+      );
+
+      await expect(
+        entityService.clone(cloneRequest),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("getCloneJob", () => {
+    const JOB_ID = "a1a1a1a1-0000-0000-0000-000000000001";
+
+    // Wire shape as returned by the API (createdAt); the SDK renames it to createdTime.
+    const doneJob = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Done,
+      createdAt: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    const doneJobResult = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Done,
+      createdTime: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    it("fetches a clone job status by id and returns createdTime", async () => {
+      mockApiClient.get.mockResolvedValue(doneJob);
+
+      const result = await entityService.getCloneJob(JOB_ID);
+
+      expect(result).toEqual(doneJobResult);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        expect.stringContaining(`/api/v3/clone/entities/${JOB_ID}`),
+        expect.any(Object),
+      );
+    });
+
+    it("rejects when the job id is empty", async () => {
+      await expect(
+        entityService.getCloneJob("  "),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it("sends the job id trimmed when it has surrounding whitespace", async () => {
+      mockApiClient.get.mockResolvedValue(doneJob);
+
+      await entityService.getCloneJob(`  ${JOB_ID}  `);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        expect.stringContaining(`/api/v3/clone/entities/${JOB_ID}`),
+        expect.any(Object),
+      );
+      const [sentUrl] = mockApiClient.get.mock.calls[0];
+      expect(sentUrl).not.toContain(" ");
+    });
+
+    it("propagates API errors", async () => {
+      mockApiClient.get.mockRejectedValue(
+        createMockError(TEST_CONSTANTS.ERROR_MESSAGE),
+      );
+
+      await expect(
+        entityService.getCloneJob(JOB_ID),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

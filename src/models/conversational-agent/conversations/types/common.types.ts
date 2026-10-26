@@ -21,6 +21,18 @@ export enum InterruptType {
   ToolCallConfirmation = 'uipath_cas_tool_call_confirmation'
 }
 
+/**
+ * Why a conversation ended.
+ */
+export enum ConversationEndReason {
+  /** The conversation reached its natural end. */
+  Completed = 'completed',
+  /** The conversation ended because of an error. */
+  Failed = 'failed',
+  /** The conversation was stopped before its natural end. */
+  Cancelled = 'cancelled'
+}
+
 
 /**
  * Base interface for citation sources.

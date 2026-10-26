@@ -29,7 +29,7 @@ export interface CodedFunctionPlatform {
 export interface CodedFunctionRobot {
   /** Platform-issued token the SDK uses to authenticate its calls. */
   accessToken: string | null;
-  /** Serverless robot key. The SDK ignores it. */
+  /** Serverless robot key, sent where Orchestrator asks which robot is calling. */
   key?: string | null;
 }
 
@@ -93,4 +93,12 @@ export function configFromFunctionContext(
  */
 export function folderKeyFromFunctionContext(context: CodedFunctionContext): string | undefined {
   return nonBlank(context.platform?.folderKey);
+}
+
+/**
+ * The serverless robot's key off a coded-function context, or undefined when it carries none
+ * (null, empty or whitespace — Orchestrator must never be sent a blank robot identifier).
+ */
+export function robotKeyFromFunctionContext(context: CodedFunctionContext): string | undefined {
+  return nonBlank(context.robot?.key);
 }

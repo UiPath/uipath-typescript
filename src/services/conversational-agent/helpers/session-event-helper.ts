@@ -20,6 +20,7 @@ import type {
   AnyErrorStartHandlerArgs,
   AsyncToolCallStartHandler,
   AsyncToolCallStartHandlerAsync,
+  ConversationEndHandler,
   ErrorEndEventOptions,
   ErrorStartEventOptions,
   ExchangeStartEventOptions,
@@ -51,12 +52,14 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
 > implements SessionStream {
 
   protected readonly _exchangeMap = new Map<string, ExchangeEventHelperImpl>();
+  protected readonly _removedExchangeIds = new Set<string>();
   protected readonly _inputStreamMap = new Map<string, AsyncInputStreamEventHelperImpl>();
   protected readonly _exchangeStartHandlers = new Array<ExchangeStartHandler>();
   protected readonly _inputStreamStartHandlers = new Array<InputStreamStartHandler>();
   protected readonly _asyncToolCallStartHandlers = new Array<AsyncToolCallStartHandler>();
   protected readonly _asyncToolCallMap = new Map<string, AsyncToolCallEventHelperImpl>();
   protected readonly _labelUpdatedHandlers = new Array<LabelUpdatedHandler>();
+  protected readonly _conversationEndHandlers = new Array<ConversationEndHandler>();
   protected readonly _sessionStartedHandlers = new Array<SessionStartedHandler>();
   protected readonly _sessionEndingHandlers = new Array<SessionEndingHandler>();
   protected readonly _sessionEndHandlers = new Array<SessionEndHandler>();
@@ -362,6 +365,19 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   }
 
   /**
+   * Registers a handler that will be called when the conversation is permanently ended. Fires
+   * independently of the session lifecycle — the session may still receive a later end session event.
+   * @returns Cleanup function to remove the handler.
+   */
+  public onConversationEnd(cb: ConversationEndHandler) {
+    this._conversationEndHandlers.push(cb);
+    return () => {
+      const index = this._conversationEndHandlers.indexOf(cb);
+      if (index >= 0) this._conversationEndHandlers.splice(index, 1);
+    };
+  }
+
+  /**
    * Sends an error start event for this conversation.
    */
   public sendErrorStart(args: ErrorStartEventOptions) {
@@ -509,16 +525,22 @@ export class SessionEventHelperImpl extends SessionEventHelper {
     if (conversationEvent.exchange) {
       let exchangeHelper = this._exchangeMap.get(conversationEvent.exchange.exchangeId);
       if (!exchangeHelper) {
-        exchangeHelper = new ExchangeEventHelperImpl(this, conversationEvent.exchange.exchangeId, conversationEvent.exchange.startExchange);
-        this._exchangeMap.set(conversationEvent.exchange.exchangeId, exchangeHelper);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._exchangeStartHandlers.forEach(cb => cb(exchangeHelper!));
-      } else if (conversationEvent.exchange.startExchange) {
-        // when session.echo is enabled, and startExchange is used, the helper will already be in the map
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._exchangeStartHandlers.forEach(cb => cb(exchangeHelper!));
+        // Drop late events for a removed exchange (e.g. ended with sendExchangeEnd) instead of recreating it.
+        if (!this._removedExchangeIds.has(conversationEvent.exchange.exchangeId)) {
+          exchangeHelper = new ExchangeEventHelperImpl(this, conversationEvent.exchange.exchangeId, conversationEvent.exchange.startExchange);
+          this._exchangeMap.set(conversationEvent.exchange.exchangeId, exchangeHelper);
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          this._exchangeStartHandlers.forEach(cb => cb(exchangeHelper!));
+          exchangeHelper.dispatch(conversationEvent.exchange);
+        }
+      } else {
+        if (conversationEvent.exchange.startExchange) {
+          // when session.echo is enabled, and startExchange is used, the helper will already be in the map
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          this._exchangeStartHandlers.forEach(cb => cb(exchangeHelper!));
+        }
+        exchangeHelper.dispatch(conversationEvent.exchange);
       }
-      exchangeHelper.dispatch(conversationEvent.exchange);
     }
 
     if (conversationEvent.asyncInputStream) {
@@ -569,6 +591,11 @@ export class SessionEventHelperImpl extends SessionEventHelper {
       this._labelUpdatedHandlers.forEach(cb => cb(conversationEvent.labelUpdated!));
     }
 
+    if (conversationEvent.endConversation) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this._conversationEndHandlers.forEach(cb => cb(conversationEvent.endConversation!));
+    }
+
     if (conversationEvent.endSession) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -583,6 +610,7 @@ export class SessionEventHelperImpl extends SessionEventHelper {
   public removeExchange(helper: ExchangeEventHelperImpl) {
     if (this._exchangeMap.get(helper.exchangeId) === helper) {
       this._exchangeMap.delete(helper.exchangeId);
+      this._removedExchangeIds.add(helper.exchangeId);
     }
   }
 

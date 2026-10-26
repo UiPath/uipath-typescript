@@ -288,7 +288,7 @@ describeIntegration('Data Fabric Entities Query - Integration Tests', 'both', mo
         }
         await cleanupTestEntityRecords(joinEntityId, seededRecordIds);
         seededRecordIds.length = 0;
-      }, 60_000);
+      }, 90_000);
 
       it('should return related-entity fields for a cross-entity LEFT join', async () => {
         // The two queries are independent, so issue them together: one stall

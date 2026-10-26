@@ -4,6 +4,7 @@
 
 import type {
   CitationSource,
+  ConversationEndReason,
   ExternalValue,
   JSONValue,
   MessageRole,
@@ -484,6 +485,20 @@ export interface LabelUpdatedEvent {
 }
 
 /**
+ * Signals that the conversation has ended. After this event the conversation accepts no new input.
+ */
+export interface ConversationEndEvent {
+  /**
+   * Why the conversation ended.
+   */
+  reason?: ConversationEndReason;
+  /**
+   * Optional metadata pertaining to the end of the conversation.
+   */
+  metaData?: MetaData;
+}
+
+/**
  * Encapsulates the data related to a tool call event.
  */
 export interface ToolCallEvent {
@@ -793,6 +808,10 @@ export interface ConversationEvent {
    * Indicates that the conversation's label has been updated.
    */
   labelUpdated?: LabelUpdatedEvent;
+  /**
+   * Sent by the service when the conversation has ended.
+   */
+  endConversation?: ConversationEndEvent;
   /**
    * Allows additional events to be sent in the context of the enclosing event stream.
    */

@@ -326,13 +326,12 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       throw new ValidationError({ message: 'queue id or name is required for startTransaction' });
     }
 
-    // RobotIdentifier is deliberately not exposed: the API defines it as the key
-    // of the robot that sent the request, so only a robot can supply one, and a
-    // robot session already identifies itself through its token.
+    // A coded function's token alone gets 204 every time. Orchestrator only
+    // hands out the item when told which robot is asking, so send its key.
     const response = await this.post<Record<string, unknown> | undefined>(
       QUEUE_ENDPOINTS.START_TRANSACTION,
       {
-        transactionData: { Name: queueName }
+        transactionData: { Name: queueName, RobotIdentifier: this.config.robotKey }
       },
       { headers }
     );

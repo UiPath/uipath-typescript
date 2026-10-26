@@ -235,6 +235,15 @@ describe('ExchangeEventHelper', () => {
 
       expect(() => exchange.sendExchangeEnd()).toThrow(ConversationEventInvalidOperationError);
     });
+
+    it('should remove the exchange from its session', () => {
+      const { session, exchange } = createExchange();
+
+      exchange.sendExchangeEnd();
+
+      expect(exchange.deleted).toBe(true);
+      expect(session.getExchange(EXCHANGE_ID)).toBeUndefined();
+    });
   });
 
   describe('sendMetaEvent', () => {

@@ -1,5 +1,8 @@
 import { ExecutionContext } from '../context/execution';
-import { isBrowser, isInActionCenter } from '../../utils/platform';
+import { isInActionCenter } from '../../utils/platform';
+import { SessionStore } from '../../utils/storage/session-store';
+import { NO_OP_STORE } from '../../utils/storage/no-op-store';
+import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { getExpiryMs } from './token-expiry';
@@ -23,6 +26,8 @@ export class TokenManager {
   private refreshPromise: Promise<AuthToken> | null = null;
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
+  private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
+  private readonly store: KeyValueStore = SessionStore.open() ?? NO_OP_STORE;
 
   /**
    * Creates a new TokenManager instance
@@ -124,79 +129,53 @@ export class TokenManager {
    */
   public loadFromStorage(): boolean {
     // Only OAuth tokens are stored in session storage
-    if (!isBrowser || !this.isOAuth) {
+    if (!this.isOAuth) {
       return false;
     }
     
-    try {
-      const storedToken = sessionStorage.getItem(this._getStorageKey());
-      if (!storedToken) {
-        return false;
-      }
-      
-      const tokenInfo = this._parseTokenInfo(storedToken);
-      if (!tokenInfo) {
-        // Invalid token format, clear it
-        sessionStorage.removeItem(this._getStorageKey());
-        return false;
-      }
-      
-      // Check if token is expired
-      if (this.isTokenExpired(tokenInfo)) {
-        // Token expired, clear it
-        sessionStorage.removeItem(this._getStorageKey());
-        return false;
-      }
-      
-      // Valid token found, use it
-      this.currentToken = tokenInfo;
-      this._updateExecutionContext(tokenInfo);
-      return true;
-    } catch (error) {
-      console.warn('Failed to load token from session storage', error);
+    const tokenInfo = this._parseTokenInfo(this.store.read(this._getStorageKey()));
+    if (!tokenInfo || this.isTokenExpired(tokenInfo)) {
+      this.store.remove(this._getStorageKey());
       return false;
     }
+    
+    this.currentToken = tokenInfo;
+    this._updateExecutionContext(tokenInfo);
+    return true;
   }
   
   /**
    * Parse and validate token info from storage
-   * @param storedToken JSON string from storage
+   * @param stored Value read from storage
    * @returns Valid TokenInfo or undefined if invalid
    */
-  private _parseTokenInfo(storedToken: string): TokenInfo | undefined {
-    try {
-      const parsed = JSON.parse(storedToken);
-      
-      // Basic validation
-      if (typeof parsed !== 'object' || !parsed) {
-        return undefined;
-      }
-      
-      if (typeof parsed.token !== 'string' || !parsed.token) {
-        return undefined;
-      }
-      
-      if (parsed.type !== 'secret' && parsed.type !== 'oauth') {
-        return undefined;
-      }
-      
-      const tokenInfo = parsed as TokenInfo;
-      
-      // Convert string date back to Date object
-      if (tokenInfo.expiresAt) {
-        tokenInfo.expiresAt = new Date(tokenInfo.expiresAt);
-        
-        // Verify it's a valid date
-        if (isNaN(tokenInfo.expiresAt.getTime())) {
-          return undefined;
-        }
-      }
-      
-      return tokenInfo;
-    } catch (error) {
-      console.warn('Failed to parse token info', error);
+  private _parseTokenInfo(stored: unknown): TokenInfo | undefined {
+    // Basic validation
+    if (typeof stored !== 'object' || !stored) {
       return undefined;
     }
+    
+    const parsed = stored as TokenInfo;
+    
+    if (typeof parsed.token !== 'string' || !parsed.token) {
+      return undefined;
+    }
+    
+    if (parsed.type !== 'secret' && parsed.type !== 'oauth') {
+      return undefined;
+    }
+    
+    // Convert string date back to Date object
+    if (parsed.expiresAt) {
+      parsed.expiresAt = new Date(parsed.expiresAt);
+      
+      // Verify it's a valid date
+      if (isNaN(parsed.expiresAt.getTime())) {
+        return undefined;
+      }
+    }
+    
+    return parsed;
   }
 
   /**
@@ -208,13 +187,8 @@ export class TokenManager {
     // Store token in execution context
     this._updateExecutionContext(tokenInfo);
     
-    // Store in session storage if in browser and this is an OAuth token
-    if (isBrowser && this.isOAuth) {
-      try {
-        sessionStorage.setItem(this._getStorageKey(), JSON.stringify(tokenInfo));
-      } catch (error) {
-        console.warn('Failed to store token in session storage', error);
-      }
+    if (this.isOAuth) {
+      this.store.write(this._getStorageKey(), tokenInfo);
     }
   }
 
@@ -264,28 +238,33 @@ export class TokenManager {
   }
 
   /**
+   * Registers a listener called with the current token, then whenever the
+   * token is set, loaded or cleared (with `undefined`).
+   */
+  onTokenChange(listener: (tokenInfo: TokenInfo | undefined) => void): void {
+    this.tokenChangeListeners.push(listener);
+    listener(this.currentToken);
+  }
+
+  /**
    * Clears the current token
    */
   clearToken(): void {
     this.currentToken = undefined;
-    this.executionContext.set('tokenInfo', undefined);
+    this._updateExecutionContext(undefined);
     
-    // Remove from session storage if this is an OAuth token
-    if (isBrowser && this.isOAuth) {
-      try {
-        sessionStorage.removeItem(this._getStorageKey());
-      } catch (error) {
-        console.warn('Failed to remove token from session storage', error);
-      }
+    if (this.isOAuth) {
+      this.store.remove(this._getStorageKey());
     }
   }
   
   /**
    * Updates execution context with token information
    */
-  private _updateExecutionContext(tokenInfo: TokenInfo): void {
+  private _updateExecutionContext(tokenInfo: TokenInfo | undefined): void {
     this.executionContext.set('tokenInfo', tokenInfo);
-    telemetryClient.setUserId(extractUserIdFromToken(tokenInfo.token));
+    if (tokenInfo) telemetryClient.setUserId(extractUserIdFromToken(tokenInfo.token));
+    this.tokenChangeListeners.forEach((listener) => listener(tokenInfo));
   }
 
   /**

@@ -14,6 +14,14 @@ permissions:
   contents: read
   pull-requests: write
 
+# One run per pull request. A push supersedes the run already in flight for the
+# same PR, so two legs of the same branch never share the dev tenant (they
+# rename the same fixture user and close each other's case instances).
+# weekly-coverage.yml keeps its own group and lets in-flight runs finish.
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   coverage:
     # Shared coverage pipeline (unit + integration + SonarCloud). The same

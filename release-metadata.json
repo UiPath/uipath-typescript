@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.7.2",
+  "sdkVersion": "1.8.2",
   "services": [
     {
       "name": "AgentMemory",
@@ -202,6 +202,10 @@
           "since": null
         },
         {
+          "name": "getAdhocTasksForCaseApp",
+          "since": "1.8.1"
+        },
+        {
           "name": "getAll",
           "since": null
         },
@@ -210,16 +214,32 @@
           "since": null
         },
         {
+          "name": "getCaseJsonForCaseApp",
+          "since": "1.8.1"
+        },
+        {
           "name": "getExecutionHistory",
           "since": null
+        },
+        {
+          "name": "getIncidentsForCaseApp",
+          "since": "1.8.1"
         },
         {
           "name": "getSlaSummary",
           "since": null
         },
         {
+          "name": "getSlaSummaryForCaseApp",
+          "since": "1.8.1"
+        },
+        {
           "name": "getStages",
           "since": null
+        },
+        {
+          "name": "getStagesForCaseApp",
+          "since": "1.8.1"
         },
         {
           "name": "getStagesSlaSummary",
@@ -242,8 +262,16 @@
           "since": null
         },
         {
+          "name": "selectStageForCaseApp",
+          "since": "1.8.1"
+        },
+        {
           "name": "sendMessage",
           "since": null
+        },
+        {
+          "name": "triggerAdhocTaskForCaseApp",
+          "since": "1.8.1"
         }
       ]
     },
@@ -366,7 +394,8 @@
         },
         {
           "name": "getAddConnectionUrl",
-          "since": "1.6.2"
+          "since": "1.6.2",
+          "deleted": "1.8.1"
         },
         {
           "name": "getAll",
@@ -386,7 +415,23 @@
         },
         {
           "name": "updateConnectionSelections",
-          "since": "1.6.2"
+          "since": "1.6.2",
+          "deleted": "1.8.1"
+        }
+      ]
+    },
+    {
+      "name": "Directory",
+      "subpath": "@uipath/uipath-typescript/directory",
+      "since": "1.8.1",
+      "methods": [
+        {
+          "name": "getGroupMembership",
+          "since": "1.8.1"
+        },
+        {
+          "name": "search",
+          "since": "1.8.1"
         }
       ]
     },
@@ -443,6 +488,10 @@
           "since": null
         },
         {
+          "name": "clone",
+          "since": "1.8.2"
+        },
+        {
           "name": "create",
           "since": "1.7.0"
         },
@@ -489,6 +538,10 @@
         {
           "name": "getByName",
           "since": "1.7.1"
+        },
+        {
+          "name": "getCloneJob",
+          "since": "1.8.2"
         },
         {
           "name": "getRecordById",
@@ -565,6 +618,10 @@
         {
           "name": "uploadAttachment",
           "since": null
+        },
+        {
+          "name": "upsert",
+          "since": "1.8.0"
         }
       ]
     },
@@ -627,6 +684,17 @@
       ]
     },
     {
+      "name": "Folders",
+      "subpath": "@uipath/uipath-typescript/folders",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "getByKey",
+          "since": "1.8.0"
+        }
+      ]
+    },
+    {
       "name": "Functions",
       "subpath": "@uipath/uipath-typescript/functions",
       "since": "1.6.1",
@@ -653,6 +721,37 @@
         {
           "name": "getPolicyTraces",
           "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "subpath": "@uipath/uipath-typescript/groups",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.8.0"
+        },
+        {
+          "name": "deleteById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getAll",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getMembers",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateById",
+          "since": "1.8.0"
         }
       ]
     },
@@ -770,7 +869,8 @@
           "name": "updateUserSettings",
           "since": "1.6.1"
         }
-      ]
+      ],
+      "deleted": "1.8.0"
     },
     {
       "name": "Processes",
@@ -899,6 +999,68 @@
         {
           "name": "startTransaction",
           "since": "1.6.2"
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "subpath": "@uipath/uipath-typescript/roles",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.8.0"
+        },
+        {
+          "name": "deleteById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "exportAssignments",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getActions",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getAll",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getAssignments",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getEffectiveAccess",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateAssignments",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateById",
+          "since": "1.8.0"
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "subpath": "@uipath/uipath-typescript/settings",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "getUserSettings",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateUserSettings",
+          "since": "1.8.0"
         }
       ]
     },

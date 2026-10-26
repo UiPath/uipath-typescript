@@ -22,7 +22,10 @@ export enum FunctionHttpMethod {
 export interface RawFunctionGetResponse {
   /** Unique identifier (GUID) of the function's HTTP endpoint. */
   id: string;
-  /** Function name — unique within a folder. */
+  /**
+   * Function name — unique within a folder. Functions deployed since July 2026
+   * carry their process name as a prefix, e.g. `my-functions_hello`.
+   */
   name: string;
   /** URL path segment of the function within its package. */
   slug: string;
@@ -64,25 +67,26 @@ export interface FunctionInvokeOptions extends FolderScopedOptions {
   /** Key (GUID) of the job this invocation belongs to, so the run is attributed to it. */
   jobKey?: string;
   /**
-   * Acquires a fresh license instead of reusing the one already held for this
-   * user. Defaults to `false`.
+   * Ignored. The SDK acquires the license for the signed-in user on its own.
    *
-   * A license is reused for as long as it says it is valid, read from the
-   * license rather than assumed, so a burst of invocations costs one
-   * acquisition. A license that states no validity window — as the free tier's
-   * does not — is reused for five minutes and then re-acquired.
-   *
-   * Set this when the user's licensing may have changed and the invocation must
-   * reflect it before that lapses.
+   * @deprecated Has no effect and will be removed in a future version.
    */
   refreshLicense?: boolean;
 }
 
 /**
- * Identifies the function to invoke. Currently only `name` is supported;
- * additional identifiers (for example, `id`) may be added in future releases.
+ * Identifies the function to invoke by name; additional identifiers (for
+ * example, `id`) may be added in future releases.
  */
 export interface FunctionRef {
-  /** Name of the function to invoke (unique within a folder). */
+  /**
+   * Name of the function to invoke: either the name it is declared with in its
+   * source (`hello`) or the full name shown by `getAll` (`my-functions_hello`).
+   */
   name: string;
+  /**
+   * Name of the process the function is deployed as. Only needed when several
+   * processes in the folder declare a function with the same name.
+   */
+  processName?: string;
 }
