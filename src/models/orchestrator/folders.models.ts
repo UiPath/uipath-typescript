@@ -30,20 +30,28 @@ export interface FolderServiceModel {
    * Each folder carries its id, key, display name, fully qualified path,
    * folder type and parent reference.
    *
+   * Without pagination options, a single page is returned at the server's
+   * default page size. Compare `totalCount` with `items.length`, or page with
+   * `pageSize` and `cursor`, to retrieve every folder.
+   *
    * @param options - Optional pagination options.
    * @returns Promise resolving to a {@link NonPaginatedResponse} of {@link FolderGetAllResponse} without pagination options, or a {@link PaginatedResponse} of {@link FolderGetAllResponse} when pagination options are used.
    * @example
    * ```typescript
-   * // Get all folders
-   * const allFolders = await folders.getAll();
-   * allFolders.items.forEach(folder => console.log(folder.fullyQualifiedName));
+   * // Get folders (first page at the server's default page size)
+   * const result = await folders.getAll();
+   * result.items.forEach(folder => console.log(folder.fullyQualifiedName));
    * ```
    *
    * @example
    * ```typescript
-   * // With pagination
-   * const page = await folders.getAll({ pageSize: 10 });
-   * console.log(page.totalCount, page.hasNextPage);
+   * // Page through every folder
+   * let page = await folders.getAll({ pageSize: 100 });
+   * const allFolders = [...page.items];
+   * while (page.hasNextPage && page.nextCursor) {
+   *   page = await folders.getAll({ cursor: page.nextCursor });
+   *   allFolders.push(...page.items);
+   * }
    * ```
    */
   getAll<T extends FolderGetAllOptions = FolderGetAllOptions>(
