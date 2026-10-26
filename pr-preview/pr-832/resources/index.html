@@ -4088,7 +4088,7 @@
 </code></pre></div>
 <p>An explicit <code>folderId</code>, <code>folderKey</code> or <code>folderPath</code> option still wins over the handle's folder when you pass one.</p>
 <h3 id="what-the-handle-resolves-to">What the handle resolves to<a class="headerlink" href="#what-the-handle-resolves-to" title="Permanent link">&para;</a></h3>
-<p><code>handle.value</code> is the name and folder the SDK will actually send, after any override published for the binding has been applied. It is computed on each read, so it always reflects the current overrides.</p>
+<p><code>handle.value</code> is the name and folder the SDK will actually send, after any override published for the binding has been applied. It is computed on each read, so it always reflects the current overrides. An override whose folder is <code>'.'</code> or empty points at the folder the code runs in, so <code>value</code> carries no <code>folderPath</code> and the call uses the SDK's own folder context.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nx">ProjectResources</span><span class="p">.</span><span class="nx">invoiceThreshold</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1">// { name: &#39;InvoiceThreshold&#39;, folderPath: &#39;Finance/Shared&#39; } without an override</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">// { name: &#39;ProdThreshold&#39;, folderPath: &#39;Production&#39; } when an admin mapped the binding</span>

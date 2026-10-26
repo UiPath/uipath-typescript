@@ -4133,6 +4133,11 @@ decides retry behavior (an <code>ApplicationException</code> failure is retried 
 the queue's retry settings, a <code>BusinessException</code> is not).</p>
 <p>Applies to items with an active transaction. Changing the outcome of an
 item that already reached a terminal status is rejected.</p>
+<p>Folder scoping works like the other methods: <code>folderId</code> / <code>folderKey</code> /
+<code>folderPath</code>, else the SDK's configured folder. When the item came from
+<code>startTransaction</code>, pass <code>{ folderId: item.folderId }</code> — that's the
+resolved folder the item lives in after any override redirect, so no
+re-derivation is needed at the call site.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4529,6 +4534,13 @@ use the SDK's usual camelCase; <code>Date</code> values in the payload are
 serialized to ISO-8601 strings.</p>
 <p>The payload must be flat — values are simple scalars (see
 <a href="../../type-aliases/QueueItemValue/">QueueItemValue</a>); nested objects and arrays are rejected.</p>
+<p>The returned item's <code>folderId</code> reflects the folder the SDK actually
+targeted — after any runtime resource-override redirect on <code>folderPath</code>.
+Pass <code>{ folderId: item.folderId }</code> to follow-up calls on the same queue
+(e.g. <code>getAllItems</code>, <code>startTransaction</code>) so they scope to the same folder
+without the caller having to re-derive it. A freshly inserted item has no
+transaction yet, so <code>completeTransaction</code> applies only once a robot has
+acquired it.</p>
 <h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4597,6 +4609,11 @@ two are not distinguishable.</p>
 <p>The queue is selected by exactly one of <code>name</code> or <code>id</code>. The transaction
 API identifies queues by name, so an <code>id</code> selector is first resolved to
 the queue's name (one extra lookup).</p>
+<p>The returned item's <code>folderId</code> reflects the folder the SDK actually
+targeted — after any runtime resource-override redirect on the
+<code>{ name }</code> selector's <code>folderPath</code>. Pass <code>{ folderId: item.folderId }</code>
+to <code>completeTransaction</code> so the follow-up scopes to the same folder
+without the caller having to re-derive it.</p>
 <h4 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4623,25 +4640,35 @@ the queue's name (one extra lookup).</p>
 <p><code>Promise</code>&lt;<code>null</code> | <a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
 <p>Promise resolving to the acquired <a href="../QueueItem/">QueueItem</a> (in <code>InProgress</code> status with <code>processingStartTime</code> set), or <code>null</code> when no item is available</p>
 <h4 id="example_8">Example<a class="headerlink" href="#example_8" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">transaction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">startTransaction</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">QueueTransactionOutcome</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/queues&#39;</span><span class="p">;</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1">// or select by ID — the SDK first resolves the queue&#39;s name (one extra lookup)</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">byId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">startTransaction</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1">// folder scoping also accepts a folder key or path</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">byPath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">startTransaction</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">transaction</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="c1">// Running under a robot session: the item is now locked to this caller</span>
-<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">transaction</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span><span class="w">        </span><span class="c1">// &#39;InProgress&#39;</span>
-<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">transaction</span><span class="p">.</span><span class="nx">specificData</span><span class="p">);</span><span class="w">  </span><span class="c1">// the item&#39;s business payload</span>
-<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">  </span><span class="c1">// No item was acquired. This happens when the queue has no eligible</span>
-<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">  </span><span class="c1">// items — and always for user/application identities (e.g. a coded app</span>
-<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">  </span><span class="c1">// signed in with OAuth), which have no robot session for Orchestrator</span>
-<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">  </span><span class="c1">// to allocate the item to.</span>
-<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Nothing to process&#39;</span><span class="p">);</span>
-<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="p">}</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">transaction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">startTransaction</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1">// or select by ID — the SDK first resolves the queue&#39;s name (one extra lookup)</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">byId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">startTransaction</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="c1">// folder scoping also accepts a folder key or path</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">byPath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">startTransaction</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">transaction</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">  </span><span class="c1">// Running under a robot session: the item is now locked to this caller</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">transaction</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span><span class="w">        </span><span class="c1">// &#39;InProgress&#39;</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">transaction</span><span class="p">.</span><span class="nx">specificData</span><span class="p">);</span><span class="w">  </span><span class="c1">// the item&#39;s business payload</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">  </span><span class="c1">// Complete via the SAME folder the item lives in — `folderId` on the</span>
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">  </span><span class="c1">// returned item is the resolved folder after any override redirect.</span>
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">completeTransaction</span><span class="p">(</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="w">    </span><span class="nx">transaction</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">    </span><span class="nx">QueueTransactionOutcome</span><span class="p">.</span><span class="nx">Successful</span><span class="p">,</span>
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">transaction.folderId</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">  </span><span class="p">);</span>
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="w">  </span><span class="c1">// No item was acquired. This happens when the queue has no eligible</span>
+<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="w">  </span><span class="c1">// items — and always for user/application identities (e.g. a coded app</span>
+<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a><span class="w">  </span><span class="c1">// signed in with OAuth), which have no robot session for Orchestrator</span>
+<a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a><span class="w">  </span><span class="c1">// to allocate the item to.</span>
+<a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Nothing to process&#39;</span><span class="p">);</span>
+<a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a><span class="p">}</span>
 </code></pre></div>
 
 
