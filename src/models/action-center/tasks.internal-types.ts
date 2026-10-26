@@ -24,6 +24,8 @@ export type TokenWithExpiry = {
 
 export type ActionCenterTokenData = {
   token: TokenWithExpiry,
+  /** Sent for a debug task only: the job that created it, which the processes the app starts become debug sub-jobs of. */
+  debugJobKey?: string,
 }
 
 export type ActionCenterEventResponsePayload = {

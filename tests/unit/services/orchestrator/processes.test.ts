@@ -21,7 +21,9 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createHeldSessionLicense } from '../../../utils/mocks/session-license';
 import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessRef, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
-import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED, JOB_KEY } from '../../../../src/utils/constants/headers';
+import { DEBUG_CONTEXT_KEY } from '../../../../src/core/context/execution';
+import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 import { RequestOptions } from '../../../../src/models/common';
 import { NotFoundError, ValidationError } from '../../../../src/core/errors';
@@ -277,6 +279,33 @@ describe('ProcessService Unit Tests', () => {
           }),
         }),
       );
+    });
+  });
+
+  describe('start under a debug context', () => {
+    const startRequest = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+
+    it('carries the parent job key on StartJobs while a debug context is set', async () => {
+      const { instance, executionContext } = createServiceTestDependencies();
+      executionContext.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      await new ProcessService(instance).start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.any(Object),
+        expect.objectContaining({ headers: expect.objectContaining({ [JOB_KEY]: JOB_TEST_CONSTANTS.JOB_KEY }) })
+      );
+    });
+
+    it('sends no job key without a debug context', async () => {
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      await service.start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      const [, , options] = mockApiClient.post.mock.calls[0];
+      expect(options.headers).not.toHaveProperty(JOB_KEY);
     });
   });
 

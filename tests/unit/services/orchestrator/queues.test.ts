@@ -26,6 +26,7 @@ import {
 import { NotFoundError, ValidationError } from '../../../../src/core/errors';
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 import { QUEUE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 
@@ -749,7 +750,78 @@ describe('QueueService Unit Tests', () => {
         })
       );
     });
+
+    it('redirects both the wire name and folderPath header when a runtime override matches the queueName', async () => {
+      // Publish an override: caller asks for QUEUE_NAME in Shared/Apps → redirects to
+      // TARGET_NAME in TARGET_FOLDER_PATH. The POST body and header must both scope to the target.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`queue.${QUEUE_TEST_CONSTANTS.QUEUE_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
+
+        await queueService.insertItemByName(
+          QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+          QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
+          { folderPath: 'Shared/Apps' },
+        );
+
+        const [, body, opts] = mockApiClient.post.mock.calls[0];
+        expect(body.itemData.Name).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
+        expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
   });
+  describe('bound methods on a queue fetched by id', () => {
+    const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+
+    beforeEach(() => {
+      // An override for this queue's design-time name must not move a queue the caller already holds.
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`queue.${QUEUE_TEST_CONSTANTS.QUEUE_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+      mockApiClient.get.mockResolvedValue(createMockRawQueue());
+    });
+
+    afterEach(() => {
+      delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+    });
+
+    it('insertItem targets the fetched queue, not the override target', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
+      const queue = await queueService.getById(QUEUE_TEST_CONSTANTS.QUEUE_ID, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      await queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+
+      const [, body, opts] = mockApiClient.post.mock.calls[0];
+      expect(body.itemData.Name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
+      expect(opts?.headers?.[FOLDER_ID]).toBe(TEST_CONSTANTS.FOLDER_ID.toString());
+      expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('startTransaction targets the fetched queue, not the override target', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem({ Status: 'InProgress' }));
+      const queue = await queueService.getById(QUEUE_TEST_CONSTANTS.QUEUE_ID, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      await queue.startTransaction();
+
+      const [, body, opts] = mockApiClient.post.mock.calls[0];
+      expect(body.transactionData.Name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
+      expect(opts?.headers?.[FOLDER_ID]).toBe(TEST_CONSTANTS.FOLDER_ID.toString());
+      expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+  });
+
   describe('getByName', () => {
     it('should accept a resources.ts handle and scope the lookup by its folderPath', async () => {
       mockApiClient.get.mockResolvedValue({ value: [createMockRawQueue()] });
@@ -898,6 +970,7 @@ describe('QueueService Unit Tests', () => {
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
+
   });
 
   describe('startTransaction', () => {
@@ -1036,6 +1109,31 @@ describe('QueueService Unit Tests', () => {
         { name: QUEUE_TEST_CONSTANTS.QUEUE_NAME },
         { folderId: TEST_CONSTANTS.FOLDER_ID }
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('redirects both the wire name and folderPath header when a runtime override matches the {name} ref', async () => {
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`queue.${QUEUE_TEST_CONSTANTS.QUEUE_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(createMockRawQueueItem({ Status: 'InProgress' }));
+
+        await queueService.startTransaction(
+          { name: QUEUE_TEST_CONSTANTS.QUEUE_NAME },
+          { folderPath: 'Shared/Apps' },
+        );
+
+        const [, body, opts] = mockApiClient.post.mock.calls[0];
+        expect(body.transactionData.Name).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
+        expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 

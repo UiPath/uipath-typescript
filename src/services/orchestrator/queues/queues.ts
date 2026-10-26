@@ -23,14 +23,14 @@ import {
   QueueGetWithMethodsResponse,
   createQueueWithMethods
 } from '../../../models/orchestrator/queues.models';
+import type { QueueBoundOperations } from '../../../models/orchestrator/queues.internal-types';
 import {
   addPrefixToKeys,
   pascalToCamelCaseKeys,
   transformData,
   transformOptions
 } from '../../../utils/transform';
-import { NotFoundError, ValidationError } from '../../../core/errors';
-import { CollectionResponse } from '../../../models/common/types';
+import { ValidationError } from '../../../core/errors';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
@@ -41,7 +41,7 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { QueueMap, QueueItemMap, QueueItemProcessingErrorMap } from '../../../models/orchestrator/queues.constants';
 import { track } from '../../../core/telemetry';
-import { GUID_REGEX } from '../../../utils/validation/guid';
+import { resolveOverride } from '../../../utils/overrides/resolve-override';
 
 /**
  * Transforms a raw API queue item into the SDK shape. `SpecificContent` and
@@ -75,6 +75,13 @@ function transformQueueItem(queueItem: Record<string, unknown>): QueueItem {
  * Service for interacting with UiPath Orchestrator Queues API
  */
 export class QueueService extends FolderScopedService implements QueueServiceModel {
+  // Bound queue objects call these so they hit exactly the queue they describe: name overrides
+  // apply to lookups, not to a queue the caller already resolved.
+  private readonly boundOperations: QueueBoundOperations = {
+    insertItem: (queue, specificData, options) => this.insertBoundItem(queue, specificData, options),
+    startTransaction: (queue) => this.startBoundTransaction(queue)
+  };
+
   @track('Queues.GetAll')
   async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
     options?: T
@@ -98,7 +105,8 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       transformFn: (queue: Record<string, unknown>) =>
         createQueueWithMethods(
           transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap),
-          this
+          this,
+          this.boundOperations
         ),
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -159,7 +167,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     );
 
     const rawQueue = transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
-    return createQueueWithMethods(rawQueue, this);
+    return createQueueWithMethods(rawQueue, this, this.boundOperations);
   }
 
   getByName(name: string, options?: QueueGetByNameOptions): Promise<QueueGetWithMethodsResponse>;
@@ -174,7 +182,8 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       effectiveOptions,
       (raw) => createQueueWithMethods(
         transformData(pascalToCamelCaseKeys(raw) as QueueGetResponse, QueueMap),
-        this
+        this,
+        this.boundOperations
       ),
       QueueMap,
     );
@@ -183,41 +192,19 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
 
   @track('Queues.GetByKey')
   async getByKey(key: string, options: QueueGetByKeyOptions = {}): Promise<QueueGetWithMethodsResponse> {
-    const trimmedKey = key?.trim();
-    if (!trimmedKey || !GUID_REGEX.test(trimmedKey)) {
-      throw new ValidationError({ message: 'key must be a GUID for getByKey' });
-    }
-
-    const { folderId, folderKey, folderPath, ...queryOptions } = options;
-    const headers = resolveFolderHeaders({
-      folderId,
-      folderKey,
-      folderPath,
-      resourceType: 'Queues.getByKey',
-      fallbackFolderKey: this.config.folderKey
-    });
-
-    const apiFieldOptions = transformOptions(queryOptions, QueueMap);
-    const apiOptions = {
-      ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
-      '$filter': `Key eq ${trimmedKey}`,
-      '$top': '1'
-    };
-
-    const response = await this.get<CollectionResponse<Record<string, unknown>>>(
+    const { result } = await this.getByKeyLookup<Record<string, unknown>, QueueGetWithMethodsResponse>(
+      'Queue',
       QUEUE_ENDPOINTS.GET_BY_FOLDER,
-      { headers, params: apiOptions }
+      key,
+      options,
+      (raw) => createQueueWithMethods(
+        transformData(pascalToCamelCaseKeys(raw) as QueueGetResponse, QueueMap),
+        this,
+        this.boundOperations
+      ),
+      QueueMap,
     );
-
-    const items = response.data?.value;
-    if (!items?.length) {
-      throw new NotFoundError({ message: `Queue with key '${trimmedKey}' not found.` });
-    }
-
-    return createQueueWithMethods(
-      transformData(pascalToCamelCaseKeys(items[0]) as QueueGetResponse, QueueMap),
-      this
-    );
+    return result;
   }
 
   @track('Queues.GetAllItems')
@@ -280,14 +267,44 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       throw new ValidationError({ message: 'queueName is required for insertItemByName' });
     }
 
+    // Runtime override redirects the design-time queue name (+ optionally folderPath) before the
+    // wire body and folder headers are built, mirroring how `getByNameLookup` handles it for reads.
+    const override = resolveOverride('Queue', queueName, options.folderPath);
+    const resolvedName = override?.name ?? queueName;
+    const resolvedFolderPath = override?.folderPath ?? options.folderPath;
+
     const headers = resolveFolderHeaders({
       folderId: options.folderId,
       folderKey: options.folderKey,
-      folderPath: options.folderPath,
+      folderPath: resolvedFolderPath,
       resourceType: 'Queues.insertItemByName',
       fallbackFolderKey: this.config.folderKey
     });
 
+    return this.addItem(resolvedName, headers, specificData, options);
+  }
+
+  // The bound path reports under the same events as the name-based methods it replaces.
+  @track('Queues.InsertItemByName')
+  private async insertBoundItem(
+    { name, folderId }: { name: string; folderId: number },
+    specificData: Record<string, QueueItemValue>,
+    options: Omit<QueueInsertItemOptions, 'folderId' | 'folderKey' | 'folderPath'> = {}
+  ): Promise<QueueItem> {
+    return this.addItem(name, createHeaders({ [FOLDER_ID]: folderId }), specificData, options);
+  }
+
+  @track('Queues.StartTransaction')
+  private async startBoundTransaction({ name, folderId }: { name: string; folderId: number }): Promise<QueueItem | null> {
+    return this.acquireItem(name, createHeaders({ [FOLDER_ID]: folderId }));
+  }
+
+  private async addItem(
+    queueName: string,
+    headers: Record<string, string>,
+    specificData: Record<string, QueueItemValue>,
+    options: Omit<QueueInsertItemOptions, 'folderId' | 'folderKey' | 'folderPath'>
+  ): Promise<QueueItem> {
     const response = await this.post<Record<string, unknown>>(
       QUEUE_ENDPOINTS.ADD_ITEM,
       {
@@ -311,25 +328,37 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
 
   @track('Queues.StartTransaction')
   async startTransaction(queue: QueueRef, options: QueueStartTransactionOptions = {}): Promise<QueueItem | null> {
+    // Runtime override applies to the {name} branch — redirects both the wire name and folderPath
+    // header. The {id} branch resolves via the API's own id→name lookup, so overrides don't apply.
+    let resolvedFolderPath = options.folderPath;
+    let queueName: string;
+    if (queue?.name) {
+      const override = resolveOverride('Queue', queue.name, options.folderPath);
+      queueName = override?.name ?? queue.name;
+      resolvedFolderPath = override?.folderPath ?? options.folderPath;
+    } else if (queue?.id == null) {
+      throw new ValidationError({ message: 'queue id or name is required for startTransaction' });
+    } else {
+      queueName = '';
+    }
+
     const headers = resolveFolderHeaders({
       folderId: options.folderId,
       folderKey: options.folderKey,
-      folderPath: options.folderPath,
+      folderPath: resolvedFolderPath,
       resourceType: 'Queues.startTransaction',
       fallbackFolderKey: this.config.folderKey
     });
 
-    // The transaction API identifies the queue by name on the wire — an `id`
-    // selector is resolved to the queue's name first (one extra lookup).
-    let queueName: string;
-    if (queue?.name) {
-      queueName = queue.name;
-    } else if (queue?.id != null) {
-      queueName = await this.resolveQueueName(queue.id, headers);
-    } else {
-      throw new ValidationError({ message: 'queue id or name is required for startTransaction' });
+    if (!queueName) {
+      // {id} branch: resolve the queue name via the by-id lookup (headers already set).
+      queueName = await this.resolveQueueName(queue.id!, headers);
     }
 
+    return this.acquireItem(queueName, headers);
+  }
+
+  private async acquireItem(queueName: string, headers: Record<string, string>): Promise<QueueItem | null> {
     // A coded function's token alone gets 204 every time. Orchestrator only
     // hands out the item when told which robot is asking, so send its key.
     const response = await this.post<Record<string, unknown> | undefined>(

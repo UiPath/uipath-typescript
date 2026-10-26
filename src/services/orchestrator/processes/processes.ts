@@ -16,7 +16,7 @@ import { ProcessServiceModel } from '../../../models/orchestrator/processes.mode
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
-import { FOLDER_ID } from '../../../utils/constants/headers';
+import { FOLDER_ID, JOB_KEY } from '../../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
@@ -29,16 +29,21 @@ import { ValidationError } from '../../../core/errors';
 import type { IUiPath } from '../../../core/types';
 import { SDKInternalsRegistry } from '../../../core/internals';
 import type { SessionLicense } from '../../../core/licensing/session-license';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../core/context/execution';
+import type { DebugContext } from '../../../models/common/types';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends FolderScopedService implements ProcessServiceModel {
   private readonly sessionLicense?: SessionLicense;
+  private readonly executionContext: ExecutionContext;
 
   constructor(instance: IUiPath) {
     super(instance);
-    this.sessionLicense = SDKInternalsRegistry.get(instance).sessionLicense;
+    const { sessionLicense, context } = SDKInternalsRegistry.get(instance);
+    this.sessionLicense = sessionLicense;
+    this.executionContext = context;
   }
 
   @track('Processes.GetAll')
@@ -147,6 +152,13 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       resourceType: 'Processes.start',
       fallbackFolderKey: this.config.folderKey,
     });
+
+    // Orchestrator reads the parent job key on StartJobs alone, and not every backend's CORS allows
+    // the header, so it travels only on this request (JIT debug sub-jobs of the parent run).
+    const debugContext = this.executionContext.get<DebugContext>(DEBUG_CONTEXT_KEY);
+    if (debugContext?.jobKey) {
+      headers[JOB_KEY] = debugContext.jobKey;
+    }
 
     // Build the startInfo shape. For the ref form we synthesize a ProcessStartRequest with just
     // the resolved identity + the extra startInfo fields the caller passed via options.
