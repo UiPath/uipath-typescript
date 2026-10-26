@@ -487,7 +487,9 @@ export class UiPath implements IUiPath {
 
   #applyDebugContextFromPage(): void {
     if (!this.#metaDebugSource || !isBrowser) return;
-    // A context the app set itself (its host's job key) wins over the page's query parameter.
+    // A context the app set itself, even one cleared with null, wins over the page's query parameter,
+    // and so does a key the host has already delivered.
+    if (this.#debugContextSetByApp) return;
     const context = SDKInternalsRegistry.get(this).context;
     if (context.get(DEBUG_CONTEXT_KEY) !== undefined) return;
     const jobKey = new URLSearchParams(window.location.search).get(DEBUG_JOB_KEY_QUERY_PARAM);

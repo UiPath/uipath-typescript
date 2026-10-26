@@ -617,6 +617,16 @@ describe('UiPath Core', () => {
       expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
     });
 
+    it('keeps the URL jobKey off a page whose app cleared the debug context with null before initialize()', async () => {
+      openPage(debugSearch, DEBUG_SOURCE);
+      const sdk = new UiPath(oauthConfig);
+      sdk.setDebugContext(null);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
+
     it('applies the jobKey that the sign-in restores to the URL before completeOAuth() returns', async () => {
       const page = openPage(callbackSearch, DEBUG_SOURCE);
       vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
