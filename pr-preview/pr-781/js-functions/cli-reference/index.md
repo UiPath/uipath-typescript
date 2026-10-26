@@ -25,7 +25,7 @@ uip functions new [name] [options]
 | `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
 | `--empty`               |                | Skip the hello world function (JS/TS only)                                                                      |
 
-Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with the package manager the machine resolves to: npm when both npm and bun are present, and that manager writes the project's lock file.
+Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with npm, which writes the project's `package-lock.json`.
 
 ______________________________________________________________________
 
@@ -110,7 +110,7 @@ uip functions pack [options]
 
 Reads `name` and `version` from `package.json`. Writes `.uipath/<name>.<version>.nupkg`. Re-packing the same version overwrites the file.
 
-The project must be ready to package: `node_modules/` present, exactly one supported lock file — `package-lock.json` (npm) or `bun.lock` (bun) — and that lock still current, which the package manager itself confirms via `npm ci --dry-run` / `bun install --frozen-lockfile --dry-run` (neither installs nor writes anything). When the manager cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it. `serve`, `run` and `debug` do not check the lock at all — Node does not read one.
+The project must be ready to package: `node_modules/` present and a current `package-lock.json`, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it.
 
 Steps performed:
 
@@ -162,6 +162,8 @@ uip functions push [options]
 Auto-syncs the `functions` map in `uipath.json`, generates `entry-points.json`, diffs local files against remote by hash, and uploads only what changed. Create the project in Studio Web first to get the project ID.
 
 The remote layout mirrors the local project root; Studio Web system files (`project.uiproj`, `.project/`, `.settings/`) are never touched, and neither is anything under `.uipath/` apart from `studio_metadata.json`.
+
+A push leaves the datasets that Studio Web's Evaluations panel keeps under `evals/` in place when the project has no `evals/` folder. When the project has an `evals/` folder, even an empty one, the push replaces them with that folder's contents.
 
 Each push also updates `.uipath/studio_metadata.json`, which Studio Web uses to detect the push (offering a Reload in an open editor) and to display the version and last-pushed-by author in the Properties panel. The version increments automatically on every push that carries a change; a push with no changes reports "Already up to date." and leaves it alone.
 

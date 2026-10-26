@@ -109,7 +109,11 @@ Calling mode is always **Sync (long-polling)**. Account is always **Run as HTTP 
 
 ### Lockfile
 
-The `.nupkg` always includes the project's lock file — `package-lock.json` or `bun.lock` — and it is the only lock file that ships: the production worker installs from it with bun, which reads either format. `pack` refuses to run when the lock is missing or no longer matches `package.json`, and `publish` refuses a package that carries no lock. Always re-run your package manager's install locally after any `package.json` change before packing.
+A project is locked with npm's `package-lock.json`. That lock ships in the `.nupkg`, and the production worker installs from it with bun. Run `npm install` after any `package.json` change, then pack.
+
+On your machine the CLI holds every project to that lock. `new` installs with npm. `serve`, `run`, `debug`, `pack`, `push` and `uip solution pack` stop on a `bun.lock`, including one next to `package-lock.json`, since bun installs from `bun.lock` first: delete `bun.lock` and run `npm install`. `pack`, `push` and `uip solution pack` also stop when `package-lock.json` is missing or `npm ci --dry-run` reports that it differs from `package.json`. `publish` requires a lock in the package.
+
+Install every dependency from a registry. `pack`, `push` and `uip solution pack` stop on a dependency that `package-lock.json` takes from a git repository, transitive ones included, and name it: replace it with a registry version, then pack again.
 
 ______________________________________________________________________
 

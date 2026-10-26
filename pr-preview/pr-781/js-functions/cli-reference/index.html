@@ -1749,6 +1749,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1798,7 +1802,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/interfaces/PlatformServiceModel/" class="md-nav__link">
+      <a href="../../api/interfaces/PlatformSettingServiceModel/" class="md-nav__link">
         
   
   
@@ -1862,6 +1866,62 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/PlatformDirectoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory
   
 
     
@@ -4031,7 +4091,7 @@
 </tr>
 </tbody>
 </table>
-<p>Creates the project directory, scaffolds <code>uipath.json</code>, <code>package.json</code>, <code>tsconfig.json</code>, and (unless <code>--empty</code>) a hello world function. Then installs with the package manager the machine resolves to: npm when both npm and bun are present, and that manager writes the project's lock file.</p>
+<p>Creates the project directory, scaffolds <code>uipath.json</code>, <code>package.json</code>, <code>tsconfig.json</code>, and (unless <code>--empty</code>) a hello world function. Then installs with npm, which writes the project's <code>package-lock.json</code>.</p>
 <hr />
 <h2 id="serve"><code>serve</code><a class="headerlink" href="#serve" title="Permanent link">&para;</a></h2>
 <p>Start local function server with hot reload.</p>
@@ -4177,7 +4237,7 @@
 </tbody>
 </table>
 <p>Reads <code>name</code> and <code>version</code> from <code>package.json</code>. Writes <code>.uipath/&lt;name&gt;.&lt;version&gt;.nupkg</code>. Re-packing the same version overwrites the file.</p>
-<p>The project must be ready to package: <code>node_modules/</code> present, exactly one supported lock file — <code>package-lock.json</code> (npm) or <code>bun.lock</code> (bun) — and that lock still current, which the package manager itself confirms via <code>npm ci --dry-run</code> / <code>bun install --frozen-lockfile --dry-run</code> (neither installs nor writes anything). When the manager cannot answer, because the registry is unreachable or unauthenticated, <code>pack</code> stops as well — reported as the check failing, not as a stale lock. <code>pack</code> never installs for you. Any other lock file (<code>yarn.lock</code>, <code>pnpm-lock.yaml</code>, <code>bun.lockb</code>) is dropped so the pod's installer cannot prefer it. <code>serve</code>, <code>run</code> and <code>debug</code> do not check the lock at all — Node does not read one.</p>
+<p>The project must be ready to package: <code>node_modules/</code> present and a current <code>package-lock.json</code>, as <a href="../deployment/#lockfile">Lockfile</a> sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, <code>pack</code> stops as well — reported as the check failing, not as a stale lock. <code>pack</code> never installs for you. Any other lock file (<code>yarn.lock</code>, <code>pnpm-lock.yaml</code>, <code>bun.lockb</code>) is dropped so the pod's installer cannot prefer it.</p>
 <p>Steps performed:
 1. Check the project is installed
 2. Sync <code>uipath.json</code> functions map
@@ -4270,6 +4330,7 @@
 </table>
 <p>Auto-syncs the <code>functions</code> map in <code>uipath.json</code>, generates <code>entry-points.json</code>, diffs local files against remote by hash, and uploads only what changed. Create the project in Studio Web first to get the project ID.</p>
 <p>The remote layout mirrors the local project root; Studio Web system files (<code>project.uiproj</code>, <code>.project/</code>, <code>.settings/</code>) are never touched, and neither is anything under <code>.uipath/</code> apart from <code>studio_metadata.json</code>.</p>
+<p>A push leaves the datasets that Studio Web's Evaluations panel keeps under <code>evals/</code> in place when the project has no <code>evals/</code> folder. When the project has an <code>evals/</code> folder, even an empty one, the push replaces them with that folder's contents.</p>
 <p>Each push also updates <code>.uipath/studio_metadata.json</code>, which Studio Web uses to detect the push (offering a Reload in an open editor) and to display the version and last-pushed-by author in the Properties panel. The version increments automatically on every push that carries a change; a push with no changes reports "Already up to date." and leaves it alone.</p>
 <hr />
 <h2 id="setup-hidden"><code>setup</code> <em>(hidden)</em><a class="headerlink" href="#setup-hidden" title="Permanent link">&para;</a></h2>

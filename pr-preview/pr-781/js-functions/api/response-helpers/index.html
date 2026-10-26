@@ -1749,6 +1749,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1798,7 +1802,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api/interfaces/PlatformServiceModel/" class="md-nav__link">
+      <a href="../../../api/interfaces/PlatformSettingServiceModel/" class="md-nav__link">
         
   
   
@@ -1862,6 +1866,62 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/interfaces/PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/interfaces/PlatformDirectoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory
   
 
     
@@ -4155,18 +4215,18 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">return</span><span class="w"> </span><span class="nx">created</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;new-resource-id&quot;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <h3 id="acceptedbody"><code>accepted(body?)</code><a class="headerlink" href="#acceptedbody" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nx">accepted</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">body?</span><span class="o">:</span><span class="w"> </span><span class="kt">T</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">FunctionResponse</span><span class="o">&lt;</span><span class="nx">T</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">undefined</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nx">accepted</span><span class="o">&lt;</span><span class="nx">T</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">never</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">body?</span><span class="o">:</span><span class="w"> </span><span class="kt">T</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">FunctionResponse</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span>
 </code></pre></div>
 <p>Returns <code>{ status: 202, body }</code>. Use for long-running operations where the result is not yet available.</p>
 <h3 id="nocontent"><code>noContent()</code><a class="headerlink" href="#nocontent" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nx">noContent</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nx">FunctionResponse</span><span class="o">&lt;</span><span class="kc">undefined</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nx">noContent</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nx">FunctionResponse</span><span class="o">&lt;</span><span class="nx">never</span><span class="o">&gt;</span>
 </code></pre></div>
 <p>Returns <code>{ status: 204 }</code>. No body.</p>
 <h2 id="error-helpers">Error helpers<a class="headerlink" href="#error-helpers" title="Permanent link">&para;</a></h2>
 <p>These return a <code>FunctionResponse</code> — they do <strong>not</strong> throw. Use them when you want to return a structured error response without stopping execution flow with an exception.</p>
 <p>For errors that must halt execution (e.g. auth failures, validation errors that prevent the handler from continuing), throw <a href="../function-error/"><code>FunctionError</code></a> instead.</p>
 <blockquote>
-<p><strong>Run-as-job behavior:</strong> when the function runs as a UiPath job (no HTTP caller), returning
+<p><strong>Run-as-job behavior:</strong> when an HTTP function runs as a UiPath job (no HTTP caller), returning
 any response with status ≥ 400 reports the job as <strong>Faulted</strong>, with the message surfaced in
 Orchestrator's job error info (<code>{ error }</code> maps to the error title, <code>details</code> to its detail).
 On the HTTP path the response body is returned to the caller verbatim, exactly as written.</p>
@@ -4198,7 +4258,7 @@ On the HTTP path the response body is returned to the caller verbatim, exactly a
 <p>Returns <code>{ status: 409, body: { error } }</code>.</p>
 <h2 id="generic-helper">Generic helper<a class="headerlink" href="#generic-helper" title="Permanent link">&para;</a></h2>
 <h3 id="responsestatus-body-headers"><code>response(status, body?, headers?)</code><a class="headerlink" href="#responsestatus-body-headers" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nx">response</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">,</span><span class="w"> </span><span class="nx">body?</span><span class="o">:</span><span class="w"> </span><span class="kt">T</span><span class="p">,</span><span class="w"> </span><span class="nx">headers?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">FunctionResponse</span><span class="o">&lt;</span><span class="nx">T</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">undefined</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nx">response</span><span class="o">&lt;</span><span class="nx">T</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">never</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">,</span><span class="w"> </span><span class="nx">body?</span><span class="o">:</span><span class="w"> </span><span class="kt">T</span><span class="p">,</span><span class="w"> </span><span class="nx">headers?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="o">&gt;</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">FunctionResponse</span><span class="o">&lt;</span><span class="nx">T</span><span class="o">&gt;</span>
 </code></pre></div>
 <p>Full control over status, body, and headers.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="p">(</span><span class="mf">302</span><span class="p">,</span><span class="w"> </span><span class="kc">undefined</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Location</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;https://example.com&quot;</span><span class="w"> </span><span class="p">});</span>

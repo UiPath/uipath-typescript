@@ -1848,6 +1848,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1897,7 +1901,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PlatformServiceModel/" class="md-nav__link">
+      <a href="../PlatformSettingServiceModel/" class="md-nav__link">
         
   
   
@@ -1961,6 +1965,62 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformDirectoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory
   
 
     
@@ -4004,12 +4064,6 @@ folder context.</p>
 input/output schema the function declares. Folder context is required — pass
 one of <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code> in the options, or initialize
 the SDK with a folder context.</p>
-<p>Before invoking, the SDK acquires a license for the calling user — their own
-if they hold one, otherwise the free Attended Studio Web license — and
-reuses it while it stays valid, so a burst of invocations costs one
-acquisition. Acquiring is a precondition rather than bookkeeping: it
-provisions the robot the function runs on, so an invocation whose license
-cannot be acquired fails with that error rather than proceeding.</p>
 <h4 id="type-parameters_1">Type Parameters<a class="headerlink" href="#type-parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4042,7 +4096,7 @@ cannot be acquired fails with that error rather than proceeding.</p>
 <tr>
 <td><code>func</code></td>
 <td><a href="../FunctionRef/"><code>FunctionRef</code></a></td>
-<td>Function to invoke. Currently identified by <code>name</code> (unique within a folder); additional identifiers may be added in future releases.</td>
+<td>Function to invoke, by <code>name</code>: the name declared in its source (<code>hello</code>) or the full name <code>getAll</code> returns (<code>my-functions_hello</code>). Add <code>processName</code> when several processes in the folder declare the same name.</td>
 </tr>
 <tr>
 <td><code>input?</code></td>
@@ -4052,7 +4106,7 @@ cannot be acquired fails with that error rather than proceeding.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../FunctionInvokeOptions/"><code>FunctionInvokeOptions</code></a></td>
-<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>), parent job attribution (<code>jobKey</code>), and <code>refreshLicense</code> to force a fresh license acquisition</td>
+<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) and parent job attribution (<code>jobKey</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -4063,11 +4117,11 @@ cannot be acquired fails with that error rather than proceeding.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Invoke a function</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">functions</span><span class="p">.</span><span class="nx">invoke</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;hello&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Alice&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Force a fresh license, e.g. just after the user&#39;s licensing changed</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Pick one process when several in the folder declare a `hello` function</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">functions</span><span class="p">.</span><span class="nx">invoke</span><span class="p">(</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;hello&#39;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;hello&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">processName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;my-functions&#39;</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Alice&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">refreshLicense</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// Typed input and output, attributed to a parent job&#39;s licensing transaction</span>
