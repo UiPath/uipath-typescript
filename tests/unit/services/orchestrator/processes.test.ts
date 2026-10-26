@@ -20,7 +20,9 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createHeldSessionLicense } from '../../../utils/mocks/session-license';
 import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessRef, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
-import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED, JOB_KEY } from '../../../../src/utils/constants/headers';
+import { DEBUG_CONTEXT_KEY } from '../../../../src/core/context/execution';
+import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 import { RequestOptions } from '../../../../src/models/common';
 import { NotFoundError, ValidationError } from '../../../../src/core/errors';
@@ -279,6 +281,33 @@ describe('ProcessService Unit Tests', () => {
     });
   });
 
+  describe('start under a debug context', () => {
+    const startRequest = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+
+    it('carries the parent job key on StartJobs while a debug context is set', async () => {
+      const { instance, executionContext } = createServiceTestDependencies();
+      executionContext.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      await new ProcessService(instance).start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.any(Object),
+        expect.objectContaining({ headers: expect.objectContaining({ [JOB_KEY]: JOB_TEST_CONSTANTS.JOB_KEY }) })
+      );
+    });
+
+    it('sends no job key without a debug context', async () => {
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      await service.start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      const [, , options] = mockApiClient.post.mock.calls[0];
+      expect(options.headers).not.toHaveProperty(JOB_KEY);
+    });
+  });
+
   describe('start', () => {
     it('should start process by processKey successfully with transformations applied', async () => {
       const mockJob = createMockProcessStartResponse();
@@ -494,6 +523,43 @@ describe('ProcessService Unit Tests', () => {
       expect(requestSpec.headers).toMatchObject({
         [FOLDER_KEY]: PROCESS_TEST_CONSTANTS.FOLDER_KEY,
       });
+    });
+
+    it('should start a process bound to the current folder (".") in the SDK init-time folder', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+      const scopedService = new ProcessService(instance);
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      await scopedService.start({ name: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessRef, { folderPath: '.' });
+
+      const [, , requestSpec] = mockApiClient.post.mock.calls[0];
+      expect(requestSpec.headers[FOLDER_KEY]).toBe(PROCESS_TEST_CONSTANTS.FOLDER_KEY);
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should start in the SDK init-time folder when an override pins a "." process to an empty folder path', async () => {
+      // A debug session's overrides give a process of the solution an empty folder path, so it runs next to the session.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`process.${PROCESS_TEST_CONSTANTS.PROCESS_NAME}`]: { name: PROCESS_TEST_CONSTANTS.PROCESS_NAME, folderPath: '' },
+      });
+
+      try {
+        const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+        vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+        const scopedService = new ProcessService(instance);
+        mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+        await scopedService.start({ name: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessRef, { folderPath: '.' });
+
+        const [, body, requestSpec] = mockApiClient.post.mock.calls[0];
+        expect(body.startInfo.releaseName).toBe(PROCESS_TEST_CONSTANTS.PROCESS_NAME);
+        expect(requestSpec.headers[FOLDER_KEY]).toBe(PROCESS_TEST_CONSTANTS.FOLDER_KEY);
+        expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
 
     it('should throw ValidationError when no folder context can be resolved', async () => {

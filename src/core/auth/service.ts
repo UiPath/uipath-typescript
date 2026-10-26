@@ -9,9 +9,10 @@ import { SessionStore } from '../../utils/storage/session-store';
 import { NO_OP_STORE } from '../../utils/storage/no-op-store';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
+import { GUID_REGEX } from '../../utils/validation/guid';
 
-const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const store: KeyValueStore = SessionStore.open() ?? NO_OP_STORE;
+const TRAILING_SLASHES_REGEX = /\/+$/;
 
 export class AuthService {
   private config: Config;
@@ -442,7 +443,8 @@ export class AuthService {
       baseUrl: this.config.baseUrl,
       orgName: this.config.orgName,
       tenantName: this.config.tenantName,
-      scope
+      scope,
+      returnTo: window.location.href
     };
     
     // The callback cannot complete without this state, so do not redirect when it was not stored.
@@ -461,8 +463,8 @@ export class AuthService {
   }
 
   private async _handleOAuthCallback(code: string, clientId: string, redirectUri: string): Promise<void> {
-    const codeVerifier = AuthService._readCodeVerifier();
-    if (!codeVerifier) {
+    const context = AuthService.getStoredOAuthContext();
+    if (!context) {
       throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
     }
 
@@ -470,15 +472,35 @@ export class AuthService {
       clientId,
       redirectUri,
       code,
-      codeVerifier
+      codeVerifier: context.codeVerifier
     });
 
     // Clear OAuth context after successful token exchange
     store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
 
-    const url = new URL(window.location.href);
+    window.history.replaceState({}, '', AuthService._postSignInUrl(context.returnTo));
+  }
+
+  private static _postSignInUrl(returnTo: string | undefined): string {
+    const url = AuthService._parseReturnTo(returnTo) ?? new URL(window.location.href);
     url.searchParams.delete('code');
     url.searchParams.delete('state');
-    window.history.replaceState({}, '', url.toString());
+    return url.toString();
+  }
+
+  // returnTo is read back from sessionStorage, which page scripts can tamper with, and replaceState throws
+  // on a cross-origin URL once the token is already stored: only the page the sign-in left from is restored.
+  private static _parseReturnTo(returnTo: string | undefined): URL | undefined {
+    if (!returnTo) return undefined;
+    try {
+      const url = new URL(returnTo);
+      const current = new URL(window.location.href);
+      const samePage = url.origin === current.origin
+        && url.pathname.replace(TRAILING_SLASHES_REGEX, '') === current.pathname.replace(TRAILING_SLASHES_REGEX, '');
+      return samePage ? url : undefined;
+    } catch (error) {
+      console.warn(error);
+      return undefined;
+    }
   }
 }

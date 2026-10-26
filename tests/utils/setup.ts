@@ -26,6 +26,7 @@ interface MockableTokenManager {
   hasValidToken: () => boolean;
   getValidToken: () => Promise<string>;
   onTokenChange: (listener: (tokenInfo: TokenInfo | undefined) => void) => void;
+  onDebugJobKey?: (listener: (jobKey: string) => void) => void;
 }
 
 // Mock console methods to avoid test output noise
@@ -73,6 +74,7 @@ const createMockTokenManager = (overrides?: Partial<MockableTokenManager>): Toke
     hasValidToken: vi.fn().mockReturnValue(true),
     getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN),
     onTokenChange: vi.fn(),
+    onDebugJobKey: vi.fn(),
     ...overrides,
   };
   return mock as TokenManager;

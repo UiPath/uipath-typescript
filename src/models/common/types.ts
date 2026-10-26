@@ -109,7 +109,7 @@ export interface FolderScopingOnly {
   folderId?: number;
   /** Folder key (GUID-formatted string). */
   folderKey?: string;
-  /** Slash-delimited folder path, e.g. `'Shared/Finance'`. */
+  /** Slash-delimited folder path, e.g. `'Shared/Finance'`; `'.'` is the folder the code runs in. */
   folderPath?: string;
 }
 
@@ -119,3 +119,14 @@ export interface FolderScopingOnly {
  * {@link FolderScopingOnly}.
  */
 export interface FolderScopedOptions extends BaseOptions, FolderScopingOnly {}
+
+/**
+ * Debug context applied to API requests while the app runs inside a platform
+ * debug session (for example, a coded action app opened from a debug task in
+ * Action Center). While set, every request carries the parent job key so the
+ * platform routes runs it triggers as debug sub-jobs of that session.
+ */
+export interface DebugContext {
+  /** Job key of the debug parent job, delivered to the app by its host (e.g. Action Center task context). */
+  jobKey: string;
+}

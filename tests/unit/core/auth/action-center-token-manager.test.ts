@@ -5,6 +5,7 @@ import { ActionCenterEventNames } from '@/models/action-center/tasks.internal-ty
 import { AuthenticationError } from '@/core/errors';
 import type { TokenInfo } from '@/core/auth/types';
 import type { Config } from '@/core/config/config';
+import { JOB_TEST_CONSTANTS } from '@tests/utils/constants/jobs';
 
 // ---------------------------------------------------------------------------
 // Window mock helpers
@@ -114,6 +115,47 @@ describe('ActionCenterTokenManager', () => {
 
     expect(await refreshPromise).toBe('tok-new');
     expect(mock.parentPostMessage).toHaveBeenCalledWith(expect.any(Object), customerOrigin);
+  });
+
+  // ---- debug job key ----
+
+  it('reports the debug job key the host sends with the token of a debug task', async () => {
+    const onDebugJobKey = vi.fn();
+    manager = new ActionCenterTokenManager(MOCK_CONFIG, onTokenRefreshed, onDebugJobKey);
+    const expired: TokenInfo = { token: 'tok-old', type: 'secret', expiresAt: new Date(0) };
+
+    const refreshPromise = manager.refreshAccessToken(expired);
+    mock.dispatch({
+      origin: VALID_ORIGIN,
+      data: {
+        eventType: ActionCenterEventNames.TOKENREFRESHED,
+        content: { token: { accessToken: 'tok-new', expiresAt: new Date(Date.now() + 3600_000) }, debugJobKey: JOB_TEST_CONSTANTS.JOB_KEY },
+      },
+    });
+
+    expect(await refreshPromise).toBe('tok-new');
+    expect(onDebugJobKey).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY);
+  });
+
+  it('reports no debug job key for a normal task, nor one that is not a GUID', async () => {
+    const onDebugJobKey = vi.fn();
+    manager = new ActionCenterTokenManager(MOCK_CONFIG, onTokenRefreshed, onDebugJobKey);
+    const expired: TokenInfo = { token: 'tok-old', type: 'secret', expiresAt: new Date(0) };
+
+    const first = manager.refreshAccessToken(expired);
+    mock.dispatch(makeRefreshedEvent(VALID_ORIGIN, 'tok-1'));
+    await first;
+    const second = manager.refreshAccessToken(expired);
+    mock.dispatch({
+      origin: VALID_ORIGIN,
+      data: {
+        eventType: ActionCenterEventNames.TOKENREFRESHED,
+        content: { token: { accessToken: 'tok-2', expiresAt: new Date(Date.now() + 3600_000) }, debugJobKey: 'not-a-guid' },
+      },
+    });
+    await second;
+
+    expect(onDebugJobKey).not.toHaveBeenCalled();
   });
 
   // ---- refresh flow ----
