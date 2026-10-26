@@ -33,6 +33,7 @@ export interface FolderServiceModel {
    * Without pagination options, a single page is returned at the server's
    * default page size. Compare `totalCount` with `items.length`, or page with
    * `pageSize` and `cursor`, to retrieve every folder.
+   * A `jumpToPage` past the last page returns no items with `totalCount: 0`.
    *
    * @param options - Optional pagination options.
    * @returns Promise resolving to a {@link NonPaginatedResponse} of {@link FolderGetAllResponse} without pagination options, or a {@link PaginatedResponse} of {@link FolderGetAllResponse} when pagination options are used.

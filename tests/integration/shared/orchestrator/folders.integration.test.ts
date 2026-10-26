@@ -45,6 +45,22 @@ describeIntegration('Orchestrator Folders - Integration Tests', 'both', modes, (
       expect(typeof page.totalCount).toBe('number');
       expect(page.totalCount).toBeGreaterThanOrEqual(1);
     });
+
+    it('should fetch the next page with nextCursor', async () => {
+      const firstPage = await folders.getAll({ pageSize: 1 });
+      if (!firstPage.totalCount || firstPage.totalCount < 2) {
+        throw new Error('At least two accessible folders are required to test nextCursor');
+      }
+
+      expect(firstPage.hasNextPage).toBe(true);
+      expect(firstPage.nextCursor).toBeDefined();
+
+      const secondPage = await folders.getAll({ cursor: firstPage.nextCursor! });
+
+      expect(secondPage.items.length).toBe(1);
+      expect(secondPage.currentPage).toBe(2);
+      expect(secondPage.items[0].key).not.toBe(firstPage.items[0].key);
+    });
   });
 
   describe('getByKey', () => {

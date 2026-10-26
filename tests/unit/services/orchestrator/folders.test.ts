@@ -24,7 +24,7 @@ describe('FolderService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
     folderService = new FolderService(instance);
     vi.mocked(PaginationHelpers.getAll).mockReset();
@@ -86,7 +86,7 @@ describe('FolderService Unit Tests', () => {
       await folderService.getAll();
 
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
-      const folder = config.transformFn(
+      const folder = config.transformFn!(
         FOLDER_TEST_CONSTANTS.RAW_LIST_FOLDER,
       ) as FolderGetAllResponse;
 
