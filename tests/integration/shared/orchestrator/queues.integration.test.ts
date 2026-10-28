@@ -3,6 +3,7 @@ import { getServices, getTestConfig, describeIntegration, InitMode } from '../..
 import { generateRandomString } from '../../utils/helpers';
 import { QueueItemReviewStatus, QueueItemStatus, QueuePriority, QueueTransactionOutcome } from '../../../../src/models/orchestrator/queues.types';
 import type { QueueGetWithMethodsResponse } from '../../../../src/models/orchestrator/queues.models';
+import { resource } from '../../../../src/resources';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -101,18 +102,42 @@ describeIntegration('Orchestrator Queues - Integration Tests', 'both', modes, ()
   });
 
   describe('getByName', () => {
-    it('should retrieve a specific queue by name with methods attached', async () => {
+    let folderId!: number;
+    let reference!: QueueGetWithMethodsResponse;
+
+    beforeAll(async () => {
       const { queues } = getServices();
       const config = getTestConfig();
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
+      const configuredFolderId = config.folderId ? Number(config.folderId) : undefined;
+      if (configuredFolderId === undefined) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured');
+      }
+      folderId = configuredFolderId;
 
-      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
-
+      // One real queue in the folder gives both lookups below a name to resolve
       const allQueues = await queues.getAll({ folderId, pageSize: 1 });
       expect(allQueues.items.length, 'No queues available to test getByName').toBeGreaterThan(0);
-      const reference = allQueues.items[0];
+      reference = allQueues.items[0];
+    });
+
+    it('should retrieve a specific queue by name with methods attached', async () => {
+      const { queues } = getServices();
 
       const result = await queues.getByName(reference.name, { folderId });
+
+      expect(result.id).toBe(reference.id);
+      expect(result.name).toBe(reference.name);
+      expect(result.key).toBe(reference.key);
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+    });
+
+    it('should retrieve a queue by a resources.ts handle with methods attached', async () => {
+      const { queues } = getServices();
+      const config = getTestConfig();
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const result = await queues.getByName(resource.queue({ name: reference.name, folderPath: config.folderPath }));
 
       expect(result.id).toBe(reference.id);
       expect(result.name).toBe(reference.name);

@@ -1,5 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { resource } from "../../../../src/resources";
 import { EntityService } from "../../../../src/services/data-fabric/entities";
 import { ApiClient } from "../../../../src/core/http/api-client";
 import { PaginationHelpers } from "../../../../src/utils/pagination/helpers";
@@ -2156,6 +2157,36 @@ describe("EntityService Unit Tests", () => {
   // ===== By-name method tests =====
 
   describe("getByName", () => {
+    it("should accept a resources.ts handle and look the entity up by its declared name", async () => {
+      mockApiClient.get.mockResolvedValue(createMockEntityResponse());
+
+      await entityService.getByName(resource.entity({ name: ENTITY_TEST_CONSTANTS.ENTITY_NAME }));
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
+        { headers: {} },
+      );
+    });
+
+    it("applies a runtime override when called with a handle", async () => {
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`entity.${ENTITY_TEST_CONSTANTS.ENTITY_NAME}`]: { name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME },
+      });
+      try {
+        mockApiClient.get.mockResolvedValue(createMockEntityResponse());
+
+        await entityService.getByName(resource.entity({ name: ENTITY_TEST_CONSTANTS.ENTITY_NAME }));
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(OVERRIDE_TEST_CONSTANTS.TARGET_NAME),
+          expect.anything(),
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
     it("should get entity by name with fields transformed and methods attached", async () => {
       const mockResponse = createMockEntityResponse();
       mockApiClient.get.mockResolvedValue(mockResponse);
