@@ -81,3 +81,6 @@ code { background: #eef1f4; padding: 1px 6px; border-radius: 4px; font-size: 12p
 .profile dt { color: var(--muted); font-weight: 600; }
 .profile dd { margin: 0; }
 main > section > button { margin-top: 10px; }
+button.link {
+  border: none; background: none; padding: 0; color: var(--primary); text-decoration: underline; font-size: 13px;
+}

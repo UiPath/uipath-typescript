@@ -1,28 +1,39 @@
 import { useEffect, useState } from 'react';
 import type { PlatformDirectoryGroup } from '@uipath/uipath-typescript/directory';
+import type { PlatformGroupGetResponse } from '@uipath/uipath-typescript/groups';
 import type { PlatformServices } from '../lib/services';
 import type { CurrentUser } from '../lib/identity';
 
 /**
- * What every signed-in user sees: their own profile and the groups they belong to.
- * The profile comes straight from the access token; the groups from `groups.getAll()`
- * plus `directory.getGroupMembership()`, which answers which of those groups the
- * user is in.
+ * What every signed-in user sees: their own profile and the organization's groups
+ * they belong to. The profile comes straight from the access token; membership from
+ * `directory.getGroupMembership()`, which answers which of the given groups
+ * (`groups.getAll()`, loaded once by the app) the user is in.
  */
-export function MemberView({ services, user }: { services: PlatformServices; user: CurrentUser }) {
-  const [groups, setGroups] = useState<PlatformDirectoryGroup[] | null>(null);
-  const [failed, setFailed] = useState(false);
+export function MemberView({
+  services,
+  user,
+  groups,
+}: {
+  services: PlatformServices;
+  user: CurrentUser;
+  groups: PlatformGroupGetResponse[] | null;
+}) {
+  const [memberships, setMemberships] = useState<PlatformDirectoryGroup[] | null>(null);
+  const [failed, setFailed] = useState(groups === null);
 
   useEffect(() => {
-    const load = async () => {
-      const allGroups = await services.groups.getAll();
-      setGroups(await services.directory.getGroupMembership(user.userId, allGroups.map(g => g.id)));
-    };
-    load().catch(err => {
-      console.error('Loading group membership failed:', err);
-      setFailed(true);
-    });
-  }, [services, user]);
+    if (!groups) return;
+    let ignore = false;
+    services.directory
+      .getGroupMembership(user.userId, groups.map(g => g.id))
+      .then(result => { if (!ignore) setMemberships(result); })
+      .catch(err => {
+        console.error('Loading group membership failed:', err);
+        if (!ignore) setFailed(true);
+      });
+    return () => { ignore = true; };
+  }, [services, user, groups]);
 
   return (
     <section>
@@ -39,13 +50,13 @@ export function MemberView({ services, user }: { services: PlatformServices; use
       <h2>Your groups</h2>
       {failed ? (
         <p className="error">Your groups could not be loaded. Try again in a moment.</p>
-      ) : !groups ? (
+      ) : !memberships ? (
         <p className="muted">Loading…</p>
-      ) : groups.length === 0 ? (
+      ) : memberships.length === 0 ? (
         <p className="muted">You are not a member of any group.</p>
       ) : (
         <ul className="pills">
-          {groups.map(g => <li key={g.id}>{g.displayName || g.name}</li>)}
+          {memberships.map(g => <li key={g.id}>{g.displayName || g.name}</li>)}
         </ul>
       )}
     </section>

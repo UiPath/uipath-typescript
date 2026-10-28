@@ -15,10 +15,12 @@ interface TokenClaims {
   preferred_username?: string;
 }
 
+/** Decodes the JWT payload as UTF-8, so names outside ASCII survive. */
 function decodeJwtPayload(token: string): TokenClaims {
   const payload = token.split('.')[1];
   if (!payload) throw new Error('Malformed access token');
-  const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+  const binary = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+  const json = new TextDecoder().decode(Uint8Array.from(binary, c => c.charCodeAt(0)));
   return JSON.parse(json) as TokenClaims;
 }
 

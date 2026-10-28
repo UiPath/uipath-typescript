@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PaginationCursor } from '@uipath/uipath-typescript/core';
 import { PlatformGroupType } from '@uipath/uipath-typescript/groups';
 import type { PlatformGroupGetResponse } from '@uipath/uipath-typescript/groups';
@@ -9,29 +9,39 @@ const PAGE_SIZE = 25;
 
 /**
  * The organization overview only admins see: every user (`users.getAll()`, one
- * page at a time) and every group (`groups.getAll()`).
+ * page at a time) and every group (`groups.getAll()`, loaded once by the app).
  */
-export function AdminView({ services }: { services: PlatformServices }) {
+export function AdminView({
+  services,
+  groups,
+}: {
+  services: PlatformServices;
+  groups: PlatformGroupGetResponse[] | null;
+}) {
   const [users, setUsers] = useState<PlatformUserGetResponse[]>([]);
   const [userCount, setUserCount] = useState<number | undefined>(undefined);
   const [nextCursor, setNextCursor] = useState<PaginationCursor | undefined>(undefined);
-  const [groups, setGroups] = useState<PlatformGroupGetResponse[] | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [failed, setFailed] = useState(false);
+  const [usersFailed, setUsersFailed] = useState(false);
+  // Only the latest request may update the list, so a late first page cannot replace a loaded second page
+  const latestRequest = useRef(0);
 
   const loadUsers = useCallback(
     async (cursor?: PaginationCursor) => {
+      const request = ++latestRequest.current;
       setLoadingUsers(true);
+      setUsersFailed(false);
       try {
         const page = await services.users.getAll({ pageSize: PAGE_SIZE, cursor });
+        if (request !== latestRequest.current) return;
         setUsers(previous => (cursor ? [...previous, ...page.items] : page.items));
         setUserCount(page.totalCount);
         setNextCursor(page.hasNextPage ? page.nextCursor : undefined);
       } catch (err) {
         console.error('Loading users failed:', err);
-        setFailed(true);
+        if (request === latestRequest.current) setUsersFailed(true);
       } finally {
-        setLoadingUsers(false);
+        if (request === latestRequest.current) setLoadingUsers(false);
       }
     },
     [services]
@@ -39,56 +49,58 @@ export function AdminView({ services }: { services: PlatformServices }) {
 
   useEffect(() => {
     loadUsers();
-    services.groups
-      .getAll()
-      .then(setGroups)
-      .catch(err => {
-        console.error('Loading groups failed:', err);
-        setFailed(true);
-      });
-  }, [services, loadUsers]);
+    // Invalidate the in-flight request on unmount
+    return () => { latestRequest.current++; };
+  }, [loadUsers]);
 
   const customGroups = groups?.filter(g => g.type === PlatformGroupType.Custom).length ?? 0;
+  const usersLoaded = !loadingUsers || users.length > 0;
 
   return (
     <section>
-      {failed && <p className="error">Some organization data could not be loaded. Try again in a moment.</p>}
-
       <div className="stats">
         <div className="stat">
-          <span className="stat-value">{userCount ?? users.length}</span>
+          <span className="stat-value">{usersFailed && users.length === 0 ? '—' : usersLoaded ? (userCount ?? users.length) : '…'}</span>
           <span className="muted">users</span>
         </div>
         <div className="stat">
-          <span className="stat-value">{groups?.length ?? '…'}</span>
-          <span className="muted">groups ({customGroups} custom)</span>
+          <span className="stat-value">{groups ? groups.length : '—'}</span>
+          <span className="muted">groups{groups ? ` (${customGroups} custom)` : ''}</span>
         </div>
       </div>
 
       <h2>Users</h2>
-      <table>
-        <thead>
-          <tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th></tr>
-        </thead>
-        <tbody>
-          {users.map(u => (
-            <tr key={u.id}>
-              <td>{u.displayName ?? u.userName}</td>
-              <td>{u.email}</td>
-              <td><span className={u.isActive ? 'badge active' : 'badge'}>{u.isActive ? 'active' : 'inactive'}</span></td>
-              <td>{u.lastLoginTime ? new Date(u.lastLoginTime).toLocaleDateString() : '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {users.length > 0 && (
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th></tr>
+          </thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id}>
+                <td>{u.displayName || u.userName}</td>
+                <td>{u.email}</td>
+                <td><span className={u.isActive ? 'badge active' : 'badge'}>{u.isActive ? 'active' : 'inactive'}</span></td>
+                <td>{u.lastLoginTime ? new Date(u.lastLoginTime).toLocaleDateString() : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       {loadingUsers && <p className="muted">Loading…</p>}
-      {!loadingUsers && nextCursor && (
+      {usersFailed && (
+        <p className="error">
+          Users could not be loaded.{' '}
+          <button className="link" onClick={() => loadUsers(users.length > 0 ? nextCursor : undefined)}>Try again</button>
+        </p>
+      )}
+      {!loadingUsers && !usersFailed && nextCursor && (
         <button onClick={() => loadUsers(nextCursor)}>Load more users</button>
       )}
 
       <h2>Groups</h2>
       {groups === null ? (
-        <p className="muted">Loading…</p>
+        <p className="error">Groups could not be loaded. Reload the page to try again.</p>
       ) : (
         <table>
           <thead>
