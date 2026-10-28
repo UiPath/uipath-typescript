@@ -37,7 +37,7 @@ The signed-in user's identity (user GUID + organization GUID) is decoded from th
 
 ```bash
 npm run build
-uip login --authority https://alpha.uipath.com --organization <org> --tenant <tenant>
+uip login --interactive
 uip codedapp pack ./dist --name access-request-portal --version <version>
 uip codedapp publish --name access-request-portal --version <version> --type Web
 uip codedapp deploy --name access-request-portal --folder-key <folderKey>
