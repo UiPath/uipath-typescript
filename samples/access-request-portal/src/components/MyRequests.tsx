@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { CurrentUser } from '../lib/identity';
 import type { AccessRequest, RequestStore } from '../lib/storage';
+import { toUserMessage } from '../lib/errors';
 
-/** The requester's own requests — non-admins never see anyone else's. */
+/**
+ * The signed-in user's own requests. The filter runs in the browser: anyone with
+ * Data Fabric read access to the entity can read every row, so the store is not a
+ * place for confidential justifications (see the README's hardening note).
+ */
 export function MyRequests({ user, store }: { user: CurrentUser; store: RequestStore }) {
   const [requests, setRequests] = useState<AccessRequest[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +17,7 @@ export function MyRequests({ user, store }: { user: CurrentUser; store: RequestS
     store
       .list()
       .then(all => setRequests(all.filter(r => r.requestedById.toLowerCase() === mine)))
-      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load requests'));
+      .catch(err => setError(toUserMessage(err, 'Your requests could not be loaded. Try again in a moment.')));
   }, [store, user]);
 
   if (error) return <p className="error">{error}</p>;

@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
+import { UiPath } from '@uipath/uipath-typescript/core';
 
 interface AuthContextValue {
   sdk: UiPath;
@@ -25,8 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sdk] = useState<UiPath>(() => new UiPath());
+  // The OAuth code is single-use: StrictMode runs effects twice in development,
+  // and a second exchange of the same code fails and signs the user out again.
+  const didInit = useRef(false);
 
   useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
     const initializeAuth = async () => {
       setIsLoading(true);
       setError(null);
@@ -37,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(sdk.isAuthenticated());
       } catch (err) {
         console.error('Authentication initialization failed:', err);
-        setError(err instanceof UiPathError ? err.message : 'Authentication failed');
+        setError('Sign-in failed. Try again.');
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -54,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(sdk.isAuthenticated());
     } catch (err) {
       console.error('Login failed:', err);
-      setError(err instanceof UiPathError ? err.message : 'Login failed');
+      setError('Sign-in failed. Try again.');
     } finally {
       setIsLoading(false);
     }

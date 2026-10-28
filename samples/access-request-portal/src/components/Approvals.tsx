@@ -3,6 +3,8 @@ import { PlatformPrincipalType } from '@uipath/uipath-typescript/roles';
 import type { PlatformServices } from '../lib/services';
 import type { CurrentUser } from '../lib/identity';
 import type { AccessRequest, RequestStore } from '../lib/storage';
+import { toUserMessage } from '../lib/errors';
+import { groupLabel, roleLabel } from '../lib/labels';
 
 /**
  * Admin approval queue. Approving actually grants the access:
@@ -22,7 +24,7 @@ import type { AccessRequest, RequestStore } from '../lib/storage';
 
 /** A pending request with its target and requester resolved from the platform. */
 interface VerifiedRequest {
-  /** Authoritative name of the group or role `targetId` points at. */
+  /** Authoritative label of the group or role `targetId` points at. */
   targetName: string;
   /** Authoritative identity of the account that would receive the access. */
   requester: string;
@@ -31,16 +33,16 @@ interface VerifiedRequest {
 }
 
 async function verify(services: PlatformServices, request: AccessRequest): Promise<VerifiedRequest> {
-  const [target, requester] = await Promise.all([
+  const [targetName, requester] = await Promise.all([
     request.kind === 'group'
-      ? services.groups.getById(request.targetId)
-      : services.roles.getById(request.targetId),
+      ? services.groups.getById(request.targetId).then(groupLabel)
+      : services.roles.getById(request.targetId).then(roleLabel),
     services.users.getById(request.requestedById),
   ]);
   return {
-    targetName: target.name,
-    requester: `${requester.displayName ?? requester.userName} <${requester.email}>`,
-    tampered: target.name !== request.targetName,
+    targetName,
+    requester: `${requester.displayName || requester.userName} <${requester.email}>`,
+    tampered: targetName !== request.targetName,
   };
 }
 
@@ -55,8 +57,9 @@ export function Approvals({
 }) {
   const [requests, setRequests] = useState<AccessRequest[] | null>(null);
   const [verified, setVerified] = useState<Record<string, VerifiedRequest>>({});
-  const [unverified, setUnverified] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [unverified, setUnverified] = useState<Record<string, true>>({});
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -64,10 +67,14 @@ export function Approvals({
     const pending = all.filter(r => r.status === 'pending');
     const results = await Promise.allSettled(pending.map(r => verify(services, r)));
     const ok: Record<string, VerifiedRequest> = {};
-    const failed: Record<string, string> = {};
+    const failed: Record<string, true> = {};
     results.forEach((result, i) => {
-      if (result.status === 'fulfilled') ok[pending[i].id] = result.value;
-      else failed[pending[i].id] = result.reason instanceof Error ? result.reason.message : 'Could not verify';
+      if (result.status === 'fulfilled') {
+        ok[pending[i].id] = result.value;
+      } else {
+        console.error(`Could not verify request ${pending[i].id}:`, result.reason);
+        failed[pending[i].id] = true;
+      }
     });
     setVerified(ok);
     setUnverified(failed);
@@ -75,10 +82,10 @@ export function Approvals({
   }, [services, store]);
 
   useEffect(() => {
-    reload().catch(err => setError(err instanceof Error ? err.message : 'Failed to load requests'));
+    reload().catch(err => setLoadError(toUserMessage(err, 'The approval queue could not be loaded. Try again in a moment.')));
   }, [reload]);
 
-  if (error) return <p className="error">{error}</p>;
+  if (loadError) return <p className="error">{loadError}</p>;
   if (!requests) return <p>Loading…</p>;
 
   const pending = requests.filter(r => r.status === 'pending');
@@ -102,33 +109,52 @@ export function Approvals({
   };
 
   const resolve = async (request: AccessRequest, approve: boolean) => {
+    if (approve) {
+      const check = verified[request.id];
+      if (!check || check.tampered) {
+        setActionError('This request could not be verified against the platform. Deny it, or ask the requester to submit it again.');
+        return;
+      }
+    }
     setBusyId(request.id);
-    setError(null);
+    setActionError(null);
     try {
       if (approve) {
-        const check = verified[request.id];
-        if (!check || check.tampered) {
-          throw new Error('This request could not be verified against the platform. Deny it, or ask the requester to submit it again.');
+        try {
+          await grant(request);
+        } catch (err) {
+          setActionError(toUserMessage(err, 'The access could not be granted. Try again in a moment.'));
+          return;
         }
-        await grant(request);
       }
-      await store.update({
-        ...request,
-        status: approve ? 'approved' : 'denied',
-        resolvedByName: user.displayName,
-        resolvedTime: new Date().toISOString(),
-      });
-      await reload();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve request');
+      try {
+        await store.update({
+          ...request,
+          status: approve ? 'approved' : 'denied',
+          resolvedByName: user.displayName,
+          resolvedTime: new Date().toISOString(),
+        });
+      } catch (err) {
+        setActionError(toUserMessage(
+          err,
+          approve
+            ? 'The access was granted, but the request could not be marked approved, so it still shows as pending.'
+            : 'The request could not be marked denied. Try again in a moment.'
+        ));
+        return;
+      }
+      await reload().catch(err => setActionError(toUserMessage(err, 'The queue could not be refreshed. Reload the page.')));
     } finally {
       setBusyId(null);
     }
   };
 
+  const busy = busyId !== null;
+
   return (
     <section>
       <h2>Pending approvals ({pending.length})</h2>
+      {actionError && <p className="error">{actionError}</p>}
       {pending.length === 0 ? (
         <p className="muted">Nothing waiting for review.</p>
       ) : (
@@ -154,17 +180,17 @@ export function Approvals({
                     {unverified[r.id] && (
                       <>
                         {' '}
-                        <span className="badge pending" title={unverified[r.id]}>unverified</span>
+                        <span className="badge pending" title="The requested group, role or requester could not be found on the platform">unverified</span>
                       </>
                     )}
                   </td>
                   <td>{r.kind}</td>
                   <td>{r.justification}</td>
                   <td className="actions">
-                    <button className="primary" disabled={busyId === r.id || !canGrant} onClick={() => resolve(r, true)}>
-                      {busyId === r.id ? 'Granting…' : 'Approve & grant'}
+                    <button className="primary" disabled={busy || !canGrant} onClick={() => resolve(r, true)}>
+                      {busyId === r.id ? 'Working…' : 'Approve & grant'}
                     </button>
-                    <button disabled={busyId === r.id} onClick={() => resolve(r, false)}>Deny</button>
+                    <button disabled={busy} onClick={() => resolve(r, false)}>Deny</button>
                   </td>
                 </tr>
               );

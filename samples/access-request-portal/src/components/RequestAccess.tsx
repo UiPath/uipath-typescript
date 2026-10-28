@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
+import { PlatformGroupType } from '@uipath/uipath-typescript/groups';
 import type { PlatformGroupGetResponse } from '@uipath/uipath-typescript/groups';
+import { PlatformRoleScopeType } from '@uipath/uipath-typescript/roles';
 import type { PlatformRoleGetResponse } from '@uipath/uipath-typescript/roles';
 import type { PlatformServices } from '../lib/services';
 import type { CurrentUser } from '../lib/identity';
 import type { RequestStore, RequestKind } from '../lib/storage';
+import { toUserMessage } from '../lib/errors';
+import { groupLabel, roleLabel } from '../lib/labels';
+
+/** Data Fabric text fields default to a 200-character limit. */
+const JUSTIFICATION_MAX_LENGTH = 200;
 
 /**
- * The request catalog: everything a member can ask for — the org's groups
- * (`groups.getAll()`) and roles (`roles.getAll()`).
+ * The request catalog: everything a member can ask for — the organization's custom
+ * groups (`groups.getAll()`; built-in groups cannot be edited) and organization-level
+ * roles (`roles.getAll({ scopeType })`), which is the scope an approval grants at.
  */
 export function RequestAccess({
   services,
@@ -25,37 +33,44 @@ export function RequestAccess({
   const [kind, setKind] = useState<RequestKind>('group');
   const [targetId, setTargetId] = useState('');
   const [justification, setJustification] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    let ignore = false;
     const load = async () => {
       try {
-        setGroups(await services.groups.getAll());
-        const rolePage = await services.roles.getAll({ pageSize: 100 });
-        setRoles(rolePage.items);
+        const [allGroups, orgRoles] = await Promise.all([
+          services.groups.getAll(),
+          services.roles.getAll({ scopeType: PlatformRoleScopeType.Organization }),
+        ]);
+        if (ignore) return;
+        setGroups(allGroups.filter(g => g.type === PlatformGroupType.Custom));
+        setRoles(orgRoles.items);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load catalog');
+        if (!ignore) setLoadError(toUserMessage(err, 'The request catalog could not be loaded. Try again in a moment.'));
       }
     };
     load();
-  }, [services, user]);
+    return () => { ignore = true; };
+  }, [services]);
 
-  if (error) return <p className="error">{error}</p>;
+  if (loadError) return <p className="error">{loadError}</p>;
   if (!groups || !roles) return <p>Loading catalog…</p>;
 
   const options = kind === 'group'
-    ? groups.map(g => ({ id: g.id, name: g.displayName || g.name }))
-    : roles.map(r => ({ id: r.id, name: `${r.name} (${r.scopeType})` }));
+    ? groups.map(g => ({ id: g.id, name: groupLabel(g) }))
+    : roles.map(r => ({ id: r.id, name: roleLabel(r) }));
 
   const submit = async () => {
     const target = options.find(o => o.id === targetId);
     if (!target || !justification.trim()) {
-      setError('Pick a target and provide a justification.');
+      setSubmitError('Pick a target and provide a justification.');
       return;
     }
     setSubmitting(true);
-    setError(null);
+    setSubmitError(null);
     try {
       await store.create({
         kind,
@@ -69,7 +84,7 @@ export function RequestAccess({
       });
       onSubmitted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit request');
+      setSubmitError(toUserMessage(err, 'Your request could not be submitted. Try again in a moment.'));
     } finally {
       setSubmitting(false);
     }
@@ -97,6 +112,7 @@ export function RequestAccess({
           Business justification
           <textarea
             rows={3}
+            maxLength={JUSTIFICATION_MAX_LENGTH}
             value={justification}
             onChange={e => setJustification(e.target.value)}
             placeholder="Why do you need this access?"
@@ -105,6 +121,7 @@ export function RequestAccess({
         <button className="primary" disabled={submitting} onClick={submit}>
           {submitting ? 'Submitting…' : 'Submit request'}
         </button>
+        {submitError && <p className="error">{submitError}</p>}
       </div>
     </section>
   );

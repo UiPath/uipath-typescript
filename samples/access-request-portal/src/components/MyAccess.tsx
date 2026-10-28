@@ -3,9 +3,10 @@ import type { PlatformDirectoryGroup } from '@uipath/uipath-typescript/directory
 import type { PlatformPrincipalRoleAssignments } from '@uipath/uipath-typescript/roles';
 import type { PlatformServices } from '../lib/services';
 import type { CurrentUser } from '../lib/identity';
+import { toUserMessage } from '../lib/errors';
 
 /**
- * "What do I have?" — the requester's own groups and direct role assignments.
+ * "What do I have?" — the requester's own groups and role assignments at organization scope.
  *
  * Groups: `groups.getAll()` + `directory.getGroupMembership()` (which of the
  * org's groups am I in). Roles: `roles.getAssignments()` filtered to me.
@@ -30,7 +31,7 @@ export function MyAccess({ services, user }: { services: PlatformServices; user:
         });
         setMyAssignments(assignments.items);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load access');
+        setError(toUserMessage(err, 'Your access could not be loaded. Try again in a moment.'));
       }
     };
     load();
@@ -54,7 +55,7 @@ export function MyAccess({ services, user }: { services: PlatformServices; user:
 
       <h2>My role assignments</h2>
       {roleRows.length === 0 ? (
-        <p className="muted">No direct role assignments — access may come via group membership.</p>
+        <p className="muted">No role assignments at organization scope — access may come via group membership.</p>
       ) : (
         <table>
           <thead>

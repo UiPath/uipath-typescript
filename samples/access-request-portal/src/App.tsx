@@ -33,19 +33,27 @@ export default function App() {
   const [services, setServices] = useState<PlatformServices | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [tab, setTab] = useState<Tab>('my-access');
+  const [bootFailed, setBootFailed] = useState(false);
   const store = useMemo(() => createRequestStore(sdk), [sdk]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     const bootstrap = async () => {
-      const currentUser = getCurrentUser(sdk);
+      let currentUser: CurrentUser;
+      try {
+        currentUser = getCurrentUser(sdk);
+      } catch (err) {
+        console.error('Could not identify the signed-in user:', err);
+        setBootFailed(true);
+        return;
+      }
       const platformServices = createServices(sdk);
       setUser(currentUser);
       setServices(platformServices);
       try {
         setIsAdmin(await isAccessAdmin(platformServices, currentUser.userId));
       } catch (err) {
-        console.error('Admin check failed:', err);
+        console.error('Admin check failed; showing the member experience:', err);
         setIsAdmin(false);
       }
     };
@@ -60,6 +68,15 @@ export default function App() {
         <h1>Access Request Portal</h1>
         <p>Request access to groups and roles; admins review and grant in one click.</p>
         {error && <p className="error">{error}</p>}
+        <button className="primary" onClick={login}>Sign in with UiPath</button>
+      </div>
+    );
+  }
+
+  if (bootFailed) {
+    return (
+      <div className="centered login">
+        <p className="error">We couldn't identify your account. Sign in again.</p>
         <button className="primary" onClick={login}>Sign in with UiPath</button>
       </div>
     );

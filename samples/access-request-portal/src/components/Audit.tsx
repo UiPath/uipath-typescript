@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { PlatformPrincipalRoleAssignments } from '@uipath/uipath-typescript/roles';
 import type { PlatformServices } from '../lib/services';
+import { toUserMessage } from '../lib/errors';
 
 /**
  * Org-wide audit: who holds what, via `roles.getAssignments('/')` (grouped by
@@ -9,19 +10,20 @@ import type { PlatformServices } from '../lib/services';
  */
 export function Audit({ services }: { services: PlatformServices }) {
   const [principals, setPrincipals] = useState<PlatformPrincipalRoleAssignments[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     services.roles
       .getAssignments('/', { pageSize: 10 })
       .then(page => setPrincipals(page.items))
-      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load assignments'));
+      .catch(err => setLoadError(toUserMessage(err, 'Role assignments could not be loaded. Try again in a moment.')));
   }, [services]);
 
   const exportCsv = async () => {
     setExporting(true);
-    setError(null);
+    setExportError(null);
     try {
       const csv = await services.roles.exportAssignments();
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -30,15 +32,16 @@ export function Audit({ services }: { services: PlatformServices }) {
       link.href = url;
       link.download = 'role-assignments.csv';
       link.click();
-      URL.revokeObjectURL(url);
+      // Revoking straight after click() can cancel the download in some browsers
+      setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed');
+      setExportError(toUserMessage(err, 'The export failed. Try again in a moment.'));
     } finally {
       setExporting(false);
     }
   };
 
-  if (error) return <p className="error">{error}</p>;
+  if (loadError) return <p className="error">{loadError}</p>;
   if (!principals) return <p>Loading assignments…</p>;
 
   return (
@@ -49,6 +52,7 @@ export function Audit({ services }: { services: PlatformServices }) {
           {exporting ? 'Exporting…' : 'Export all as CSV'}
         </button>
       </div>
+      {exportError && <p className="error">{exportError}</p>}
       {principals.map(p => (
         <div key={p.securityPrincipalId} className="card">
           <div className="card-title">

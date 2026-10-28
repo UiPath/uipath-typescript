@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { PlatformDirectoryEntityType } from '@uipath/uipath-typescript/directory';
 import type { PlatformDirectoryEntry } from '@uipath/uipath-typescript/directory';
+import { PlatformGroupType } from '@uipath/uipath-typescript/groups';
 import { PlatformPrincipalType } from '@uipath/uipath-typescript/roles';
 import type { PlatformRoleAssignment } from '@uipath/uipath-typescript/roles';
 import type { PlatformServices } from '../lib/services';
+import { toUserMessage } from '../lib/errors';
 
 interface ClonePreview {
   groups: { id: string; name: string }[];
@@ -12,10 +14,10 @@ interface ClonePreview {
 
 /**
  * Onboarding shortcut: copy a teammate's access to a new joiner.
- * `directory.search()` powers both people pickers; the source's groups come
- * from `directory.getGroupMembership()` and their direct role assignments
- * from `roles.getAssignments()`; applying uses `groups.updateById()` +
- * `roles.updateAssignments()`.
+ * `directory.search()` powers both people pickers; the source's custom groups come
+ * from `directory.getGroupMembership()` (built-in groups cannot be edited) and their
+ * non-inherited role assignments from `roles.getAssignments()`; applying uses
+ * `groups.updateById()` + `roles.updateAssignments()`.
  */
 export function CloneAccess({ services }: { services: PlatformServices }) {
   const [query, setQuery] = useState('');
@@ -26,8 +28,11 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Picking a second source while the first preview loads must not let the slower response win
+  const previewRequest = useRef(0);
 
   const search = async () => {
+    if (!query.trim()) return;
     setError(null);
     try {
       const entries = await services.directory.search(query, {
@@ -35,11 +40,12 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
       });
       setResults(entries);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
+      setError(toUserMessage(err, 'The search failed. Try again in a moment.'));
     }
   };
 
   const loadPreview = async (sourceUser: PlatformDirectoryEntry) => {
+    const request = ++previewRequest.current;
     setSource(sourceUser);
     setPreview(null);
     setError(null);
@@ -47,7 +53,7 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
       const allGroups = await services.groups.getAll();
       const memberships = await services.directory.getGroupMembership(
         sourceUser.id,
-        allGroups.map(g => g.id)
+        allGroups.filter(g => g.type === PlatformGroupType.Custom).map(g => g.id)
       );
       const assignments = await services.roles.getAssignments('/', {
         securityPrincipalId: sourceUser.id,
@@ -56,12 +62,15 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
       const direct = assignments.items
         .flatMap(p => p.roleAssignments)
         .filter(a => !a.inherited);
+      if (request !== previewRequest.current) return;
       setPreview({
         groups: memberships.map(m => ({ id: m.id, name: m.displayName || m.name })),
         assignments: direct,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load source access');
+      if (request === previewRequest.current) {
+        setError(toUserMessage(err, "The source person's access could not be loaded. Try again in a moment."));
+      }
     }
   };
 
@@ -88,7 +97,7 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
       }
       setStatus(`Copied ${preview.groups.length} group membership(s) and ${preview.assignments.length} role assignment(s) from ${source.displayName || source.name} to ${target.displayName || target.name}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Clone failed');
+      setError(toUserMessage(err, 'The clone stopped partway. Check the target person\'s access before trying again.'));
     } finally {
       setBusy(false);
     }
@@ -97,7 +106,7 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
   return (
     <section>
       <h2>Clone access</h2>
-      <p className="muted">Copy a teammate’s groups and direct role assignments to a new joiner.</p>
+      <p className="muted">Copy a teammate’s custom groups and role assignments to a new joiner.</p>
 
       <div className="form-inline">
         <input
@@ -149,7 +158,14 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
         </div>
       )}
 
-      <button className="primary" disabled={!source || !target || !preview || busy} onClick={apply}>
+      {source && target && source.id === target.id && (
+        <p className="muted">Pick a different person as the target.</p>
+      )}
+      <button
+        className="primary"
+        disabled={!source || !target || !preview || busy || source.id === target.id}
+        onClick={apply}
+      >
         {busy ? 'Copying…' : 'Apply clone'}
       </button>
 
