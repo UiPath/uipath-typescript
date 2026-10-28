@@ -291,6 +291,10 @@ export interface ConversationalAgentServiceModel {
    * Gets available connections for each configurable connector binding of an agent.
    * Only returns bindings that are "configurable by users" (not admin-fixed).
    *
+   * **Requires user-scoped authentication.** Personal connections are per-user;
+   * app-scoped tokens (client credentials / `externalUserId`) do not carry a
+   * user identity and these calls will fail.
+   *
    * @param agentId - ID of the agent release
    * @param folderId - ID of the folder containing the agent
    * @returns Promise resolving to an array of connector items with their available connections
