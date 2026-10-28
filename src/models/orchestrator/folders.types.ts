@@ -1,4 +1,5 @@
-import type { BaseOptions } from '../common/types';
+import type { BaseOptions } from '@/models/common/types';
+import type { PaginationOptions } from '@/utils/pagination/types';
 
 /**
  * Orchestrator folder type.
@@ -75,3 +76,20 @@ export interface FolderGetResponse {
  * This lookup is not folder-scoped — no folder headers are sent.
  */
 export interface FolderGetByKeyOptions extends Omit<BaseOptions, 'expand'> {}
+
+/**
+ * A folder returned by {@link FolderServiceModel.getAll}: the identity, path
+ * and parent fields of {@link FolderGetResponse}.
+ */
+export interface FolderGetAllResponse extends Pick<
+  FolderGetResponse,
+  'id' | 'key' | 'displayName' | 'fullyQualifiedName' | 'description' | 'folderType' | 'parentId' | 'parentKey'
+> {}
+
+/**
+ * Query options for {@link FolderServiceModel.getAll}.
+ *
+ * Pagination only — `filter`, `orderby`, `select` and `expand` are not
+ * supported.
+ */
+export type FolderGetAllOptions = PaginationOptions;

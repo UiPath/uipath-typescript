@@ -229,6 +229,7 @@ Creating a validation action and polling its result both go through the [Documen
 
 | Method | OAuth Scope |
 |--------|-------------|
+| `getAll()` | `OR.Folders` or `OR.Folders.Read` |
 | `getByKey()` | `OR.Folders` or `OR.Folders.Read` |
 
 ## Functions

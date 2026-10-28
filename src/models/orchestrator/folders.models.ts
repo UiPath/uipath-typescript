@@ -1,4 +1,10 @@
-import type { FolderGetByKeyOptions, FolderGetResponse } from './folders.types';
+import type {
+  FolderGetAllOptions,
+  FolderGetAllResponse,
+  FolderGetByKeyOptions,
+  FolderGetResponse,
+} from './folders.types';
+import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 
 /**
  * Service for looking up UiPath Orchestrator folders.
@@ -18,6 +24,45 @@ import type { FolderGetByKeyOptions, FolderGetResponse } from './folders.types';
  * ```
  */
 export interface FolderServiceModel {
+  /**
+   * Gets the folders the calling user has access to, across the tenant.
+   *
+   * Each folder carries its id, key, display name, fully qualified path,
+   * folder type and parent reference.
+   *
+   * Without pagination options, a single page is returned at the server's
+   * default page size. Compare `totalCount` with `items.length`, or page with
+   * `pageSize` and `cursor`, to retrieve every folder.
+   * A `jumpToPage` past the last page returns no items with `totalCount: 0`.
+   *
+   * @param options - Optional pagination options.
+   * @returns Promise resolving to a {@link NonPaginatedResponse} of {@link FolderGetAllResponse} without pagination options, or a {@link PaginatedResponse} of {@link FolderGetAllResponse} when pagination options are used.
+   * @example
+   * ```typescript
+   * // Get folders (first page at the server's default page size)
+   * const result = await folders.getAll();
+   * result.items.forEach(folder => console.log(folder.fullyQualifiedName));
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Page through every folder
+   * let page = await folders.getAll({ pageSize: 100 });
+   * const allFolders = [...page.items];
+   * while (page.hasNextPage && page.nextCursor) {
+   *   page = await folders.getAll({ cursor: page.nextCursor });
+   *   allFolders.push(...page.items);
+   * }
+   * ```
+   */
+  getAll<T extends FolderGetAllOptions = FolderGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<FolderGetAllResponse>
+      : NonPaginatedResponse<FolderGetAllResponse>
+  >;
+
   /**
    * Gets a single folder by its key (GUID). Unlike most Orchestrator reads,
    * this lookup is not folder-scoped: no folder headers are sent.

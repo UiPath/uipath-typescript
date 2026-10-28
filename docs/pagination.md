@@ -123,6 +123,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets | `getAll()` | ✅ Yes |
 | Buckets | `getFiles()` | ✅ Yes |
 | Buckets | `getFileMetaData()` | ❌ No |
+| Folders | `getAll()` | ✅ Yes |
 | Jobs | `getAll()` | ✅ Yes |
 | Users | `getAll()` | ✅ Yes |
 | Roles | `getAll()` | ✅ Yes |
