@@ -33,6 +33,23 @@ The signed-in user's identity (user GUID + organization GUID) is decoded from th
 
 5. Sign in. Members of the organization's **Administrators** group get the admin tabs (Approvals, Audit, Clone Access); everyone else gets the member experience.
 
+## Deploying as a Coded App
+
+```bash
+npm run build
+uip login --authority https://alpha.uipath.com --organization <org> --tenant <tenant>
+uip codedapp pack ./dist --name access-request-portal --version <version>
+uip codedapp publish --name access-request-portal --version <version> --type Web
+uip codedapp deploy --name access-request-portal --folder-key <folderKey>
+```
+
+`pack` reads `uipath.json` for the OAuth client baked into the package, so keep the same file across
+releases. Pass `--folder-key` to `deploy`; without it the CLI opens an interactive folder picker. A new
+version of an already deployed app must not be `1.0.0` — the tool treats that version as a first
+deployment and refuses when the app name is already taken. A fresh deployment always starts from the
+app's first published version, so keep that package in the Orchestrator feed; run `deploy` a second
+time to upgrade the new deployment to the latest published version.
+
 ## Demo flow (single browser)
 
 1. Sign in as a member → **Request Access** → pick a group or role, add a justification, submit.

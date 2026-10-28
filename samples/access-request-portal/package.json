@@ -1,7 +1,7 @@
 {
   "name": "access-request-portal",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.3",
   "description": "Coded app demonstrating the platform RBAC services: self-service access requests with admin approval, effective-access view, role assignment audit, and access cloning",
   "type": "module",
   "scripts": {
