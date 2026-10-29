@@ -54,7 +54,7 @@ export type {
   CodedFunctionPlatform,
   CodedFunctionRobot,
 } from './config/function-context';
-export type { TokenInfo, LogoutOptions } from './auth/types';
+export type { TokenInfo, LogoutOptions, AuthenticatedUser } from './auth/types';
 export type { DebugContext } from '../models/common/types';
 export * from './errors';
 
