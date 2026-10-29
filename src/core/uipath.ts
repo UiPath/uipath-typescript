@@ -1,8 +1,9 @@
 import { UiPathConfig } from './config/config';
 import { DEBUG_CONTEXT_KEY, ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
-import { TokenInfo, LogoutOptions } from './auth/types';
+import { TokenInfo, LogoutOptions, AuthenticatedUser } from './auth/types';
 import { NO_TOKEN_MESSAGE } from './auth/constants';
+import { authenticatedUserFromToken } from './auth/authenticated-user';
 import { AuthenticationError } from './errors';
 import type { DebugContext } from '../models/common/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig, isPublicMode } from './config/sdk-config';
@@ -446,6 +447,17 @@ export class UiPath implements IUiPath {
       throw new AuthenticationError({ message: NO_TOKEN_MESSAGE });
     }
     return this.#authService.getTokenManager().getValidToken();
+  }
+
+  public async getAuthenticatedUser(): Promise<AuthenticatedUser> {
+    if (!this.#authService) {
+      throw new AuthenticationError({
+        message: 'The SDK is not configured. Call initialize() before getAuthenticatedUser().'
+      });
+    }
+
+    const token = await this.#authService.getTokenManager().getValidToken();
+    return authenticatedUserFromToken(token);
   }
 
   /**
