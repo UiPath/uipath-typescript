@@ -9,7 +9,7 @@
  */
 
 import type { BaseConfig } from './config/sdk-config';
-import type { TokenInfo, LogoutOptions } from './auth/types';
+import type { TokenInfo, LogoutOptions, AuthenticatedUser } from './auth/types';
 import type { DebugContext } from '../models/common/types';
 
 export interface IUiPath {
@@ -47,6 +47,32 @@ export interface IUiPath {
    * Get the current authentication token
    */
   getToken(): string | undefined;
+
+  /**
+   * Gets the signed-in user's ID, name and email, read from the claims of the current
+   * access token rather than requested from an API. Inside Action Center or another UiPath
+   * host, the SDK first gets the user's token from the host; an expired OAuth token is refreshed.
+   *
+   * Only user sign-ins carry these details: OAuth, or the user token a UiPath host passes
+   * to the app. The promise rejects with an `AuthenticationError` when the SDK is not
+   * authenticated, or when the token is a personal access token or was issued to an
+   * application, machine or robot.
+   *
+   * The token's signature is not verified, so use these details for display, not for access
+   * decisions. A server that receives tokens from its callers must verify them before
+   * trusting the user they name.
+   *
+   * @returns Promise resolving to the {@link AuthenticatedUser}
+   *
+   * @example
+   * ```typescript
+   * await sdk.initialize();
+   *
+   * const user = await sdk.getAuthenticatedUser();
+   * console.log(user.name, user.email);
+   * ```
+   */
+  getAuthenticatedUser(): Promise<AuthenticatedUser>;
 
   /**
    * Releases resources held by this SDK instance.
