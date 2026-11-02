@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.8.2",
+  "sdkVersion": "1.8.3",
   "services": [
     {
       "name": "AgentMemory",
@@ -688,6 +688,10 @@
       "subpath": "@uipath/uipath-typescript/folders",
       "since": "1.8.0",
       "methods": [
+        {
+          "name": "getAll",
+          "since": "1.8.3"
+        },
         {
           "name": "getByKey",
           "since": "1.8.0"
