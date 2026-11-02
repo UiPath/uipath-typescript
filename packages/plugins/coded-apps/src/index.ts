@@ -13,6 +13,7 @@ import {
   generateEnvScriptForVite,
   injectEnvScriptHtml,
 } from './core/index'
+import { readPublicDevContext, createPublicDevMiddleware, DEV_APP_KEY, CLIENT_ID_VARIABLE } from './core/public-dev-server'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
   let isDev = false
@@ -21,6 +22,9 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
   // esbuild builds, `vite build --mode development` and unminified builds never get them.
   let isDevServer = false
   let cachedConfig: ReturnType<typeof readConfig> | null = null
+  // Set when the env files hold the external app's client id and secret: the dev server then answers the public
+  // routes itself (see public-dev-server.ts). Read once at startup, so a change to them needs a restart.
+  let publicDev = false
   const configPath = options.configPath ?? 'uipath.json'
 
   return {
@@ -33,6 +37,13 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         isDevServer = config.command === 'serve'
       },
       configureServer(server) {
+        cachedConfig ??= readConfig({ ...options, isDev })
+        const publicDevContext = readPublicDevContext(cachedConfig)
+        if (publicDevContext) {
+          publicDev = true
+          server.middlewares.use(createPublicDevMiddleware(publicDevContext))
+          console.log(`[${PLUGIN_NAME}] Public mode: the dev server makes the app's calls as ${CLIENT_ID_VARIABLE} ${publicDevContext.clientId}.`)
+        }
         // Watch uipath.json — invalidate cache on change so next request picks it up
         const fullConfigPath = path.resolve(process.cwd(), configPath)
         server.watcher.add(fullConfigPath)
@@ -51,7 +62,19 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         if (!cachedConfig) {
           cachedConfig = readConfig({ ...options, isDev })
         }
-        const tags = generateMetaTagsForVite(cachedConfig)
+        let tags: { tag: string; attrs?: Record<string, string>; children?: string; injectTo: 'head' }[] = generateMetaTagsForVite(cachedConfig)
+        if (publicDev) {
+          // The SDK sends public calls to base-url; point it at this dev server, whichever host the page was opened on.
+          tags = [
+            ...tags.filter(tag => tag.attrs?.name !== 'uipath:base-url'),
+            { tag: 'meta', attrs: { name: 'uipath:app-key', content: DEV_APP_KEY }, injectTo: 'head' },
+            {
+              tag: 'script',
+              children: "document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'uipath:base-url', content: location.origin }))",
+              injectTo: 'head',
+            },
+          ]
+        }
         const envValues = readDevEnvValues(isDevServer)
         return envValues ? [...generateEnvScriptForVite(envValues), ...tags] : tags
       },
