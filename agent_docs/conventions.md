@@ -56,7 +56,7 @@ alwaysApply: true
   - **The same ≤3 / 4+ rule applies to bound entity methods independently.** Bound methods often have fewer required params than their service-level counterparts because the entity auto-fills some fields (e.g., `processKey`, `packageId`). Count what's left after the entity-supplied fields. E.g., service-level `getElementStats` has 5 required → uses `ProcessStatsRequest`. Bound `process.getElementStats(packageVersion, startTime, endTime)` has 3 required → stays positional. The factory delegate constructs the `Request` from the positional args plus the entity's fields before calling the service.
 - **NEVER** duplicate fields across option types — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`).
 - **Use `Omit` only when a field must not appear in a type at all.** When a field has a server-side default and is simply not required by callers, mark it `?` optional instead. Using `Omit` implies the field would cause an error if included — it misleads callers into thinking they cannot pass the field. Example: if `assignmentCriteria` defaults to `SingleUser` on the server, the options type should declare it as `assignmentCriteria?: TaskAssignmentCriteria`, not `Omit<BaseOptions, 'assignmentCriteria'>`.
-- **Always use `type` for response types** (intersections, unions, composed types). The `interface extends` form is required in two cases that break TypeDoc: (a) single-type aliases (`type X = Y`), and (b) `Omit<>` derived types — `type X = Omit<Y, 'field'>` renders as an unexpanded alias in TypeDoc with no property table, while `interface X extends Omit<Y, 'field'> {}` renders the full property table. Use `interface extends Omit<>` for any public response type derived by excluding fields. Example: `export interface AttachmentCreateResponse extends Omit<AttachmentResponse, 'blobFileAccess'> {}`.
+- **Always use `type` for response types** (intersections, unions, composed types). The `interface extends` form is required in two cases that break TypeDoc: (a) single-type aliases (`type X = Y`), and (b) `Omit<>` derived types — `type X = Omit<Y, 'field'>` renders as an unexpanded alias in TypeDoc with no property table, while `interface X extends Omit<Y, 'field'> {}` renders the full property table. Use `interface extends Omit<>` for any public response type derived by excluding fields. Example: `export interface AttachmentCreateResponse extends Omit<AttachmentResponse, 'blobFileAccess'> {}`. **Exception — `interface extends` fails (TS2312) when the base contains a union member** (e.g., `PaginationOptions = { pageSize?: number } & PaginationMethodUnion`). TypeScript requires all bases of an interface to have statically known members; a type containing a union does not satisfy this. In that case, use `type X = BaseUnionType` even though it renders as an unexpanded alias in TypeDoc.
 
 **ID parameter types**: New methods must use `string` (GUID) for entity identifiers, not `string | number`. Legacy methods may still accept `string | number` for backward compatibility, but all new `getById`, `getOutput`, etc. should type their ID parameter as `string`.
 
@@ -157,6 +157,8 @@ Defined in `src/utils/constants/endpoints/<domain>/`, one folder per domain name
 ## Pagination
 
 **When to add:** Always check whether the API supports paginated responses. If so, use `PaginationHelpers.getAll()` from `src/utils/pagination/helpers.ts`.
+
+**Internal auto-looping policy** — `getAll()` methods expose pagination controls (`pageSize`, `nextCursor`) to the caller and return the first page at the service default. **NEVER** auto-loop all pages internally unless the endpoint's default page size is inherently too small to be useful on its own (e.g., Identity users at 10 per page). All other services follow the standard pattern — callers walk pages with `pageSize` + `nextCursor`, matching every other paginated `getAll` in the SDK (e.g., `businessApps.getAll()`, `caseInstances.getAll()`).
 
 **Two pagination types:**
 
@@ -268,6 +270,8 @@ If the constructor only calls `super()` with no additional setup, omit it entire
 ## BaseService
 
 **`BaseService`** (`src/services/base.ts`): Authenticated HTTP methods, `createPaginationServiceAccess()`. All services extend this. **NEVER** add domain-specific helpers to `BaseService` — especially helpers that make external network calls. Adding such methods to `BaseService` silently gives every service access to functionality (and external API calls) it doesn't need. Domain-specific resolution logic (e.g., looking up an organization ID via Identity) belongs in a dedicated resolver class or the specific service that needs it.
+
+**NEVER add domain-specific headers inside `ApiClient.request()`** — `ApiClient` is used by every service (Orchestrator, Maestro, Data Fabric, Action Center, etc.). A header injected there propagates to all backends regardless of whether those backends allow it, which can fail CORS preflight on services whose allowed-headers list doesn't include it. Scope custom headers to the specific service method that needs them (e.g., set `X-UIPATH-JobKey` inside `Processes.start`, not inside `ApiClient`).
 
 ## Folder-scoped services
 
