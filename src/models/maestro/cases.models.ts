@@ -5,7 +5,7 @@
 
 import { CaseGetAllResponse, CaseGetAllOptions, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
 import { CaseExploreQuery, CaseExploreResponse } from './case-explore.types';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationOptions } from '../../utils/pagination';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationOptions } from '@/utils/pagination';
 import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**

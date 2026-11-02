@@ -11,12 +11,12 @@ import { buildInsightsTopBody, buildInsightsTimelineBody, buildInsightsCommonBod
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
-import type { CaseExploreQuery, CaseExploreResponse } from '../../../models/maestro/case-explore.types';
-import type { RawCaseExploreColumns } from '../../../models/maestro/case-explore.internal-types';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationOptions, getLimitedPageSize } from '../../../utils/pagination';
-import { PaginationHelpers } from '../../../utils/pagination/helpers';
-import { PaginationManager } from '../../../utils/pagination/pagination-manager';
-import { PaginationType } from '../../../utils/pagination/internal-types';
+import type { CaseExploreQuery, CaseExploreResponse } from '@/models/maestro/case-explore.types';
+import type { RawCaseExploreColumns } from '@/models/maestro/case-explore.internal-types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationOptions, getLimitedPageSize } from '@/utils/pagination';
+import { PaginationHelpers } from '@/utils/pagination/helpers';
+import { PaginationManager } from '@/utils/pagination/pagination-manager';
+import { PaginationType } from '@/utils/pagination/internal-types';
 import { toWireExploreQuery, toExploreRows, isPagedExploreResponse } from './explore-helpers';
 
 /**

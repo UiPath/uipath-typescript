@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { CaseExploreFilterKind, CaseExploreSortDirection } from '../../../../src/models/maestro/case-explore.types';
-import type { CaseExploreQuery } from '../../../../src/models/maestro/case-explore.types';
-import { CASE_EXPLORE_TEST_CONSTANTS as EXPLORE } from '../../../utils/constants/case-explore';
+import { CaseExploreFilterKind, CaseExploreSortDirection } from '@/models/maestro/case-explore.types';
+import type { CaseExploreQuery } from '@/models/maestro/case-explore.types';
+import { CASE_EXPLORE_TEST_CONSTANTS as EXPLORE } from '@tests/utils/constants/case-explore';
 import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 

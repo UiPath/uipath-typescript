@@ -2,13 +2,13 @@
  * Case explore query mock factories — columnar wire shapes, as the query engine returns them.
  */
 
-import { CASE_EXPLORE_TEST_CONSTANTS as C } from '../constants/case-explore';
+import { CASE_EXPLORE_TEST_CONSTANTS as C } from '@tests/utils/constants/case-explore';
 import type {
   RawCaseExploreColumns,
   RawCaseExploreColumn,
   RawCaseExplorePagedResponse,
   RawCaseExploreValue,
-} from '../../../src/models/maestro/case-explore.internal-types';
+} from '@/models/maestro/case-explore.internal-types';
 
 export const createRawExploreColumn = (values: RawCaseExploreValue[] | null): RawCaseExploreColumn => ({
   values,

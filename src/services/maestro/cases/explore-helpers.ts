@@ -1,13 +1,13 @@
-import { CaseExploreFilter, CaseExploreFilterKind, CaseExploreQuery, CaseExploreResponse } from '../../../models/maestro/case-explore.types';
-import { CaseExploreSearchType, CaseExploreValueType } from '../../../models/maestro/case-explore.internal-types';
+import { CaseExploreFilter, CaseExploreFilterKind, CaseExploreQuery, CaseExploreResponse } from '@/models/maestro/case-explore.types';
+import { CaseExploreSearchType, CaseExploreValueType } from '@/models/maestro/case-explore.internal-types';
 import type {
   RawCaseExploreColumns,
   RawCaseExplorePagedResponse,
   RawCaseExploreQuery,
   RawCaseExploreSearchFilter,
   RawCaseExploreValueFilter,
-} from '../../../models/maestro/case-explore.internal-types';
-import { CASE_EXPLORE_MARKER_PREFIX } from '../../../models/maestro/case-explore.constants';
+} from '@/models/maestro/case-explore.internal-types';
+import { CASE_EXPLORE_MARKER_PREFIX } from '@/models/maestro/case-explore.constants';
 
 /**
  * Maps an SDK filter to the shape the query engine reads.

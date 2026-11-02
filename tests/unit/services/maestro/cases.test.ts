@@ -19,10 +19,10 @@ import {
   createRawExploreColumns,
   createRawExplorePagedResponse
 } from '../../../utils/mocks';
-import { CASE_EXPLORE_TEST_CONSTANTS as EXPLORE, PAGINATION_TEST_CONSTANTS } from '../../../utils/constants';
-import { CaseExploreFilterKind, CaseExploreSortDirection } from '../../../../src/models/maestro/case-explore.types';
-import type { CaseExploreQuery } from '../../../../src/models/maestro/case-explore.types';
-import type { PaginationCursor } from '../../../../src/utils/pagination';
+import { CASE_EXPLORE_TEST_CONSTANTS as EXPLORE, PAGINATION_TEST_CONSTANTS } from '@tests/utils/constants';
+import { CaseExploreFilterKind, CaseExploreSortDirection } from '@/models/maestro/case-explore.types';
+import type { CaseExploreQuery } from '@/models/maestro/case-explore.types';
+import type { PaginationCursor } from '@/utils/pagination';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
 
