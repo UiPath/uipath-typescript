@@ -296,6 +296,28 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         console.log('Stage fields:', Object.keys(stage));
       }
     });
+
+    it('should expose stage SLA rules with transformed fields', async () => {
+      if (!testCaseInstanceId || !testCaseFolderKey) {
+        throw new Error('No case instance with a folder key available — cannot validate stage SLA rules');
+      }
+
+      const { caseInstances } = getServices();
+
+      const stages = await caseInstances.getStages(testCaseInstanceId, testCaseFolderKey);
+
+      for (const stage of stages) {
+        for (const rule of stage.slaRules ?? []) {
+          expect(typeof rule.expression).toBe('string');
+          expect((rule as any).count).toBeUndefined();
+          expect((rule as any).unit).toBeUndefined();
+        }
+        if (stage.sla) {
+          expect((stage.sla as any).count).toBeUndefined();
+          expect((stage.sla as any).unit).toBeUndefined();
+        }
+      }
+    });
   });
 
   describe('getVariables', () => {

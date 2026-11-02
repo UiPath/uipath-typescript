@@ -83,6 +83,14 @@ export const MAESTRO_TEST_CONSTANTS = {
   SLA_DURATION_HOURS: 'h',
   SLA_DURATION_DAYS: 'd',
   SLA_COUNT_14_DAYS: 14,
+  SLA_COUNT_30_MINUTES: 30,
+  SLA_DURATION_MINUTES: 'min',
+  SLA_RULE_DEFAULT_ID: 'slag1BY1Rio',
+  SLA_RULE_DEFAULT_NAME: 'Default SLA',
+  SLA_RULE_DEFAULT_EXPRESSION: '=js:true',
+  SLA_RULE_CONDITIONAL_ID: 'slaCond1',
+  SLA_RULE_CONDITIONAL_NAME: 'Conditional SLA 1',
+  SLA_RULE_CONDITIONAL_EXPRESSION: '=js:vars.priority == "High"',
   
   // Binding constants
   BINDING_ID: 'binding-1',

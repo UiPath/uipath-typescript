@@ -12,6 +12,9 @@ import {
   createMockRawCaseInstance,
   createMockCaseJsonResponse,
   createMockCaseJsonWithStages,
+  createMockCaseStageNode,
+  createMockCaseSlaRule,
+  createMockCaseTask,
   createMockCaseJsonWithSections,
   createMockCaseInstanceExecutionHistory,
   createMockMaestroApiOperationResponse,
@@ -811,11 +814,21 @@ describe('CaseInstancesService', () => {
       expect(stage.id).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID);
       expect(stage.name).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME);
       
-      // Verify SLA data
+      // Verify SLA data is read from slaRules and renamed
       expect(stage.sla).toBeDefined();
       expect(stage.sla).toHaveProperty('length', MAESTRO_TEST_CONSTANTS.SLA_COUNT_14_DAYS);
       expect(stage.sla).toHaveProperty('duration', MAESTRO_TEST_CONSTANTS.SLA_DURATION_DAYS);
       expect(stage.sla!.escalationRule).toHaveLength(1);
+      expect((stage.sla as any).count).toBeUndefined();
+      expect((stage.sla as any).unit).toBeUndefined();
+      expect(stage.slaRules).toHaveLength(1);
+      expect(stage.slaRules![0]).toMatchObject({
+        id: MAESTRO_TEST_CONSTANTS.SLA_RULE_DEFAULT_ID,
+        displayName: MAESTRO_TEST_CONSTANTS.SLA_RULE_DEFAULT_NAME,
+        expression: MAESTRO_TEST_CONSTANTS.SLA_RULE_DEFAULT_EXPRESSION,
+        length: MAESTRO_TEST_CONSTANTS.SLA_COUNT_14_DAYS,
+        duration: MAESTRO_TEST_CONSTANTS.SLA_DURATION_DAYS
+      });
       
       // Verify task data with execution history
       expect(stage.tasks).toHaveLength(1);
@@ -825,6 +838,63 @@ describe('CaseInstancesService', () => {
       expect(task.status).toBe(MAESTRO_TEST_CONSTANTS.TASK_STATUS_COMPLETED);
       expect(task.startedTime).toBe(MAESTRO_TEST_CONSTANTS.START_TIME);
       expect(task.completedTime).toBe(MAESTRO_TEST_CONSTANTS.END_TIME);
+    });
+
+    it('should pick the default rule among multiple slaRules', async () => {
+      const conditionalRule = createMockCaseSlaRule({
+        id: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_ID,
+        displayName: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_NAME,
+        expression: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_EXPRESSION
+      });
+      const defaultRule = createMockCaseSlaRule({
+        count: MAESTRO_TEST_CONSTANTS.SLA_COUNT_30_MINUTES,
+        unit: MAESTRO_TEST_CONSTANTS.SLA_DURATION_MINUTES
+      });
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockBaseResponse({
+          nodes: [createMockCaseStageNode({
+            data: {
+              label: MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME,
+              slaRules: [conditionalRule, defaultRule],
+              tasks: [[createMockCaseTask()]]
+            }
+          })]
+        }));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].sla).toMatchObject({
+        expression: MAESTRO_TEST_CONSTANTS.SLA_RULE_DEFAULT_EXPRESSION,
+        length: MAESTRO_TEST_CONSTANTS.SLA_COUNT_30_MINUTES,
+        duration: MAESTRO_TEST_CONSTANTS.SLA_DURATION_MINUTES
+      });
+      expect(result[0].slaRules).toHaveLength(2);
+      expect(result[0].slaRules![0].expression).toBe(MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_EXPRESSION);
+    });
+
+    it('should leave sla undefined when only conditional slaRules exist', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockCaseJsonWithStages('conditional-sla-only'));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].sla).toBeUndefined();
+      expect(result[0].slaRules).toHaveLength(1);
+      expect(result[0].slaRules![0].id).toBe(MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_ID);
+    });
+
+    it('should fall back to legacy data.sla when slaRules is absent', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockCaseJsonWithStages('legacy-sla'));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].sla).toHaveProperty('length', MAESTRO_TEST_CONSTANTS.SLA_COUNT_14_DAYS);
+      expect(result[0].sla).toHaveProperty('duration', MAESTRO_TEST_CONSTANTS.SLA_DURATION_DAYS);
+      expect(result[0].slaRules).toBeUndefined();
     });
 
     it('should handle edge cases gracefully', async () => {
@@ -867,6 +937,7 @@ describe('CaseInstancesService', () => {
       result = await service.getStages(instanceId, folderKey);
       expect(result).toHaveLength(1);
       expect(result[0].sla).toBeUndefined();
+      expect(result[0].slaRules).toBeUndefined();
       
       mockApiClient.get.mockReset();
 

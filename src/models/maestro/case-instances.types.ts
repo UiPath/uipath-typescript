@@ -376,6 +376,10 @@ export interface EscalationTriggerMetadata {
  * Escalation rule configuration
  */
 export interface EscalationRule {
+  /** Escalation rule identifier */
+  id?: string;
+  /** Escalation rule display name */
+  displayName?: string;
   triggerInfo: EscalationTriggerMetadata;
   action?: EscalationAction;
 }
@@ -384,6 +388,7 @@ export interface EscalationRule {
  * SLA duration unit
  */
 export enum SLADurationUnit {
+  MINUTES = 'min',
   HOURS = 'h',
   DAYS = 'd',
   WEEKS = 'w',
@@ -400,12 +405,28 @@ export interface StageSLA {
 }
 
 /**
+ * A single SLA rule configured on a stage. A stage can carry several rules; the one whose
+ * `expression` is `=js:true` is the default (unconditional) rule.
+ */
+export interface StageSLARule extends StageSLA {
+  /** SLA rule identifier */
+  id?: string;
+  /** SLA rule display name (e.g. `'Default SLA'`) */
+  displayName?: string;
+  /** Condition under which the rule applies; `=js:true` for the default rule */
+  expression: string;
+}
+
+/**
  * Stage information from case instances
  */
 export interface CaseGetStageResponse {
   id: string;
   name: string;
+  /** Default (unconditional) SLA of the stage, undefined when the stage has no default SLA rule */
   sla?: StageSLA;
+  /** All SLA rules configured on the stage, including conditional ones */
+  slaRules?: StageSLARule[];
   status: string;
   tasks: StageTask[][];
 }

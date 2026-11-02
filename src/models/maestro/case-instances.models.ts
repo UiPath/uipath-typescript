@@ -342,7 +342,7 @@ export interface CaseInstancesServiceModel {
    * Get stages and its associated tasks information for a case instance 
    * @param caseInstanceId - The ID of the case instance
    * @param folderKey - Required folder key
-   * @returns Promise resolving to an array of case stages with their tasks and status
+   * @returns Promise resolving to an array of {@link CaseGetStageResponse} with each stage's tasks, status, default `sla` and all configured `slaRules`
    * @example
    * ```typescript
    * // Get stages for a case instance
@@ -354,6 +354,11 @@ export interface CaseInstancesServiceModel {
    * // Iterate through stages
    * for (const stage of stages) {
    *   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
+   *
+   *   // Default SLA, e.g. "30 min"
+   *   if (stage.sla) {
+   *     console.log(`  SLA: ${stage.sla.length} ${stage.sla.duration}`);
+   *   }
    *
    *   // Check tasks in the stage
    *   for (const taskGroup of stage.tasks) {
