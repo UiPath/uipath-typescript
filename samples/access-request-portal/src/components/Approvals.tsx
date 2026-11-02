@@ -8,7 +8,8 @@ import { groupLabel, roleLabel } from '../lib/labels';
 
 /**
  * Admin approval queue. Approving actually grants the access:
- * - group requests → `groups.updateById()` with `memberUserIdsToAdd`
+ * - group requests → `users.updateById()` with `groupIdsToAdd`, which also works for
+ *   built-in groups such as Administrators (`groups.updateById()` rejects those)
  * - role requests  → `roles.updateAssignments()` with a `toAdd` entry
  *
  * The platform re-checks the admin's own permissions server-side on both
@@ -93,8 +94,8 @@ export function Approvals({
 
   const grant = async (request: AccessRequest) => {
     if (request.kind === 'group') {
-      await services.groups.updateById(request.targetId, {
-        memberUserIdsToAdd: [request.requestedById],
+      await services.users.updateById(request.requestedById, {
+        groupIdsToAdd: [request.targetId],
       });
     } else {
       await services.roles.updateAssignments({

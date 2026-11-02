@@ -8,14 +8,14 @@ A coded app showcasing the UiPath TypeScript SDK **platform RBAC services** (`@u
 |---|---|
 | Admin gate (admin vs member experience) | `groups.getAll()`, `directory.getGroupMembership()` |
 | My Access — the signed-in user's groups and role assignments | `directory.getGroupMembership()`, `roles.getAssignments()` |
-| Request catalog (custom groups + organization-level roles to ask for) | `groups.getAll()`, `roles.getAll({ scopeType })` |
+| Request catalog (every group except Everyone + organization-level roles to ask for) | `groups.getAll()`, `roles.getAll({ scopeType })` |
 | Verify a pending request before granting | `groups.getById()` / `roles.getById()`, `users.getById()` |
-| Approve → grant group membership | `groups.updateById()` with `memberUserIdsToAdd` |
+| Approve → grant group membership (built-in groups included) | `users.updateById()` with `groupIdsToAdd` |
 | Approve → grant a role | `roles.updateAssignments()` |
 | Audit — who holds what, org-wide | `roles.getAssignments('/')` (paginated) |
 | One-click CSV export of all assignments | `roles.exportAssignments()` |
 | People picker | `directory.search()` |
-| Clone a teammate's access to a new joiner | `directory.getGroupMembership()` + `roles.getAssignments()` → `groups.updateById()` + `roles.updateAssignments()` |
+| Clone a teammate's access to a new joiner | `directory.getGroupMembership()` + `roles.getAssignments()` → `users.updateById()` + `roles.updateAssignments()` |
 
 The signed-in user's id is decoded from the OAuth access token (`sub` claim) via `sdk.getToken()`, so identifying them needs no API call.
 
@@ -23,7 +23,7 @@ The signed-in user's id is decoded from the OAuth access token (`sub` claim) via
 
 Requires [Node.js 20+](https://uipath.github.io/uipath-typescript/getting-started/#prerequisites).
 
-1. Create an **external application** (non-confidential, user-mode) in UiPath Admin with redirect URI `http://localhost:5173` and scopes `PM.User.Read PM.Group PM.Directory DataFabric.Data.Read DataFabric.Data.Write`. The Roles service endpoints are governed by the caller's platform roles rather than OAuth scopes, and the SDK requests `offline_access` (refresh tokens) automatically — neither needs to be configured.
+1. Create an **external application** (non-confidential, user-mode) in UiPath Admin with redirect URI `http://localhost:5173` and scopes `PM.User PM.Group PM.Directory DataFabric.Data.Read DataFabric.Data.Write` (`PM.User` rather than `PM.User.Read`, because approvals add the requester to the group through `users.updateById()`). The Roles service endpoints are governed by the caller's platform roles rather than OAuth scopes, and the SDK requests `offline_access` (refresh tokens) automatically — neither needs to be configured.
 2. Copy `uipath.json.example` to `uipath.json` and fill in your `clientId`, `baseUrl`, `orgName`, and `tenantName`.
 3. Create the request store: a tenant-level Data Fabric entity named `AccessRequests` with text fields `kind`, `targetId`, `targetName`, `justification` (multiline), `requestedById`, `requestedByName`, `status`, `createdTime`, `resolvedByName`, `resolvedTime`. The app addresses it by name (`src/lib/config.ts`), so no id needs copying. Members need Data Fabric access to submit requests: in Data Fabric → Manage Access, assign the **Data Writer** role to the group that may request (for example Everyone); without it, submitting fails with a Data Fabric permission error.
 4. Install and start:

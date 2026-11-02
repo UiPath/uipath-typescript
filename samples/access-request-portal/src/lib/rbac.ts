@@ -1,7 +1,21 @@
+import { PlatformGroupType } from '@uipath/uipath-typescript/groups';
+import type { PlatformGroupGetResponse } from '@uipath/uipath-typescript/groups';
 import type { PlatformServices } from './services';
 
 /** Name of the built-in group whose members get the admin experience. */
 export const ADMIN_GROUP_NAME = 'Administrators';
+
+/** Built-in group every user belongs to implicitly; membership cannot be granted. */
+const EVERYONE_GROUP_NAME = 'Everyone';
+
+/**
+ * Whether membership in `group` can be granted — every group except Everyone.
+ * Built-in groups are included: their membership is granted per user through
+ * `users.updateById()` with `groupIdsToAdd`.
+ */
+export function isGrantableGroup(group: PlatformGroupGetResponse): boolean {
+  return !(group.type === PlatformGroupType.BuiltIn && group.name === EVERYONE_GROUP_NAME);
+}
 
 /**
  * Whether the user is an access admin, decided by group membership: fetch the

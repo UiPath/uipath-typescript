@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { PlatformGroupType } from '@uipath/uipath-typescript/groups';
 import type { PlatformGroupGetResponse } from '@uipath/uipath-typescript/groups';
 import { PlatformRoleScopeType } from '@uipath/uipath-typescript/roles';
 import type { PlatformRoleGetResponse } from '@uipath/uipath-typescript/roles';
@@ -8,14 +7,16 @@ import type { CurrentUser } from '../lib/identity';
 import type { RequestStore, RequestKind } from '../lib/storage';
 import { toUserMessage } from '../lib/errors';
 import { groupLabel, roleLabel } from '../lib/labels';
+import { isGrantableGroup } from '../lib/rbac';
 
 /** Data Fabric text fields default to a 200-character limit. */
 const JUSTIFICATION_MAX_LENGTH = 200;
 
 /**
- * The request catalog: everything a member can ask for — the organization's custom
- * groups (`groups.getAll()`; built-in groups cannot be edited) and organization-level
- * roles (`roles.getAll({ scopeType })`), which is the scope an approval grants at.
+ * The request catalog: everything a member can ask for — the organization's groups
+ * (`groups.getAll()`, minus Everyone, which every user is already in) and
+ * organization-level roles (`roles.getAll({ scopeType })`), which is the scope an
+ * approval grants at.
  */
 export function RequestAccess({
   services,
@@ -46,7 +47,7 @@ export function RequestAccess({
           services.roles.getAll({ scopeType: PlatformRoleScopeType.Organization }),
         ]);
         if (ignore) return;
-        setGroups(allGroups.filter(g => g.type === PlatformGroupType.Custom));
+        setGroups(allGroups.filter(isGrantableGroup));
         setRoles(orgRoles.items);
       } catch (err) {
         if (!ignore) setLoadError(toUserMessage(err, 'The request catalog could not be loaded. Try again in a moment.'));

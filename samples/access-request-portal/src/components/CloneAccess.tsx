@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { PlatformDirectoryEntityType } from '@uipath/uipath-typescript/directory';
 import type { PlatformDirectoryEntry } from '@uipath/uipath-typescript/directory';
-import { PlatformGroupType } from '@uipath/uipath-typescript/groups';
 import { PlatformPrincipalType } from '@uipath/uipath-typescript/roles';
 import type { PlatformRoleAssignment } from '@uipath/uipath-typescript/roles';
 import type { PlatformServices } from '../lib/services';
 import { toUserMessage } from '../lib/errors';
+import { isGrantableGroup } from '../lib/rbac';
 
 interface ClonePreview {
   groups: { id: string; name: string }[];
@@ -14,10 +14,10 @@ interface ClonePreview {
 
 /**
  * Onboarding shortcut: copy a teammate's access to a new joiner.
- * `directory.search()` powers both people pickers; the source's custom groups come
- * from `directory.getGroupMembership()` (built-in groups cannot be edited) and their
- * non-inherited role assignments from `roles.getAssignments()`; applying uses
- * `groups.updateById()` + `roles.updateAssignments()`.
+ * `directory.search()` powers both people pickers; the source's groups (all but
+ * Everyone) come from `directory.getGroupMembership()` and their non-inherited role
+ * assignments from `roles.getAssignments()`; applying uses `users.updateById()` with
+ * `groupIdsToAdd` + `roles.updateAssignments()`.
  */
 export function CloneAccess({ services }: { services: PlatformServices }) {
   const [query, setQuery] = useState('');
@@ -53,7 +53,7 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
       const allGroups = await services.groups.getAll();
       const memberships = await services.directory.getGroupMembership(
         sourceUser.id,
-        allGroups.filter(g => g.type === PlatformGroupType.Custom).map(g => g.id)
+        allGroups.filter(isGrantableGroup).map(g => g.id)
       );
       const assignments = await services.roles.getAssignments('/', {
         securityPrincipalId: sourceUser.id,
@@ -80,9 +80,9 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
     setError(null);
     setStatus(null);
     try {
-      for (const group of preview.groups) {
-        await services.groups.updateById(group.id, {
-          memberUserIdsToAdd: [target.id],
+      if (preview.groups.length > 0) {
+        await services.users.updateById(target.id, {
+          groupIdsToAdd: preview.groups.map(g => g.id),
         });
       }
       if (preview.assignments.length > 0) {
@@ -106,7 +106,7 @@ export function CloneAccess({ services }: { services: PlatformServices }) {
   return (
     <section>
       <h2>Clone access</h2>
-      <p className="muted">Copy a teammate’s custom groups and role assignments to a new joiner.</p>
+      <p className="muted">Copy a teammate’s groups and role assignments to a new joiner.</p>
 
       <div className="form-inline">
         <input
