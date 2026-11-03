@@ -122,6 +122,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets                           | `getAll()`                 | ✅ Yes                 |
 | Buckets                           | `getFiles()`               | ✅ Yes                 |
 | Buckets                           | `getFileMetaData()`        | ❌ No                  |
+| Folders                           | `getAll()`                 | ✅ Yes                 |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
 | Users                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAll()`                 | ✅ Yes                 |
@@ -149,5 +150,5 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
 | Feedback                          | `getCategories()`          | ✅ Yes                 |
 | Governance                        | `getPolicyTraces()`        | ✅ Yes                 |
-| Decisions                         | `list()`                   | ✅ Yes                 |
+| Decisions                         | `getAll()`                 | ✅ Yes                 |
 | Decisions                         | `query()`                  | ❌ No                  |

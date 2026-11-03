@@ -3026,6 +3026,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-function-runs-with-limited-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A function runs with limited permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#declare-contracts-schema-first" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4093,6 +4104,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-function-runs-with-limited-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A function runs with limited permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#declare-contracts-schema-first" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4270,6 +4292,9 @@ a query value, <code>z.coerce.number()</code> accepts and converts it.</p>
 <h2 id="node-globals-are-available">Node globals are available<a class="headerlink" href="#node-globals-are-available" title="Permanent link">&para;</a></h2>
 <p><code>Buffer</code>, <code>process</code>, <code>setImmediate</code>, <code>clearImmediate</code> and <code>global</code> are all present, and <code>await import("node:buffer")</code> resolves.</p>
 <p>Keep <code>Buffer</code> out of declared contracts: a JSON output schema serializes it as <code>{"type":"Buffer","data":[104,105]}</code>, not bytes — cross the boundary as base64 or <code>number[]</code>.</p>
+<hr />
+<h2 id="a-function-runs-with-limited-permissions">A function runs with limited permissions<a class="headerlink" href="#a-function-runs-with-limited-permissions" title="Permanent link">&para;</a></h2>
+<p>The function process starts in its package folder, where its code and <code>node_modules</code> are. It can read files anywhere, make network calls, read environment variables and access basic system information such as the host name or CPU count. It can write only to <code>os.tmpdir()</code>, a temp folder private to its job or server process. It cannot start other processes. A call outside these limits fails the function.</p>
 <hr />
 <h2 id="declare-contracts-schema-first">Declare contracts schema-first<a class="headerlink" href="#declare-contracts-schema-first" title="Permanent link">&para;</a></h2>
 <p>Declare <code>input</code>/<code>output</code> as a <code>defineSchema&lt;T&gt;()</code> marker (TypeScript) or a JSON Schema literal (JavaScript) — see <a href="../api/define-function/#declaring-contracts">defineFunction — Declaring contracts</a>. These are statically extractable (Studio Web reads the contract without executing your code) and add no runtime dependency.</p>
