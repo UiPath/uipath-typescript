@@ -336,8 +336,8 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `search()` | `PM.Directory.Read` |
-| `getGroupMembership()` | `PM.Directory.Read` |
+| `search()` | `PM.Directory` |
+| `getGroupMembership()` | `PM.Directory` |
 
 ### Groups
 

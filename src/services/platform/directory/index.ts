@@ -4,7 +4,7 @@
  * Provides access to an organization's directory of principals:
  * - `Directory` — search users, groups, and applications by name, and check group membership
  *
- * Requires the `PM.Directory` scope (or `PM.Directory.Read`).
+ * Requires the `PM.Directory` scope.
  *
  * @example
  * ```typescript
