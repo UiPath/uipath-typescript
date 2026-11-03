@@ -12,6 +12,7 @@ import {
   OntologyCreateOptions,
   OntologyUpdateOptions,
   OntologyGetAllOptions,
+  OntologyGetByIdOptions,
   ArtifactUpsertRequest,
   ArtifactBulkItem,
   ArtifactListOptions,
@@ -67,8 +68,11 @@ export class OntologyService extends BaseService implements OntologyServiceModel
   }
 
   @track('Ontologies.GetById')
-  async getById(idOrName: string): Promise<OntologySummary> {
-    const response = await this.get<RawOntologySummary>(ONTOLOGY_ENDPOINTS.BY_ID(idOrName));
+  async getById(idOrName: string, options?: OntologyGetByIdOptions): Promise<OntologySummary> {
+    const response = await this.get<RawOntologySummary>(
+      ONTOLOGY_ENDPOINTS.BY_ID(idOrName),
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey ?? this.config.folderKey }) }
+    );
     return createOntologyWithMethods(response.data, this);
   }
 

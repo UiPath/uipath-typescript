@@ -8,6 +8,7 @@ import type {
   OntologyUpdateOptions,
   OntologyCreateOptions,
   OntologyGetAllOptions,
+  OntologyGetByIdOptions,
 } from './ontology.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -79,7 +80,8 @@ export interface OntologyServiceModel {
    * Gets a single ontology by its GUID or name.
    *
    * @param idOrName - Ontology GUID or name (GUID is checked first)
-   * @returns The ontology with bound methods
+   * @param options - Optional folder to read from; defaults to the configured folder
+   * @returns The ontology with bound methods; `folderId` is the folder the service reports
    *
    * @example
    * ```typescript
@@ -88,11 +90,14 @@ export interface OntologyServiceModel {
    * const o1 = await ontologies.getById('ecommerce');
    * // By GUID
    * const o2 = await ontologies.getById('a1b2c3d4-...');
+   * // In a specific folder
+   * const o3 = await ontologies.getById('ecommerce', { folderKey: '<folderKey>' });
+   * console.log(o3.folderId);
    * ```
    *
    * @internal
    */
-  getById(idOrName: string): Promise<OntologySummary>;
+  getById(idOrName: string, options?: OntologyGetByIdOptions): Promise<OntologySummary>;
 
   /**
    * Updates ontology metadata. Only supplied fields are changed; omitted fields are left unchanged.

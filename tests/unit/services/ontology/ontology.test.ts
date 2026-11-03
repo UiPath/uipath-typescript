@@ -12,7 +12,7 @@ import {
   createMockValidationFailure,
 } from '../../../utils/mocks/ontology';
 import { createMockError } from '../../../utils/mocks/core';
-import { ValidationError } from '../../../../src/core/errors';
+import { ValidationError, NotFoundError } from '../../../../src/core/errors';
 import { ONTOLOGY_TEST_CONSTANTS } from '../../../utils/constants/ontology';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { ONTOLOGY_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -115,6 +115,16 @@ describe('OntologyService Unit Tests', () => {
       );
     });
 
+    it('should carry folderId on items through transformFn', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const item = config.transformFn!(createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY }) as any) as OntologySummary;
+      expect(item.folderId).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
+    });
+
     it('should send folderKey as the folder query parameter, not a header', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
 
@@ -191,6 +201,40 @@ describe('OntologyService Unit Tests', () => {
         ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
         expect.any(Object)
       );
+    });
+
+    it('should send the folder key header when given', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
+        expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_KEY]: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY }) })
+      );
+    });
+
+    it('should send no folder header without a folder', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+      expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('should return the folderId the service sends', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY }));
+
+      const result = await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(result.folderId).toBe(ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY);
+      expect(typeof result.update).toBe('function');
+    });
+
+    it('should reject with NotFoundError on 404', async () => {
+      mockApiClient.get.mockRejectedValue(new NotFoundError({ message: ONTOLOGY_TEST_CONSTANTS.ERROR_NOT_FOUND }));
+
+      await expect(service.getById('Missing')).rejects.toBeInstanceOf(NotFoundError);
     });
 
     it('should propagate 404 errors', async () => {

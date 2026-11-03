@@ -27,4 +27,5 @@ export const ONTOLOGY_TEST_CONSTANTS = {
   ERROR_VALIDATION_FAILED: 'Content failed W3C standards validation',
 
   FOLDER_KEY: 'test-folder-key',
+  OTHER_FOLDER_KEY: 'other-folder-key',
 };

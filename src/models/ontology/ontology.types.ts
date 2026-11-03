@@ -60,6 +60,12 @@ export interface OntologyGetAllOptions {
 }
 
 /** @internal */
+export interface OntologyGetByIdOptions {
+  /** Folder to read the ontology from; defaults to the configured folder. */
+  folderKey?: string;
+}
+
+/** @internal */
 export interface ArtifactListOptions {
   /** Filter artifacts by semantic type. */
   type?: ArtifactType;
