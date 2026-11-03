@@ -118,6 +118,6 @@ export interface CaseExploreQuery {
  * @internal
  * @experimental
  */
-export interface CaseExploreResponse {
+export type CaseExploreResponse = {
   [fieldId: string]: string | number | boolean | null;
-}
+};
