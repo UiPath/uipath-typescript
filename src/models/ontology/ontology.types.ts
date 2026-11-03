@@ -90,9 +90,9 @@ export interface RawOntologySummary {
   name: string;
   displayName: string;
   description?: string;
+  /** Folder the ontology belongs to. */
+  folderId?: string;
   state?: OntologyState;
-  /** Latest published semver; omitted until publish flow has run. */
-  latestVersion?: string;
   createdBy?: string;
   createTime?: string;
   updatedBy?: string;

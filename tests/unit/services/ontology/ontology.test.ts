@@ -109,20 +109,31 @@ describe('OntologyService Unit Tests', () => {
               zeroBased: false,
             }),
           }),
-          excludeFromPrefix: ['search'],
+          excludeFromPrefix: ['search', 'folder'],
         }),
         expect.any(Object)
       );
     });
 
-    it('should pass folderKey as header and exclude it from query params', async () => {
+    it('should send folderKey as the folder query parameter, not a header', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
 
       await service.getAll({ folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
 
       const [config, opts] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
-      expect(config.headers![FOLDER_KEY]).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
+      expect(opts).toEqual(expect.objectContaining({ folder: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY }));
       expect(opts).not.toHaveProperty('folderKey');
+      expect(config.headers?.[FOLDER_KEY]).toBeUndefined();
+      expect(config.excludeFromPrefix).toEqual(expect.arrayContaining(['search', 'folder']));
+    });
+
+    it('should target the api v1 collection route', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect(config.getEndpoint()).toBe('ontology_/api/v1/ontology');
     });
 
     it('should target the collection endpoint and attach bound methods to each item', async () => {
@@ -160,6 +171,14 @@ describe('OntologyService Unit Tests', () => {
       expect(result.id).toBe(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID);
       expect(typeof result.update).toBe('function');
       expect(typeof result.deleteById).toBe('function');
+    });
+
+    it('should URL-encode the name in the api v1 path', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getById('Sales Ops');
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('ontology_/api/v1/ontology/Sales%20Ops', expect.anything());
     });
 
     it('should also accept a name as idOrName', async () => {

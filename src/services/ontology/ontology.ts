@@ -47,9 +47,8 @@ export class OntologyService extends BaseService implements OntologyServiceModel
       {
         serviceAccess: this.createPaginationServiceAccess(),
         getEndpoint: () => ONTOLOGY_ENDPOINTS.COLLECTION,
-        headers: createHeaders({ [FOLDER_KEY]: folderKey ?? this.config.folderKey }),
         transformFn: (raw) => createOntologyWithMethods(raw, this),
-        excludeFromPrefix: ['search'],
+        excludeFromPrefix: ['search', 'folder'],
         pagination: {
           paginationType: PaginationType.OFFSET,
           itemsField: ONTOLOGY_PAGINATION.ITEMS_FIELD,
@@ -63,7 +62,7 @@ export class OntologyService extends BaseService implements OntologyServiceModel
           },
         },
       },
-      restOptions as T
+      { ...restOptions, folder: folderKey ?? this.config.folderKey } as unknown as T
     );
   }
 
