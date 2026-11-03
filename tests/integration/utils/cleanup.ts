@@ -16,6 +16,7 @@ interface ResourceRegistry {
   feedbackCategories: Array<{ id: string }>;
   bucketFiles: Array<{ bucketId: number; path: string; folderId?: number }>;
   businessApps: Array<{ id: string }>;
+  ontologies: Array<{ id: string }>;
 }
 
 const resourceRegistry: ResourceRegistry = {
@@ -27,6 +28,7 @@ const resourceRegistry: ResourceRegistry = {
   feedbackCategories: [],
   bucketFiles: [],
   businessApps: [],
+  ontologies: [],
 };
 
 /**
@@ -220,6 +222,19 @@ export async function cleanupTestBusinessApp(id: string): Promise<void> {
   }
 }
 
+export async function cleanupTestOntology(id: string): Promise<void> {
+  try {
+    const { ontologies } = getServices();
+    if (!ontologies) return;
+    await retryWithBackoff(async () => {
+      await ontologies.deleteById(id);
+    });
+    console.log(`Cleaned up test ontology: ${id}`);
+  } catch (error) {
+    console.warn(`Failed to cleanup ontology ${id}:`, error);
+  }
+}
+
 /**
  * Emergency cleanup function that attempts to delete all registered resources.
  * Should be called as a last resort in afterAll hooks.
@@ -267,6 +282,10 @@ export async function cleanupAllTestResources(): Promise<void> {
     await cleanupTestBusinessApp(app.id);
   }
 
+  for (const ontology of resourceRegistry.ontologies) {
+    await cleanupTestOntology(ontology.id);
+  }
+
   // Clear registry
   resourceRegistry.tasks = [];
   resourceRegistry.entityRecords = [];
@@ -276,6 +295,7 @@ export async function cleanupAllTestResources(): Promise<void> {
   resourceRegistry.feedbackCategories = [];
   resourceRegistry.bucketFiles = [];
   resourceRegistry.businessApps = [];
+  resourceRegistry.ontologies = [];
 
   console.log('Emergency cleanup completed');
 }
