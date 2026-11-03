@@ -1,6 +1,6 @@
 {
   "name": "@uipath/coded-apps-dev",
-  "version": "1.0.0-dev.1",
+  "version": "1.0.0-pca.20261103.2",
   "description": "Universal bundler plugin for UiPath Coded Apps configuration injection",
   "type": "module",
   "main": "./dist/index.cjs",

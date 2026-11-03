@@ -12,6 +12,7 @@ on:
           - ts-sdk
           - coded-action-app-sdk
           - telemetry
+          - coded-apps-dev
       github_packages_only:
         description: 'Publish only to GitHub Packages (skip npm, docs deploy, and CF worker)'
         required: false
@@ -333,3 +334,49 @@ jobs:
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/core-telemetry" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** $TELEMETRY_VERSION" >> $GITHUB_STEP_SUMMARY
+
+  publish-coded-apps-dev:
+    if: github.event.inputs.package == 'coded-apps-dev' && inputs.github_packages_only
+    runs-on: uipath-ubuntu-latest
+    environment: github-packages-dev
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: packages/plugins/coded-apps
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        run: |
+          echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate prerelease version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" != *-* ]]; then
+            echo "::error::requires a prerelease version, but package.json version is $VERSION"
+            exit 1
+          fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to GitHub Packages
+        run: |
+          echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm publish --tag dev
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
