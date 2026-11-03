@@ -594,6 +594,92 @@ describe('OntologyService Unit Tests', () => {
     });
   });
 
+  describe('validateArtifactContent', () => {
+    it('should POST raw content to the ontology-free route with ?type=', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult({ type: ArtifactType.Constraints }));
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE, type: ArtifactType.Constraints }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        'ontology_/api/v1/artifact/po-shapes.ttl/validate?type=constraints',
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        expect.objectContaining({
+          headers: { 'Content-Type': ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE },
+          bodyOptions: { stringify: false },
+        })
+      );
+    });
+
+    it('should omit type when not given', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult());
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+      );
+
+      expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/artifact/po-shapes.ttl/validate');
+    });
+
+    it('should encode the file name', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult());
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_SPECIAL,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+      );
+
+      expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/artifact/my%20file%231.ttl/validate');
+    });
+
+    it('should return an invalid report as data', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationFailure());
+
+      const result = await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        'bad turtle',
+        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.violations).toHaveLength(1);
+    });
+
+    it('should throw ValidationError without calling the API when mediaType is empty', async () => {
+      await expect(
+        service.validateArtifactContent(
+          ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+          ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+          { mediaType: '' }
+        )
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('artifact file name encoding', () => {
+    it('should encode a file name with a space and # for getArtifact and validateArtifact', async () => {
+      mockApiClient.get.mockResolvedValue(ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL);
+      mockApiClient.post.mockResolvedValue(createMockValidationResult());
+
+      await service.getArtifact(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_SPECIAL);
+      await service.validateArtifact(
+        ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_SPECIAL,
+        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE, content: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL }
+      );
+
+      expect(mockApiClient.get.mock.calls[0][0]).toBe('ontology_/api/v1/ontology/ecommerce/artifact/my%20file%231.ttl');
+      expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/ontology/ecommerce/artifact/my%20file%231.ttl/validate');
+    });
+  });
+
   describe('exportOntology', () => {
     it('should GET export endpoint with blob responseType and return Uint8Array', async () => {
       const zipContent = new Uint8Array([0x50, 0x4b, 0x05, 0x06]);

@@ -15,6 +15,7 @@ export const ONTOLOGY_TEST_CONSTANTS = {
 
   ARTIFACT_FILE_NAME: 'schema.ofn',
   ARTIFACT_FILE_NAME_2: 'po-shapes.ttl',
+  ARTIFACT_FILE_NAME_SPECIAL: 'my file#1.ttl',
   ARTIFACT_MEDIA_TYPE_OFN: 'text/owl-functional',
   ARTIFACT_MEDIA_TYPE_TURTLE: 'text/turtle',
   ARTIFACT_CONTENT_OFN: 'Prefix(:=<http://example.com/ecommerce#>)\nOntology( … )',

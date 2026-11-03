@@ -80,6 +80,14 @@ export interface ArtifactUpsertRequest {
 }
 
 /** @internal */
+export interface ArtifactContentValidateOptions {
+  /** MIME type of the content (e.g. "text/turtle"); required. */
+  mediaType: string;
+  /** Semantic type; required when not inferrable from mediaType. */
+  type?: ArtifactType;
+}
+
+/** @internal */
 export interface ArtifactBulkItem {
   fileName: string;
   /** Semantic type — becomes the multipart part name. */

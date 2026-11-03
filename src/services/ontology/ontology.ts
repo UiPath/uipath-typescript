@@ -16,6 +16,7 @@ import {
   ArtifactUpsertRequest,
   ArtifactBulkItem,
   ArtifactListOptions,
+  ArtifactContentValidateOptions,
 } from '../../models/ontology/ontology.types';
 import { ONTOLOGY_PAGINATION, ONTOLOGY_OFFSET_PARAMS } from '../../utils/constants/common';
 import { ONTOLOGY_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -164,6 +165,22 @@ export class OntologyService extends BaseService implements OntologyServiceModel
       url,
       request.content,
       { headers: { 'Content-Type': request.mediaType }, bodyOptions: { stringify: false } }
+    );
+    return response.data;
+  }
+
+  @track('Ontologies.ValidateArtifactContent')
+  async validateArtifactContent(fileName: string, content: string, options: ArtifactContentValidateOptions): Promise<ValidationResult> {
+    if (!options.mediaType) {
+      throw new ValidationError({ message: 'mediaType is required for validateArtifactContent' });
+    }
+    const url = options.type
+      ? `${ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName)}?type=${encodeURIComponent(options.type)}`
+      : ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName);
+    const response = await this.post<ValidationResult>(
+      url,
+      content,
+      { headers: { 'Content-Type': options.mediaType }, bodyOptions: { stringify: false } }
     );
     return response.data;
   }

@@ -5,6 +5,7 @@ import type {
   ArtifactUpsertRequest,
   ArtifactBulkItem,
   ArtifactListOptions,
+  ArtifactContentValidateOptions,
   OntologyUpdateOptions,
   OntologyCreateOptions,
   OntologyGetAllOptions,
@@ -307,6 +308,35 @@ export interface OntologyServiceModel {
    * @internal
    */
   validateArtifact(idOrName: string, fileName: string, request: ArtifactUpsertRequest): Promise<ValidationResult>;
+
+  /**
+   * Validates artifact content without an ontology and without storing anything.
+   *
+   * Always returns 200; inspect the `valid` field in the response.
+   *
+   * @param fileName - Artifact filename (extension required, e.g. `po-shapes.ttl`)
+   * @param content - Raw artifact content to validate
+   * @param options - Media type of the content and an optional semantic type hint
+   * @returns Validation outcome including any violations
+   *
+   * @example
+   * ```typescript
+   * import { Ontologies, ArtifactType } from '@uipath/uipath-typescript/ontologies';
+   *
+   * const ontologies = new Ontologies(sdk);
+   * const result = await ontologies.validateArtifactContent(
+   *   'po-shapes.ttl',
+   *   '@prefix sh: … ',
+   *   { mediaType: 'text/turtle', type: ArtifactType.Constraints }
+   * );
+   * if (!result.valid) {
+   *   result.violations.forEach(v => console.error(v.severity, v.message));
+   * }
+   * ```
+   *
+   * @internal
+   */
+  validateArtifactContent(fileName: string, content: string, options: ArtifactContentValidateOptions): Promise<ValidationResult>;
 }
 
 /**
