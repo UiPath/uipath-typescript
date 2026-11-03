@@ -60,6 +60,21 @@ describe('Ontology Models — bound methods', () => {
     });
   });
 
+  describe('service.getById() result', () => {
+    it('should keep bound methods and folderId on the returned ontology', async () => {
+      const raw = createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY });
+      mockService.getById = vi.fn().mockResolvedValue(createOntologyWithMethods(raw, mockService));
+      mockService.deleteById = vi.fn().mockResolvedValue(undefined);
+
+      const ontology = await mockService.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      await ontology.deleteById();
+
+      expect(ontology.folderId).toBe(ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY);
+      expect(typeof ontology.update).toBe('function');
+      expect(mockService.deleteById).toHaveBeenCalledWith(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID);
+    });
+  });
+
   describe('ontology.update()', () => {
     it('should delegate to service.update with bound ontology id', async () => {
       const raw = createMockRawOntology();

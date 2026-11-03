@@ -20,6 +20,7 @@ export const ONTOLOGY_TEST_CONSTANTS = {
   ARTIFACT_MEDIA_TYPE_TURTLE: 'text/turtle',
   ARTIFACT_CONTENT_OFN: 'Prefix(:=<http://example.com/ecommerce#>)\nOntology( … )',
   ARTIFACT_CONTENT_SHACL: '@prefix sh: <http://www.w3.org/ns/shacl#> .',
+  ARTIFACT_CONTENT_YAML_FLOW: '{a: 1}\n',
   ARTIFACT_SIZE_BYTES: 3210,
   ARTIFACT_CHECKSUM: '9f2c4ae1deadbeef9f2c4ae1deadbeef9f2c4ae1deadbeef9f2c4ae1deadbeef',
 

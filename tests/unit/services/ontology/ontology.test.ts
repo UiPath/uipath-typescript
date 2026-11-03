@@ -222,6 +222,16 @@ describe('OntologyService Unit Tests', () => {
       expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBeUndefined();
     });
 
+    it('should fall back to the configured folder key for the header', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      const folderService = new OntologyService(instance);
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await folderService.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+      expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
+    });
+
     it('should return the folderId the service sends', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY }));
 
@@ -636,6 +646,19 @@ describe('OntologyService Unit Tests', () => {
       );
 
       expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/artifact/my%20file%231.ttl/validate');
+    });
+
+    it('should pass JSON-looking content through as the identical string', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult());
+      const content = ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_YAML_FLOW;
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        content,
+        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+      );
+
+      expect(mockApiClient.post.mock.calls[0][1]).toBe(content);
     });
 
     it('should return an invalid report as data', async () => {
