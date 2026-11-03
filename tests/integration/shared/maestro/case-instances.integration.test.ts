@@ -7,6 +7,7 @@ import {
 } from '../../config/unified-setup';
 import { hasValidPagination, generateRandomString } from '../../utils/helpers';
 import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/maestro';
+import { isValidationError } from '@/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -480,9 +481,7 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
   // Reopen requires a Completed instance (close produces Cancelled, which PIMS rejects),
   // so this test seeds one from the auto-completing case process (runs to Completed
   // without human interaction), reopens that same instance, and closes it afterwards.
-  // TODO: unskip once PIMS accepts the stage id getStages returns. Since 2026-10-13 every run fails with
-  // "element to restart from is missing or does not belong to this case".
-  describe.skip('reopen', () => {
+  describe('reopen', () => {
     it('should reopen a completed case instance from a stage', async () => {
       const { processes, caseInstances } = getServices();
       const config = getTestConfig();
@@ -496,6 +495,29 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       const completedProcessKey = config.maestroCompletedCaseProcessKey;
       const folderId = Number(config.folderId);
       const folderKey = config.folderKey;
+
+      // For a case published with the current model, PIMS accepts only an enterable stage and answers 400
+      // for any other id, such as the case manager stage getStages lists first. The 400 comes before the
+      // status changes, so the next stage can be tried on the same instance.
+      const reopenAtEnterableStage = async (id: string) => {
+        const stages = await caseInstances.getStages(id, folderKey);
+        expect(stages.length).toBeGreaterThan(0);
+        let rejection: unknown;
+        for (const stage of stages) {
+          try {
+            const reopened = await caseInstances.reopen(id, folderKey, {
+              stageId: stage.id,
+              comment: 'Reopened by the SDK integration suite',
+            });
+            console.log(`reopen accepted stage ${stage.id}`);
+            return reopened;
+          } catch (error) {
+            if (!isValidationError(error)) throw error;
+            rejection = error;
+          }
+        }
+        throw rejection;
+      };
 
       const startOwnInstance = async (): Promise<string> => {
         const [job] = await processes.start({ processKey: completedProcessKey }, { folderId });
@@ -526,13 +548,8 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         }
 
         if (status === InstanceStatus.COMPLETED) {
-          const stages = await caseInstances.getStages(instanceId, folderKey);
-          expect(stages.length).toBeGreaterThan(0);
           try {
-            result = await caseInstances.reopen(instanceId, folderKey, {
-              stageId: stages[0].id,
-              comment: 'Reopened by the SDK integration suite',
-            });
+            result = await reopenAtEnterableStage(instanceId);
             break;
           } catch (error) {
             if (!shared) throw error;
