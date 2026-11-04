@@ -26,6 +26,100 @@ interface CreateTrackedFunctionArgs {
     opts: TrackOptions;
 }
 
+/** `Result` attribute values. */
+export const CallResult = {
+    SUCCESS: 'Success',
+    FAILED: 'Failed',
+} as const;
+
+/**
+ * `FailureCategory` attribute values: a short fixed list, never error text,
+ * so a failed call can be attributed to the customer's app or to UiPath.
+ */
+export const FailureCategory = {
+    AUTH: 'Auth',
+    PERMISSION: 'Permission',
+    NOT_FOUND: 'NotFound',
+    VALIDATION: 'Validation',
+    THROTTLED: 'Throttled',
+    NETWORK: 'Network',
+    SERVICE_ERROR: 'ServiceError',
+    UNKNOWN: 'Unknown',
+} as const;
+
+const FAILURE_CATEGORY_BY_ERROR_TYPE: Record<string, string> = {
+    AuthenticationError: FailureCategory.AUTH,
+    AuthorizationError: FailureCategory.PERMISSION,
+    NotFoundError: FailureCategory.NOT_FOUND,
+    ValidationError: FailureCategory.VALIDATION,
+    RateLimitError: FailureCategory.THROTTLED,
+    NetworkError: FailureCategory.NETWORK,
+    ServerError: FailureCategory.SERVICE_ERROR,
+};
+
+interface ErrorLike {
+    type?: unknown;
+    name?: unknown;
+    statusCode?: unknown;
+}
+
+function statusCodeOf(error: unknown): number | undefined {
+    const code = (error as ErrorLike | null)?.statusCode;
+    return typeof code === 'number' ? code : undefined;
+}
+
+/**
+ * Maps an error to a `FailureCategory`. Duck-typed on the SDK's
+ * `UiPathError` shape (`type`, `statusCode`) so this package does not
+ * depend on the SDK; falls back to the HTTP status, then `Unknown`.
+ */
+export function failureCategoryOf(error: unknown): string {
+    const e = (error ?? {}) as ErrorLike;
+    const type = typeof e.type === 'string' ? e.type : typeof e.name === 'string' ? e.name : '';
+    if (type in FAILURE_CATEGORY_BY_ERROR_TYPE) {
+        return FAILURE_CATEGORY_BY_ERROR_TYPE[type];
+    }
+    const status = statusCodeOf(error);
+    if (status === 401) return FailureCategory.AUTH;
+    if (status === 403) return FailureCategory.PERMISSION;
+    if (status === 404) return FailureCategory.NOT_FOUND;
+    if (status === 429) return FailureCategory.THROTTLED;
+    if (status !== undefined && status >= 500) return FailureCategory.SERVICE_ERROR;
+    if (status !== undefined && status >= 400) return FailureCategory.VALIDATION;
+    // fetch() rejects with a TypeError when the request never reached the server (CORS, offline, DNS).
+    if (error instanceof TypeError) return FailureCategory.NETWORK;
+    return FailureCategory.UNKNOWN;
+}
+
+function now(): number {
+    return typeof performance !== 'undefined' && typeof performance.now === 'function'
+        ? performance.now()
+        : Date.now();
+}
+
+function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
+    return (
+        value !== null &&
+        (typeof value === 'object' || typeof value === 'function') &&
+        typeof (value as PromiseLike<unknown>).then === 'function'
+    );
+}
+
+function outcomeAttributes(start: number, error?: unknown): TelemetryAttributes {
+    const attributes: TelemetryAttributes = {
+        Result: error === undefined ? CallResult.SUCCESS : CallResult.FAILED,
+        DurationMs: Math.round(now() - start),
+    };
+    if (error !== undefined) {
+        attributes.FailureCategory = failureCategoryOf(error);
+        const status = statusCodeOf(error);
+        if (status !== undefined) {
+            attributes.HttpStatus = status;
+        }
+    }
+    return attributes;
+}
+
 function createTrackedFunction<F extends TrackedFunction>(
     originalFunction: F,
     { client, nameOrOptions, fallbackName, opts }: CreateTrackedFunctionArgs
@@ -39,17 +133,40 @@ function createTrackedFunction<F extends TrackedFunction>(
                     : opts.condition;
         }
 
-        if (shouldTrack) {
-            const serviceMethod =
-                typeof nameOrOptions === 'string' ? nameOrOptions : fallbackName;
-            client.track(
-                serviceMethod,
-                client.getDefaultEventName(),
-                opts.attributes
-            );
+        if (!shouldTrack) {
+            return originalFunction.apply(this, args);
         }
 
-        return originalFunction.apply(this, args);
+        const serviceMethod =
+            typeof nameOrOptions === 'string' ? nameOrOptions : fallbackName;
+        const emit = (outcome: TelemetryAttributes): void => {
+            client.track(serviceMethod, client.getDefaultEventName(), {
+                ...opts.attributes,
+                ...outcome,
+            });
+        };
+
+        // The event is emitted once the call settles, so it can carry the
+        // call's Result, FailureCategory and DurationMs. The caller gets the
+        // original return value (or error) unchanged.
+        const start = now();
+        let result: unknown;
+        try {
+            result = originalFunction.apply(this, args);
+        } catch (error) {
+            emit(outcomeAttributes(start, error ?? new Error('unknown')));
+            throw error;
+        }
+
+        if (isPromiseLike(result)) {
+            result.then(
+                () => emit(outcomeAttributes(start)),
+                (error: unknown) => emit(outcomeAttributes(start, error ?? new Error('unknown')))
+            );
+        } else {
+            emit(outcomeAttributes(start));
+        }
+        return result;
     };
 
     return wrapped as F;
