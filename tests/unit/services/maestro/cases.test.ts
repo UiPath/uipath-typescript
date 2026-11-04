@@ -23,6 +23,7 @@ import { CASE_EXPLORE_TEST_CONSTANTS as EXPLORE, PAGINATION_TEST_CONSTANTS } fro
 import { CaseExploreFilterKind, CaseExploreSortDirection } from '@/models/maestro/case-explore.types';
 import type { CaseExploreQuery } from '@/models/maestro/case-explore.types';
 import type { PaginationCursor } from '@/utils/pagination';
+import { ServerError } from '@/core/errors';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
 
@@ -640,26 +641,16 @@ describe('CasesService', () => {
       expect(result.nextCursor).toBeUndefined();
     });
 
-    it('should keep bare columns answered to a paginated request as the last page', async () => {
+    it('should throw a ServerError when a paginated request is answered with bare columns', async () => {
       mockApiClient.post.mockResolvedValue(createRawExploreColumns());
 
-      const result = await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE });
-
-      expect(result.items).toEqual([
-        { [EXPLORE.FIELD_CASE_ID]: EXPLORE.CASE_ID_1, [EXPLORE.FIELD_STATUS]: EXPLORE.STATUS_RUNNING },
-        { [EXPLORE.FIELD_CASE_ID]: EXPLORE.CASE_ID_2, [EXPLORE.FIELD_STATUS]: EXPLORE.STATUS_COMPLETED },
-      ]);
-      expect(result.hasNextPage).toBe(false);
-      expect(result.nextCursor).toBeUndefined();
+      await expect(service.explore(query, { pageSize: EXPLORE.PAGE_SIZE })).rejects.toBeInstanceOf(ServerError);
     });
 
-    it('should treat a malformed pagination envelope as an empty last page', async () => {
+    it('should throw a ServerError for a malformed pagination envelope', async () => {
       mockApiClient.post.mockResolvedValue({ data: null, pagination: { hasNextPage: true } });
 
-      const result = await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE });
-
-      expect(result.items).toEqual([]);
-      expect(result.hasNextPage).toBe(false);
+      await expect(service.explore(query, { pageSize: EXPLORE.PAGE_SIZE })).rejects.toBeInstanceOf(ServerError);
     });
 
     it('should reject an invalid page size before calling the API', async () => {

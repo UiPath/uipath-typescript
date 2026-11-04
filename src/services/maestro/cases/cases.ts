@@ -18,6 +18,7 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationManager } from '@/utils/pagination/pagination-manager';
 import { PaginationType } from '@/utils/pagination/internal-types';
 import { toWireExploreQuery, toExploreRows, isPagedExploreResponse } from './explore-helpers';
+import { ServerError } from '@/core/errors';
 
 /**
  * Service for interacting with UiPath Maestro Cases
@@ -158,10 +159,14 @@ export class CasesService extends BaseService implements CasesServiceModel {
       { params: createParams({ page, pageSize: limitedPageSize }) }
     );
 
-    // Bare columns mean the engine did not page the result, so they are the whole result: keep them as the last page.
+    // The engine answers a bare {} when the caller can view no case process. Any other answer without the page
+    // wrapper cannot be paged, so it is an error rather than a page that silently drops rows.
+    if (!isPagedExploreResponse(data) && Object.keys(data ?? {}).length > 0) {
+      throw new ServerError({ message: 'The explore query answered a paginated request without page information' });
+    }
     const paged = isPagedExploreResponse(data)
       ? data
-      : { data: data ?? {}, pagination: { page, pageSize: limitedPageSize, hasNextPage: false } };
+      : { data: {}, pagination: { page, pageSize: limitedPageSize, hasNextPage: false } };
 
     const result = PaginationManager.createPaginatedResponse(
       {
