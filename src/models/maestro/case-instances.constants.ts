@@ -50,7 +50,8 @@ export const TimeFieldTransformMap: { [key: string]: string } = {
 export const CASE_STAGE_CONSTANTS = {
   TRIGGER_NODE_TYPE: 'case-management:Trigger',
   UNDEFINED_VALUE: 'Undefined',
-  NOT_STARTED_STATUS: 'Not Started'
+  NOT_STARTED_STATUS: 'Not Started',
+  DEFAULT_SLA_EXPRESSION: '=js:true'
 } as const;
 
 /**

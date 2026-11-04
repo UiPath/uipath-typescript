@@ -296,6 +296,32 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         console.log('Stage fields:', Object.keys(stage));
       }
     });
+
+    it('should expose stage SLA rules with transformed fields', async () => {
+      if (!seededInstance) {
+        throw new Error('MAESTRO_TEST_CASE_PROCESS_KEY / folder config not set — cannot validate stage SLA rules');
+      }
+
+      const { caseInstances } = getServices();
+
+      const stages = await caseInstances.getStages(seededInstance.instanceId, seededInstance.folderKey);
+
+      if (!stages.some((stage) => stage.slaRules?.length)) {
+        throw new Error('No stage of the MAESTRO_TEST_CASE_PROCESS_KEY process has an SLA configured — cannot validate stage SLA rules');
+      }
+
+      for (const stage of stages) {
+        for (const rule of stage.slaRules ?? []) {
+          expect(typeof rule.expression).toBe('string');
+          expect((rule as any).count).toBeUndefined();
+          expect((rule as any).unit).toBeUndefined();
+        }
+        if (stage.sla) {
+          expect((stage.sla as any).count).toBeUndefined();
+          expect((stage.sla as any).unit).toBeUndefined();
+        }
+      }
+    });
   });
 
   describe('getVariables', () => {
