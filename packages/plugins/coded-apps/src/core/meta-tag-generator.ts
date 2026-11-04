@@ -14,7 +14,8 @@ export function generateMetaTagsForVite(config: UiPathConfig): ViteMetaTag[] {
   const tags: ViteMetaTag[] = []
 
   for (const [key, value] of Object.entries(config)) {
-    if (value) {
+    // Lists like access or publicApp aren't SDK config and have no meta tag form.
+    if (value && typeof value !== 'object') {
       tags.push({
         tag: 'meta',
         attrs: { name: getMetaTagName(key), content: String(value) },
@@ -38,7 +39,8 @@ export function generateMetaTagsHtml(config: UiPathConfig): string {
   const lines: string[] = []
 
   for (const [key, value] of Object.entries(config)) {
-    if (value) {
+    // Lists like access or publicApp aren't SDK config and have no meta tag form.
+    if (value && typeof value !== 'object') {
       lines.push(`<meta name="${getMetaTagName(key)}" content="${value}">`)
     }
   }
