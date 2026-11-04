@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTrack, createTrackEvent, failureCategoryOf, FailureCategory } from '../src/track';
+import type { TelemetryClient } from '../src/client';
 
 /** Outcome attributes every tracked call now carries when it succeeds. */
 const SUCCESS_OUTCOME = expect.objectContaining({ Result: 'Success', DurationMs: expect.any(Number) });
-import type { TelemetryClient } from '../src/client';
 
 interface FakeClient {
     track: ReturnType<typeof vi.fn>;
@@ -397,6 +397,54 @@ describe('createTrack — call outcome', () => {
             'Default.Run',
             expect.objectContaining({ Source: 'unit-test', Result: 'Success' })
         );
+    });
+});
+
+describe('createTrack — telemetry failures never reach the caller', () => {
+    let client: TelemetryClient;
+    let fake: FakeClient;
+
+    beforeEach(() => {
+        ({ client, fake } = makeClient());
+        fake.track.mockImplementation(() => {
+            throw new Error('telemetry down');
+        });
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('returns the sync result when emitting throws', () => {
+        const track = createTrack(client);
+
+        expect(track('Assets.Get')(() => 7)()).toBe(7);
+        expect(console.warn).toHaveBeenCalled();
+    });
+
+    it('rethrows the original sync error, not the telemetry error, when emitting throws', () => {
+        const track = createTrack(client);
+        const error = new FakeUiPathError('NotFoundError', 404);
+
+        expect(
+            track('Assets.Get')(() => {
+                throw error;
+            })
+        ).toThrow(error);
+    });
+
+    it('resolves normally and raises no unhandled rejection when emitting throws after an async call', async () => {
+        const track = createTrack(client);
+        const unhandled = vi.fn();
+        process.on('unhandledRejection', unhandled);
+
+        await expect(track('Queues.GetAll')(async () => 'ok')()).resolves.toBe('ok');
+        await new Promise(resolve => setTimeout(resolve));
+
+        process.off('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+        expect(console.warn).toHaveBeenCalled();
     });
 });
 

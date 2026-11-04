@@ -139,11 +139,17 @@ function createTrackedFunction<F extends TrackedFunction>(
 
         const serviceMethod =
             typeof nameOrOptions === 'string' ? nameOrOptions : fallbackName;
+        // Never throws: a telemetry failure must not change the caller's result or error,
+        // or surface as an unhandled rejection from the promise handlers below.
         const emit = (outcome: TelemetryAttributes): void => {
-            client.track(serviceMethod, client.getDefaultEventName(), {
-                ...opts.attributes,
-                ...outcome,
-            });
+            try {
+                client.track(serviceMethod, client.getDefaultEventName(), {
+                    ...opts.attributes,
+                    ...outcome,
+                });
+            } catch (error) {
+                console.warn('Failed to track telemetry event:', error);
+            }
         };
 
         // The event is emitted once the call settles, so it can carry the
