@@ -874,6 +874,10 @@ describe('CaseInstancesService', () => {
       });
       expect(result[0].slaRules).toHaveLength(2);
       expect(result[0].slaRules![0].expression).toBe(MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_EXPRESSION);
+      expect((result[0].sla as any).count).toBeUndefined();
+      expect((result[0].sla as any).unit).toBeUndefined();
+      expect((result[0].slaRules![0] as any).count).toBeUndefined();
+      expect((result[0].slaRules![0] as any).unit).toBeUndefined();
     });
 
     it('should leave sla undefined when only conditional slaRules exist', async () => {
@@ -886,6 +890,8 @@ describe('CaseInstancesService', () => {
       expect(result[0].sla).toBeUndefined();
       expect(result[0].slaRules).toHaveLength(1);
       expect(result[0].slaRules![0].id).toBe(MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_ID);
+      expect((result[0].slaRules![0] as any).count).toBeUndefined();
+      expect((result[0].slaRules![0] as any).unit).toBeUndefined();
     });
 
     it('should ignore legacy data.sla when slaRules has no default rule', async () => {
@@ -928,6 +934,8 @@ describe('CaseInstancesService', () => {
 
       expect(result[0].slaRules).toHaveLength(1);
       expect(result[0].sla).toHaveProperty('length', MAESTRO_TEST_CONSTANTS.SLA_COUNT_14_DAYS);
+      expect((result[0].sla as any).count).toBeUndefined();
+      expect((result[0].sla as any).unit).toBeUndefined();
     });
 
     it('should fall back to legacy data.sla when slaRules is absent', async () => {
@@ -939,6 +947,8 @@ describe('CaseInstancesService', () => {
 
       expect(result[0].sla).toHaveProperty('length', MAESTRO_TEST_CONSTANTS.SLA_COUNT_14_DAYS);
       expect(result[0].sla).toHaveProperty('duration', MAESTRO_TEST_CONSTANTS.SLA_DURATION_DAYS);
+      expect((result[0].sla as any).count).toBeUndefined();
+      expect((result[0].sla as any).unit).toBeUndefined();
       expect(result[0].slaRules).toBeUndefined();
     });
 
