@@ -1,0 +1,12 @@
+{
+  "name": "template-gallery-api",
+  "private": true,
+  "type": "module",
+  "description": "Local host for the copies function: POST /copies replays uip codedapp push from a template's project.zip",
+  "scripts": {
+    "serve": "bun run server.ts"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  }
+}
