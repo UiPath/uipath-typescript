@@ -6,7 +6,7 @@ import { NetworkError } from '../../../../src/core/errors/network';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { HTTP_TEST_CONSTANTS } from '../../../utils/constants/http';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
-import { JOB_KEY, RESPONSE_TYPES } from '../../../../src/utils/constants/headers';
+import { JOB_KEY } from '../../../../src/utils/constants/headers';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
 
@@ -209,19 +209,6 @@ describe('ApiClient raw text bodies and responses', () => {
     await client.put('/test', HTTP_TEST_CONSTANTS.TEXT_BODY);
 
     expect(capturedBody).toBe(JSON.stringify(HTTP_TEST_CONSTANTS.TEXT_BODY));
-  });
-
-  it('returns the raw response text when responseType is text', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: () => Promise.resolve(HTTP_TEST_CONSTANTS.TEXT_BODY),
-    });
-
-    const client = createClient();
-    const result = await client.get<string>('/test', { responseType: RESPONSE_TYPES.TEXT });
-
-    expect(result).toBe(HTTP_TEST_CONSTANTS.TEXT_BODY);
   });
 });
 

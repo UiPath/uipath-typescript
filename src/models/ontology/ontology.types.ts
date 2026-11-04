@@ -36,21 +36,6 @@ export enum OntologyState {
 }
 
 /** @internal */
-export interface OntologyCreateOptions {
-  displayName?: string;
-  description?: string;
-  folderKey?: string;
-}
-
-/** @internal */
-export interface OntologyUpdateOptions {
-  /** Rename the ontology (GUID stays stable); 409 if the new name is already taken. */
-  name?: string;
-  displayName?: string;
-  description?: string;
-}
-
-/** @internal */
 export interface OntologyGetAllOptions {
   search?: string;
   folderKey?: string;
@@ -66,35 +51,11 @@ export interface OntologyGetByIdOptions {
 }
 
 /** @internal */
-export interface ArtifactListOptions {
-  /** Filter artifacts by semantic type. */
-  type?: ArtifactType;
-}
-
-/** @internal */
-export interface ArtifactUpsertRequest {
-  mediaType: string;
-  content: string;
-  /** Semantic type; required when creating and not inferrable from mediaType. */
-  type?: ArtifactType;
-}
-
-/** @internal */
 export interface ArtifactContentValidateOptions {
   /** MIME type of the content (e.g. "text/turtle"); required. */
   mediaType: string;
   /** Semantic type; required when not inferrable from mediaType. */
   type?: ArtifactType;
-}
-
-/** @internal */
-export interface ArtifactBulkItem {
-  fileName: string;
-  /** Semantic type — becomes the multipart part name. */
-  type: ArtifactType;
-  /** MIME type of the content (e.g. "text/owl-functional", "text/turtle"). */
-  mediaType: string;
-  content: string;
 }
 
 /** @internal */
@@ -107,22 +68,6 @@ export interface RawOntologySummary {
   /** Folder the ontology belongs to. */
   folderId?: string;
   state?: OntologyState;
-  createdBy?: string;
-  createTime?: string;
-  updatedBy?: string;
-  updateTime?: string;
-}
-
-/** @internal */
-export interface ArtifactMetadata {
-  /** Unique per ontology; extension required (e.g. schema.ofn, po-shapes.ttl). */
-  fileName: string;
-  type: ArtifactType;
-  /** MIME type (e.g. "text/turtle", "text/owl-functional"). */
-  mediaType: string;
-  sizeBytes: number;
-  /** SHA-256 hex checksum (also the ETag). */
-  checksum: string;
   createdBy?: string;
   createTime?: string;
   updatedBy?: string;

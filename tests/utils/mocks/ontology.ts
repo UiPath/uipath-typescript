@@ -3,7 +3,6 @@ import {
   OntologyState,
   ValidationSeverity,
   RawOntologySummary,
-  ArtifactMetadata,
   ValidationResult,
 } from '../../../src/models/ontology/ontology.types';
 import { ONTOLOGY_TEST_CONSTANTS } from '../constants/ontology';
@@ -14,17 +13,6 @@ export const createMockRawOntology = (overrides: Partial<RawOntologySummary> = {
   displayName: ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_DISPLAY_NAME,
   description: ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_DESCRIPTION,
   state: OntologyState.Draft,
-  createdBy: ONTOLOGY_TEST_CONSTANTS.CREATED_BY,
-  createTime: ONTOLOGY_TEST_CONSTANTS.CREATE_TIME,
-  ...overrides,
-});
-
-export const createMockArtifactMetadata = (overrides: Partial<ArtifactMetadata> = {}): ArtifactMetadata => ({
-  fileName: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME,
-  type: ArtifactType.Schema,
-  mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_OFN,
-  sizeBytes: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_SIZE_BYTES,
-  checksum: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CHECKSUM,
   createdBy: ONTOLOGY_TEST_CONSTANTS.CREATED_BY,
   createTime: ONTOLOGY_TEST_CONSTANTS.CREATE_TIME,
   ...overrides,

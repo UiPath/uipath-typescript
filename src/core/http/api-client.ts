@@ -142,9 +142,6 @@ export class ApiClient {
       if (!text) {
         return undefined as T;
       }
-      if (options.responseType === RESPONSE_TYPES.TEXT) {
-        return text as T;
-      }
       try {
         return JSON.parse(text);
       } catch (error) {

@@ -1,7 +1,7 @@
 /**
  * Ontologies Module
  *
- * Provides access to UiPath Ontologies and their artifacts.
+ * Reads deployed UiPath Ontologies and validates ontology artifact content.
  *
  * @example
  * ```typescript
