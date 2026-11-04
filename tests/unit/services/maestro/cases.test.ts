@@ -601,6 +601,29 @@ describe('CasesService', () => {
       expect(result.totalCount).toBeUndefined();
     });
 
+    it('should send pageSize in place of a smaller limit so later pages stay reachable', async () => {
+      mockApiClient.post.mockResolvedValueOnce(createRawExplorePagedResponse());
+      const first = await service.explore({ ...query, limit: EXPLORE.LIMIT_BELOW_PAGE_SIZE }, { pageSize: EXPLORE.PAGE_SIZE });
+
+      mockApiClient.post.mockResolvedValueOnce(createRawExplorePagedResponse({ page: 2, hasNextPage: false, hasPreviousPage: true }));
+      await service.explore({ ...query, limit: EXPLORE.LIMIT_BELOW_PAGE_SIZE }, { cursor: first.nextCursor as PaginationCursor });
+
+      expect(first.items).toHaveLength(2);
+      expect(first.hasNextPage).toBe(true);
+      expect(mockApiClient.post).toHaveBeenNthCalledWith(
+        1,
+        MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+        expect.objectContaining({ limit: EXPLORE.PAGE_SIZE }),
+        { params: { page: 1, pageSize: EXPLORE.PAGE_SIZE } }
+      );
+      expect(mockApiClient.post).toHaveBeenNthCalledWith(
+        2,
+        MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+        expect.objectContaining({ limit: EXPLORE.PAGE_SIZE }),
+        { params: { page: 2, pageSize: EXPLORE.PAGE_SIZE } }
+      );
+    });
+
     it('should fetch the next page from the cursor at the page size the engine reported', async () => {
       mockApiClient.post.mockResolvedValueOnce(createRawExplorePagedResponse({ pageSize: EXPLORE.SERVER_PAGE_SIZE }));
       const first = await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE });
