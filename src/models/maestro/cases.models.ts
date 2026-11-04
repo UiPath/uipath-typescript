@@ -395,11 +395,6 @@ export interface CasesServiceModel {
    * Run an explore query over case and element runs.
    *
    * @internal
-   * @experimental
-   *
-   * /// warning
-   * Preview: This method is experimental and may change or be removed in future releases.
-   * ///
    *
    * Groups, filters and aggregates the case management data behind case dashboards, and returns one
    * row per group keyed by field id or aggregate `id`. For a signed-in user, results are limited to the

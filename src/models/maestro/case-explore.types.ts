@@ -7,7 +7,6 @@
  * Kind of a filter in a case explore query.
  *
  * @internal
- * @experimental
  */
 export enum CaseExploreFilterKind {
   /** Matches rows whose field equals one of the given values */
@@ -20,7 +19,6 @@ export enum CaseExploreFilterKind {
  * Sort direction for a case explore query.
  *
  * @internal
- * @experimental
  */
 export enum CaseExploreSortDirection {
   Ascending = 'asc',
@@ -31,7 +29,6 @@ export enum CaseExploreSortDirection {
  * Matches rows whose field equals one of `values`.
  *
  * @internal
- * @experimental
  */
 export interface CaseExploreValueFilter {
   kind: CaseExploreFilterKind.Value;
@@ -45,7 +42,6 @@ export interface CaseExploreValueFilter {
  * Matches rows whose field starts with `pattern`.
  *
  * @internal
- * @experimental
  */
 export interface CaseExploreSearchFilter {
   kind: CaseExploreFilterKind.Search;
@@ -59,7 +55,6 @@ export interface CaseExploreSearchFilter {
  * A filter in a case explore query.
  *
  * @internal
- * @experimental
  */
 export type CaseExploreFilter = CaseExploreValueFilter | CaseExploreSearchFilter;
 
@@ -67,7 +62,6 @@ export type CaseExploreFilter = CaseExploreValueFilter | CaseExploreSearchFilter
  * Orders the result by a field.
  *
  * @internal
- * @experimental
  */
 export interface CaseExploreSort {
   /** Field id, or the `id` of an aggregate in the same query */
@@ -79,7 +73,6 @@ export interface CaseExploreSort {
  * A stored measure computed per group.
  *
  * @internal
- * @experimental
  */
 export interface CaseExploreAggregate {
   /** Key the measure is returned under in each row */
@@ -96,7 +89,6 @@ export interface CaseExploreAggregate {
  * only the current state.
  *
  * @internal
- * @experimental
  */
 export interface CaseExploreQuery {
   /** Field ids to group by. Each distinct combination is one row */
@@ -116,7 +108,6 @@ export interface CaseExploreQuery {
  * A field the tenant's schema does not carry is absent.
  *
  * @internal
- * @experimental
  */
 export type CaseExploreResponse = {
   [fieldId: string]: string | number | boolean | null;
