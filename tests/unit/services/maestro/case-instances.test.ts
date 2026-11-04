@@ -14,6 +14,7 @@ import {
   createMockCaseJsonWithStages,
   createMockCaseStageNode,
   createMockCaseSlaRule,
+  createMockCaseSla,
   createMockCaseTask,
   createMockCaseJsonWithSections,
   createMockCaseInstanceExecutionHistory,
@@ -883,6 +884,48 @@ describe('CaseInstancesService', () => {
       expect(result[0].sla).toBeUndefined();
       expect(result[0].slaRules).toHaveLength(1);
       expect(result[0].slaRules![0].id).toBe(MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_ID);
+    });
+
+    it('should ignore legacy data.sla when slaRules has no default rule', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockBaseResponse({
+          nodes: [createMockCaseStageNode({
+            data: {
+              label: MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME,
+              sla: createMockCaseSla(),
+              slaRules: [createMockCaseSlaRule({
+                id: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_ID,
+                expression: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_EXPRESSION
+              })],
+              tasks: [[createMockCaseTask()]]
+            }
+          })]
+        }));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].sla).toBeUndefined();
+      expect(result[0].slaRules).toHaveLength(1);
+    });
+
+    it('should skip null entries in slaRules', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockBaseResponse({
+          nodes: [createMockCaseStageNode({
+            data: {
+              label: MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME,
+              slaRules: [null, createMockCaseSlaRule()],
+              tasks: [[createMockCaseTask()]]
+            }
+          })]
+        }));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].slaRules).toHaveLength(1);
+      expect(result[0].sla).toHaveProperty('length', MAESTRO_TEST_CONSTANTS.SLA_COUNT_14_DAYS);
     });
 
     it('should fall back to legacy data.sla when slaRules is absent', async () => {
