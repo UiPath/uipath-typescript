@@ -830,6 +830,8 @@ describe('CaseInstancesService', () => {
         length: MAESTRO_TEST_CONSTANTS.SLA_COUNT_14_DAYS,
         duration: MAESTRO_TEST_CONSTANTS.SLA_DURATION_DAYS
       });
+      expect((stage.slaRules![0] as any).count).toBeUndefined();
+      expect((stage.slaRules![0] as any).unit).toBeUndefined();
       
       // Verify task data with execution history
       expect(stage.tasks).toHaveLength(1);
