@@ -27,27 +27,34 @@ interface CreateTrackedFunctionArgs {
 }
 
 /** `Result` attribute values. */
-export const CallResult = {
-    SUCCESS: 'Success',
-    FAILED: 'Failed',
-} as const;
+export enum CallResult {
+    SUCCESS = 'Success',
+    FAILED = 'Failed',
+}
 
 /**
  * `FailureCategory` attribute values: a short fixed list, never error text,
  * so a failed call can be attributed to the customer's app or to UiPath.
  */
-export const FailureCategory = {
-    AUTH: 'Auth',
-    PERMISSION: 'Permission',
-    NOT_FOUND: 'NotFound',
-    VALIDATION: 'Validation',
-    THROTTLED: 'Throttled',
-    NETWORK: 'Network',
-    SERVICE_ERROR: 'ServiceError',
-    UNKNOWN: 'Unknown',
-} as const;
+export enum FailureCategory {
+    /** Token missing, expired or rejected. */
+    AUTH = 'Auth',
+    /** Scope or role missing. */
+    PERMISSION = 'Permission',
+    /** Folder, process or record not found. */
+    NOT_FOUND = 'NotFound',
+    /** The request was rejected as invalid. */
+    VALIDATION = 'Validation',
+    /** Rate limited. */
+    THROTTLED = 'Throttled',
+    /** The request never reached the server (CORS, offline, DNS). */
+    NETWORK = 'Network',
+    /** The called service returned a server error. */
+    SERVICE_ERROR = 'ServiceError',
+    UNKNOWN = 'Unknown',
+}
 
-const FAILURE_CATEGORY_BY_ERROR_TYPE: Record<string, string> = {
+const FAILURE_CATEGORY_BY_ERROR_TYPE: Record<string, FailureCategory> = {
     AuthenticationError: FailureCategory.AUTH,
     AuthorizationError: FailureCategory.PERMISSION,
     NotFoundError: FailureCategory.NOT_FOUND,
@@ -73,7 +80,7 @@ function statusCodeOf(error: unknown): number | undefined {
  * `UiPathError` shape (`type`, `statusCode`) so this package does not
  * depend on the SDK; falls back to the HTTP status, then `Unknown`.
  */
-export function failureCategoryOf(error: unknown): string {
+export function failureCategoryOf(error: unknown): FailureCategory {
     const e = (error ?? {}) as ErrorLike;
     const type = typeof e.type === 'string' ? e.type : typeof e.name === 'string' ? e.name : '';
     if (type in FAILURE_CATEGORY_BY_ERROR_TYPE) {
