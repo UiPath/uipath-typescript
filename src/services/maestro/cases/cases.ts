@@ -12,7 +12,7 @@ import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
 import type { CaseExploreQuery, CaseExploreResponse } from '@/models/maestro/case-explore.types';
-import type { RawCaseExploreColumns } from '@/models/maestro/case-explore.internal-types';
+import type { RawCaseExploreColumns, RawCaseExplorePagedResponse } from '@/models/maestro/case-explore.internal-types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationOptions, getLimitedPageSize } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationManager } from '@/utils/pagination/pagination-manager';
@@ -152,15 +152,16 @@ export class CasesService extends BaseService implements CasesServiceModel {
     const { pageNumber, pageSize } = PaginationHelpers.validatePaginationOptions(options ?? {}, PaginationType.OFFSET);
     const page = pageNumber ?? 1;
     const limitedPageSize = getLimitedPageSize(pageSize);
-    const { data } = await this.post<unknown>(
+    const { data } = await this.post<RawCaseExploreColumns | RawCaseExplorePagedResponse>(
       MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
       toWireExploreQuery(query, limitedPageSize),
       { params: createParams({ page, pageSize: limitedPageSize }) }
     );
 
+    // Bare columns mean the engine did not page the result, so they are the whole result: keep them as the last page.
     const paged = isPagedExploreResponse(data)
       ? data
-      : { data: {}, pagination: { page, pageSize: limitedPageSize, hasNextPage: false } };
+      : { data: data ?? {}, pagination: { page, pageSize: limitedPageSize, hasNextPage: false } };
 
     const result = PaginationManager.createPaginatedResponse(
       {

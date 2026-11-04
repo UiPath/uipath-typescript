@@ -640,6 +640,19 @@ describe('CasesService', () => {
       expect(result.nextCursor).toBeUndefined();
     });
 
+    it('should keep bare columns answered to a paginated request as the last page', async () => {
+      mockApiClient.post.mockResolvedValue(createRawExploreColumns());
+
+      const result = await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE });
+
+      expect(result.items).toEqual([
+        { [EXPLORE.FIELD_CASE_ID]: EXPLORE.CASE_ID_1, [EXPLORE.FIELD_STATUS]: EXPLORE.STATUS_RUNNING },
+        { [EXPLORE.FIELD_CASE_ID]: EXPLORE.CASE_ID_2, [EXPLORE.FIELD_STATUS]: EXPLORE.STATUS_COMPLETED },
+      ]);
+      expect(result.hasNextPage).toBe(false);
+      expect(result.nextCursor).toBeUndefined();
+    });
+
     it('should treat a malformed pagination envelope as an empty last page', async () => {
       mockApiClient.post.mockResolvedValue({ data: null, pagination: { hasNextPage: true } });
 
