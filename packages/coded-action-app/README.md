@@ -53,6 +53,7 @@ console.log(taskData.folderId);   // number
 console.log(taskData.folderName); // string
 console.log(taskData.jobKey);     // string | null — GUID key of the job that created the task
 console.log(taskData.theme);      // Theme enum — the UI theme Action Center is currently using
+console.log(taskData.reviewerId); // string | undefined — cloud user id of the signed-in reviewer
 ```
 
 > **Note:** This call will reject with an error if Action Center does not respond within 3 seconds, or if the parent origin is not trusted.
@@ -66,6 +67,35 @@ Call this whenever the user modifies the task form data. Action Center uses this
 ```ts
 service.setTaskData({ field: 'updatedValue' });
 ```
+
+---
+
+### Record what the reviewer looked at and changed
+
+For a task where a process proposes values and a reviewer confirms or corrects them, `createDecisionRecorder` builds the record for you. It tracks which parts the reviewer opened, what they changed, and how much (`Kept`, `Untouched`, `Lightly edited`, `Rewritten` or `Rejected`), the order of the changes, and the time on task.
+
+```ts
+import { CodedActionApp, createDecisionRecorder } from '@uipath/coded-action-app';
+
+const service = new CodedActionApp();
+const task = await service.getTask();
+
+const recorder = createDecisionRecorder({
+  proposed: [
+    { id: 'amount', part: 'Approved amount', proposed: '5000', source: 'Claims agent v4' },
+    { id: 'message', part: 'Message to the customer', proposed: 'We can cover $5,000 under your plan.' },
+  ],
+  reviewerId: task.reviewerId,
+  defaultScope: 'Counts for claims like this',
+});
+
+recorder.lookedAt('message');
+recorder.change('amount', '4800', { scope: 'Just this claim' });
+
+await service.completeTask('Approve', { ...(task.data as object), ...recorder.snapshot() });
+```
+
+`snapshot()` returns `record` (one row per part with `part`, `proposed`, `submitted`, `howMuch`, `source`, `lookedAt` and `scope`), `changeLog`, `timeOnTaskSeconds` and `reviewerId`. Opening a part counts as looking at it even when its value stays as proposed. Returning a part to its proposed value clears the change.
 
 ---
 
