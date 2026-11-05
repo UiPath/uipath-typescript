@@ -1,7 +1,7 @@
 import type { PaginationCursor } from '../../utils/pagination/types';
 
 /**
- * Semantic kind of an artifact — independent of mediaType.
+ * Semantic kind of an artifact — independent of the media type.
  * Single-file: schema, mapping, summary, context (one per ontology).
  * Multi-file: constraints, business-rules (many per ontology).
  *
@@ -52,9 +52,7 @@ export interface OntologyGetByIdOptions {
 
 /** @internal */
 export interface ArtifactContentValidateOptions {
-  /** MIME type of the content (e.g. "text/turtle"); required. */
-  mediaType: string;
-  /** Semantic type; required when not inferrable from mediaType. */
+  /** Semantic type; required when not inferrable from the media type. */
   type?: ArtifactType;
 }
 

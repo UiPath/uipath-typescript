@@ -80,7 +80,8 @@ export interface OntologyServiceModel {
    *
    * @param fileName - Artifact filename (extension required, e.g. `po-shapes.ttl`)
    * @param content - Raw artifact content to validate
-   * @param options - Media type of the content and an optional semantic type hint
+   * @param mediaType - MIME type of the content (e.g. `text/turtle`)
+   * @param options - Optional semantic type hint
    * @returns Validation outcome including any violations
    *
    * @example
@@ -91,7 +92,8 @@ export interface OntologyServiceModel {
    * const result = await ontologies.validateArtifactContent(
    *   'po-shapes.ttl',
    *   '@prefix sh: … ',
-   *   { mediaType: 'text/turtle', type: ArtifactType.Constraints }
+   *   'text/turtle',
+   *   { type: ArtifactType.Constraints }
    * );
    * if (!result.valid) {
    *   result.violations.forEach(v => console.error(v.severity, v.message));
@@ -100,5 +102,5 @@ export interface OntologyServiceModel {
    *
    * @internal
    */
-  validateArtifactContent(fileName: string, content: string, options: ArtifactContentValidateOptions): Promise<ValidationResult>;
+  validateArtifactContent(fileName: string, content: string, mediaType: string, options?: ArtifactContentValidateOptions): Promise<ValidationResult>;
 }

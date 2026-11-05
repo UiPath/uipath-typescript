@@ -36,8 +36,7 @@ describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
 
   describe('validateArtifactContent', () => {
     it('should return valid=true for well-formed Turtle', async () => {
-      const result = await ontologies.validateArtifactContent('x.ttl', '@prefix : <urn:x#> .', {
-        mediaType: 'text/turtle',
+      const result = await ontologies.validateArtifactContent('x.ttl', '@prefix : <urn:x#> .', 'text/turtle', {
         type: ArtifactType.Constraints,
       });
 
@@ -45,8 +44,7 @@ describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
     });
 
     it('should return valid=false with an ERROR for malformed Turtle', async () => {
-      const result = await ontologies.validateArtifactContent('x.ttl', 'not turtle', {
-        mediaType: 'text/turtle',
+      const result = await ontologies.validateArtifactContent('x.ttl', 'not turtle', 'text/turtle', {
         type: ArtifactType.Constraints,
       });
 

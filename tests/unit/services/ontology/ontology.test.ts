@@ -224,7 +224,8 @@ describe('OntologyService Unit Tests', () => {
       await service.validateArtifactContent(
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
-        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE, type: ArtifactType.Constraints }
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE,
+        { type: ArtifactType.Constraints }
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -243,7 +244,7 @@ describe('OntologyService Unit Tests', () => {
       await service.validateArtifactContent(
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
-        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
       );
 
       expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/artifact/po-shapes.ttl/validate');
@@ -255,7 +256,7 @@ describe('OntologyService Unit Tests', () => {
       await service.validateArtifactContent(
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_SPECIAL,
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
-        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
       );
 
       expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/artifact/my%20file%231.ttl/validate');
@@ -268,7 +269,7 @@ describe('OntologyService Unit Tests', () => {
       await service.validateArtifactContent(
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
         content,
-        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
       );
 
       expect(mockApiClient.post.mock.calls[0][1]).toBe(content);
@@ -280,7 +281,7 @@ describe('OntologyService Unit Tests', () => {
       const result = await service.validateArtifactContent(
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
         'bad turtle',
-        { mediaType: ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE }
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
       );
 
       expect(result.valid).toBe(false);

@@ -58,14 +58,14 @@ export class OntologyService extends BaseService implements OntologyServiceModel
   }
 
   @track('Ontologies.ValidateArtifactContent')
-  async validateArtifactContent(fileName: string, content: string, options: ArtifactContentValidateOptions): Promise<ValidationResult> {
-    const url = options.type
+  async validateArtifactContent(fileName: string, content: string, mediaType: string, options?: ArtifactContentValidateOptions): Promise<ValidationResult> {
+    const url = options?.type
       ? `${ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName)}?type=${encodeURIComponent(options.type)}`
       : ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName);
     const response = await this.post<ValidationResult>(
       url,
       content,
-      { headers: { 'Content-Type': options.mediaType }, bodyOptions: { stringify: false } }
+      { headers: { 'Content-Type': mediaType }, bodyOptions: { stringify: false } }
     );
     return response.data;
   }
