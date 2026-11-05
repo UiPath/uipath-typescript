@@ -28,6 +28,7 @@ export * from './business-apps';
 export * from './integration-service';
 export * from './case-app';
 export * from './case-explore';
+export * from './ontology';
 
 // Re-export constants for convenience
 export * from '../constants';

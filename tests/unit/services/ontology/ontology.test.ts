@@ -1,0 +1,291 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { OntologyService } from '../../../../src/services/ontology/ontology';
+import { ArtifactType } from '../../../../src/models/ontology/ontology.types';
+import type { OntologySummary } from '../../../../src/models/ontology/ontology.models';
+import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
+import { ApiClient } from '../../../../src/core/http/api-client';
+import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import {
+  createMockRawOntology,
+  createMockValidationResult,
+  createMockValidationFailure,
+} from '../../../utils/mocks/ontology';
+import { createMockError } from '../../../utils/mocks/core';
+import { NotFoundError } from '../../../../src/core/errors';
+import { ONTOLOGY_TEST_CONSTANTS } from '../../../utils/constants/ontology';
+import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { ONTOLOGY_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+
+vi.mock('../../../../src/core/http/api-client');
+
+const mocks = vi.hoisted(() => import('../../../utils/mocks/core'));
+vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mockPaginationHelpers);
+
+describe('OntologyService Unit Tests', () => {
+  let service: OntologyService;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
+
+  beforeEach(() => {
+    const { instance } = createServiceTestDependencies();
+    mockApiClient = createMockApiClient();
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+    vi.mocked(PaginationHelpers.getAll).mockReset();
+    service = new OntologyService(instance);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('getAll', () => {
+    it('should call PaginationHelpers.getAll with correct pagination config', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [createMockRawOntology()],
+        totalCount: 1,
+      } as any);
+
+      await service.getAll();
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pagination: expect.objectContaining({
+            itemsField: 'items',
+            totalCountField: 'total',
+            paginationParams: expect.objectContaining({
+              pageSizeParam: 'limit',
+              offsetParam: 'page',
+              convertToSkip: false,
+              zeroBased: false,
+            }),
+          }),
+          excludeFromPrefix: ['search', 'folder'],
+        }),
+        undefined
+      );
+    });
+
+    it('should carry folderId on items through transformFn', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const item = config.transformFn!(createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY }) as any) as OntologySummary;
+      expect(item.folderId).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
+    });
+
+    it('should rename createTime and updateTime to createdTime and updatedTime', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const item = config.transformFn!(createMockRawOntology({ updateTime: ONTOLOGY_TEST_CONSTANTS.CREATE_TIME }) as any) as OntologySummary;
+      expect(item.createdTime).toBe(ONTOLOGY_TEST_CONSTANTS.CREATE_TIME);
+      expect(item.updatedTime).toBe(ONTOLOGY_TEST_CONSTANTS.CREATE_TIME);
+      expect(item).not.toHaveProperty('createTime');
+      expect(item).not.toHaveProperty('updateTime');
+    });
+
+    it('should send folderKey as the folder query parameter, not a header', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll({ folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const params = config.processParametersFn!({ folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      expect(params).toEqual({ folder: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      expect(config.headers?.[FOLDER_KEY]).toBeUndefined();
+      expect(config.excludeFromPrefix).toEqual(expect.arrayContaining(['search', 'folder']));
+    });
+
+    it('should target the api v1 collection route', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect(config.getEndpoint()).toBe('ontology_/api/v1/ontology');
+    });
+
+    it('should target the collection endpoint and return each item with SDK field names', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect(config.getEndpoint()).toBe(ONTOLOGY_ENDPOINTS.COLLECTION);
+      const { createTime, ...rest } = createMockRawOntology();
+      expect(config.transformFn!({ ...rest, createTime })).toEqual({ ...rest, createdTime: createTime });
+    });
+
+    it('should propagate API errors', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(
+        createMockError(TEST_CONSTANTS.ERROR_MESSAGE)
+      );
+
+      await expect(service.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getById', () => {
+    it('should return the ontology', async () => {
+      const raw = createMockRawOntology();
+      mockApiClient.get.mockResolvedValue(raw);
+
+      const result = await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID),
+        expect.any(Object)
+      );
+      const { createTime, ...rest } = raw;
+      expect(result).toEqual({ ...rest, createdTime: createTime });
+      expect(result).not.toHaveProperty('createTime');
+    });
+
+    it('should URL-encode the name in the api v1 path', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getById('Sales Ops');
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('ontology_/api/v1/ontology/Sales%20Ops', expect.anything());
+    });
+
+    it('should also accept a name as idOrName', async () => {
+      const raw = createMockRawOntology();
+      mockApiClient.get.mockResolvedValue(raw);
+
+      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
+        expect.any(Object)
+      );
+    });
+
+    it('should send the folder key header when given', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
+        expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_KEY]: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY }) })
+      );
+    });
+
+    it('should send no folder header without a folder', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+      expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('should fall back to the configured folder key for the header', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      const folderService = new OntologyService(instance);
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await folderService.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+      expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
+    });
+
+    it('should return the folderId the service sends', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY }));
+
+      const result = await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(result.folderId).toBe(ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY);
+    });
+
+    it('should reject with NotFoundError on 404', async () => {
+      mockApiClient.get.mockRejectedValue(new NotFoundError({ message: ONTOLOGY_TEST_CONSTANTS.ERROR_NOT_FOUND }));
+
+      await expect(service.getById('Missing')).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('should propagate 404 errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(ONTOLOGY_TEST_CONSTANTS.ERROR_NOT_FOUND));
+
+      await expect(service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID)).rejects.toThrow(
+        ONTOLOGY_TEST_CONSTANTS.ERROR_NOT_FOUND
+      );
+    });
+  });
+
+  describe('validateArtifactContent', () => {
+    it('should POST raw content to the ontology-free route with ?type=', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult({ type: ArtifactType.Constraints }));
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE,
+        { type: ArtifactType.Constraints }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        'ontology_/api/v1/artifact/po-shapes.ttl/validate?type=constraints',
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        expect.objectContaining({
+          headers: { 'Content-Type': ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE },
+          bodyOptions: { stringify: false },
+        })
+      );
+    });
+
+    it('should omit type when not given', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult());
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
+      );
+
+      expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/artifact/po-shapes.ttl/validate');
+    });
+
+    it('should encode the file name', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult());
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_SPECIAL,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
+      );
+
+      expect(mockApiClient.post.mock.calls[0][0]).toBe('ontology_/api/v1/artifact/my%20file%231.ttl/validate');
+    });
+
+    it('should pass JSON-looking content through as the identical string', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationResult());
+      const content = ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_YAML_FLOW;
+
+      await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        content,
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
+      );
+
+      expect(mockApiClient.post.mock.calls[0][1]).toBe(content);
+    });
+
+    it('should return an invalid report as data', async () => {
+      mockApiClient.post.mockResolvedValue(createMockValidationFailure());
+
+      const result = await service.validateArtifactContent(
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME_2,
+        'bad turtle',
+        ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.violations).toHaveLength(1);
+    });
+  });
+});
