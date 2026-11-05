@@ -1,6 +1,14 @@
 # CI/CD: GitHub Actions
 
-Build, pack, publish, and deploy a Coded App from a GitHub Actions workflow with the `uip` CLI. Once the one-time setup is committed, every step runs unattended. This page covers:
+Build, pack, publish, and deploy a Coded App from a CI/CD pipeline with the `uip` CLI. The lifecycle has three stages:
+
+1. **Create** the solution and the app, once, on your machine.
+2. **Develop** the app locally and commit your changes.
+3. **Build and deploy** in the pipeline. Every run packs a new version, publishes it, and deploys it: the first run installs the app, and later runs upgrade it. No run needs manual input.
+
+The examples use GitHub Actions. The `uip` commands are the same in any CI/CD system; only the way secrets reach them differs (see [Other CI/CD systems](#other-cicd-systems)).
+
+This page covers:
 
 - [A Coded App inside a solution](#githubworkflowsdeployyml): created with `uip codedapp init`, deployed with `uip solution`.
 - [Referencing an existing Coded Action App](#reference-an-existing-coded-action-app): adding it to the solution and linking it to the deployed app.
@@ -24,7 +32,7 @@ This opens a browser, so a pipeline cannot use it. Workflows authenticate with a
 
 ### Personal Access Token (workflows)
 
-A Personal Access Token (PAT) is created once, stored as a repository secret, and passed to every `uip` command through environment variables. No login step runs in the workflow.
+A Personal Access Token (PAT) is created once, stored in your CI/CD system's secret store, and passed to every `uip` command through environment variables. No login step runs in the pipeline.
 
 1. **Create the token** while signed in:
 
@@ -47,11 +55,11 @@ A Personal Access Token (PAT) is created once, stored as a repository secret, an
 
 2. **Find your organization and tenant IDs**: run `uip login status --output json` and read `OrganizationId` and `TenantId`.
 
-3. **Store the values** in the repository settings (Settings → Secrets and variables → Actions):
+3. **Store the values** with your CI/CD system's secret mechanism: the token as a secret, the organization and tenant as plain variables. In GitHub, use the repository settings (Settings → Secrets and variables → Actions):
     - Secret `UIPATH_PAT`: the token.
     - Variables `UIPATH_ORG`, `UIPATH_ORG_ID`, `UIPATH_TENANT`, `UIPATH_TENANT_ID`.
 
-4. **Pass them to the deploy job.** `UIPATH_URL` is required because a PAT carries no server information:
+4. **Expose them as environment variables** to the deploy step. `UIPATH_URL` is required because a PAT carries no server information. In GitHub Actions:
 
     ```yaml
     env:
@@ -125,7 +133,8 @@ on:
 
 env:
   NODE_VERSION: "22"
-  UIP_CLI_VERSION: "1.205.0"
+  # Or pin an exact version for reproducible builds
+  UIP_CLI_VERSION: ">=1.205.0"
   SOLUTION: "my-solution"
   APP: "my-app"
   # The app is served at https://<org>.uipath.host/<routing-name>
@@ -273,6 +282,55 @@ on:
     branches: [main]
 ```
 
+## Other CI/CD systems
+
+The build and deploy steps above are plain shell commands, so they run unchanged in Azure DevOps, Jenkins, or any other CI/CD system. Store the PAT in that system's secret store and map it to the same environment variables for the deploy steps. Use its approval mechanism for the gate: environment approvals in Azure DevOps, an `input` step in Jenkins.
+
+=== "Azure DevOps"
+
+    Secret variables are not exposed to scripts automatically, so map them in `env:`:
+
+    ```yaml
+    - script: |
+        uip solution pack . ./out --version "$VERSION"
+        uip solution publish "./out/${SOLUTION}_${VERSION}.zip" --wait
+        # ... deploy config and deploy run, as in the GitHub Actions workflow
+      workingDirectory: my-solution
+      env:
+        UIPATH_CLI_ENABLE_ENV_AUTH: "true"
+        UIPATH_CLI_AUTH_TOKEN: $(UIPATH_PAT)
+        UIPATH_URL: "https://cloud.uipath.com"
+        UIPATH_CLI_ORGANIZATION_NAME: $(UIPATH_ORG)
+        UIPATH_CLI_ORGANIZATION_ID: $(UIPATH_ORG_ID)
+        UIPATH_CLI_TENANT_NAME: $(UIPATH_TENANT)
+        UIPATH_CLI_TENANT_ID: $(UIPATH_TENANT_ID)
+    ```
+
+=== "Jenkins"
+
+    Store the PAT as a *Secret text* credential and bind it with `credentials()`:
+
+    ```groovy
+    stage('Deploy') {
+      environment {
+        UIPATH_CLI_ENABLE_ENV_AUTH = 'true'
+        UIPATH_CLI_AUTH_TOKEN = credentials('uipath-pat')
+        UIPATH_URL = 'https://cloud.uipath.com'
+        UIPATH_CLI_ORGANIZATION_NAME = 'my-org'
+        UIPATH_CLI_ORGANIZATION_ID = '<organization-id>'
+        UIPATH_CLI_TENANT_NAME = 'my-tenant'
+        UIPATH_CLI_TENANT_ID = '<tenant-id>'
+      }
+      steps {
+        dir('my-solution') {
+          sh 'uip solution pack . ./out --version "$VERSION"'
+          sh 'uip solution publish "./out/${SOLUTION}_${VERSION}.zip" --wait'
+          // ... deploy config and deploy run, as in the GitHub Actions workflow
+        }
+      }
+    }
+    ```
+
 ## Standalone Coded App (no solution)
 
 To deploy a Coded App on its own, without a solution, use `uip codedapp` with a Confidential External Application.
@@ -308,7 +366,8 @@ on:
 
 env:
   NODE_VERSION: "22"
-  UIP_CLI_VERSION: "1.205.0"
+  # Or pin an exact version for reproducible builds
+  UIP_CLI_VERSION: ">=1.205.0"
 
 jobs:
   deploy:
