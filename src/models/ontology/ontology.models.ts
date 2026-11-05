@@ -5,7 +5,7 @@ import type {
   OntologyGetAllOptions,
   OntologyGetByIdOptions,
 } from './ontology.types';
-import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
+import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination/types';
 
 /**
  * An ontology as the service returns it.

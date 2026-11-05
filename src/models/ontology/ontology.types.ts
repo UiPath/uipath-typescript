@@ -1,4 +1,4 @@
-import type { PaginationCursor } from '../../utils/pagination/types';
+import type { PaginationCursor } from '@/utils/pagination/types';
 
 /**
  * Semantic kind of an artifact — independent of the media type.

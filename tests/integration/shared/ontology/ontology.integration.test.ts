@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
-import { Ontologies } from '../../../../src/services/ontology';
-import { ArtifactType, ValidationSeverity } from '../../../../src/models/ontology/ontology.types';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '@tests/integration/config/unified-setup';
+import { Ontologies } from '@/services/ontology';
+import { ArtifactType, ValidationSeverity } from '@/models/ontology/ontology.types';
 
 const modes: InitMode[] = ['v1'];
 

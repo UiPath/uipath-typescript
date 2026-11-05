@@ -2,7 +2,7 @@
  * Ontology Service Endpoints
  */
 
-import { ONTOLOGY_BASE } from '../base';
+import { ONTOLOGY_BASE } from '@/utils/constants/endpoints/base';
 
 export const ONTOLOGY_ENDPOINTS = {
   /** Collection route — GET lists the ontologies in a folder. */

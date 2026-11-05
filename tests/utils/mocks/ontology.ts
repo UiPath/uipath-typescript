@@ -4,8 +4,8 @@ import {
   ValidationSeverity,
   RawOntologySummary,
   ValidationResult,
-} from '../../../src/models/ontology/ontology.types';
-import { ONTOLOGY_TEST_CONSTANTS } from '../constants/ontology';
+} from '@/models/ontology/ontology.types';
+import { ONTOLOGY_TEST_CONSTANTS } from '@tests/utils/constants/ontology';
 
 export const createMockRawOntology = (overrides: Partial<RawOntologySummary> = {}): RawOntologySummary => ({
   id: ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID,

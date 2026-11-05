@@ -1,22 +1,22 @@
-import { track } from '../../core/telemetry';
-import { OntologySummary, OntologyServiceModel } from '../../models/ontology/ontology.models';
-import { OntologyMap } from '../../models/ontology/ontology.constants';
+import { track } from '@/core/telemetry';
+import { OntologySummary, OntologyServiceModel } from '@/models/ontology/ontology.models';
+import { OntologyMap } from '@/models/ontology/ontology.constants';
 import {
   RawOntologySummary,
   ValidationResult,
   OntologyGetAllOptions,
   OntologyGetByIdOptions,
   ArtifactContentValidateOptions,
-} from '../../models/ontology/ontology.types';
-import { ONTOLOGY_PAGINATION, ONTOLOGY_OFFSET_PARAMS } from '../../utils/constants/common';
-import { ONTOLOGY_ENDPOINTS } from '../../utils/constants/endpoints';
-import { FOLDER_KEY } from '../../utils/constants/headers';
-import { createHeaders } from '../../utils/http/headers';
-import { HasPaginationOptions, PaginatedResponse, NonPaginatedResponse } from '../../utils/pagination/types';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { transformData } from '../../utils/transform';
-import { BaseService } from '../base';
+} from '@/models/ontology/ontology.types';
+import { ONTOLOGY_PAGINATION, ONTOLOGY_OFFSET_PARAMS } from '@/utils/constants/common';
+import { ONTOLOGY_ENDPOINTS } from '@/utils/constants/endpoints';
+import { FOLDER_KEY } from '@/utils/constants/headers';
+import { createHeaders } from '@/utils/http/headers';
+import { HasPaginationOptions, PaginatedResponse, NonPaginatedResponse } from '@/utils/pagination/types';
+import { PaginationHelpers } from '@/utils/pagination/helpers';
+import { PaginationType } from '@/utils/pagination/internal-types';
+import { transformData } from '@/utils/transform';
+import { BaseService } from '@/services/base';
 
 /**
  * @internal

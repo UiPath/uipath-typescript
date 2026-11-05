@@ -1,25 +1,25 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { OntologyService } from '../../../../src/services/ontology/ontology';
-import { ArtifactType } from '../../../../src/models/ontology/ontology.types';
-import type { OntologySummary } from '../../../../src/models/ontology/ontology.models';
-import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
-import { ApiClient } from '../../../../src/core/http/api-client';
-import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { OntologyService } from '@/services/ontology/ontology';
+import { ArtifactType } from '@/models/ontology/ontology.types';
+import type { OntologySummary } from '@/models/ontology/ontology.models';
+import { PaginationHelpers } from '@/utils/pagination/helpers';
+import { ApiClient } from '@/core/http/api-client';
+import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import {
   createMockRawOntology,
   createMockValidationResult,
   createMockValidationFailure,
-} from '../../../utils/mocks/ontology';
-import { createMockError } from '../../../utils/mocks/core';
-import { NotFoundError } from '../../../../src/core/errors';
-import { ONTOLOGY_TEST_CONSTANTS } from '../../../utils/constants/ontology';
-import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import { ONTOLOGY_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+} from '@tests/utils/mocks/ontology';
+import { createMockError } from '@tests/utils/mocks/core';
+import { NotFoundError } from '@/core/errors';
+import { ONTOLOGY_TEST_CONSTANTS } from '@tests/utils/constants/ontology';
+import { TEST_CONSTANTS } from '@tests/utils/constants/common';
+import { ONTOLOGY_ENDPOINTS } from '@/utils/constants/endpoints';
+import { FOLDER_KEY } from '@/utils/constants/headers';
 
 vi.mock('../../../../src/core/http/api-client');
 
-const mocks = vi.hoisted(() => import('../../../utils/mocks/core'));
+const mocks = vi.hoisted(() => import('@tests/utils/mocks/core'));
 vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mockPaginationHelpers);
 
 describe('OntologyService Unit Tests', () => {
@@ -143,6 +143,19 @@ describe('OntologyService Unit Tests', () => {
       const { createTime, ...rest } = raw;
       expect(result).toEqual({ ...rest, createdTime: createTime });
       expect(result).not.toHaveProperty('createTime');
+    });
+
+    it('should rename createTime and updateTime to createdTime and updatedTime', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockRawOntology({ updateTime: ONTOLOGY_TEST_CONSTANTS.CREATE_TIME })
+      );
+
+      const result = await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID);
+
+      expect(result.createdTime).toBe(ONTOLOGY_TEST_CONSTANTS.CREATE_TIME);
+      expect(result.updatedTime).toBe(ONTOLOGY_TEST_CONSTANTS.CREATE_TIME);
+      expect(result).not.toHaveProperty('createTime');
+      expect(result).not.toHaveProperty('updateTime');
     });
 
     it('should URL-encode the name in the api v1 path', async () => {
