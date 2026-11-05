@@ -79,5 +79,7 @@ export const MAESTRO_ENDPOINTS = {
     ELEMENT_COUNT_BY_STATUS: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/ElementCountByStatus`,
     /** Incident counts aggregated by time bucket for time-series charts */
     INCIDENTS_BY_TIME_WINDOW: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/IncidentsByTimeWindow`,
+    /** Case management explore query over case and element runs */
+    CASE_EXPLORE: `${INSIGHTS_RTM_BASE}/api/v1/standalone-query/CaseManagementExplore`,
   },
 } as const;
