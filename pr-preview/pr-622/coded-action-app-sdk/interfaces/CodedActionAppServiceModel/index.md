@@ -31,7 +31,7 @@ A promise that resolves with a [TaskCompleteResponse](../../type-aliases/TaskCom
 
 #### Throws
 
-If called from an untrusted origin.
+If the host origin (`basedomain` query parameter) is missing.
 
 #### Throws
 
@@ -71,7 +71,7 @@ A promise that resolves with a [Task](../../type-aliases/Task/) object containin
 
 #### Throws
 
-If called from an untrusted origin.
+If the host origin (`basedomain` query parameter) is missing.
 
 #### Throws
 
@@ -90,6 +90,7 @@ console.log(task.isReadOnly); // boolean — disable editing if true
 console.log(task.data);       // the task's form data
 console.log(task.folderId);   // number
 console.log(task.folderName); // string
+console.log(task.jobKey);     // string | null — GUID key of the job that created the task
 console.log(task.theme);      // Theme enum — current Action Center UI theme
 
 // Disable the form when task is read-only

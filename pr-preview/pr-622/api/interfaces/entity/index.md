@@ -13,18 +13,149 @@ const allEntities = await entities.getAll();
 
 ## Methods
 
-### deleteAttachment()
+### clone()
 
-> **deleteAttachment**(`entityId`: `string`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
+> **clone**(`request`: `EntityCloneRequest`): `Promise`\<`EntityCloneJob`>
 
-Removes an attachment from a File-type field of an entity record.
+**`Experimental`**
+
+Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneJob](#getclonejob).
+
+Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+
+`DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes are required only for `SchemaAndData` mode (which creates the target schema).
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `request`: `EntityCloneRequest` — Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the [EntityCloneJob](../EntityCloneJob/) descriptor (initial state `Queued`).
+
+#### Example
+
+```
+import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const job = await entities.clone({
+  source: { scopeType: EntityCloneScopeType.Tenant },
+  target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
+  entityIds: ["<rootEntityId>", "<choiceSetId>"],
+  options: { mode: EntityCloneMode.SchemaAndData },
+});
+
+// Poll to a terminal state.
+const terminal = [
+  EntityCloneJobState.Done, EntityCloneJobState.Failed,
+  EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+];
+let status = await entities.getCloneJob(job.jobId);
+while (!terminal.includes(status.state)) {
+  await new Promise((r) => setTimeout(r, 3000));
+  status = await entities.getCloneJob(job.jobId);
+}
+```
+
+### create()
+
+> **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
+
+**`Experimental`**
+
+Creates a new Data Fabric entity with the given schema
+
+To create a **Federated** entity — a read-only view over one or more external (Integration Service) or native sources — set `entityClass` to `Federated`, describe each source in `externalFields`, and pass `[]` for `fields`. A Federated entity with N sources needs N-1 `sourceJoinConditionDetails`, all starting from one source, which becomes the primary source.
+
+#### Parameters
+
+- `name`: `string` — Entity name — must start with a letter, letters/numbers/underscores only (e.g., `"productCatalog"`).
+- `fields`: `EntityCreateFieldOptions`[] — Array of field definitions. Each field's `name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names.
+- `options?`: `EntityCreateOptions` — Optional entity-level settings ([EntityCreateOptions](../EntityCreateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to the ID of the created entity
+
+#### Example
+
+```
+import { Entities, EntityClass, DataDirectionType, EntityFieldDataType, JoinType } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const id = await entities.create("product_catalog", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+  { name: "price", type: EntityFieldDataType.DECIMAL, defaultValue: "0" },
+], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+
+// With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+const ordersId = await entities.create("orders", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+  { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  { name: "quantity", type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, maxValue: 10000, minValue: 1, defaultValue: "0" },
+]);
+
+// Cross-folder references — link a folder-scoped entity to entities and
+// system choice sets that live in another folder or at the tenant level.
+await entities.create("orderLine", [
+  {
+    name: "order",
+    type: EntityFieldDataType.RELATIONSHIP,
+    referenceEntityId: "<orderEntityId>",
+    referenceFieldId: "<orderEntityPkId>",
+    referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
+  },
+  {
+    name: "userType",
+    type: EntityFieldDataType.CHOICE_SET_SINGLE,
+    choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
+    // referenceFolderKey omitted → SDK looks up the target at tenant scope
+  },
+], { folderKey: "<sourceFolderKey>" });
+
+// Federated entity — a read-only view over external and/or native sources.
+// Native columns stay empty ([]); the schema comes from `externalFields`.
+await entities.create("<entityName>", [], {
+  entityClass: EntityClass.Federated,
+  externalFields: [{
+    externalConnectionDetail: {
+      connectionId: "<connectionId>", connectorKey: "<connectorKey>", connectorName: "<connectorName>",
+      elementInstanceId: 0, folderKey: "<folderKey>",
+    },
+    externalObjectDetail: { externalObjectName: "<objectName>", primaryKey: "<primaryKeyField>", isPrimarySource: true, method: "<operationsCatalogJson>" },
+    fields: [{
+      field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING },
+      externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly },
+    }],
+  }],
+  // Multi-source: add more entries to `externalFields` and join them:
+  // sourceJoinConditionDetails: [{
+  //   sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>",
+  //   joinType: JoinType.LeftJoin,
+  //   relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>",
+  // }],
+});
+```
+
+### deleteAttachment()
+
+> **deleteAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
+
+Removes an attachment from a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
-- `options?`: `EntityDeleteAttachmentOptions` — Optional [EntityDeleteAttachmentOptions](../EntityDeleteAttachmentOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteAttachmentOptions` — Optional delete options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -47,27 +178,58 @@ const entityId = allEntities[0].id;
 const records = await entities.getAllRecords(entityId);
 const recordId = records[0].Id;
 
-// Delete attachment for a specific record and field
-await entities.deleteAttachment(entityId, recordId, 'Documents');
+// Delete attachment by id
+await entities.deleteAttachment({ id: entityId }, recordId, 'Documents');
+
+// Or by name
+await entities.deleteAttachment({ name: 'Customer' }, recordId, 'Documents');
 
 // Or delete using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
 await entity.deleteAttachment(recordId, 'Documents');
 ```
 
-### deleteRecordById()
+### deleteById()
 
-> **deleteRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
+> **deleteById**(`id`: `string`, `options?`: `EntityDeleteByIdOptions`): `Promise`\<`void`>
 
-Deletes a single record from an entity by entity ID and record ID
+**`Experimental`**
+
+Deletes a Data Fabric entity and all its records
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to delete
+- `options?`: `EntityDeleteByIdOptions` — Optional [EntityDeleteByIdOptions](../EntityDeleteByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the entity is deleted
+
+#### Example
+
+```
+await entities.deleteById(<id>);
+
+// Folder-scoped: pass the entity's folder key
+await entities.deleteById(<id>, { folderKey: "<folderKey>" });
+```
+
+### deleteRecord()
+
+> **deleteRecord**(`entityRef`: `EntityRef`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
+
+Deletes a single record from an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records. Use this method if you need trigger events to fire for the deleted record.
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to delete
-- `options?`: `EntityDeleteRecordByIdOptions` — Optional [EntityDeleteRecordByIdOptions](../EntityDeleteRecordByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordByIdOptions` — Optional delete options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -78,35 +240,96 @@ Promise resolving to void on success
 #### Example
 
 ```
-import { Entities } from '@uipath/uipath-typescript/entities';
+// By id
+await entities.deleteRecord({ id: "<entityId>" }, "<recordId>");
 
-const entities = new Entities(sdk);
-
-await entities.deleteRecordById("<entityId>", "<recordId>");
-
-// Folder-scoped: pass the entity's folder key
-await entities.deleteRecordById("<entityId>", "<recordId>", { folderKey: "<folderKey>" });
+// By name
+await entities.deleteRecord({ name: "Customer" }, "<recordId>", { folderKey: "<folderKey>" });
 ```
 
-### deleteRecordsById()
+### ~~deleteRecordById()~~
 
-> **deleteRecordsById**(`id`: `string`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
+> **deleteRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
 
-Deletes data from an entity by entity ID
-
-Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use [deleteRecordById](#deleterecordbyid) if you need trigger events to fire for the deleted record.
+Deletes a single record from an entity by entity ID and record ID
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityId`: `string` — UUID of the entity
+- `recordId`: `string` — UUID of the record to delete
+- `options?`: `EntityDeleteRecordByIdOptions` — Optional delete options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving to void on success
+
+#### Deprecated
+
+Use [deleteRecord](#deleterecord) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records. Use this method if you need trigger events to fire for the deleted record.
+
+#### Example
+
+```
+await entities.deleteRecordById("<entityId>", "<recordId>");
+```
+
+### deleteRecords()
+
+> **deleteRecords**(`entityRef`: `EntityRef`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
+
+Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)
+
+Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use [deleteRecord](#deleterecord) if you need trigger events to fire for the deleted record.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordIds`: `string`[] — Array of record UUIDs to delete
-- `options?`: `EntityDeleteRecordsOptions` — Delete options The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordsOptions` — Delete options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityDeleteResponse`>
 
-Promise resolving to delete response [EntityDeleteResponse](../EntityDeleteResponse/)
+Promise resolving to delete response ([EntityDeleteResponse](../EntityDeleteResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.deleteRecords({ id: "<entityId>" }, ["<recordId-1>", "<recordId-2>"]);
+
+// By name
+await entities.deleteRecords({ name: "Customer" }, ["<recordId-1>", "<recordId-2>"], { folderKey: "<folderKey>" });
+```
+
+### ~~deleteRecordsById()~~
+
+> **deleteRecordsById**(`id`: `string`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
+
+Deletes data from an entity by entity ID
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `recordIds`: `string`[] — Array of record UUIDs to delete
+- `options?`: `EntityDeleteRecordsOptions` — Delete options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityDeleteResponse`>
+
+Promise resolving to delete response ([EntityDeleteResponse](../EntityDeleteResponse/))
+
+#### Deprecated
+
+Use [deleteRecords](#deleterecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use [deleteRecord](#deleterecord) if you need trigger events to fire for the deleted record.
 
 #### Example
 
@@ -124,16 +347,16 @@ await entities.deleteRecordsById(<entityId>, [
 
 ### downloadAttachment()
 
-> **downloadAttachment**(`entityId`: `string`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDownloadAttachmentOptions`): `Promise`\<`Blob`>
+> **downloadAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDownloadAttachmentOptions`): `Promise`\<`Blob`>
 
-Downloads an attachment stored in a File-type field of an entity record.
+Downloads an attachment stored in a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
-- `options?`: `EntityDownloadAttachmentOptions` — Optional [EntityDownloadAttachmentOptions](../EntityDownloadAttachmentOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDownloadAttachmentOptions` — Optional download options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -148,11 +371,6 @@ import { Entities } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
-// First, get records to obtain the record ID
-const records = await entities.getAllRecords("<entityId>");
-// Get the recordId for the record that contains the attachment
-const recordId = records.items[0].Id;
-
 // Get the entityId from getAll()
 const allEntities = await entities.getAll();
 const entityId = allEntities[0].id;
@@ -161,8 +379,11 @@ const entityId = allEntities[0].id;
 const records = await entities.getAllRecords(entityId);
 const recordId = records[0].Id;
 
-// Download attachment using service method
-const response = await entities.downloadAttachment(entityId, recordId, 'Documents');
+// Download attachment by id
+const response = await entities.downloadAttachment({ id: entityId }, recordId, 'Documents');
+
+// Or by name
+const byName = await entities.downloadAttachment({ name: 'Customer' }, recordId, 'Documents');
 
 // Or download using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
@@ -252,7 +473,7 @@ if (customerEntity) {
 
 Gets entity records by entity ID
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
 
 #### Type Parameters
 
@@ -261,13 +482,13 @@ Gets entity records by entity ID
 #### Parameters
 
 - `entityId`: `string` — UUID of the entity
-- `options?`: `T` — Query options The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
-Promise resolving to either an array of entity records NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityRecord](../EntityRecord/)
+Promise resolving to entity records ([EntityRecord](../EntityRecord/)) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.
 
 #### Example
 
@@ -311,7 +532,7 @@ Gets entity metadata by entity ID with attached operation methods
 
 `Promise`\<`EntityGetResponse`>
 
-Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
 #### Example
 
@@ -346,6 +567,67 @@ const batchResult = await entity.insertRecords([
 ]);
 ```
 
+### getByName()
+
+> **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+
+Gets entity metadata by entity name with attached operation methods.
+
+Sibling of [getById](#getbyid) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides that resolve resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
+
+#### Parameters
+
+- `entityName`: `string` — Name of the entity
+- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityGetResponse`>
+
+Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
+
+#### Example
+
+```
+// Get entity metadata by name
+const entity = await entities.getByName("Customer");
+
+// Folder-scoped: pass the entity's folder key
+const folderEntity = await entities.getByName("Customer", { folderKey: "<folderKey>" });
+
+// Call operations directly on the entity
+const records = await entity.getAllRecords();
+```
+
+### getCloneJob()
+
+> **getCloneJob**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Gets the current status of a clone job started by [EntityServiceModel.clone](#clone); poll until `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done` terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+
+#### Parameters
+
+- `jobId`: `string` — The `jobId` returned when the clone job was started.
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
+
+#### Example
+
+```
+import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const status = await entities.getCloneJob("<jobId>");
+if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
+```
+
 ### getRecordById()
 
 > **getRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByIdOptions`): `Promise`\<`EntityRecord`>
@@ -358,13 +640,13 @@ Returns the full record, including the complete content of `MULTILINE_MAX` field
 
 - `entityId`: `string` — UUID of the entity
 - `recordId`: `string` — UUID of the record
-- `options?`: `EntityGetRecordByIdOptions` — Query options The `folderKey` property is **experimental**.
+- `options?`: `EntityGetRecordByIdOptions` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityRecord`>
 
-Promise resolving to a single entity record [EntityRecord](../EntityRecord/)
+Promise resolving to a single entity record ([EntityRecord](../EntityRecord/))
 
 #### Example
 
@@ -387,17 +669,89 @@ const record = await entities.getRecordById(<entityId>, recordId, {
 });
 ```
 
-### importRecordsById()
+### getRecordByName()
 
-> **importRecordsById**(`id`: `string`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
+> **getRecordByName**(`entityName`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByNameOptions`): `Promise`\<`EntityRecord`>
 
-Imports records from a CSV file into an entity
+Gets a single entity record by entity name and record ID
+
+Sibling of [getRecordById](#getrecordbyid) that addresses the entity by name. Returns the full record, including the complete content of `MULTILINE_MAX` fields.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityName`: `string` — Name of the entity
+- `recordId`: `string` — UUID of the record
+- `options?`: `EntityGetRecordByNameOptions` — Query options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityRecord`>
+
+Promise resolving to a single entity record ([EntityRecord](../EntityRecord/))
+
+#### Example
+
+```
+// First, get records to obtain the record ID
+const records = await entities.getRecordsByName("Customer");
+const recordId = records.items[0].Id;
+
+// Get the record
+const record = await entities.getRecordByName("Customer", recordId);
+
+// Folder-scoped entity: pass the entity's folder key
+const record = await entities.getRecordByName("Customer", recordId, { folderKey: "<folderKey>" });
+```
+
+### getRecordsByName()
+
+> **getRecordsByName**\<`T`>(`entityName`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Gets entity records by entity name.
+
+Sibling of [getAllRecords](#getallrecords) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides), avoiding a lookup to resolve the ID.
+
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordByName](#getrecordbyname) for the guaranteed full value.
+
+#### Type Parameters
+
+- `T` *extends* `EntityGetRecordsByIdOptions` = `EntityGetRecordsByIdOptions`
+
+#### Parameters
+
+- `entityName`: `string` — Name of the entity
+- `options?`: `T` — Query options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Promise resolving to entity records ([EntityRecord](../EntityRecord/)) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.
+
+#### Example
+
+```
+// Basic usage (non-paginated)
+const records = await entities.getRecordsByName("Customer");
+
+// With pagination and expansion level
+const paginatedResponse = await entities.getRecordsByName("Customer", { pageSize: 50, expansionLevel: 1 });
+
+// Folder-scoped entity: pass the entity's folder key
+const records = await entities.getRecordsByName("Customer", { folderKey: "<folderKey>" });
+```
+
+### importRecords()
+
+> **importRecords**(`entityRef`: `EntityRef`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
+
+Imports records from a CSV file into an entity, identified by ref (`{ id }` or `{ name }`)
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `file`: `EntityFileType` — CSV file to import as a Blob or File or Uint8Array
-- `options?`: `EntityImportRecordsByIdOptions` — Optional [EntityImportRecordsByIdOptions](../EntityImportRecordsByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityImportRecordsByIdOptions` — Optional import options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -408,34 +762,100 @@ Promise resolving to [EntityImportRecordsResponse](../EntityImportRecordsRespons
 #### Example
 
 ```
-// Browser: upload from file input
 const fileInput = document.getElementById('csv-input') as HTMLInputElement;
-const result = await entities.importRecordsById(<id>, fileInput.files[0]);
-console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
 
-// Folder-scoped entity: pass the entity's folder key
-await entities.importRecordsById(<id>, fileInput.files[0], { folderKey: "<folderKey>" });
+// By id
+const result = await entities.importRecords({ id: "<entityId>" }, fileInput.files[0]);
+
+// By name
+await entities.importRecords({ name: "Customer" }, fileInput.files[0], { folderKey: "<folderKey>" });
 ```
 
-### insertRecordById()
+### ~~importRecordsById()~~
 
-> **insertRecordById**(`id`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
+> **importRecordsById**(`id`: `string`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
 
-Inserts a single record into an entity by entity ID
+Imports records from a CSV file into an entity
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `file`: `EntityFileType` — CSV file to import as a Blob or File or Uint8Array
+- `options?`: `EntityImportRecordsByIdOptions` — Optional import options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityImportRecordsResponse`>
+
+Promise resolving to [EntityImportRecordsResponse](../EntityImportRecordsResponse/) with record counts
+
+#### Deprecated
+
+Use [importRecords](#importrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+#### Example
+
+```
+const fileInput = document.getElementById('csv-input') as HTMLInputElement;
+const result = await entities.importRecordsById(<id>, fileInput.files[0]);
+```
+
+### insertRecord()
+
+> **insertRecord**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
+
+Inserts a single record into an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records. Use this method if you need trigger events to fire for the inserted record.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`> — Record to insert
-- `options?`: `EntityInsertRecordOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityInsertResponse`>
 
-Promise resolving to the inserted record with generated record ID [EntityInsertResponse](../EntityInsertResponse/)
+Promise resolving to the inserted record with generated record ID ([EntityInsertResponse](../EntityInsertResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.insertRecord({ id: "<entityId>" }, { name: "John", age: 30 });
+
+// By name (e.g. solution binding overrides that resolve resources by name)
+const result = await entities.insertRecord({ name: "Customer" }, { name: "John", age: 30 });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.insertRecord({ name: "Customer" }, { name: "John", age: 30 }, { folderKey: "<folderKey>" });
+```
+
+### ~~insertRecordById()~~
+
+> **insertRecordById**(`id`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
+
+Inserts a single record into an entity by entity ID
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `data`: `Record`\<`string`, `any`> — Record to insert
+- `options?`: `EntityInsertRecordOptions` — Insert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityInsertResponse`>
+
+Promise resolving to the inserted record with generated record ID ([EntityInsertResponse](../EntityInsertResponse/))
+
+#### Deprecated
+
+Use [insertRecord](#insertrecord) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records. Use this method if you need trigger events to fire for the inserted record.
 
 #### Example
 
@@ -454,25 +874,62 @@ await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
 });
 ```
 
-### insertRecordsById()
+### insertRecords()
 
-> **insertRecordsById**(`id`: `string`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
+> **insertRecords**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
 
-Inserts one or more records into an entity by entity ID
+Inserts one or more records into an entity, identified by ref (`{ id }` or `{ name }`)
 
-Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use [insertRecordById](#insertrecordbyid) if you need trigger events to fire for each inserted record.
+Note: Records inserted using insertRecords will not trigger Data Fabric trigger events. Use [insertRecord](#insertrecord) if you need trigger events to fire for each inserted record.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`>[] — Array of records to insert
-- `options?`: `EntityInsertRecordsOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordsOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityBatchInsertResponse`>
 
-Promise resolving to insert response [EntityBatchInsertResponse](../EntityBatchInsertResponse/)
+Promise resolving to insert response ([EntityBatchInsertResponse](../EntityBatchInsertResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.insertRecords({ id: "<entityId>" }, [{ name: "John", age: 30 }, { name: "Jane", age: 25 }]);
+
+// By name
+const result = await entities.insertRecords({ name: "Customer" }, [{ name: "John", age: 30 }], { failOnFirst: true });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.insertRecords({ name: "Customer" }, [{ name: "John", age: 30 }], { folderKey: "<folderKey>" });
+```
+
+### ~~insertRecordsById()~~
+
+> **insertRecordsById**(`id`: `string`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
+
+Inserts one or more records into an entity by entity ID
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `data`: `Record`\<`string`, `any`>[] — Array of records to insert
+- `options?`: `EntityInsertRecordsOptions` — Insert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityBatchInsertResponse`>
+
+Promise resolving to insert response ([EntityBatchInsertResponse](../EntityBatchInsertResponse/))
+
+#### Deprecated
+
+Use [insertRecords](#insertrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use [insertRecord](#insertrecord) if you need trigger events to fire for each inserted record.
 
 #### Example
 
@@ -499,13 +956,13 @@ await entities.insertRecordsById(<entityId>, [
 ], { folderKey: "<folderKey>" });
 ```
 
-### queryRecordsById()
+### queryRecords()
 
-> **queryRecordsById**\<`T`>(`id`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+> **queryRecords**\<`T`>(`entityRef`: `EntityRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
-Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
+Queries entity records with filters, sorting, aggregates, and SDK-managed pagination, identified by ref (`{ id }` or `{ name }`)
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
 
 Cross-entity joins are supported via the `joins` option — see [EntityJoin](../EntityJoin/) for constraints and the result-row key format.
 
@@ -515,8 +972,8 @@ Cross-entity joins are supported via the `joins` option — see [EntityJoin](../
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
-- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -527,7 +984,59 @@ Promise resolving to [NonPaginatedResponse](../NonPaginatedResponse/) without pa
 #### Example
 
 ```
-import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+// By id, non-paginated query with a filter
+const result = await entities.queryRecords({ id: "<entityId>" }, {
+  filterGroup: {
+    logicalOperator: LogicalOperator.And,
+    queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
+  },
+  sortOptions: [{ fieldName: "createdTime", isDescending: true }],
+});
+
+// By name, with pagination
+const page1 = await entities.queryRecords({ name: "Customer" }, { pageSize: 25 });
+if (page1.hasNextPage) {
+  const page2 = await entities.queryRecords({ name: "Customer" }, { cursor: page1.nextCursor });
+}
+```
+
+### ~~queryRecordsById()~~
+
+> **queryRecordsById**\<`T`>(`id`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
+
+#### Type Parameters
+
+- `T` *extends* `EntityQueryRecordsOptions` = `EntityQueryRecordsOptions`
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Promise resolving to [NonPaginatedResponse](../NonPaginatedResponse/) without pagination options, or [PaginatedResponse](../PaginatedResponse/) when `pageSize`, `cursor`, or `jumpToPage` are provided
+
+#### Deprecated
+
+Use [queryRecords](#queryrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
+
+Cross-entity joins are supported via the `joins` option — see [EntityJoin](../EntityJoin/) for constraints and the result-row key format.
+
+#### Example
+
+```
+import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
@@ -554,6 +1063,18 @@ await entities.queryRecordsById(<id>, {
   aggregates: [
     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
   ],
+});
+
+// Post-aggregation filter (HAVING): only statuses with more than 5 records
+await entities.queryRecordsById(<id>, {
+  selectedFields: ["status"],
+  groupBy: ["status"],
+  aggregates: [
+    { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+  ],
+  havingFilter: {
+    aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+  },
 });
 
 // Folder-scoped entity: pass the entity's folder key
@@ -593,26 +1114,174 @@ await entities.queryRecordsById(<id>, {
 });
 ```
 
-### updateRecordById()
+### updateById()
+
+> **updateById**(`id`: `string`, `options?`: `EntityUpdateByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Updates an existing Data Fabric entity — schema and/or metadata.
+
+Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
+
+For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, and `updateExternalConnection`.
+
+- **Identifying things.** A delta that targets an existing source identifies it by **both** `sourceObjectName` and `sourceConnectionId` (a connector `connectionId`, or the `entityId` for a native source), because an entity may have two sources with the same object name on different connections.
+- **Joins.** A Federated entity with N sources has exactly N-1 joins, all starting from one source, the *primary source*. The primary source is not stored: it is the source on the left of every join. A join cannot be removed on its own, since every other source must stay joined. To change the primary source, pass the complete new join set to `replaceSourceJoins`. To add a source, pass it in `addExternalSources` together with its join in `addSourceJoins`. `updateSourceJoin` only changes the join fields of an existing join.
+- **Fields.** `addExternalFields` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field. A source must keep at least one field, and a field name must be unique across all sources. Mapping settings (direction, searchable, sortable) cannot be changed after a source is added.
+- **Sources.** A Federated entity always has at least one source: to replace its only source, remove it and add the new one in the same call. The saved result is validated by the backend (join graph, duplicate sources, duplicate field names, empty sources).
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to update
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, `updateExternalConnection`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the update is complete
+
+#### Example
+
+```
+import { Entities, EntityFieldDataType, DataDirectionType, JoinType } from '@uipath/uipath-typescript/entities';
+
+// Schema-only: add a field and remove another
+await entities.updateById(<id>, {
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+  removeFields: [{ name: "oldField" }],
+});
+
+// Metadata-only: rename the entity
+await entities.updateById(<id>, {
+  displayName: "My Updated Entity",
+  description: "Updated description",
+});
+
+// Combined: update a field and rename at the same time
+await entities.updateById(<id>, {
+  updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
+  displayName: "Price Catalog",
+});
+
+// Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+await entities.updateById(<id>, {
+  addFields: [
+    { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+    { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  ],
+  updateFields: [
+    { id: <fieldId>, lengthLimit: 1000 },
+  ],
+});
+
+// Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
+await entities.updateById(<id>, {
+  folderKey: "<folderKey>",
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+});
+
+// Federated: add a source joined to the existing graph. Every source is identified by
+// (sourceObjectName, sourceConnectionId) — a connector connectionId, or a native entityId.
+await entities.updateById(<id>, {
+  addExternalSources: [{
+    externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
+    externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
+    fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
+  }],
+  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+});
+
+// Federated: add a field to an existing source (maps a field that already exists on it)
+await entities.updateById(<id>, {
+  addExternalFields: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+});
+
+// Federated: change the join fields of an existing join (its sources and direction stay the same)
+await entities.updateById(<id>, {
+  updateSourceJoin: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceConnectionId: "<relatedConnectionId>", sourceJoinField: "<externalFieldName>" }],
+});
+
+// Federated: change the primary source. Pass the complete new join set, rooted at the new
+// primary source (here "<newPrimaryObject>"); every other source is the related side of one join.
+await entities.updateById(<id>, {
+  replaceSourceJoins: [
+    { sourceObjectName: "<newPrimaryObject>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<otherObject>", relatedSourceObjectConnectionId: "<otherConnectionId>", relatedSourceJoinField: "<otherExternalFieldName>", joinType: JoinType.LeftJoin },
+  ],
+});
+
+// Federated: swap a connector source's connection id
+await entities.updateById(<id>, {
+  updateExternalConnection: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<currentConnectionId>", newConnectionId: "<newConnectionId>" }],
+});
+
+// Federated: remove a non-primary source (its join is removed with it)
+await entities.updateById(<id>, { removeExternalSources: [{ sourceObjectName: "<relatedObjectName>", sourceConnectionId: "<relatedConnectionId>" }] });
+```
+
+### updateRecord()
+
+> **updateRecord**(`entityRef`: `EntityRef`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
+
+Updates a single record in an entity, identified by ref (`{ id }` or `{ name }`)
+
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
+Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `recordId`: `string` — UUID of the record to update
+- `data`: `Record`\<`string`, `any`> — Key-value pairs of fields to update
+- `options?`: `EntityUpdateRecordOptions` — Update options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpdateRecordResponse`>
+
+Promise resolving to the updated record ([EntityUpdateRecordResponse](../EntityUpdateRecordResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.updateRecord({ id: "<entityId>" }, "<recordId>", { name: "John Updated", age: 31 });
+
+// By name
+const result = await entities.updateRecord({ name: "Customer" }, "<recordId>", { name: "John Updated" });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.updateRecord({ name: "Customer" }, "<recordId>", { name: "John Updated" }, { folderKey: "<folderKey>" });
+```
+
+### ~~updateRecordById()~~
 
 > **updateRecordById**(`entityId`: `string`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
 
 Updates a single record in an entity by entity ID
 
-Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
 
 #### Parameters
 
 - `entityId`: `string` — UUID of the entity
 - `recordId`: `string` — UUID of the record to update
 - `data`: `Record`\<`string`, `any`> — Key-value pairs of fields to update
-- `options?`: `EntityUpdateRecordOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateRecordResponse`>
 
-Promise resolving to the updated record [EntityUpdateRecordResponse](../EntityUpdateRecordResponse/)
+Promise resolving to the updated record ([EntityUpdateRecordResponse](../EntityUpdateRecordResponse/))
+
+#### Deprecated
+
+Use [updateRecord](#updaterecord) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
 
 #### Example
 
@@ -631,25 +1300,66 @@ await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated" }
 });
 ```
 
-### updateRecordsById()
+### updateRecords()
 
-> **updateRecordsById**(`id`: `string`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
+> **updateRecords**(`entityRef`: `EntityRef`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
 
-Updates data in an entity by entity ID
+Updates data in an entity, identified by ref (`{ id }` or `{ name }`)
 
-Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use [updateRecordById](#updaterecordbyid) if you need trigger events to fire for each updated record.
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
+Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use [updateRecord](#updaterecord) if you need trigger events to fire for each updated record.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `EntityRecord`[] — Array of records to update. Each record MUST contain the record id.
-- `options?`: `EntityUpdateRecordsOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordsOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateResponse`>
 
-Promise resolving to update response [EntityUpdateResponse](../EntityUpdateResponse/)
+Promise resolving to update response ([EntityUpdateResponse](../EntityUpdateResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.updateRecords({ id: "<entityId>" }, [{ Id: "123", name: "John Updated" }]);
+
+// By name
+const result = await entities.updateRecords({ name: "Customer" }, [{ Id: "123", name: "John Updated" }], { failOnFirst: true });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.updateRecords({ name: "Customer" }, [{ Id: "123", name: "John Updated" }], { folderKey: "<folderKey>" });
+```
+
+### ~~updateRecordsById()~~
+
+> **updateRecordsById**(`id`: `string`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
+
+Updates data in an entity by entity ID
+
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `data`: `EntityRecord`[] — Array of records to update. Each record MUST contain the record id.
+- `options?`: `EntityUpdateRecordsOptions` — Update options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpdateResponse`>
+
+Promise resolving to update response ([EntityUpdateResponse](../EntityUpdateResponse/))
+
+#### Deprecated
+
+Use [updateRecords](#updaterecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use [updateRecord](#updaterecord) if you need trigger events to fire for each updated record.
 
 #### Example
 
@@ -677,19 +1387,19 @@ await entities.updateRecordsById(<entityId>, [
 
 ### uploadAttachment()
 
-> **uploadAttachment**(`entityId`: `string`, `recordId`: `string`, `fieldName`: `string`, `file`: `EntityFileType`, `options?`: `EntityUploadAttachmentOptions`): `Promise`\<`EntityUploadAttachmentResponse`>
+> **uploadAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `file`: `EntityFileType`, `options?`: `EntityUploadAttachmentOptions`): `Promise`\<`EntityUploadAttachmentResponse`>
 
 Uploads an attachment to a File-type field of an entity record.
 
-Uses multipart/form-data to upload the file content to the specified field.
+Uses multipart/form-data to upload the file content to the specified field. Identified by ref (`{ id }` or `{ name }`).
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to upload the attachment to
 - `fieldName`: `string` — Name of the File-type field
 - `file`: `EntityFileType` — File to upload (Blob, File, or Uint8Array)
-- `options?`: `EntityUploadAttachmentOptions` — Optional [EntityUploadAttachmentOptions](../EntityUploadAttachmentOptions/) (e.g. `expansionLevel`, `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityUploadAttachmentOptions` — Optional upload options (e.g. `expansionLevel`, `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -715,13 +1425,65 @@ const recordId = records[0].Id;
 // Browser: Upload a file from an input element
 const fileInput = document.getElementById('file-input') as HTMLInputElement;
 const file = fileInput.files[0];
-const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
 
-// Folder-scoped entity: pass the entity's folder key
-await entities.uploadAttachment(entityId, recordId, 'Documents', file, { folderKey: "<folderKey>" });
+// By id
+const response = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', file);
+
+// By name, folder-scoped
+await entities.uploadAttachment({ name: 'Customer' }, recordId, 'Documents', file, { folderKey: "<folderKey>" });
 
 // Node.js: Upload a file from disk
 const fileBuffer = fs.readFileSync('document.pdf');
 const blob = new Blob([fileBuffer], { type: 'application/pdf' });
-const response = await entities.uploadAttachment(entityId, recordId, 'Documents', blob);
+const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', blob);
 ```
+
+### upsert()
+
+> **upsert**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpsertOptions`): `Promise`\<`EntityUpsertResponse`>
+
+**`Experimental`**
+
+Upserts a record into an entity, and to its related child records. Two payload types:
+
+- One record: Only case and templated entities have one; a native entity rejects this type.
+- A tree of records: child records nested under a root entity, written as one transaction. A nested record with an `Id` field updates that row, one without it creates a row.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `data`: `Record`\<`string`, `any`> — Record fields, with child records nested under their entity name
+- `options?`: `EntityUpsertOptions` — Upsert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpsertResponse`>
+
+Promise resolving to the written root record's `Id`, plus the per-record results of a tree write ([EntityUpsertResponse](../EntityUpsertResponse/))
+
+#### Examples
+
+```
+// Single record, matched on the entity's business key
+const result = await entities.upsert({ name: "Case" }, {
+  caseId: "CASE-001",
+  caseStatus: "Open"
+});
+```
+
+```
+// A report with two expenses, one of which has a line item — applied as one transaction
+const result = await entities.upsert({ name: "Report" }, {
+  assignee: "assignee1",
+  totalReportAmount: 25,
+  Expense: [
+    { vendor: "Vendor 1", totalExpense: 20, ExpenseLineItem: [{ expenseAmount: 5 }] },
+    { vendor: "Vendor 2", totalExpense: 5 }
+  ]
+}, { folderKey: "<folderKey>" });
+
+console.log(result.transaction!.totalRecordsAffected); // 4
+console.log(result.transaction!.members[0].id);        // generated expense record ID
+```
+
+Writing across related entities requires the multi-entity write feature to be enabled for your tenant.

@@ -73,8 +73,8 @@ message.onToolCallStart((toolCall) => {
   if (!isClientSideTool) return;
 
   toolCall.onExecutingToolCall(async (event) => {
-    const result = await runLocalProcess(toolName, event.input);
-    toolCall.sendToolCallEnd({ output: result });
+    const result = await runClientTool(toolName, event.input);
+    toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
   });
 });
 ```
@@ -121,6 +121,29 @@ Cleanup function to remove the handler
 ```
 toolCall.onErrorStart((error) => {
   console.error(`Tool call error: ${error.message}`);
+});
+```
+
+### onExecutingToolCall()
+
+> **onExecutingToolCall**(`cb`: (`event`: `ExecutingToolCallEvent`) => `void`): () => `void`
+
+Registers a handler for executingToolCall events. Fired when the tool is about to be executed. For client-side tools, the client should begin executing its handler upon receiving this event and return the result via `sendToolCallEnd`.
+
+#### Parameters
+
+- `cb`: (`event`: `ExecutingToolCallEvent`) => `void` — Callback receiving the [ExecutingToolCallEvent](../ExecutingToolCallEvent/) with the final input
+
+#### Returns
+
+Cleanup function to remove the handler
+
+#### Example
+
+```
+toolCall.onExecutingToolCall(async (event) => {
+  const result = await runClientTool(toolCall.startEvent.toolName, event.input);
+  toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
 });
 ```
 

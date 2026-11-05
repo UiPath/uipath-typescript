@@ -80,6 +80,39 @@ Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
 const asset = await assets.getById(<assetId>, <folderId>);
 ```
 
+### getByKey()
+
+> **getByKey**(`key`: `string`, `options?`: `AssetGetByKeyOptions`): `Promise`\<`AssetGetResponse`>
+
+Retrieves a single asset by key (GUID).
+
+#### Parameters
+
+- `key`: `string` — Asset key (GUID)
+- `options?`: `AssetGetByKeyOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+
+#### Returns
+
+`Promise`\<`AssetGetResponse`>
+
+Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
+
+#### Example
+
+```
+// By folder ID
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderId: 123 });
+
+// By folder key (GUID)
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderKey: '<folderKey>' });
+
+// By folder path
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Shared/Finance' });
+
+// With expand
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
+```
+
 ### getByName()
 
 > **getByName**(`name`: `string`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
@@ -113,13 +146,13 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
 await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
 ```
 
-### updateValueById()
+### updateValue()
 
-> **updateValueById**(`id`: `number`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueByIdOptions`): `Promise`\<`void`>
+> **updateValue**(`assetRef`: `AssetRef`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueOptions`): `Promise`\<`void`>
 
-Updates the value of an existing asset by ID.
+Updates the value of an existing asset, identified by `assetRef` (`{ id }`, `{ name }`, or `{ key }` (GUID)).
 
-Fetches the asset internally to determine its type, then updates only the value while preserving the asset's name, scope, and description.
+Fetches the asset internally to determine its type, then updates only the value while preserving the asset's name, scope, and description. Folder scoping in `options` drives both the ref's name/key lookup and the update itself — the same folder options apply to both calls.
 
 **Supported value types:** `Text`, `Integer`, and `Bool` only. Other types (`Credential`, `Secret`) throw a `ValidationError`.
 
@@ -131,9 +164,9 @@ The `newValue` runtime type must match the asset's `valueType`:
 
 #### Parameters
 
-- `id`: `number` — Asset ID
-- `newValue`: `AssetNewValue` — New value to apply (string for `Text`, number for `Integer`, boolean for `Bool`)
-- `options?`: `AssetUpdateValueByIdOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
+- `assetRef`: `AssetRef` — Asset ref (`{ id }`, `{ name }`, or `{ key }` (GUID))
+- `newValue`: `AssetNewValue` — New value to apply
+- `options?`: `AssetUpdateValueOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
 
 #### Returns
 
@@ -144,12 +177,32 @@ Promise resolving when the asset has been updated
 #### Example
 
 ```
-// Update a Text asset by folder ID
-await assets.updateValueById(<assetId>, 'new-value', { folderId: <folderId> });
+// Update by id
+await assets.updateValue({ id: <assetId> }, 'new-value', { folderId: <folderId> });
 
-// Update an Integer asset by folder key (GUID)
-await assets.updateValueById(<assetId>, 42, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+// Update by name (folder options drive the name lookup)
+await assets.updateValue({ name: 'ApiKey' }, 42, { folderPath: 'Shared/Finance' });
 
-// Update a Bool asset by folder path
-await assets.updateValueById(<assetId>, true, { folderPath: 'Shared/Finance' });
+// Update by GUID key
+await assets.updateValue({ key: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' }, true, { folderPath: 'Shared/Finance' });
 ```
+
+### ~~updateValueById()~~
+
+> **updateValueById**(`id`: `number`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueByIdOptions`): `Promise`\<`void`>
+
+Updates the value of an existing asset by ID.
+
+#### Parameters
+
+- `id`: `number` — Asset ID
+- `newValue`: `AssetNewValue` — New value to apply
+- `options?`: `AssetUpdateValueByIdOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
+
+#### Returns
+
+`Promise`\<`void`>
+
+#### Deprecated
+
+Use [AssetServiceModel.updateValue](#updatevalue) with `{ id }`, `{ name }`, or `{ key }` instead. This method will be removed in the next major version.

@@ -168,6 +168,26 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+### Token renewal
+
+With OAuth sign-in, the SDK renews the access token about a minute before it expires, on the next request your app makes, so users stay signed in.
+
+### Enforcing sign-in through the organization's identity provider
+
+By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them straight to the organization's configured identity provider instead.
+
+```
+const sdk = new UiPath({ enforceSso: true });
+```
+
+Only where everyone signs in through SSO
+
+Users who sign in with a UiPath account do not exist in the organization's identity provider and will be rejected by it.
+
+Needs the organization id
+
+This uses the organization id, which the platform and `uipath.json` supply for you. If you instead pass configuration directly to the constructor, set `orgName` to the organization id, otherwise `enforceSso` is ignored and a warning is logged.
+
 ## Secret-based Authentication
 
 ```
@@ -183,7 +203,7 @@ const sdk = new UiPath({
 
 Using externally obtained tokens
 
-If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side.
+If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side. In a deployed coded app the platform has already injected OAuth meta tags; passing `secret` still selects secret authentication and those injected fields are dropped.
 
 To Generate a PAT Token:
 
@@ -193,13 +213,100 @@ To Generate a PAT Token:
 1. Give it a name and expiration date
 1. Provide relevant scopes
 
+### Confidential App-scoped External App (client-credentials)
+
+You can also authenticate the SDK with a token issued to a confidential, app-scoped [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) via the client-credentials grant. Your backend requests the token using the app's Client ID and Client Secret, then passes it to the SDK through the `secret` parameter — like any other bearer token above.
+
+To create a confidential app-scoped External App:
+
+1. In UiPath Cloud: **Admin** → **External Applications**
+1. Click **Add Application** → **Confidential Application**
+1. Configure:
+   - **Name**: Your app name
+   - **Scopes**: Select the permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes)). All scopes must be added as **Application** scopes, not **User** scopes.
+1. Save and copy the **Client ID** and the **Client Secret** — you will not be shown the Client Secret again
+1. Follow the [official UiPath documentation](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) on how to request client-credentials tokens for a confidential app with application scopes
+1. Pass this token as your `secret`, as shown in the Secret-based Authentication example above
+
+Keep the Client Secret confidential
+
+The Client Secret must never be exposed to public or client-side consumers. If it is exposed, revoke it immediately and generate a new one.
+
+No refresh tokens
+
+The client-credentials flow does **not** support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.
+
+## Coded Functions
+
+A coded function receives its platform coordinates as the handler's `ctx`. Pass that straight to the SDK — it maps the context itself, so the handler names no credential fields and never touches the workload token:
+
+```
+import { defineFunction } from '@uipath/coded-functions-js-sdk';
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+export default defineFunction({
+  name: 'list-entities',
+  handler: async (_input, ctx) => {
+    const sdk = new UiPath(ctx);
+
+    const entities = await new Entities(sdk).getAll();
+    return { entityCount: entities.length };
+  },
+});
+```
+
+Construct the SDK **inside the handler**, once per invocation. A single instance hoisted to module scope would keep serving the org, tenant and token of whichever invocation created it.
+
+The constructor reads `ctx.platform` — `baseUrl`, reduced to its origin, and the `orgId` and `tenantId` GUIDs, which the platform accepts in place of names — and `ctx.robot.accessToken` as the bearer token. `ctx.platform.folderKey` is the fallback folder for a call that needs a folder and names none, such as a lookup by name, which runs against the invocation's folder. Integration Service calls are left unscoped: Integration Service rejects a connection outside the folder a call names, and the connection a function uses often lives in another folder. Explicit `folderId`, `folderKey` or `folderPath` options still win. On a local run, where `ctx.platform` is null, the constructor falls through to the environment contract below; when neither supplies a coordinate, the error names it.
+
+## Server-side and scripts (environment contract)
+
+Outside the browser — a script, a test, a CI job — the SDK configures itself from environment variables, so `new UiPath()` needs no arguments:
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath();
+```
+
+```
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_NAME=<organization>          # an id works here as well as a name
+UIPATH_TENANT_NAME=<tenant>
+UIPATH_ACCESS_TOKEN=<accessToken>       # PAT or bearer token
+```
+
+These are the names this SDK already uses elsewhere for the same values, so one `.env` serves a script and a test run alike.
+
+The variables are read from `process.env` or `Deno.env`, whichever the runtime provides.
+
+To state the configuration explicitly instead, pass it to the constructor — this takes precedence over both the environment and meta tags:
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: '<organizationId>',   // an id works here as well as a name
+  tenantName: '<tenantId>',
+  secret: '<accessToken>'        // any bearer token
+});
+```
+
+The access token is consumed internally and is never exposed on `sdk.config`.
+
+Precedence
+
+Constructor arguments win over meta tags, which win over the environment. Meta tags apply in the browser only; the environment contract applies outside it.
+
+Precedence is per field, so a config passing only `secret` still inherits any injected `clientId`, `redirectUri` and `scope`. Naming one method drops the other's inherited fields. If the merge still carries `secret` beside a **complete** OAuth set, the constructor throws, naming each field and its source.
+
 ## SDK Initialization - The initialize() Method
 
 ### When to Use initialize()
 
 The `initialize()` method completes the authentication process for the SDK:
 
-- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**. This covers `secret`, `accessToken`, a coded function's `ctx`, and the environment contract.
 - **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
 
 ### Example: Secret Authentication (Auto-initialized)
@@ -294,8 +401,9 @@ useEffect(() => {
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
-- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
+- `sdk.setDebugContext()` - Attach a parent job key to the jobs the app starts so Orchestrator links them to it and, when that parent is a debug run, routes them as debug sub-jobs. Studio Web debug sessions and Action Center debug tasks hand the key to the SDK themselves; call this only when another host runs the app inside a job
 
 ## Quick Test Script
 
@@ -467,26 +575,204 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Assets                            | `getAll()`                 | ✅ Yes                 |
 | Buckets                           | `getAll()`                 | ✅ Yes                 |
 | Buckets                           | `getFiles()`               | ✅ Yes                 |
+| Buckets                           | `getFileMetaData()`        | ❌ No                  |
+| Folders                           | `getAll()`                 | ✅ Yes                 |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
-| Entities                          | `getAll()`                 | ✅ Yes                 |
+| Users                             | `getAll()`                 | ✅ Yes                 |
+| Roles                             | `getAll()`                 | ✅ Yes                 |
+| Roles                             | `getAssignments()`         | ✅ Yes                 |
+| Groups                            | `getMembers()`             | ✅ Yes                 |
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
+| Entities                          | `getRecordsByName()`       | ✅ Yes                 |
+| Entities                          | `queryRecords()`           | ✅ Yes                 |
 | Entities                          | `queryRecordsById()`       | ✅ Yes                 |
+| ChoiceSets                        | `getById()`                | ✅ Yes                 |
 | Processes                         | `getAll()`                 | ✅ Yes                 |
+| Functions                         | `getAll()`                 | ✅ Yes                 |
 | ProcessInstances                  | `getAll()`                 | ❌ No                  |
 | CaseInstances                     | `getAll()`                 | ❌ No                  |
 | CaseInstances                     | `getActionTasks()`         | ✅ Yes                 |
 | CaseInstances                     | `getSlaSummary()`          | ✅ Yes                 |
 | Queues                            | `getAll()`                 | ✅ Yes                 |
+| Queues                            | `getAllItems()`            | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |
+| Tasks                             | `getComments()`            | ✅ Yes                 |
+| TaskCatalogs                      | `getAll()`                 | ✅ Yes                 |
 | ConversationalAgent.conversations | `getAll()`                 | ❌ No                  |
 | ConversationalAgent.exchanges     | `getAll()`                 | ❌ No                  |
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
 | Feedback                          | `getCategories()`          | ✅ Yes                 |
-| Traces                            | `getById()`                | ❌ No                  |
-| Traces                            | `getSpansByIds()`          | ❌ No                  |
 | Governance                        | `getPolicyTraces()`        | ✅ Yes                 |
-| Ontologies                        | `getAll()`                 | ✅ Yes                 |
+
+# Helper Methods
+
+Standalone helper functions that you call directly. Unlike the SDK's services, they need no `UiPath` instance and no `initialize()` call — just import them from `@uipath/uipath-typescript/core`.
+
+| Helper          | Description                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| `httpRequest()` | Calls any URL, with optional retries and backoff                                                      |
+| `wait()`        | Pauses for a given duration, useful between calls you are pacing yourself                             |
+| `trace()`       | Marks a point in your code, or every call of a method, so you can see its values without a breakpoint |
+
+For third-party endpoints
+
+`httpRequest` sends no UiPath authentication and adds no UiPath headers. Use the SDK's service methods for UiPath APIs.
+
+## httpRequest()
+
+Takes a URL and optional `HttpRequestInit`, and resolves to an `HttpResponse`. A status the server returned does not by itself throw, even a 4xx or 5xx, so check `ok` to spot a failed request. A few conditions do throw — see [Error Handling](#error-handling).
+
+```
+import { httpRequest } from '@uipath/uipath-typescript/core';
+
+const response = await httpRequest('https://api.example.com/v1/orders');
+
+if (response.ok) {
+  console.log(response.data);
+} else {
+  console.log('Request failed with status', response.status);
+}
+```
+
+### Retries and Backoff
+
+By default, the idempotent methods — `GET`, `HEAD`, `PUT`, `DELETE`, and `OPTIONS`, per [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110#section-9.2.2) — are retried up to twice on a transient failure: a transport error, or a `408`, `429`, `500`, `502`, `503`, or `504`. `POST` and `PATCH` are not retried, since a replayed `POST` can create the same resource twice.
+
+Pass `retry` to change any of that. See `RetryOptions` for every setting and its default.
+
+```
+import { httpRequest } from '@uipath/uipath-typescript/core';
+
+await httpRequest('https://api.example.com/v1/orders', {
+  method: 'POST',
+  body: { sku: 'ABC-123' },
+  retry: {
+    maxRetries: 4,
+    initialDelayMs: 1000,
+    backoffStrategy: 'exponential',
+    backoffFactor: 2,
+    backoffMaxDelayMs: 30000,
+    retryMethods: ['GET', 'HEAD', 'POST']
+  }
+});
+```
+
+A request that never reached the server is retried too, as long as its method is retryable. Set `retryNetworkErrors` to `false` to retry only on response status codes, leaving connection failures, DNS errors, and timeouts to fail on the first attempt. `timeoutMs` bounds a single attempt rather than the call as a whole, so each retry gets a fresh one.
+
+### Backoff Strategies
+
+`backoffStrategy` controls how the delay grows, given an `initialDelayMs` of `d` and a `backoffFactor` of `f`:
+
+| Strategy                | Delays            |
+| ----------------------- | ----------------- |
+| `constant`              | `d, d, d, …`      |
+| `linear`                | `d, 2d, 3d, …`    |
+| `exponential` (default) | `d, d×f, d×f², …` |
+
+`backoffFactor` applies only to `exponential`; the other strategies ignore it. Every computed delay is capped at `backoffMaxDelayMs`.
+
+### Retry-After Header
+
+A `Retry-After` response header overrides the computed delay unless `respectRetryAfter` is `false`. It is applied exactly as the server sent it — `backoffMaxDelayMs` does not apply to it — so set `maxRetryAfterMs` if you need a ceiling on how long a server can ask you to wait.
+
+### Sending a Body and Query Parameters
+
+Objects and arrays are sent as JSON. Array values in `params` are sent as repeated query parameters.
+
+```
+import { httpRequest } from '@uipath/uipath-typescript/core';
+
+await httpRequest('https://api.example.com/v1/orders', {
+  method: 'POST',
+  headers: { 'x-api-key': '<apiKey>' },
+  params: { region: 'emea', status: ['open', 'shipped'] },
+  body: { sku: 'ABC-123' }
+});
+```
+
+### Error Handling
+
+Because it makes arbitrary third-party calls, `httpRequest` handles errors differently from the SDK's service methods, which throw on any failed status. See the [Error Handling guide](/uipath-typescript/error-handling) for the SDK-wide error types.
+
+| Condition                                                            | Behavior                                                              |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| The server returned a 4xx or 5xx                                     | Resolves with `ok: false`. Branch on `ok` or `status`                 |
+| The request never produced a response                                | Throws `NetworkError`                                                 |
+| `responseType: 'json'` is set explicitly and the body does not parse | Throws `ServerError`                                                  |
+| `body` is a `ReadableStream`                                         | Throws `ValidationError` — streaming request bodies are not supported |
+
+DNS failures, refused connections, and timeouts all surface as a `NetworkError`. Handling both a failed status and a failed connection looks like this:
+
+```
+import { httpRequest, isNetworkError } from '@uipath/uipath-typescript/core';
+
+try {
+  const response = await httpRequest('https://api.example.com/v1/orders');
+
+  if (response.ok) {
+    console.log(response.data);
+  } else {
+    // The server answered, with a 404 or a 500 for example
+    console.log('Request failed with status', response.status);
+  }
+} catch (error) {
+  if (isNetworkError(error)) {
+    // No response at all
+    console.log('The request never reached the server:', error.message);
+  }
+}
+```
+
+Without an explicit `responseType`, an unparseable body is returned as raw text instead — auto-detection is a guess, and a host can label an HTML error page as JSON.
+
+`data` is typed as `unknown` because the body is whatever the server sent: the shape you expect on a success, an error payload on a 4xx or 5xx, and nothing at all on a 204.
+
+## wait()
+
+Pauses for a duration in milliseconds. Useful for pacing calls of your own, separate from the automatic waits `httpRequest` inserts between retries.
+
+```
+import { wait } from '@uipath/uipath-typescript/core';
+
+await wait(1000); // pause for one second
+```
+
+## trace()
+
+Records a point in your code, with optional named values, so you can inspect it without a breakpoint. Call it as a statement to mark a line, or apply it as a decorator to record every call of a class method.
+
+```
+import { trace } from '@uipath/uipath-typescript/core';
+
+const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+trace('after-total', { orderId: '<orderId>', total });
+```
+
+When tracing is available, such as in a UiPath coded function, the marker is added to the trace. Otherwise it is printed with `console.debug`. `trace` never throws.
+
+### Tracing a Method
+
+```
+import { trace } from '@uipath/uipath-typescript/core';
+
+class ApprovalPolicy {
+  @trace
+  approve(total: number): boolean {
+    return total <= 1000;
+  }
+}
+```
+
+Each call is recorded under the method's name, with its arguments and its result, or the error it threw. Markers recorded during the call appear under it. The method behaves exactly as before.
+
+- Apply `@trace` without parentheses.
+- It works with standard decorators and with `experimentalDecorators`.
+- It applies to class methods only.
+
+What gets recorded
+
+Markers can include the values you pass, the arguments and results of traced methods, and the local variables of the calling function. Do not trace code that handles secrets or personal data.
 # API Reference
 
 Service for managing UiPath Assets.
@@ -571,6 +857,39 @@ Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
 const asset = await assets.getById(<assetId>, <folderId>);
 ```
 
+### getByKey()
+
+> **getByKey**(`key`: `string`, `options?`: `AssetGetByKeyOptions`): `Promise`\<`AssetGetResponse`>
+
+Retrieves a single asset by key (GUID).
+
+#### Parameters
+
+- `key`: `string` — Asset key (GUID)
+- `options?`: `AssetGetByKeyOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+
+#### Returns
+
+`Promise`\<`AssetGetResponse`>
+
+Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
+
+#### Example
+
+```
+// By folder ID
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderId: 123 });
+
+// By folder key (GUID)
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderKey: '<folderKey>' });
+
+// By folder path
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Shared/Finance' });
+
+// With expand
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
+```
+
 ### getByName()
 
 > **getByName**(`name`: `string`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
@@ -604,13 +923,13 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
 await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
 ```
 
-### updateValueById()
+### updateValue()
 
-> **updateValueById**(`id`: `number`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueByIdOptions`): `Promise`\<`void`>
+> **updateValue**(`assetRef`: `AssetRef`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueOptions`): `Promise`\<`void`>
 
-Updates the value of an existing asset by ID.
+Updates the value of an existing asset, identified by `assetRef` (`{ id }`, `{ name }`, or `{ key }` (GUID)).
 
-Fetches the asset internally to determine its type, then updates only the value while preserving the asset's name, scope, and description.
+Fetches the asset internally to determine its type, then updates only the value while preserving the asset's name, scope, and description. Folder scoping in `options` drives both the ref's name/key lookup and the update itself — the same folder options apply to both calls.
 
 **Supported value types:** `Text`, `Integer`, and `Bool` only. Other types (`Credential`, `Secret`) throw a `ValidationError`.
 
@@ -622,9 +941,9 @@ The `newValue` runtime type must match the asset's `valueType`:
 
 #### Parameters
 
-- `id`: `number` — Asset ID
-- `newValue`: `AssetNewValue` — New value to apply (string for `Text`, number for `Integer`, boolean for `Bool`)
-- `options?`: `AssetUpdateValueByIdOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
+- `assetRef`: `AssetRef` — Asset ref (`{ id }`, `{ name }`, or `{ key }` (GUID))
+- `newValue`: `AssetNewValue` — New value to apply
+- `options?`: `AssetUpdateValueOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
 
 #### Returns
 
@@ -635,15 +954,35 @@ Promise resolving when the asset has been updated
 #### Example
 
 ```
-// Update a Text asset by folder ID
-await assets.updateValueById(<assetId>, 'new-value', { folderId: <folderId> });
+// Update by id
+await assets.updateValue({ id: <assetId> }, 'new-value', { folderId: <folderId> });
 
-// Update an Integer asset by folder key (GUID)
-await assets.updateValueById(<assetId>, 42, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+// Update by name (folder options drive the name lookup)
+await assets.updateValue({ name: 'ApiKey' }, 42, { folderPath: 'Shared/Finance' });
 
-// Update a Bool asset by folder path
-await assets.updateValueById(<assetId>, true, { folderPath: 'Shared/Finance' });
+// Update by GUID key
+await assets.updateValue({ key: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' }, true, { folderPath: 'Shared/Finance' });
 ```
+
+### ~~updateValueById()~~
+
+> **updateValueById**(`id`: `number`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueByIdOptions`): `Promise`\<`void`>
+
+Updates the value of an existing asset by ID.
+
+#### Parameters
+
+- `id`: `number` — Asset ID
+- `newValue`: `AssetNewValue` — New value to apply
+- `options?`: `AssetUpdateValueByIdOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
+
+#### Returns
+
+`Promise`\<`void`>
+
+#### Deprecated
+
+Use [AssetServiceModel.updateValue](#updatevalue) with `{ id }`, `{ name }`, or `{ key }` instead. This method will be removed in the next major version.
 
 Service for managing UiPath Orchestrator Jobs.
 
@@ -714,6 +1053,42 @@ const page5 = await jobs.getAll({
   jumpToPage: 5,
   pageSize: 10
 });
+```
+
+### getAttachments()
+
+> **getAttachments**(`jobKey`: `string`, `folderId`: `number`): `Promise`\<`JobAttachmentGetResponse`[]>
+
+Gets all attachments linked to a job.
+
+#### Parameters
+
+- `jobKey`: `string` — The unique key (GUID) of the job whose attachments to retrieve
+- `folderId`: `number` — The folder ID where the job resides
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`[]>
+
+Promise resolving to an array of [JobAttachmentGetResponse](../JobAttachmentGetResponse/) links, empty when the job has none
+
+#### Examples
+
+```
+const attachments = await jobs.getAttachments(<jobKey>, <folderId>);
+```
+
+```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+// Read the underlying file of each attachment linked to a job
+const attachmentsService = new Attachments(sdk);
+const links = await jobs.getAttachments(<jobKey>, <folderId>);
+
+for (const link of links) {
+  const attachment = await attachmentsService.getById(link.attachmentId);
+  console.log(link.category, attachment.blobFileAccess.uri);
+}
 ```
 
 ### getById()
@@ -790,6 +1165,42 @@ const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
 if (completedJob) {
   const output = await completedJob.getOutput();
 }
+```
+
+### linkAttachment()
+
+> **linkAttachment**(`attachmentId`: `string`, `jobKey`: `string`, `folderId`: `number`, `options?`: `JobLinkAttachmentOptions`): `Promise`\<`JobAttachmentGetResponse`>
+
+Links an existing attachment to a job.
+
+This does not upload a file — it associates an attachment that already exists in Orchestrator with a job.
+
+The returned link does not carry `attachmentName` or `creatorUserId` yet — read them back with [getAttachments](#getattachments).
+
+#### Parameters
+
+- `attachmentId`: `string` — The unique ID (GUID) of the attachment to link
+- `jobKey`: `string` — The unique key (GUID) of the job to link the attachment to
+- `folderId`: `number` — The folder ID where the job resides
+- `options?`: `JobLinkAttachmentOptions` — Optional settings for the link, such as its category
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`>
+
+Promise resolving to the created [JobAttachmentGetResponse](../JobAttachmentGetResponse/) link
+
+#### Examples
+
+```
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>);
+```
+
+```
+// Group the attachment under a category of your choosing
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>, {
+  category: 'Invoice',
+});
 ```
 
 ### restart()
@@ -1020,69 +1431,46 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: '
 
 ### start()
 
-#### Call Signature
+> **start**(`processRef`: `ProcessRef`, `options?`: `ProcessStartRefOptions`): `Promise`\<`ProcessStartResponse`[]>
 
-> **start**(`request`: `ProcessStartRequest`, `options?`: `ProcessStartOptions`): `Promise`\<`ProcessStartResponse`[]>
+Starts a process. First fetch the process via `processes.getAll()` or `processes.getByName()` to obtain a name or key to pass in `processRef`.
 
-Starts a process with the specified configuration.
+Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`, `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on both `{ name }` and `{ key }` — a cross-folder redirect steers both the identity and the folder scoping to the override target.
 
-Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` inside the options.
+#### Parameters
 
-##### Parameters
+- `processRef`: `ProcessRef` — Process identifier — see the variants for their folder-scope requirements
+- `options?`: `ProcessStartRefOptions` — Folder scoping + startInfo fields + optional `expand` / `select` / `filter` / `orderby`
 
-| Parameter  | Type                  | Description                                                                                                                      |
-| ---------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `request`  | `ProcessStartRequest` | Process start configuration                                                                                                      |
-| `options?` | `ProcessStartOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`, `filter`, `orderby`) |
-
-##### Returns
+#### Returns
 
 `Promise`\<`ProcessStartResponse`[]>
 
-Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
+Promise resolving to an array of started process instances of [ProcessStartResponse](../ProcessStartResponse/)
 
-##### Example
+#### Example
 
 ```
-// By folder ID
-await processes.start({ processKey: '<processKey>' }, { folderId: <folderId> });
+import { JobPriority } from '@uipath/uipath-typescript/processes';
 
-// By folder key (GUID)
-await processes.start({ processKey: '<processKey>' }, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+// By process name + folder path
+await processes.start({ name: 'InvoiceReview' }, { folderPath: 'Shared/Live' });
 
-// By folder path
-await processes.start({ processKey: '<processKey>' }, { folderPath: 'Shared/Finance' });
+// By process key (GUID)
+await processes.start({ key: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' }, { folderKey: '<folderKey>' });
 
-// Start by process name (instead of processKey)
-await processes.start({ processName: 'MyProcess' }, { folderId: <folderId> });
+// With startInfo options
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', jobPriority: JobPriority.High, jobsCount: 3 },
+);
 
-// With additional options
-await processes.start({ processKey: '<processKey>' }, { folderId: <folderId>, expand: 'Robot' });
+// With expand to include related entities
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', expand: 'Robot,Machine' },
+);
 ```
-
-#### Call Signature
-
-> **start**(`request`: `ProcessStartRequest`, `folderId`: `number`, `options?`: `RequestOptions`): `Promise`\<`ProcessStartResponse`[]>
-
-Starts a process — positional `folderId` form.
-
-##### Parameters
-
-| Parameter  | Type                  | Description                  |
-| ---------- | --------------------- | ---------------------------- |
-| `request`  | `ProcessStartRequest` | Process start configuration  |
-| `folderId` | `number`              | Required folder ID (numeric) |
-| `options?` | `RequestOptions`      | Optional request options     |
-
-##### Returns
-
-`Promise`\<`ProcessStartResponse`[]>
-
-Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
-
-##### Deprecated
-
-Use the options-object form: `start(request, { folderId })`. See [ProcessStartOptions](../ProcessStartOptions/) for the supported options.
 
 Service for managing UiPath Queues
 
@@ -1099,11 +1487,57 @@ const allQueues = await queues.getAll();
 
 ## Methods
 
+### completeTransaction()
+
+> **completeTransaction**(`itemId`: `number`, `outcome`: `QueueTransactionOutcome`, `options?`: `QueueCompleteTransactionOptions`): `Promise`\<`void`>
+
+Completes a transaction: reports the processing outcome of a queue item
+
+Marks the item `Successful` or `Failed`, and can persist output data alongside the result. On failure, `processingError` is optional — without it the item is marked `Failed` with no error details; the error `type` decides retry behavior (an `ApplicationException` failure is retried per the queue's retry settings, a `BusinessException` is not).
+
+Applies to items with an active transaction. Changing the outcome of an item that already reached a terminal status is rejected.
+
+Folder scoping works like the other methods: `folderId` / `folderKey` / `folderPath`, else the SDK's configured folder. When the item came from `startTransaction`, pass `{ folderId: item.folderId }` — that's the resolved folder the item lives in after any override redirect, so no re-derivation is needed at the call site.
+
+#### Parameters
+
+- `itemId`: `number` — Queue item ID of the transaction to complete
+- `outcome`: `QueueTransactionOutcome` — The caller's verdict on its own processing of the item; Orchestrator records it as-is
+- `options?`: `QueueCompleteTransactionOptions` — Completion details (output data, failure details, new defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise that resolves once the outcome is recorded
+
+#### Example
+
+```
+import { QueueTransactionOutcome, QueueExceptionType } from '@uipath/uipath-typescript/queues';
+
+// Report success with output data
+await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Successful, {
+  folderId: <folderId>,
+  outputData: { paymentId: 'P-778' }
+});
+
+// Report a business failure (not retried) — folder scoping also
+// accepts a folder key or path
+await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Failed, {
+  folderKey: '<folderKey>',
+  processingError: {
+    reason: 'Vendor not found',
+    type: QueueExceptionType.BusinessException
+  }
+});
+```
+
 ### getAll()
 
-> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
 
-Gets all queues across folders with optional filtering and folder scoping
+Gets all queues with the operational methods attached, with optional filtering and folder scoping
 
 #### Type Parameters
 
@@ -1111,17 +1545,13 @@ Gets all queues across folders with optional filtering and folder scoping
 
 #### Parameters
 
-- `options?`: `T` — Query options including optional folderId and pagination options
+- `options?`: `T` — Query options including folder scoping (`folderId` / `folderKey` / `folderPath`) and pagination options; without folder scoping, queues across all folders are returned
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
 
-Promise resolving to either an array of queues NonPaginatedResponse or a PaginatedResponse when pagination options are used. [QueueGetResponse](../QueueGetResponse/)
-
-#### Signature
-
-getAll(options?) → Promise\<QueueGetResponse[]>
+Promise resolving to either a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetWithMethodsResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
 
 #### Example
 
@@ -1129,7 +1559,7 @@ getAll(options?) → Promise\<QueueGetResponse[]>
 // Standard array return
 const allQueues = await queues.getAll();
 
-// Get queues within a specific folder
+// Get queues within a specific folder — also accepts folderKey / folderPath
 const folderQueues = await queues.getAll({
   folderId: <folderId>
 });
@@ -1147,41 +1577,281 @@ if (page1.hasNextPage) {
   const page2 = await queues.getAll({ cursor: page1.nextCursor });
 }
 
-// Jump to specific page
-const page5 = await queues.getAll({
-  jumpToPage: 5,
-  pageSize: 10
+// Operate on a result directly via the attached methods
+const item = await page1.items[0].insertItem({ invoiceId: 'INV-1001' });
+```
+
+### getAllItems()
+
+> **getAllItems**\<`T`>(`queueId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
+
+Gets the items of a queue with optional filtering and pagination
+
+Returns the queue's work items including their status, business payload (`specificData`), output, timing fields, and failure details.
+
+#### Type Parameters
+
+- `T` *extends* `QueueGetAllItemsOptions` = `QueueGetAllItemsOptions`
+
+#### Parameters
+
+- `queueId`: `number` — Queue ID
+- `options?`: `T` — Query options including filtering, pagination, and folder scoping (`folderId` / `folderKey` / `folderPath`)
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
+
+Promise resolving to either a [QueueItem](../QueueItem/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueItem>` when pagination options are used.
+
+#### Examples
+
+```
+const items = await queues.getAllItems(<queueId>, { folderId: <folderId> });
+
+// Failed items only, newest first — folder scoping also accepts a
+// folder key or path
+const failed = await queues.getAllItems(<queueId>, {
+  folderPath: 'Shared/Finance',
+  filter: "status eq 'Failed'",
+  orderby: 'id desc',
+  pageSize: 25
 });
+```
+
+```
+// Or operate on a queue returned by getAll / getById
+const queue = await queues.getById(<queueId>, { folderId: <folderId> });
+const items = await queue.getAllItems();
 ```
 
 ### getById()
 
+#### Call Signature
+
+> **getById**(`id`: `number`, `options?`: `QueueGetByIdScopedOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Gets a single queue by ID with the operational methods attached
+
+##### Parameters
+
+| Parameter  | Type                        | Description                                                                |
+| ---------- | --------------------------- | -------------------------------------------------------------------------- |
+| `id`       | `number`                    | Queue ID                                                                   |
+| `options?` | `QueueGetByIdScopedOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options |
+
+##### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
+
+##### Example
+
+```
+// Get queue by ID
+const queue = await queues.getById(<queueId>, { folderId: <folderId> });
+
+// Folder scoping also accepts a folder key or path
+const byPath = await queues.getById(<queueId>, { folderPath: 'Shared/Finance' });
+
+// Operate on the queue directly via the attached methods
+const items = await queue.getAllItems();
+const item = await queue.insertItem({
+  invoiceId: 'INV-1001',
+  amount: 1520
+});
+```
+
+#### Call Signature
+
 > **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueGetResponse`>
 
-Gets a single queue by ID
+Gets a single queue by ID — positional `folderId` form.
 
-#### Parameters
+##### Parameters
 
-- `id`: `number` — Queue ID
-- `folderId`: `number` — Required folder ID
-- `options?`: `QueueGetByIdOptions` — -
+| Parameter  | Type                  | Description            |
+| ---------- | --------------------- | ---------------------- |
+| `id`       | `number`              | Queue ID               |
+| `folderId` | `number`              | Required folder ID     |
+| `options?` | `QueueGetByIdOptions` | Optional query options |
 
-#### Returns
+##### Returns
 
 `Promise`\<`QueueGetResponse`>
 
-Promise resolving to a queue definition
+Promise resolving to a [QueueGetResponse](../QueueGetResponse/) — the queue definition
+
+##### Deprecated
+
+Use the options-object form: `getById(id, { folderId })` — it also supports `folderKey` / `folderPath` and returns the queue with the operational methods attached. This form keeps returning plain queue data.
+
+##### Example
+
+```
+const queue = await queues.getById(<queueId>, <folderId>);
+```
+
+### getByKey()
+
+> **getByKey**(`key`: `string`, `options?`: `QueueGetByKeyOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Gets a single queue by key (the queue's GUID identifier)
+
+#### Parameters
+
+- `key`: `string` — Queue key (GUID)
+- `options?`: `QueueGetByKeyOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+
+#### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
 
 #### Example
 
 ```
-// Get queue by ID
-const queue = await queues.getById(<queueId>, <folderId>);
+const queue = await queues.getByKey('<queueKey>', { folderId: <folderId> });
+```
+
+### getByName()
+
+> **getByName**(`name`: `string`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Gets a single queue by name
+
+#### Parameters
+
+- `name`: `string` — Queue name (exact match)
+- `options?`: `QueueGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+
+#### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
+
+#### Example
+
+```
+const queue = await queues.getByName('<queueName>', { folderId: <folderId> });
+
+// Folder scoping also accepts a folder key or path
+const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' });
+```
+
+### insertItemByName()
+
+> **insertItemByName**(`queueName`: `string`, `specificData`: `Record`\<`string`, `QueueItemValue`>, `options?`: `QueueInsertItemOptions`): `Promise`\<`QueueItem`>
+
+Inserts a new item into a queue by queue name
+
+Returns the created queue item including its id, status, and the stored payload. Payload keys keep their original casing — the SDK performs no case conversion on them, while method options and response fields still use the SDK's usual camelCase; `Date` values in the payload are serialized to ISO-8601 strings.
+
+The payload must be flat — values are simple scalars (see [QueueItemValue](../../type-aliases/QueueItemValue/)); nested objects and arrays are rejected.
+
+The returned item's `folderId` reflects the folder the SDK actually targeted — after any runtime resource-override redirect on `folderPath`. Pass `{ folderId: item.folderId }` to follow-up calls on the same queue (e.g. `getAllItems`, `startTransaction`) so they scope to the same folder without the caller having to re-derive it. A freshly inserted item has no transaction yet, so `completeTransaction` applies only once a robot has acquired it.
+
+#### Parameters
+
+- `queueName`: `string` — Name of the queue to insert into
+- `specificData`: `Record`\<`string`, `QueueItemValue`> — The item's business payload (stored as the queue item's specific content)
+- `options?`: `QueueInsertItemOptions` — Item metadata (priority, reference, defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
+
+#### Returns
+
+`Promise`\<`QueueItem`>
+
+Promise resolving to the created [QueueItem](../QueueItem/)
+
+#### Example
+
+```
+import { QueuePriority } from '@uipath/uipath-typescript/queues';
+
+// Minimal insert
+const item = await queues.insertItemByName('<queueName>', {
+  invoiceId: 'INV-1001',
+  amount: 1520
+}, { folderId: <folderId> });
+
+// With metadata — folder scoping also accepts a folder key or path
+const rushItem = await queues.insertItemByName('<queueName>', {
+  invoiceId: 'INV-1002'
+}, {
+  folderKey: '<folderKey>',
+  priority: QueuePriority.High,
+  reference: 'INV-1002',
+  dueDate: new Date('2026-08-15')
+});
+```
+
+### startTransaction()
+
+> **startTransaction**(`queue`: `QueueRef`, `options?`: `QueueStartTransactionOptions`): `Promise`\<`null` | `QueueItem`>
+
+Starts a transaction: acquires the next available item from a queue and marks it `InProgress`
+
+Requires a robot session. Orchestrator allocates the item to the robot that sent the request, so user and application identities always receive `null`, however many items are waiting. Inside a coded function, build the SDK with `new UiPath(ctx)`: the SDK then sends the function's robot key, which Orchestrator needs to allocate the item. Queue items are normally consumed by a robot running a process — apps produce with `insertItemByName` and observe with `getAllItems`, leaving acquisition to the robot.
+
+`null` covers both "no eligible items" and "no allocation target" — the two are not distinguishable.
+
+The queue is selected by exactly one of `name` or `id`. The transaction API identifies queues by name, so an `id` selector is first resolved to the queue's name (one extra lookup).
+
+The returned item's `folderId` reflects the folder the SDK actually targeted — after any runtime resource-override redirect on the `{ name }` selector's `folderPath`. Pass `{ folderId: item.folderId }` to `completeTransaction` so the follow-up scopes to the same folder without the caller having to re-derive it.
+
+#### Parameters
+
+- `queue`: `QueueRef` — Queue selector: `{ name: '<queueName>' }` or `{ id: <queueId> }`
+- `options?`: `QueueStartTransactionOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
+
+#### Returns
+
+`Promise`\<`null` | `QueueItem`>
+
+Promise resolving to the acquired [QueueItem](../QueueItem/) (in `InProgress` status with `processingStartTime` set), or `null` when no item is available
+
+#### Example
+
+```
+import { QueueTransactionOutcome } from '@uipath/uipath-typescript/queues';
+
+const transaction = await queues.startTransaction({ name: '<queueName>' }, { folderId: <folderId> });
+
+// or select by ID — the SDK first resolves the queue's name (one extra lookup)
+const byId = await queues.startTransaction({ id: <queueId> }, { folderId: <folderId> });
+
+// folder scoping also accepts a folder key or path
+const byPath = await queues.startTransaction({ name: '<queueName>' }, { folderPath: 'Shared/Finance' });
+
+if (transaction) {
+  // Running under a robot session: the item is now locked to this caller
+  console.log(transaction.status);        // 'InProgress'
+  console.log(transaction.specificData);  // the item's business payload
+
+  // Complete via the SAME folder the item lives in — `folderId` on the
+  // returned item is the resolved folder after any override redirect.
+  await queues.completeTransaction(
+    transaction.id,
+    QueueTransactionOutcome.Successful,
+    { folderId: transaction.folderId },
+  );
+} else {
+  // No item was acquired. This happens when the queue has no eligible
+  // items — and always for user/application identities (e.g. a coded app
+  // signed in with OAuth), which have no robot session for Orchestrator
+  // to allocate the item to.
+  console.log('Nothing to process');
+}
 ```
 
 Service for managing UiPath storage Buckets.
 
 Buckets are cloud storage containers that can be used to store and manage files used by automation processes. [UiPath Buckets Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-storage-buckets)
+
+Buckets with encryption enabled, including those using Customer Managed Keys, are also supported.
 
 ### Usage
 
@@ -1196,28 +1866,59 @@ const allBuckets = await buckets.getAll();
 
 ### deleteFile()
 
-> **deleteFile**(`bucketId`: `number`, `path`: `string`, `options?`: `BucketDeleteFileOptions`): `Promise`\<`void`>
+#### Call Signature
+
+> **deleteFile**(`bucketRef`: `BucketRef`, `path`: `string`, `options?`: `BucketDeleteFileOptions`): `Promise`\<`void`>
 
 Deletes a file from a bucket
 
-#### Parameters
+##### Parameters
 
-- `bucketId`: `number` — The ID of the bucket
-- `path`: `string` — The full path to the file to delete
-- `options?`: `BucketDeleteFileOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
+| Parameter   | Type                      | Description                                                                                                                                               |
+| ----------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef`               | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `path`      | `string`                  | The full path to the file to delete                                                                                                                       |
+| `options?`  | `BucketDeleteFileOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`)                                                                                                  |
 
-#### Returns
+##### Returns
 
 `Promise`\<`void`>
 
 Promise resolving when the file is deleted
 
-#### Example
+##### Example
 
 ```
-// Delete a file from a bucket
-await buckets.deleteFile(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
+// By bucket id
+await buckets.deleteFile({ id: <bucketId> }, '/folder/file.pdf', { folderId: <folderId> });
+
+// By bucket name
+await buckets.deleteFile({ name: 'MyBucket' }, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
 ```
+
+#### Call Signature
+
+> **deleteFile**(`bucketId`: `number`, `path`: `string`, `options?`: `BucketDeleteFileOptions`): `Promise`\<`void`>
+
+Deletes a file from a bucket — numeric bucket id form.
+
+##### Parameters
+
+| Parameter  | Type                      | Description                                              |
+| ---------- | ------------------------- | -------------------------------------------------------- |
+| `bucketId` | `number`                  | The ID of the bucket                                     |
+| `path`     | `string`                  | The full path to the file to delete                      |
+| `options?` | `BucketDeleteFileOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) |
+
+##### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the file is deleted
+
+##### Deprecated
+
+Use the ref-based form: `deleteFile({ id: bucketId }, path, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 ### getAll()
 
@@ -1334,7 +2035,7 @@ await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
 
 #### Call Signature
 
-> **getFileMetaData**\<`T`>(`bucketId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
+> **getFileMetaData**\<`T`>(`bucketRef`: `BucketRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
 
 Gets metadata for files in a bucket with optional filtering and pagination.
 
@@ -1344,6 +2045,52 @@ The method returns either:
 
 - A NonPaginatedResponse with items array (when no pagination parameters are provided)
 - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+
+##### Type Parameters
+
+| Type Parameter                                             | Default type                                 |
+| ---------------------------------------------------------- | -------------------------------------------- |
+| `T` *extends* `BucketGetFileMetaDataWithPaginationOptions` | `BucketGetFileMetaDataWithPaginationOptions` |
+
+##### Parameters
+
+| Parameter   | Type        | Description                                                                                                                                               |
+| ----------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef` | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `options?`  | `T`         | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for filtering and pagination                                             |
+
+##### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
+
+Promise resolving to either an array of files metadata NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BlobItem](../BlobItem/)
+
+##### Example
+
+```
+// By bucket id
+const fileMetadata = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId> });
+
+// By bucket name (folder scoping applies to both the name lookup and the meta-data read)
+await buckets.getFileMetaData({ name: 'InvoicesBucket' }, { folderPath: 'Shared/Finance' });
+
+// Filter by prefix
+await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId>, prefix: '/folder1' });
+
+// First page with pagination
+const page1 = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId>, pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId>, cursor: page1.nextCursor });
+}
+```
+
+#### Call Signature
+
+> **getFileMetaData**\<`T`>(`bucketId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
+
+Gets metadata for files in a bucket — numeric bucket id form.
 
 ##### Type Parameters
 
@@ -1364,29 +2111,9 @@ The method returns either:
 
 Promise resolving to either an array of files metadata NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BlobItem](../BlobItem/)
 
-##### Example
+##### Deprecated
 
-```
-// By folder ID
-const fileMetadata = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId> });
-
-// By folder key (GUID)
-await buckets.getFileMetaData(<bucketId>, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-
-// By folder path
-await buckets.getFileMetaData(<bucketId>, { folderPath: 'Shared/Finance' });
-
-// Filter by prefix
-await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, prefix: '/folder1' });
-
-// First page with pagination
-const page1 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, pageSize: 10 });
-
-// Navigate using cursor
-if (page1.hasNextPage) {
-  const page2 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
-}
-```
+Use the ref-based form: `getFileMetaData({ id: bucketId }, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 #### Call Signature
 
@@ -1416,11 +2143,13 @@ Promise resolving to either an array of files metadata NonPaginatedResponse or a
 
 ##### Deprecated
 
-Use the options-object form: `getFileMetaData(bucketId, { folderId })`. See [BucketGetFileMetaDataWithPaginationOptions](../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/) for the supported options.
+Use the ref-based form: `getFileMetaData({ id: bucketId }, { folderId })`. See [BucketRef](../../type-aliases/BucketRef/).
 
 ### getFiles()
 
-> **getFiles**\<`T`>(`bucketId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
+#### Call Signature
+
+> **getFiles**\<`T`>(`bucketRef`: `BucketRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
 
 Lists all files in a bucket.
 
@@ -1431,58 +2160,124 @@ The method returns either:
 - A NonPaginatedResponse with items array (when no pagination parameters are provided)
 - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
 
-#### Type Parameters
+##### Type Parameters
 
-- `T` *extends* `BucketGetFilesOptions` = `BucketGetFilesOptions`
+| Type Parameter                        | Default type            |
+| ------------------------------------- | ----------------------- |
+| `T` *extends* `BucketGetFilesOptions` | `BucketGetFilesOptions` |
 
-#### Parameters
+##### Parameters
 
-- `bucketId`: `number` — The ID of the bucket
-- `options?`: `T` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination [BucketGetFilesOptions](../../type-aliases/BucketGetFilesOptions/)
+| Parameter   | Type        | Description                                                                                                                                                                                            |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bucketRef` | `BucketRef` | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders.                                              |
+| `options?`  | `T`         | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination [BucketGetFilesOptions](../../type-aliases/BucketGetFilesOptions/) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
 
 Promise resolving to either an array of files NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BucketFile](../BucketFile/)
 
-#### Example
+##### Example
 
 ```
-// List all files in the bucket
-const files = await buckets.getFiles(<bucketId>, { folderId: <folderId> });
+// By bucket id
+const files = await buckets.getFiles({ id: <bucketId> }, { folderId: <folderId> });
+
+// By bucket name (folder scoping applies to both the name lookup and the listing)
+const filesByName = await buckets.getFiles({ name: 'MyBucket' }, { folderPath: 'Shared/Finance' });
 
 // Filter by regex pattern
-const pdfs = await buckets.getFiles(<bucketId>, {
+const pdfs = await buckets.getFiles({ id: <bucketId> }, {
   folderId: <folderId>,
   fileNameRegex: '.*\\.pdf$'
 });
 
 // First page with pagination
-const page1 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, pageSize: 10 });
+const page1 = await buckets.getFiles({ id: <bucketId> }, { folderId: <folderId>, pageSize: 10 });
 
 // Navigate using cursor
 if (page1.hasNextPage) {
-  const page2 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
+  const page2 = await buckets.getFiles({ id: <bucketId> }, { folderId: <folderId>, cursor: page1.nextCursor });
 }
 
 // Jump to specific page
-const page5 = await buckets.getFiles(<bucketId>, {
+const page5 = await buckets.getFiles({ id: <bucketId> }, {
   folderId: <folderId>,
   jumpToPage: 5,
   pageSize: 10
 });
 ```
 
+#### Call Signature
+
+> **getFiles**\<`T`>(`bucketId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
+
+Lists all files in a bucket — numeric bucket id form.
+
+##### Type Parameters
+
+| Type Parameter                        | Default type            |
+| ------------------------------------- | ----------------------- |
+| `T` *extends* `BucketGetFilesOptions` | `BucketGetFilesOptions` |
+
+##### Parameters
+
+| Parameter  | Type     | Description                                                                                                                                                                                            |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bucketId` | `number` | The ID of the bucket                                                                                                                                                                                   |
+| `options?` | `T`      | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination [BucketGetFilesOptions](../../type-aliases/BucketGetFilesOptions/) |
+
+##### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
+
+Promise resolving to either an array of files NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BucketFile](../BucketFile/)
+
+##### Deprecated
+
+Use the ref-based form: `getFiles({ id: bucketId }, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
+
 ### getReadUri()
+
+#### Call Signature
+
+> **getReadUri**(`bucketRef`: `BucketRef`, `path`: `string`, `options?`: `BucketGetReadUriRequestOptions`): `Promise`\<`BucketGetUriResponse`>
+
+Gets a direct download URL for a file in the bucket.
+
+Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` in the options.
+
+##### Parameters
+
+| Parameter   | Type                             | Description                                                                                                                                               |
+| ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef`                      | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `path`      | `string`                         | The full path to the file                                                                                                                                 |
+| `options?`  | `BucketGetReadUriRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `expiryInMinutes`                                                                   |
+
+##### Returns
+
+`Promise`\<`BucketGetUriResponse`>
+
+Promise resolving to blob file access information [BucketGetUriResponse](../BucketGetUriResponse/)
+
+##### Example
+
+```
+// By bucket id
+await buckets.getReadUri({ id: <bucketId> }, '/folder/file.pdf', { folderId: <folderId> });
+
+// By bucket name (folder scoping applies to both the name lookup and the read)
+await buckets.getReadUri({ name: 'MyBucket' }, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
+```
 
 #### Call Signature
 
 > **getReadUri**(`bucketId`: `number`, `path`: `string`, `options?`: `BucketGetReadUriRequestOptions`): `Promise`\<`BucketGetUriResponse`>
 
-Gets a direct download URL for a file in the bucket.
-
-Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` in the options.
+Gets a direct download URL for a file in the bucket — numeric bucket id form.
 
 ##### Parameters
 
@@ -1498,18 +2293,9 @@ Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` in th
 
 Promise resolving to blob file access information [BucketGetUriResponse](../BucketGetUriResponse/)
 
-##### Example
+##### Deprecated
 
-```
-// By folder ID
-await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
-
-// By folder key (GUID)
-await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-
-// By folder path
-await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
-```
+Use the ref-based form: `getReadUri({ id: bucketId }, path, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 #### Call Signature
 
@@ -1531,13 +2317,13 @@ Promise resolving to blob file access information [BucketGetUriResponse](../Buck
 
 ##### Deprecated
 
-Use the positional form: `getReadUri(bucketId, path, options?)`. See [BucketGetReadUriRequestOptions](../BucketGetReadUriRequestOptions/) for the supported options.
+Use the ref-based form: `getReadUri({ id: bucketId }, path, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 ### uploadFile()
 
 #### Call Signature
 
-> **uploadFile**(`bucketId`: `number`, `path`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `BucketUploadFileRequestOptions`): `Promise`\<`BucketUploadResponse`>
+> **uploadFile**(`bucketRef`: `BucketRef`, `path`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `BucketUploadFileRequestOptions`): `Promise`\<`BucketUploadResponse`>
 
 Uploads a file to a bucket.
 
@@ -1545,12 +2331,12 @@ Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` in th
 
 ##### Parameters
 
-| Parameter  | Type                             | Description                                              |
-| ---------- | -------------------------------- | -------------------------------------------------------- |
-| `bucketId` | `number`                         | The ID of the bucket to upload to                        |
-| `path`     | `string`                         | Path where the file should be stored in the bucket       |
-| `content`  | `Uint8Array`\<`ArrayBuffer`>     | `Blob`                                                   |
-| `options?` | `BucketUploadFileRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) |
+| Parameter   | Type                             | Description                                                                                                                                               |
+| ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef`                      | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `path`      | `string`                         | Path where the file should be stored in the bucket                                                                                                        |
+| `content`   | `Uint8Array`\<`ArrayBuffer`>     | `Blob`                                                                                                                                                    |
+| `options?`  | `BucketUploadFileRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`)                                                                                                  |
 
 ##### Returns
 
@@ -1561,20 +2347,42 @@ Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadR
 ##### Example
 
 ```
-// By folder ID
+// By bucket id
 const file = new File(['file content'], 'example.txt');
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderId: <folderId> });
+await buckets.uploadFile({ id: <bucketId> }, '/folder/example.txt', file, { folderId: <folderId> });
 
-// By folder key (GUID)
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-
-// By folder path
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderPath: 'Shared/Finance' });
+// By bucket name (folder scoping applies to both the name lookup and the upload)
+await buckets.uploadFile({ name: 'MyBucket' }, '/folder/example.txt', file, { folderPath: 'Shared/Finance' });
 
 // In Node env with Uint8Array or Buffer
 const content = new TextEncoder().encode('file content');
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', content, { folderId: <folderId> });
+await buckets.uploadFile({ id: <bucketId> }, '/folder/example.txt', content, { folderId: <folderId> });
 ```
+
+#### Call Signature
+
+> **uploadFile**(`bucketId`: `number`, `path`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `BucketUploadFileRequestOptions`): `Promise`\<`BucketUploadResponse`>
+
+Uploads a file to a bucket — numeric bucket id form.
+
+##### Parameters
+
+| Parameter  | Type                             | Description                                              |
+| ---------- | -------------------------------- | -------------------------------------------------------- |
+| `bucketId` | `number`                         | The ID of the bucket                                     |
+| `path`     | `string`                         | Path where the file should be stored in the bucket       |
+| `content`  | `Uint8Array`\<`ArrayBuffer`>     | `Blob`                                                   |
+| `options?` | `BucketUploadFileRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) |
+
+##### Returns
+
+`Promise`\<`BucketUploadResponse`>
+
+Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadResponse/)
+
+##### Deprecated
+
+Use the ref-based form: `uploadFile({ id: bucketId }, path, content, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 #### Call Signature
 
@@ -1596,7 +2404,7 @@ Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadR
 
 ##### Deprecated
 
-Use the positional form: `uploadFile(bucketId, path, content, options?)`. See [BucketUploadFileRequestOptions](../BucketUploadFileRequestOptions/) for the supported options.
+Use the ref-based form: `uploadFile({ id: bucketId }, path, content, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 Service for managing UiPath Action Center
 
@@ -1713,29 +2521,94 @@ await tasks.complete({
 
 ### create()
 
-> **create**(`options`: `TaskCreateOptions`, `folderId`: `number`): `Promise`\<`TaskCreateResponse`>
+> **create**(`task`: `TaskCreateOptions`, `folderId`: `number`): `Promise`\<`TaskCreateResponse`>
 
-Creates a new task
+Creates a new task. Pass `type: TaskType.QuickForm` (with `taskSchemaKey` and `schema`) for a schema-first HITL task rendered in Action Center; otherwise the default `TaskType.External` shape is used.
+
+For QuickForm, `schema` is registered under `taskSchemaKey` on first use and reused (not updated) on subsequent calls with the same key, then the task is created in the same call. Schema keys are unique per tenant.
 
 #### Parameters
 
-- `options`: `TaskCreateOptions` — The task to be created
+- `task`: `TaskCreateOptions` — The task to create. Set `type` to select the task shape.
 - `folderId`: `number` — Required folder ID
 
 #### Returns
 
 `Promise`\<`TaskCreateResponse`>
 
-Promise resolving to the created task [TaskCreateResponse](../../type-aliases/TaskCreateResponse/)
+Promise resolving to the created [TaskCreateResponse](../../type-aliases/TaskCreateResponse/).
 
 #### Example
 
 ```
-import { TaskPriority } from '@uipath/uipath-typescript';
-const task = await tasks.create({
+import { TaskPriority, TaskType } from '@uipath/uipath-typescript';
+
+// External task (default)
+await tasks.create({
   title: "My Task",
   priority: TaskPriority.Medium
-}, <folderId>); // folderId is required
+}, <folderId>);
+
+// QuickForm task
+await tasks.create({
+  type: TaskType.QuickForm,
+  title: "Approve invoice",
+  taskSchemaKey: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+  schema: {
+    id: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+    fields: [{ id: "invoice", type: "text", label: "Invoice", direction: "input" }],
+    outcomes: [{ id: "approve", name: "Approve", type: "string", isPrimary: true }],
+  },
+  data: { invoice: "INV-1234" },
+}, <folderId>);
+```
+
+### createComment()
+
+> **createComment**(`taskId`: `number`, `text`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskCommentGetResponse`>
+
+Creates a comment on a task.
+
+#### Parameters
+
+- `taskId`: `number` — Id of the task the comment belongs to
+- `text`: `string` — Comment text (max 512 characters)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskCommentGetResponse`>
+
+Promise resolving to [TaskCommentGetResponse](../TaskCommentGetResponse/)
+
+#### Example
+
+```
+const comment = await tasks.createComment(<taskId>, "Escalated", { folderId: <folderId> });
+```
+
+### editMetadata()
+
+> **editMetadata**(`taskId`: `number`, `options?`: `TaskEditMetadataOptions`): `Promise`\<`void`>
+
+Edits a task's metadata (title, priority, catalog association, etc.).
+
+#### Parameters
+
+- `taskId`: `number` — Id of the task to edit
+- `options?`: `TaskEditMetadataOptions` — Fields to change plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the edit completes
+
+#### Example
+
+```
+import { TaskPriority } from '@uipath/uipath-typescript/tasks';
+await tasks.editMetadata(<taskId>, { title: "Review invoice", priority: TaskPriority.High, folderId: <folderId> });
 ```
 
 ### getAll()
@@ -1828,6 +2701,91 @@ console.log(formTask.formLayout);
 
 // Get a document validation task by ID (faster with taskType provided in the options)
 const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
+```
+
+### getComments()
+
+> **getComments**\<`T`>(`taskId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
+
+Gets the comments for a task.
+
+#### Type Parameters
+
+- `T` *extends* `TaskCommentGetByTaskIdOptions` = `TaskCommentGetByTaskIdOptions`
+
+#### Parameters
+
+- `taskId`: `number` — The task to list comments for
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
+
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCommentGetResponse](../TaskCommentGetResponse/) items, paginated when pagination options are used.
+
+#### Example
+
+```
+const comments = await tasks.getComments(<taskId>, { folderId: <folderId> });
+
+// Paginated
+const page1 = await tasks.getComments(<taskId>, { folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await tasks.getComments(<taskId>, { folderId: <folderId>, cursor: page1.nextCursor });
+}
+```
+
+### getDataById()
+
+> **getDataById**(`id`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+
+Gets a task's data (form/task payload) and core metadata, by task id.
+
+Works for any task type (Form, App, External, etc.).
+
+#### Parameters
+
+- `id`: `number` — The task id to fetch data for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskDataGetResponse`>
+
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
+
+#### Example
+
+```
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+console.log(task.data);
+```
+
+### getDataByKey()
+
+> **getDataByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+
+Gets a task's data (form/task payload) and core metadata, by task key.
+
+Works for any task type (Form, App, External, etc.).
+
+#### Parameters
+
+- `key`: `string` — The task key (GUID) to fetch data for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskDataGetResponse`>
+
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
+
+#### Example
+
+```
+const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
+console.log(task.data);
 ```
 
 ### getUsers()
@@ -1924,6 +2882,61 @@ const result2 = await tasks.reassign({
 });
 ```
 
+### saveData()
+
+> **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `options?`: `TaskSaveDataOptions`): `Promise`\<`void`>
+
+Saves a task's data (form/task payload), replacing the existing payload.
+
+Routes to the correct save endpoint by task type: Form and App tasks use their own endpoints, everything else uses the generic one. If `type` is not passed, it is looked up automatically (one extra read). When called on a task object returned by the SDK, the type is already known, so no lookup happens.
+
+#### Parameters
+
+- `taskId`: `number` — The task to update
+- `data`: `Record`\<`string`, `unknown`> — The task data to save (replaces the existing payload)
+- `options?`: `TaskSaveDataOptions` — Task type plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the save completes
+
+#### Examples
+
+```
+await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { folderId: <folderId> });
+```
+
+```
+import { TaskType } from '@uipath/uipath-typescript/tasks';
+await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { type: TaskType.Form, folderId: <folderId> });
+```
+
+### saveTags()
+
+> **saveTags**(`taskId`: `number`, `tags`: `Tag`[], `options?`: `FolderScopedOptions`): `Promise`\<`void`>
+
+Saves the tags on a task, replacing any existing tags.
+
+#### Parameters
+
+- `taskId`: `number` — The task to tag
+- `tags`: `Tag`[] — The tags to set
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the save completes
+
+#### Example
+
+```
+await tasks.saveTags(<taskId>, [{ name: "priority", displayName: "Priority", displayValue: "High" }], { folderId: <folderId> });
+```
+
 ### unassign()
 
 > **unassign**(`taskId`: `number` | `number`[]): `Promise`\<`OperationResponse`\<`TaskAssignmentResponse`[] | { `taskId`: `number`; }[]>>
@@ -1954,11 +2967,232 @@ const result = await task.unassign();
 const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
 ```
 
+Service for managing UiPath Action Center task catalogs.
+
+A task catalog is a reusable, folder-scoped definition that groups related tasks and configures how they behave: data retention (delete or archive the tasks after a retention period), encryption of task data, and tags. A task is linked to a catalog through its metadata (see `editMetadata`) to inherit that configuration. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
+
+### Usage
+
+```
+import { TaskCatalogs } from '@uipath/uipath-typescript/tasks';
+
+const taskCatalogs = new TaskCatalogs(sdk);
+const catalogs = await taskCatalogs.getAll({ folderId: <folderId> });
+```
+
+## Methods
+
+### create()
+
+> **create**(`name`: `string`, `options?`: `TaskCatalogCreateOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Creates a task catalog.
+
+#### Parameters
+
+- `name`: `string` — Name of the task catalog (max 50 characters)
+- `options?`: `TaskCatalogCreateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the created task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Examples
+
+```
+const catalog = await taskCatalogs.create("Invoices", { description: "Invoice tasks", folderId: <folderId> });
+```
+
+```
+import { TaskCatalogRetentionAction } from '@uipath/uipath-typescript/tasks';
+const catalog = await taskCatalogs.create("Invoices", {
+  retentionAction: TaskCatalogRetentionAction.Delete,
+  retentionPeriod: 30,
+  folderId: <folderId>
+});
+```
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+Gets task catalogs in a folder.
+
+#### Type Parameters
+
+- `T` *extends* `TaskCatalogGetAllOptions` = `TaskCatalogGetAllOptions`
+
+#### Parameters
+
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCatalogGetResponse](../TaskCatalogGetResponse/) items, paginated when pagination options are used.
+
+#### Example
+
+```
+const catalogs = await taskCatalogs.getAll({ folderId: <folderId> });
+
+// Paginated
+const page1 = await taskCatalogs.getAll({ folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await taskCatalogs.getAll({ folderId: <folderId>, cursor: page1.nextCursor });
+}
+```
+
+### getById()
+
+> **getById**(`id`: `number`, `options?`: `TaskCatalogGetByIdOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by id.
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `options?`: `TaskCatalogGetByIdOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await taskCatalogs.getById(<catalogId>, { folderId: <folderId> });
+```
+
+### getByName()
+
+> **getByName**(`name`: `string`, `options?`: `TaskCatalogGetByNameOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by name within a folder.
+
+#### Parameters
+
+- `name`: `string` — The task catalog name
+- `options?`: `TaskCatalogGetByNameOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the matching task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await taskCatalogs.getByName("Invoices", { folderId: <folderId> });
+```
+
+### updateById()
+
+> **updateById**(`id`: `number`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+
+Updates a task catalog by id. Name, description and retention are preserved when not passed; tags are replaced only when provided (the catalog is not returned with its tags, so they cannot be auto preserved).
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the update completes
+
+#### Example
+
+```
+// Change only the description, keep everything else
+await taskCatalogs.updateById(<catalogId>, { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateById(<catalogId>, { name: "Invoices 2025", folderId: <folderId> });
+```
+
+### updateByName()
+
+> **updateByName**(`name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+
+Updates a task catalog by name, resolving the id internally. Name, description and retention are preserved when not passed; tags are replaced only when provided.
+
+#### Parameters
+
+- `name`: `string` — The current name of the task catalog to update
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the update completes
+
+#### Example
+
+```
+// Change only the description
+await taskCatalogs.updateByName("Invoices", { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateByName("Invoices", { name: "Invoices 2025", folderId: <folderId> });
+```
+
 Service for managing UiPath Orchestrator Attachments.
 
 Attachments are files that can be associated with Orchestrator jobs.
 
 ## Methods
+
+### create()
+
+> **create**(`name`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `AttachmentCreateOptions`): `Promise`\<`AttachmentCreateResponse`>
+
+Creates an attachment and uploads its content.
+
+The upload is handled for you — the attachment record and its file are both in place once this resolves. Returns the stored attachment, whose `id` is the handle to use everywhere else (for example as the value of a `file` field in an action's output data).
+
+Pass `jobKey` to link the attachment to a job as part of the same call; `jobs.linkAttachment()` is only needed to attach it to a further job later.
+
+#### Parameters
+
+- `name`: `string` — File name to store the attachment under, including its extension
+- `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File` — File content to upload
+- `options?`: `AttachmentCreateOptions` — Optional job to link to, its category, and the folder to create the attachment in
+
+#### Returns
+
+`Promise`\<`AttachmentCreateResponse`>
+
+Promise resolving to the created [AttachmentCreateResponse](../AttachmentCreateResponse/)
+
+#### Examples
+
+```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+const attachments = new Attachments(sdk);
+
+// Upload a file picked in the browser
+const attachment = await attachments.create(file.name, file);
+console.log(attachment.id);
+```
+
+```
+// Upload and link it to a job in one call
+const attachment = await attachments.create('invoice.pdf', file, {
+  jobKey: <jobKey>,
+  category: 'Invoice',
+});
+```
 
 ### getById()
 
@@ -2001,18 +3235,149 @@ const allEntities = await entities.getAll();
 
 ## Methods
 
-### deleteAttachment()
+### clone()
 
-> **deleteAttachment**(`entityId`: `string`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
+> **clone**(`request`: `EntityCloneRequest`): `Promise`\<`EntityCloneJob`>
 
-Removes an attachment from a File-type field of an entity record.
+**`Experimental`**
+
+Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneJob](#getclonejob).
+
+Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+
+`DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes are required only for `SchemaAndData` mode (which creates the target schema).
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `request`: `EntityCloneRequest` — Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the [EntityCloneJob](../EntityCloneJob/) descriptor (initial state `Queued`).
+
+#### Example
+
+```
+import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const job = await entities.clone({
+  source: { scopeType: EntityCloneScopeType.Tenant },
+  target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
+  entityIds: ["<rootEntityId>", "<choiceSetId>"],
+  options: { mode: EntityCloneMode.SchemaAndData },
+});
+
+// Poll to a terminal state.
+const terminal = [
+  EntityCloneJobState.Done, EntityCloneJobState.Failed,
+  EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+];
+let status = await entities.getCloneJob(job.jobId);
+while (!terminal.includes(status.state)) {
+  await new Promise((r) => setTimeout(r, 3000));
+  status = await entities.getCloneJob(job.jobId);
+}
+```
+
+### create()
+
+> **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
+
+**`Experimental`**
+
+Creates a new Data Fabric entity with the given schema
+
+To create a **Federated** entity — a read-only view over one or more external (Integration Service) or native sources — set `entityClass` to `Federated`, describe each source in `externalFields`, and pass `[]` for `fields`. A Federated entity with N sources needs N-1 `sourceJoinConditionDetails`, all starting from one source, which becomes the primary source.
+
+#### Parameters
+
+- `name`: `string` — Entity name — must start with a letter, letters/numbers/underscores only (e.g., `"productCatalog"`).
+- `fields`: `EntityCreateFieldOptions`[] — Array of field definitions. Each field's `name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names.
+- `options?`: `EntityCreateOptions` — Optional entity-level settings ([EntityCreateOptions](../EntityCreateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to the ID of the created entity
+
+#### Example
+
+```
+import { Entities, EntityClass, DataDirectionType, EntityFieldDataType, JoinType } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const id = await entities.create("product_catalog", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+  { name: "price", type: EntityFieldDataType.DECIMAL, defaultValue: "0" },
+], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+
+// With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+const ordersId = await entities.create("orders", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+  { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  { name: "quantity", type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, maxValue: 10000, minValue: 1, defaultValue: "0" },
+]);
+
+// Cross-folder references — link a folder-scoped entity to entities and
+// system choice sets that live in another folder or at the tenant level.
+await entities.create("orderLine", [
+  {
+    name: "order",
+    type: EntityFieldDataType.RELATIONSHIP,
+    referenceEntityId: "<orderEntityId>",
+    referenceFieldId: "<orderEntityPkId>",
+    referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
+  },
+  {
+    name: "userType",
+    type: EntityFieldDataType.CHOICE_SET_SINGLE,
+    choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
+    // referenceFolderKey omitted → SDK looks up the target at tenant scope
+  },
+], { folderKey: "<sourceFolderKey>" });
+
+// Federated entity — a read-only view over external and/or native sources.
+// Native columns stay empty ([]); the schema comes from `externalFields`.
+await entities.create("<entityName>", [], {
+  entityClass: EntityClass.Federated,
+  externalFields: [{
+    externalConnectionDetail: {
+      connectionId: "<connectionId>", connectorKey: "<connectorKey>", connectorName: "<connectorName>",
+      elementInstanceId: 0, folderKey: "<folderKey>",
+    },
+    externalObjectDetail: { externalObjectName: "<objectName>", primaryKey: "<primaryKeyField>", isPrimarySource: true, method: "<operationsCatalogJson>" },
+    fields: [{
+      field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING },
+      externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly },
+    }],
+  }],
+  // Multi-source: add more entries to `externalFields` and join them:
+  // sourceJoinConditionDetails: [{
+  //   sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>",
+  //   joinType: JoinType.LeftJoin,
+  //   relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>",
+  // }],
+});
+```
+
+### deleteAttachment()
+
+> **deleteAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
+
+Removes an attachment from a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
-- `options?`: `EntityDeleteAttachmentOptions` — Optional [EntityDeleteAttachmentOptions](../EntityDeleteAttachmentOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteAttachmentOptions` — Optional delete options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2035,27 +3400,58 @@ const entityId = allEntities[0].id;
 const records = await entities.getAllRecords(entityId);
 const recordId = records[0].Id;
 
-// Delete attachment for a specific record and field
-await entities.deleteAttachment(entityId, recordId, 'Documents');
+// Delete attachment by id
+await entities.deleteAttachment({ id: entityId }, recordId, 'Documents');
+
+// Or by name
+await entities.deleteAttachment({ name: 'Customer' }, recordId, 'Documents');
 
 // Or delete using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
 await entity.deleteAttachment(recordId, 'Documents');
 ```
 
-### deleteRecordById()
+### deleteById()
 
-> **deleteRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
+> **deleteById**(`id`: `string`, `options?`: `EntityDeleteByIdOptions`): `Promise`\<`void`>
 
-Deletes a single record from an entity by entity ID and record ID
+**`Experimental`**
+
+Deletes a Data Fabric entity and all its records
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to delete
+- `options?`: `EntityDeleteByIdOptions` — Optional [EntityDeleteByIdOptions](../EntityDeleteByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the entity is deleted
+
+#### Example
+
+```
+await entities.deleteById(<id>);
+
+// Folder-scoped: pass the entity's folder key
+await entities.deleteById(<id>, { folderKey: "<folderKey>" });
+```
+
+### deleteRecord()
+
+> **deleteRecord**(`entityRef`: `EntityRef`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
+
+Deletes a single record from an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records. Use this method if you need trigger events to fire for the deleted record.
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to delete
-- `options?`: `EntityDeleteRecordByIdOptions` — Optional [EntityDeleteRecordByIdOptions](../EntityDeleteRecordByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordByIdOptions` — Optional delete options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2066,35 +3462,96 @@ Promise resolving to void on success
 #### Example
 
 ```
-import { Entities } from '@uipath/uipath-typescript/entities';
+// By id
+await entities.deleteRecord({ id: "<entityId>" }, "<recordId>");
 
-const entities = new Entities(sdk);
-
-await entities.deleteRecordById("<entityId>", "<recordId>");
-
-// Folder-scoped: pass the entity's folder key
-await entities.deleteRecordById("<entityId>", "<recordId>", { folderKey: "<folderKey>" });
+// By name
+await entities.deleteRecord({ name: "Customer" }, "<recordId>", { folderKey: "<folderKey>" });
 ```
 
-### deleteRecordsById()
+### ~~deleteRecordById()~~
 
-> **deleteRecordsById**(`id`: `string`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
+> **deleteRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
 
-Deletes data from an entity by entity ID
-
-Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use [deleteRecordById](#deleterecordbyid) if you need trigger events to fire for the deleted record.
+Deletes a single record from an entity by entity ID and record ID
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityId`: `string` — UUID of the entity
+- `recordId`: `string` — UUID of the record to delete
+- `options?`: `EntityDeleteRecordByIdOptions` — Optional delete options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving to void on success
+
+#### Deprecated
+
+Use [deleteRecord](#deleterecord) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records. Use this method if you need trigger events to fire for the deleted record.
+
+#### Example
+
+```
+await entities.deleteRecordById("<entityId>", "<recordId>");
+```
+
+### deleteRecords()
+
+> **deleteRecords**(`entityRef`: `EntityRef`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
+
+Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)
+
+Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use [deleteRecord](#deleterecord) if you need trigger events to fire for the deleted record.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordIds`: `string`[] — Array of record UUIDs to delete
-- `options?`: `EntityDeleteRecordsOptions` — Delete options The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordsOptions` — Delete options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityDeleteResponse`>
 
-Promise resolving to delete response [EntityDeleteResponse](../EntityDeleteResponse/)
+Promise resolving to delete response ([EntityDeleteResponse](../EntityDeleteResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.deleteRecords({ id: "<entityId>" }, ["<recordId-1>", "<recordId-2>"]);
+
+// By name
+await entities.deleteRecords({ name: "Customer" }, ["<recordId-1>", "<recordId-2>"], { folderKey: "<folderKey>" });
+```
+
+### ~~deleteRecordsById()~~
+
+> **deleteRecordsById**(`id`: `string`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
+
+Deletes data from an entity by entity ID
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `recordIds`: `string`[] — Array of record UUIDs to delete
+- `options?`: `EntityDeleteRecordsOptions` — Delete options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityDeleteResponse`>
+
+Promise resolving to delete response ([EntityDeleteResponse](../EntityDeleteResponse/))
+
+#### Deprecated
+
+Use [deleteRecords](#deleterecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use [deleteRecord](#deleterecord) if you need trigger events to fire for the deleted record.
 
 #### Example
 
@@ -2112,16 +3569,16 @@ await entities.deleteRecordsById(<entityId>, [
 
 ### downloadAttachment()
 
-> **downloadAttachment**(`entityId`: `string`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDownloadAttachmentOptions`): `Promise`\<`Blob`>
+> **downloadAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDownloadAttachmentOptions`): `Promise`\<`Blob`>
 
-Downloads an attachment stored in a File-type field of an entity record.
+Downloads an attachment stored in a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
-- `options?`: `EntityDownloadAttachmentOptions` — Optional [EntityDownloadAttachmentOptions](../EntityDownloadAttachmentOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDownloadAttachmentOptions` — Optional download options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2136,11 +3593,6 @@ import { Entities } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
-// First, get records to obtain the record ID
-const records = await entities.getAllRecords("<entityId>");
-// Get the recordId for the record that contains the attachment
-const recordId = records.items[0].Id;
-
 // Get the entityId from getAll()
 const allEntities = await entities.getAll();
 const entityId = allEntities[0].id;
@@ -2149,8 +3601,11 @@ const entityId = allEntities[0].id;
 const records = await entities.getAllRecords(entityId);
 const recordId = records[0].Id;
 
-// Download attachment using service method
-const response = await entities.downloadAttachment(entityId, recordId, 'Documents');
+// Download attachment by id
+const response = await entities.downloadAttachment({ id: entityId }, recordId, 'Documents');
+
+// Or by name
+const byName = await entities.downloadAttachment({ name: 'Customer' }, recordId, 'Documents');
 
 // Or download using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
@@ -2240,7 +3695,7 @@ if (customerEntity) {
 
 Gets entity records by entity ID
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
 
 #### Type Parameters
 
@@ -2249,13 +3704,13 @@ Gets entity records by entity ID
 #### Parameters
 
 - `entityId`: `string` — UUID of the entity
-- `options?`: `T` — Query options The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
-Promise resolving to either an array of entity records NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityRecord](../EntityRecord/)
+Promise resolving to entity records ([EntityRecord](../EntityRecord/)) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.
 
 #### Example
 
@@ -2299,7 +3754,7 @@ Gets entity metadata by entity ID with attached operation methods
 
 `Promise`\<`EntityGetResponse`>
 
-Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
 #### Example
 
@@ -2334,6 +3789,67 @@ const batchResult = await entity.insertRecords([
 ]);
 ```
 
+### getByName()
+
+> **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+
+Gets entity metadata by entity name with attached operation methods.
+
+Sibling of [getById](#getbyid) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides that resolve resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
+
+#### Parameters
+
+- `entityName`: `string` — Name of the entity
+- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityGetResponse`>
+
+Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
+
+#### Example
+
+```
+// Get entity metadata by name
+const entity = await entities.getByName("Customer");
+
+// Folder-scoped: pass the entity's folder key
+const folderEntity = await entities.getByName("Customer", { folderKey: "<folderKey>" });
+
+// Call operations directly on the entity
+const records = await entity.getAllRecords();
+```
+
+### getCloneJob()
+
+> **getCloneJob**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Gets the current status of a clone job started by [EntityServiceModel.clone](#clone); poll until `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done` terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+
+#### Parameters
+
+- `jobId`: `string` — The `jobId` returned when the clone job was started.
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
+
+#### Example
+
+```
+import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const status = await entities.getCloneJob("<jobId>");
+if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
+```
+
 ### getRecordById()
 
 > **getRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByIdOptions`): `Promise`\<`EntityRecord`>
@@ -2346,13 +3862,13 @@ Returns the full record, including the complete content of `MULTILINE_MAX` field
 
 - `entityId`: `string` — UUID of the entity
 - `recordId`: `string` — UUID of the record
-- `options?`: `EntityGetRecordByIdOptions` — Query options The `folderKey` property is **experimental**.
+- `options?`: `EntityGetRecordByIdOptions` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityRecord`>
 
-Promise resolving to a single entity record [EntityRecord](../EntityRecord/)
+Promise resolving to a single entity record ([EntityRecord](../EntityRecord/))
 
 #### Example
 
@@ -2375,17 +3891,89 @@ const record = await entities.getRecordById(<entityId>, recordId, {
 });
 ```
 
-### importRecordsById()
+### getRecordByName()
 
-> **importRecordsById**(`id`: `string`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
+> **getRecordByName**(`entityName`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByNameOptions`): `Promise`\<`EntityRecord`>
 
-Imports records from a CSV file into an entity
+Gets a single entity record by entity name and record ID
+
+Sibling of [getRecordById](#getrecordbyid) that addresses the entity by name. Returns the full record, including the complete content of `MULTILINE_MAX` fields.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityName`: `string` — Name of the entity
+- `recordId`: `string` — UUID of the record
+- `options?`: `EntityGetRecordByNameOptions` — Query options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityRecord`>
+
+Promise resolving to a single entity record ([EntityRecord](../EntityRecord/))
+
+#### Example
+
+```
+// First, get records to obtain the record ID
+const records = await entities.getRecordsByName("Customer");
+const recordId = records.items[0].Id;
+
+// Get the record
+const record = await entities.getRecordByName("Customer", recordId);
+
+// Folder-scoped entity: pass the entity's folder key
+const record = await entities.getRecordByName("Customer", recordId, { folderKey: "<folderKey>" });
+```
+
+### getRecordsByName()
+
+> **getRecordsByName**\<`T`>(`entityName`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Gets entity records by entity name.
+
+Sibling of [getAllRecords](#getallrecords) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides), avoiding a lookup to resolve the ID.
+
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordByName](#getrecordbyname) for the guaranteed full value.
+
+#### Type Parameters
+
+- `T` *extends* `EntityGetRecordsByIdOptions` = `EntityGetRecordsByIdOptions`
+
+#### Parameters
+
+- `entityName`: `string` — Name of the entity
+- `options?`: `T` — Query options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Promise resolving to entity records ([EntityRecord](../EntityRecord/)) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.
+
+#### Example
+
+```
+// Basic usage (non-paginated)
+const records = await entities.getRecordsByName("Customer");
+
+// With pagination and expansion level
+const paginatedResponse = await entities.getRecordsByName("Customer", { pageSize: 50, expansionLevel: 1 });
+
+// Folder-scoped entity: pass the entity's folder key
+const records = await entities.getRecordsByName("Customer", { folderKey: "<folderKey>" });
+```
+
+### importRecords()
+
+> **importRecords**(`entityRef`: `EntityRef`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
+
+Imports records from a CSV file into an entity, identified by ref (`{ id }` or `{ name }`)
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `file`: `EntityFileType` — CSV file to import as a Blob or File or Uint8Array
-- `options?`: `EntityImportRecordsByIdOptions` — Optional [EntityImportRecordsByIdOptions](../EntityImportRecordsByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityImportRecordsByIdOptions` — Optional import options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2396,34 +3984,100 @@ Promise resolving to [EntityImportRecordsResponse](../EntityImportRecordsRespons
 #### Example
 
 ```
-// Browser: upload from file input
 const fileInput = document.getElementById('csv-input') as HTMLInputElement;
-const result = await entities.importRecordsById(<id>, fileInput.files[0]);
-console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
 
-// Folder-scoped entity: pass the entity's folder key
-await entities.importRecordsById(<id>, fileInput.files[0], { folderKey: "<folderKey>" });
+// By id
+const result = await entities.importRecords({ id: "<entityId>" }, fileInput.files[0]);
+
+// By name
+await entities.importRecords({ name: "Customer" }, fileInput.files[0], { folderKey: "<folderKey>" });
 ```
 
-### insertRecordById()
+### ~~importRecordsById()~~
 
-> **insertRecordById**(`id`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
+> **importRecordsById**(`id`: `string`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
 
-Inserts a single record into an entity by entity ID
+Imports records from a CSV file into an entity
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `file`: `EntityFileType` — CSV file to import as a Blob or File or Uint8Array
+- `options?`: `EntityImportRecordsByIdOptions` — Optional import options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityImportRecordsResponse`>
+
+Promise resolving to [EntityImportRecordsResponse](../EntityImportRecordsResponse/) with record counts
+
+#### Deprecated
+
+Use [importRecords](#importrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+#### Example
+
+```
+const fileInput = document.getElementById('csv-input') as HTMLInputElement;
+const result = await entities.importRecordsById(<id>, fileInput.files[0]);
+```
+
+### insertRecord()
+
+> **insertRecord**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
+
+Inserts a single record into an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records. Use this method if you need trigger events to fire for the inserted record.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`> — Record to insert
-- `options?`: `EntityInsertRecordOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityInsertResponse`>
 
-Promise resolving to the inserted record with generated record ID [EntityInsertResponse](../EntityInsertResponse/)
+Promise resolving to the inserted record with generated record ID ([EntityInsertResponse](../EntityInsertResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.insertRecord({ id: "<entityId>" }, { name: "John", age: 30 });
+
+// By name (e.g. solution binding overrides that resolve resources by name)
+const result = await entities.insertRecord({ name: "Customer" }, { name: "John", age: 30 });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.insertRecord({ name: "Customer" }, { name: "John", age: 30 }, { folderKey: "<folderKey>" });
+```
+
+### ~~insertRecordById()~~
+
+> **insertRecordById**(`id`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
+
+Inserts a single record into an entity by entity ID
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `data`: `Record`\<`string`, `any`> — Record to insert
+- `options?`: `EntityInsertRecordOptions` — Insert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityInsertResponse`>
+
+Promise resolving to the inserted record with generated record ID ([EntityInsertResponse](../EntityInsertResponse/))
+
+#### Deprecated
+
+Use [insertRecord](#insertrecord) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records. Use this method if you need trigger events to fire for the inserted record.
 
 #### Example
 
@@ -2442,25 +4096,62 @@ await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
 });
 ```
 
-### insertRecordsById()
+### insertRecords()
 
-> **insertRecordsById**(`id`: `string`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
+> **insertRecords**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
 
-Inserts one or more records into an entity by entity ID
+Inserts one or more records into an entity, identified by ref (`{ id }` or `{ name }`)
 
-Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use [insertRecordById](#insertrecordbyid) if you need trigger events to fire for each inserted record.
+Note: Records inserted using insertRecords will not trigger Data Fabric trigger events. Use [insertRecord](#insertrecord) if you need trigger events to fire for each inserted record.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`>[] — Array of records to insert
-- `options?`: `EntityInsertRecordsOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordsOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityBatchInsertResponse`>
 
-Promise resolving to insert response [EntityBatchInsertResponse](../EntityBatchInsertResponse/)
+Promise resolving to insert response ([EntityBatchInsertResponse](../EntityBatchInsertResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.insertRecords({ id: "<entityId>" }, [{ name: "John", age: 30 }, { name: "Jane", age: 25 }]);
+
+// By name
+const result = await entities.insertRecords({ name: "Customer" }, [{ name: "John", age: 30 }], { failOnFirst: true });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.insertRecords({ name: "Customer" }, [{ name: "John", age: 30 }], { folderKey: "<folderKey>" });
+```
+
+### ~~insertRecordsById()~~
+
+> **insertRecordsById**(`id`: `string`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
+
+Inserts one or more records into an entity by entity ID
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `data`: `Record`\<`string`, `any`>[] — Array of records to insert
+- `options?`: `EntityInsertRecordsOptions` — Insert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityBatchInsertResponse`>
+
+Promise resolving to insert response ([EntityBatchInsertResponse](../EntityBatchInsertResponse/))
+
+#### Deprecated
+
+Use [insertRecords](#insertrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use [insertRecord](#insertrecord) if you need trigger events to fire for each inserted record.
 
 #### Example
 
@@ -2487,13 +4178,13 @@ await entities.insertRecordsById(<entityId>, [
 ], { folderKey: "<folderKey>" });
 ```
 
-### queryRecordsById()
+### queryRecords()
 
-> **queryRecordsById**\<`T`>(`id`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+> **queryRecords**\<`T`>(`entityRef`: `EntityRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
-Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
+Queries entity records with filters, sorting, aggregates, and SDK-managed pagination, identified by ref (`{ id }` or `{ name }`)
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
 
 Cross-entity joins are supported via the `joins` option — see [EntityJoin](../EntityJoin/) for constraints and the result-row key format.
 
@@ -2503,8 +4194,8 @@ Cross-entity joins are supported via the `joins` option — see [EntityJoin](../
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
-- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2515,7 +4206,59 @@ Promise resolving to [NonPaginatedResponse](../NonPaginatedResponse/) without pa
 #### Example
 
 ```
-import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+// By id, non-paginated query with a filter
+const result = await entities.queryRecords({ id: "<entityId>" }, {
+  filterGroup: {
+    logicalOperator: LogicalOperator.And,
+    queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
+  },
+  sortOptions: [{ fieldName: "createdTime", isDescending: true }],
+});
+
+// By name, with pagination
+const page1 = await entities.queryRecords({ name: "Customer" }, { pageSize: 25 });
+if (page1.hasNextPage) {
+  const page2 = await entities.queryRecords({ name: "Customer" }, { cursor: page1.nextCursor });
+}
+```
+
+### ~~queryRecordsById()~~
+
+> **queryRecordsById**\<`T`>(`id`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
+
+#### Type Parameters
+
+- `T` *extends* `EntityQueryRecordsOptions` = `EntityQueryRecordsOptions`
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+
+Promise resolving to [NonPaginatedResponse](../NonPaginatedResponse/) without pagination options, or [PaginatedResponse](../PaginatedResponse/) when `pageSize`, `cursor`, or `jumpToPage` are provided
+
+#### Deprecated
+
+Use [queryRecords](#queryrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
+
+Cross-entity joins are supported via the `joins` option — see [EntityJoin](../EntityJoin/) for constraints and the result-row key format.
+
+#### Example
+
+```
+import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
@@ -2542,6 +4285,18 @@ await entities.queryRecordsById(<id>, {
   aggregates: [
     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
   ],
+});
+
+// Post-aggregation filter (HAVING): only statuses with more than 5 records
+await entities.queryRecordsById(<id>, {
+  selectedFields: ["status"],
+  groupBy: ["status"],
+  aggregates: [
+    { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+  ],
+  havingFilter: {
+    aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+  },
 });
 
 // Folder-scoped entity: pass the entity's folder key
@@ -2581,26 +4336,174 @@ await entities.queryRecordsById(<id>, {
 });
 ```
 
-### updateRecordById()
+### updateById()
+
+> **updateById**(`id`: `string`, `options?`: `EntityUpdateByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Updates an existing Data Fabric entity — schema and/or metadata.
+
+Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
+
+For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, and `updateExternalConnection`.
+
+- **Identifying things.** A delta that targets an existing source identifies it by **both** `sourceObjectName` and `sourceConnectionId` (a connector `connectionId`, or the `entityId` for a native source), because an entity may have two sources with the same object name on different connections.
+- **Joins.** A Federated entity with N sources has exactly N-1 joins, all starting from one source, the *primary source*. The primary source is not stored: it is the source on the left of every join. A join cannot be removed on its own, since every other source must stay joined. To change the primary source, pass the complete new join set to `replaceSourceJoins`. To add a source, pass it in `addExternalSources` together with its join in `addSourceJoins`. `updateSourceJoin` only changes the join fields of an existing join.
+- **Fields.** `addExternalFields` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field. A source must keep at least one field, and a field name must be unique across all sources. Mapping settings (direction, searchable, sortable) cannot be changed after a source is added.
+- **Sources.** A Federated entity always has at least one source: to replace its only source, remove it and add the new one in the same call. The saved result is validated by the backend (join graph, duplicate sources, duplicate field names, empty sources).
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to update
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, `updateExternalConnection`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the update is complete
+
+#### Example
+
+```
+import { Entities, EntityFieldDataType, DataDirectionType, JoinType } from '@uipath/uipath-typescript/entities';
+
+// Schema-only: add a field and remove another
+await entities.updateById(<id>, {
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+  removeFields: [{ name: "oldField" }],
+});
+
+// Metadata-only: rename the entity
+await entities.updateById(<id>, {
+  displayName: "My Updated Entity",
+  description: "Updated description",
+});
+
+// Combined: update a field and rename at the same time
+await entities.updateById(<id>, {
+  updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
+  displayName: "Price Catalog",
+});
+
+// Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+await entities.updateById(<id>, {
+  addFields: [
+    { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+    { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  ],
+  updateFields: [
+    { id: <fieldId>, lengthLimit: 1000 },
+  ],
+});
+
+// Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
+await entities.updateById(<id>, {
+  folderKey: "<folderKey>",
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+});
+
+// Federated: add a source joined to the existing graph. Every source is identified by
+// (sourceObjectName, sourceConnectionId) — a connector connectionId, or a native entityId.
+await entities.updateById(<id>, {
+  addExternalSources: [{
+    externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
+    externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
+    fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
+  }],
+  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+});
+
+// Federated: add a field to an existing source (maps a field that already exists on it)
+await entities.updateById(<id>, {
+  addExternalFields: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+});
+
+// Federated: change the join fields of an existing join (its sources and direction stay the same)
+await entities.updateById(<id>, {
+  updateSourceJoin: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceConnectionId: "<relatedConnectionId>", sourceJoinField: "<externalFieldName>" }],
+});
+
+// Federated: change the primary source. Pass the complete new join set, rooted at the new
+// primary source (here "<newPrimaryObject>"); every other source is the related side of one join.
+await entities.updateById(<id>, {
+  replaceSourceJoins: [
+    { sourceObjectName: "<newPrimaryObject>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<otherObject>", relatedSourceObjectConnectionId: "<otherConnectionId>", relatedSourceJoinField: "<otherExternalFieldName>", joinType: JoinType.LeftJoin },
+  ],
+});
+
+// Federated: swap a connector source's connection id
+await entities.updateById(<id>, {
+  updateExternalConnection: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<currentConnectionId>", newConnectionId: "<newConnectionId>" }],
+});
+
+// Federated: remove a non-primary source (its join is removed with it)
+await entities.updateById(<id>, { removeExternalSources: [{ sourceObjectName: "<relatedObjectName>", sourceConnectionId: "<relatedConnectionId>" }] });
+```
+
+### updateRecord()
+
+> **updateRecord**(`entityRef`: `EntityRef`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
+
+Updates a single record in an entity, identified by ref (`{ id }` or `{ name }`)
+
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
+Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `recordId`: `string` — UUID of the record to update
+- `data`: `Record`\<`string`, `any`> — Key-value pairs of fields to update
+- `options?`: `EntityUpdateRecordOptions` — Update options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpdateRecordResponse`>
+
+Promise resolving to the updated record ([EntityUpdateRecordResponse](../EntityUpdateRecordResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.updateRecord({ id: "<entityId>" }, "<recordId>", { name: "John Updated", age: 31 });
+
+// By name
+const result = await entities.updateRecord({ name: "Customer" }, "<recordId>", { name: "John Updated" });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.updateRecord({ name: "Customer" }, "<recordId>", { name: "John Updated" }, { folderKey: "<folderKey>" });
+```
+
+### ~~updateRecordById()~~
 
 > **updateRecordById**(`entityId`: `string`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
 
 Updates a single record in an entity by entity ID
 
-Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
 
 #### Parameters
 
 - `entityId`: `string` — UUID of the entity
 - `recordId`: `string` — UUID of the record to update
 - `data`: `Record`\<`string`, `any`> — Key-value pairs of fields to update
-- `options?`: `EntityUpdateRecordOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateRecordResponse`>
 
-Promise resolving to the updated record [EntityUpdateRecordResponse](../EntityUpdateRecordResponse/)
+Promise resolving to the updated record ([EntityUpdateRecordResponse](../EntityUpdateRecordResponse/))
+
+#### Deprecated
+
+Use [updateRecord](#updaterecord) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
 
 #### Example
 
@@ -2619,25 +4522,66 @@ await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated" }
 });
 ```
 
-### updateRecordsById()
+### updateRecords()
 
-> **updateRecordsById**(`id`: `string`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
+> **updateRecords**(`entityRef`: `EntityRef`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
 
-Updates data in an entity by entity ID
+Updates data in an entity, identified by ref (`{ id }` or `{ name }`)
 
-Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use [updateRecordById](#updaterecordbyid) if you need trigger events to fire for each updated record.
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
+Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use [updateRecord](#updaterecord) if you need trigger events to fire for each updated record.
 
 #### Parameters
 
-- `id`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `EntityRecord`[] — Array of records to update. Each record MUST contain the record id.
-- `options?`: `EntityUpdateRecordsOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordsOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateResponse`>
 
-Promise resolving to update response [EntityUpdateResponse](../EntityUpdateResponse/)
+Promise resolving to update response ([EntityUpdateResponse](../EntityUpdateResponse/))
+
+#### Example
+
+```
+// By id
+const result = await entities.updateRecords({ id: "<entityId>" }, [{ Id: "123", name: "John Updated" }]);
+
+// By name
+const result = await entities.updateRecords({ name: "Customer" }, [{ Id: "123", name: "John Updated" }], { failOnFirst: true });
+
+// Folder-scoped entity: pass the entity's folder key
+await entities.updateRecords({ name: "Customer" }, [{ Id: "123", name: "John Updated" }], { folderKey: "<folderKey>" });
+```
+
+### ~~updateRecordsById()~~
+
+> **updateRecordsById**(`id`: `string`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
+
+Updates data in an entity by entity ID
+
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity
+- `data`: `EntityRecord`[] — Array of records to update. Each record MUST contain the record id.
+- `options?`: `EntityUpdateRecordsOptions` — Update options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpdateResponse`>
+
+Promise resolving to update response ([EntityUpdateResponse](../EntityUpdateResponse/))
+
+#### Deprecated
+
+Use [updateRecords](#updaterecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
+
+Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use [updateRecord](#updaterecord) if you need trigger events to fire for each updated record.
 
 #### Example
 
@@ -2665,19 +4609,19 @@ await entities.updateRecordsById(<entityId>, [
 
 ### uploadAttachment()
 
-> **uploadAttachment**(`entityId`: `string`, `recordId`: `string`, `fieldName`: `string`, `file`: `EntityFileType`, `options?`: `EntityUploadAttachmentOptions`): `Promise`\<`EntityUploadAttachmentResponse`>
+> **uploadAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `file`: `EntityFileType`, `options?`: `EntityUploadAttachmentOptions`): `Promise`\<`EntityUploadAttachmentResponse`>
 
 Uploads an attachment to a File-type field of an entity record.
 
-Uses multipart/form-data to upload the file content to the specified field.
+Uses multipart/form-data to upload the file content to the specified field. Identified by ref (`{ id }` or `{ name }`).
 
 #### Parameters
 
-- `entityId`: `string` — UUID of the entity
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to upload the attachment to
 - `fieldName`: `string` — Name of the File-type field
 - `file`: `EntityFileType` — File to upload (Blob, File, or Uint8Array)
-- `options?`: `EntityUploadAttachmentOptions` — Optional [EntityUploadAttachmentOptions](../EntityUploadAttachmentOptions/) (e.g. `expansionLevel`, `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityUploadAttachmentOptions` — Optional upload options (e.g. `expansionLevel`, `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2703,16 +4647,68 @@ const recordId = records[0].Id;
 // Browser: Upload a file from an input element
 const fileInput = document.getElementById('file-input') as HTMLInputElement;
 const file = fileInput.files[0];
-const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
 
-// Folder-scoped entity: pass the entity's folder key
-await entities.uploadAttachment(entityId, recordId, 'Documents', file, { folderKey: "<folderKey>" });
+// By id
+const response = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', file);
+
+// By name, folder-scoped
+await entities.uploadAttachment({ name: 'Customer' }, recordId, 'Documents', file, { folderKey: "<folderKey>" });
 
 // Node.js: Upload a file from disk
 const fileBuffer = fs.readFileSync('document.pdf');
 const blob = new Blob([fileBuffer], { type: 'application/pdf' });
-const response = await entities.uploadAttachment(entityId, recordId, 'Documents', blob);
+const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', blob);
 ```
+
+### upsert()
+
+> **upsert**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpsertOptions`): `Promise`\<`EntityUpsertResponse`>
+
+**`Experimental`**
+
+Upserts a record into an entity, and to its related child records. Two payload types:
+
+- One record: Only case and templated entities have one; a native entity rejects this type.
+- A tree of records: child records nested under a root entity, written as one transaction. A nested record with an `Id` field updates that row, one without it creates a row.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `data`: `Record`\<`string`, `any`> — Record fields, with child records nested under their entity name
+- `options?`: `EntityUpsertOptions` — Upsert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpsertResponse`>
+
+Promise resolving to the written root record's `Id`, plus the per-record results of a tree write ([EntityUpsertResponse](../EntityUpsertResponse/))
+
+#### Examples
+
+```
+// Single record, matched on the entity's business key
+const result = await entities.upsert({ name: "Case" }, {
+  caseId: "CASE-001",
+  caseStatus: "Open"
+});
+```
+
+```
+// A report with two expenses, one of which has a line item — applied as one transaction
+const result = await entities.upsert({ name: "Report" }, {
+  assignee: "assignee1",
+  totalReportAmount: 25,
+  Expense: [
+    { vendor: "Vendor 1", totalExpense: 20, ExpenseLineItem: [{ expenseAmount: 5 }] },
+    { vendor: "Vendor 2", totalExpense: 5 }
+  ]
+}, { folderKey: "<folderKey>" });
+
+console.log(result.transaction!.totalRecordsAffected); // 4
+console.log(result.transaction!.members[0].id);        // generated expense record ID
+```
+
+Writing across related entities requires the multi-entity write feature to be enabled for your tenant.
 
 Service for managing UiPath Data Fabric Choice Sets
 
@@ -2728,6 +4724,70 @@ const allChoiceSets = await choicesets.getAll();
 ```
 
 ## Methods
+
+### create()
+
+> **create**(`name`: `string`, `options?`: `ChoiceSetCreateOptions`): `Promise`\<`string`>
+
+**`Experimental`**
+
+Creates a new Data Fabric choice set
+
+#### Parameters
+
+- `name`: `string` — Choice set name. Must start with a letter, may contain only letters, numbers, and underscores, length 3–100 characters (e.g., `"expenseTypes"`).
+- `options?`: `ChoiceSetCreateOptions` — Optional choice-set-level settings ([ChoiceSetCreateOptions](../ChoiceSetCreateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to the UUID of the created choice set
+
+#### Example
+
+```
+// Minimal create
+const expenseTypesId = await choicesets.create("expense_types");
+
+// With display name and description
+const priorityLevelsId = await choicesets.create("priority_levels", {
+  displayName: "Priority Levels",
+  description: "Ticket priority categories",
+});
+```
+
+### deleteById()
+
+> **deleteById**(`choiceSetId`: `string`, `options?`: `ChoiceSetDeleteByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Deletes a Data Fabric choice set and all its values.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the choice set to delete
+- `options?`: `ChoiceSetDeleteByIdOptions` — Optional [ChoiceSetDeleteByIdOptions](../ChoiceSetDeleteByIdOptions/) — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the choice set is deleted
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+
+await choicesets.deleteById(expenseTypes.id);
+
+// Folder-scoped choice set
+await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
+```
 
 ### getAll()
 
@@ -2819,6 +4879,40 @@ if (page1.hasNextPage) {
 
 // Folder-scoped choice set
 const folderValues = await choicesets.getById(choiceSetId, { folderKey: "<folderKey>" });
+```
+
+### updateById()
+
+> **updateById**(`choiceSetId`: `string`, `options`: `ChoiceSetUpdateOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Updates an existing choice set's metadata (display name and/or description).
+
+**At least one of `displayName` or `description` must be provided** — the call throws `ValidationError` if both are omitted.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the choice set to update
+- `options`: `ChoiceSetUpdateOptions` — Metadata fields to change ([ChoiceSetUpdateOptions](../ChoiceSetUpdateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the update is complete
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+
+await choicesets.updateById(expenseTypes.id, {
+  displayName: "Expense Categories",
+  description: "Updated description",
+});
 ```
 
 Service for managing UiPath Maestro Processes
@@ -4120,6 +6214,34 @@ const caseInstances = new CaseInstances(sdk);
 const allInstances = await caseInstances.getAll();
 ```
 
+### Case App routes (experimental)
+
+Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder permissions. Use them to build apps for case workers who hold Case persona grants. Grant users roles inside Maestro Case Instances.
+
+**Requirements**
+
+- `folderKey` on `getAll`, since Case App routes list one folder at a time.
+
+**Enable** by creating the service with `{ useCaseAppRoutes: true }`:
+
+```
+import { CaseInstances } from '@uipath/uipath-typescript/cases';
+
+const caseApp = new CaseInstances(sdk, { useCaseAppRoutes: true });
+const { items } = await caseApp.getAll({ folderKey: '<folderKey>' });
+
+// Bound methods on returned instances keep using Case App routes
+await items[0].close({ comment: 'Resolved' });
+```
+
+**Method behavior with `useCaseAppRoutes: true`**
+
+| Methods                                                                        | Behavior                                             |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `getAll`, `getStages`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes                             |
+| `getById`, `pause`, `resume`, `getVariables`                                   | Throw a `ValidationError` — no Case App route exists |
+| Methods ending in `ForCaseApp`                                                 | Always call the Case App routes, whatever the option |
+
 Note
 
 Methods that rely on the Insights Real-Time Monitoring service (`getSlaSummary`, `getStagesSlaSummary`) may have up to ~1 minute latency before reflecting the latest updates. See [Real-Time Monitoring Overview](https://docs.uipath.com/insights/automation-cloud/latest/user-guide/real-time-monitoring-overview) for details.
@@ -4142,7 +6264,7 @@ Close/Cancel a case instance
 
 `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
-Promise resolving to operation result with instance data
+Promise resolving to operation result with instance data. With Case App routes, a case that has already completed is rejected, and the result reports `isCompleted`.
 
 #### Example
 
@@ -4227,11 +6349,45 @@ const page5 = await caseInstances.getActionTasks(
 );
 ```
 
+### getAdhocTasksForCaseApp()
+
+> **getAdhocTasksForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppAdhocTaskStage`[]>
+
+**`Experimental`**
+
+Gets the ad-hoc tasks the caller can trigger on a running case instance, grouped by stage.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Only stages the caller holds `Cases.RunAdhocTasks` on are returned, so every task listed can be passed to `triggerAdhocTaskForCaseApp`. A caller whose grants cover no ad-hoc task gets an empty array.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppAdhocTaskStage`[]>
+
+Promise resolving to an array of [CaseAppAdhocTaskStage](../CaseAppAdhocTaskStage/)
+
+#### Example
+
+```
+const stages = await caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>');
+stages.forEach(stage => stage.tasks.forEach(task => console.log(stage.stageLabel, task.taskName)));
+```
+
 ### getAll()
 
 > **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`CaseInstanceGetResponse`> : `NonPaginatedResponse`\<`CaseInstanceGetResponse`>>
 
 Get all case instances with optional filtering and pagination
+
+With Case App routes, `folderKey` is required and instances the caller's `Cases.View` grants don't cover are dropped after each page is fetched, so a page can hold fewer items than `pageSize` — or none — while `hasNextPage` is still `true`.
 
 #### Type Parameters
 
@@ -4250,6 +6406,8 @@ Promise resolving to either an array of case instances NonPaginatedResponse or a
 #### Example
 
 ```
+import { CaseInstanceSortBy, CaseInstanceSortOrder, InstanceStatus } from '@uipath/uipath-typescript/cases';
+
 // Get all case instances (non-paginated)
 const instances = await caseInstances.getAll();
 
@@ -4263,6 +6421,14 @@ for (const instance of instances.items) {
 // With filtering
 const filteredInstances = await caseInstances.getAll({
   processKey: 'MyCaseProcess'
+});
+
+// Filter by status and start time, newest first
+const running = await caseInstances.getAll({
+  statuses: [InstanceStatus.RUNNING, InstanceStatus.FAULTED],
+  startedTimeStart: new Date('2026-01-01'),
+  sortBy: CaseInstanceSortBy.StartedTime,
+  order: CaseInstanceSortOrder.Desc
 });
 
 // First page with pagination
@@ -4279,6 +6445,8 @@ if (page1.hasNextPage) {
 > **getById**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseInstanceGetResponse`>
 
 Get a specific case instance by ID
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 
@@ -4304,16 +6472,50 @@ const instance = await caseInstances.getById(
 console.log(`Status: ${instance.latestRunStatus}`);
 ```
 
+### getCaseJsonForCaseApp()
+
+> **getCaseJsonForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`Record`\<`string`, `unknown`>>
+
+**`Experimental`**
+
+Gets the case plan of a case instance — the JSON document the case was designed with.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Returned exactly as stored in the package, so its shape follows the case designer's schema. Requires `Cases.ViewSummary` on the case.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`Record`\<`string`, `unknown`>>
+
+Promise resolving to the case plan as a `Record<string, unknown>`
+
+#### Example
+
+```
+const casePlan = await caseInstances.getCaseJsonForCaseApp('<instanceId>', '<folderKey>');
+```
+
 ### getExecutionHistory()
 
-> **getExecutionHistory**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseInstanceExecutionHistoryResponse`>
+> **getExecutionHistory**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceGetExecutionHistoryOptions`): `Promise`\<`CaseInstanceExecutionHistoryResponse`>
 
 Get execution history for a case instance
+
+With Case App routes the response also carries the case id, the case summary and the details sections configured on the case app.
 
 #### Parameters
 
 - `instanceId`: `string` — The ID of the case instance
 - `folderKey`: `string` — Required folder key
+- `options?`: `CaseInstanceGetExecutionHistoryOptions` — Optional element-type filter
 
 #### Returns
 
@@ -4324,6 +6526,8 @@ Promise resolving to instance execution history [CaseInstanceExecutionHistoryRes
 #### Example
 
 ```
+import { CaseInstanceElementType } from '@uipath/uipath-typescript/cases';
+
 // Get execution history for a case instance
 const history = await caseInstances.getExecutionHistory(
   <instanceId>,
@@ -4336,6 +6540,43 @@ if (history.elementExecutions) {
     console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
   }
 }
+
+// Only human-in-the-loop and agent elements
+const tasks = await caseInstances.getExecutionHistory(<instanceId>, <folderKey>, {
+  elementTypes: [CaseInstanceElementType.Hitl, CaseInstanceElementType.Agent]
+});
+```
+
+### getIncidentsForCaseApp()
+
+> **getIncidentsForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppIncidentGetResponse`[]>
+
+**`Experimental`**
+
+Gets the incidents raised on a case instance, across all of its runs.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.ViewSummary` on the case.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppIncidentGetResponse`[]>
+
+Promise resolving to an array of [CaseAppIncidentGetResponse](../CaseAppIncidentGetResponse/)
+
+#### Example
+
+```
+const incidents = await caseInstances.getIncidentsForCaseApp('<instanceId>', '<folderKey>');
+incidents.forEach(incident => console.log(incident.errorCode, incident.errorMessage));
 ```
 
 ### getSlaSummary()
@@ -4388,6 +6629,38 @@ if (page1.hasNextPage) {
 const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
 ```
 
+### getSlaSummaryForCaseApp()
+
+> **getSlaSummaryForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppGetSlaSummaryResponse`>
+
+**`Experimental`**
+
+Gets the case-level SLA summary of a case instance: its due time, SLA status and escalation state.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.ViewSummary` on the case; a grant on a single stage is not enough.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppGetSlaSummaryResponse`>
+
+Promise resolving to [CaseAppGetSlaSummaryResponse](../CaseAppGetSlaSummaryResponse/)
+
+#### Example
+
+```
+const summary = await caseInstances.getSlaSummaryForCaseApp('<instanceId>', '<folderKey>');
+console.log(summary.slaStatus, summary.slaDueTime);
+```
+
 ### getStages()
 
 > **getStages**(`caseInstanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseGetStageResponse`[]>
@@ -4403,7 +6676,7 @@ Get stages and its associated tasks information for a case instance
 
 `Promise`\<`CaseGetStageResponse`[]>
 
-Promise resolving to an array of case stages with their tasks and status
+Promise resolving to an array of [CaseGetStageResponse](../CaseGetStageResponse/) with each stage's tasks, status, default `sla` and all configured `slaRules`
 
 #### Example
 
@@ -4418,6 +6691,11 @@ const stages = await caseInstances.getStages(
 for (const stage of stages) {
   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
 
+  // Default SLA, e.g. "30 min"
+  if (stage.sla) {
+    console.log(`  SLA: ${stage.sla.length} ${stage.sla.duration}`);
+  }
+
   // Check tasks in the stage
   for (const taskGroup of stage.tasks) {
     for (const task of taskGroup) {
@@ -4425,6 +6703,39 @@ for (const stage of stages) {
     }
   }
 }
+```
+
+### getStagesForCaseApp()
+
+> **getStagesForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppGetStagesResponse`>
+
+**`Experimental`**
+
+Gets each stage of a case instance with its latest status and runtime SLA.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.View`.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppGetStagesResponse`>
+
+Promise resolving to [CaseAppGetStagesResponse](../CaseAppGetStagesResponse/)
+
+#### Example
+
+```
+// First, get case instances with caseInstances.getAll({ folderKey: '<folderKey>' })
+const { stages } = await caseInstances.getStagesForCaseApp('<instanceId>', '<folderKey>');
+stages.forEach(stage => console.log(stage.name, stage.latestStatus, stage.slaStatus));
 ```
 
 ### getStagesSlaSummary()
@@ -4467,11 +6778,63 @@ const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
 const stagesSla = await instance.getStagesSlaSummary();
 ```
 
+### getVariables()
+
+> **getVariables**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceGetVariablesOptions`): `Promise`\<`CaseInstanceGetVariablesResponse`>
+
+Get global variables for a case instance
+
+Returns the case instance's elements with their inputs/outputs and the global variables enriched with metadata (name, type, source element) parsed from the case's BPMN definition.
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
+#### Parameters
+
+- `instanceId`: `string` — The ID of the case instance to get variables for
+- `folderKey`: `string` — The folder key for authorization
+- `options?`: `CaseInstanceGetVariablesOptions` — Optional options including parentElementId to filter by parent element
+
+#### Returns
+
+`Promise`\<`CaseInstanceGetVariablesResponse`>
+
+Promise resolving to [CaseInstanceGetVariablesResponse](../CaseInstanceGetVariablesResponse/) with elements and enriched global variables
+
+#### Example
+
+```
+// Get all variables for a case instance
+const variables = await caseInstances.getVariables(
+  '<instanceId>',
+  '<folderKey>'
+);
+
+// Iterate through global variables with metadata
+variables.globalVariables.forEach(variable => {
+  console.log(`Variable: ${variable.name} (${variable.id})`);
+  console.log(`  Type: ${variable.type}`);
+  console.log(`  Value: ${variable.value}`);
+});
+
+// Get variables scoped to a specific parent element (e.g. a stage)
+const stageVariables = await caseInstances.getVariables(
+  '<instanceId>',
+  '<folderKey>',
+  { parentElementId: '<parentElementId>' }
+);
+
+// Or using the bound method on a retrieved instance
+const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+const instanceVariables = await instance.getVariables();
+```
+
 ### pause()
 
 > **pause**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceOperationOptions`): `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Pause a case instance
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 
@@ -4540,6 +6903,8 @@ const result = await instance.reopen({ stageId: stages[0].id });
 
 Resume a case instance
 
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
 #### Parameters
 
 - `instanceId`: `string` — The ID of the instance to resume
@@ -4551,6 +6916,43 @@ Resume a case instance
 `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Promise resolving to operation result with instance data
+
+### selectStageForCaseApp()
+
+> **selectStageForCaseApp**(`instanceId`: `string`, `folderKey`: `string`, `stageName`: `string`, `options?`: `CaseAppSelectStageOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Selects the next stage of a running case instance that is waiting for a user to choose one.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+`stageName` is matched case-sensitively against the case plan's stage labels; an unknown name, or a stage that is not user-selectable, is rejected as not found. Requires `Cases.SelectStage` on the case. Resolves once the selection is sent, not once the case has transitioned.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+- `stageName`: `string` — Label of the stage to select
+- `options?`: `CaseAppSelectStageOptions` — Which waiting stage receives the selection, when several are waiting
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the selection is accepted
+
+#### Examples
+
+```
+await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review');
+```
+
+```
+await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review', { waitingStageId: '<stageId>' });
+```
 
 ### sendMessage()
 
@@ -4602,6 +7004,46 @@ await instance.sendMessage(
   CaseInstanceMessageName.UserAdhocTrigger,
   { itemData: { taskNames: ['Approve Invoice'] } }
 );
+```
+
+### triggerAdhocTaskForCaseApp()
+
+> **triggerAdhocTaskForCaseApp**(`instanceId`: `string`, `folderKey`: `string`, `taskName`: `string`, `options?`: `CaseAppTriggerAdhocTaskOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Triggers one ad-hoc (manually-triggered) task on a running case instance.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+`taskName` is matched case-sensitively against the case plan; an unknown or non-ad-hoc name is rejected as not found. Requires `Cases.RunAdhocTasks` on the stage that owns the task. Resolves once the trigger is accepted, not once the task has run.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+- `taskName`: `string` — Case plan name of the task, as returned by `getAdhocTasksForCaseApp`
+- `options?`: `CaseAppTriggerAdhocTaskOptions` — Optional input handed to the task
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the trigger is accepted
+
+#### Examples
+
+```
+// First, list triggerable tasks with caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>')
+await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents');
+```
+
+```
+await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents', {
+  taskInput: { reason: 'Missing proof of address' },
+});
 ```
 
 Service for managing UiPath Conversational Agents — AI-powered chat interfaces that enable natural language interactions with UiPath automation. Discover agents, create conversations, and stream real-time responses over WebSocket. [UiPath Conversational Agents Guide](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/conversational-agents)
@@ -4691,6 +7133,73 @@ conversation.endSession();
 const exchanges = await conversation.exchanges.getAll();
 ```
 
+## Client-side tools
+
+Agents can define tools that execute locally in the client rather than on the server. When starting an exchange, pass `clientSideTools` to declare which tools this client supports. The names must match tools defined in the agent's design-time configuration. Only the declared subset is routed to the client — omitting a tool means the server handles it (or skips it). This lets each client advertise only the tools it can run.
+
+When the agent invokes a client-side tool, the SDK fires `onExecutingToolCall` with the final input. The client executes the tool locally and returns the result via `sendToolCallEnd`.
+
+```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
+const conversationalAgent = new ConversationalAgent(sdk);
+const agents = await conversationalAgent.getAll();
+const conversation = await agents[0].conversations.create({ label: 'Client Tools Demo' });
+const session = conversation.startSession();
+
+// 1. Listen for tool calls and handle client-side tools
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    message.onToolCallStart((toolCall) => {
+      const { isClientSideTool, toolName } = toolCall.startEvent;
+      if (!isClientSideTool) return;
+
+      // 2. Execute when the server signals the tool is ready
+      toolCall.onExecutingToolCall(async (event) => {
+        const result = await runClientTool(toolName, event.input);
+        toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
+      });
+    });
+  });
+});
+
+session.onSessionStarted(() => {
+  // 3. Declare the subset of client-side tools this client supports
+  //    The agent may define more tools, but only these will be routed here
+  const exchange = session.startExchange({
+    clientSideTools: [
+      { name: 'get_user_location' },
+      { name: 'get_clipboard_contents' },
+    ],
+  });
+
+  exchange.sendMessageWithContentPart({ data: 'What is the weather near me?' });
+});
+```
+
+## App-scoped authentication (anonymous, sign-in-free chat)
+
+Conversational Agents can be driven with an **app-scoped token** — one issued to an External App via the client-credentials grant, which carries no end-user identity. This lets an application offer chat without requiring each of its users to sign in to UiPath. For more information on creating External Apps, see the official UiPath documentation on [managing external OAuth applications](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications); for details on how to request client-credentials tokens, see the official UiPath documentation on [the OAuth bearer token types](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) issued to an External App.
+
+To use it, pass an `externalUserId` — your application's own identifier for the end user — when constructing the service:
+
+```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
+const conversationalAgent = new ConversationalAgent(sdk, {
+  externalUserId: 'app-user-42'
+});
+```
+
+The SDK forwards this identifier on every HTTP request and real-time WebSocket session. Each distinct `externalUserId` — scoped to the client ID of the External App the token was issued for — gets its own conversation history and user settings, and the same value always maps back to the same user.
+
+### Limitations
+
+- **App-scoped tokens only.** `externalUserId` takes effect only when the SDK is authenticated with an app-scoped External App token. With a standard UiPath user token the server ignores it and uses the token's own user identity — so omit it in that case.
+- **Required with an app-scoped token.** When the token is app-scoped, `externalUserId` is mandatory; requests without it are rejected with a `401`. It is set once at construction and applies to all calls made through that service instance (including `conversations`, `exchanges`, `messages`, `user`, and WebSocket sessions).
+- **Value constraints.** May contain only letters, digits, dot (`.`), underscore (`_`), and hyphen (`-`), and must be at most 255 characters. Other characters are rejected with a `400`.
+- **Identity scope.** The derived identity is scoped per application: the same `externalUserId` under a different app is a different user.
+
 ## Properties
 
 | Property        | Modifier   | Type                       | Description                                                                                                                                 |
@@ -4758,6 +7267,32 @@ const conversation = await agent.conversations.create({ label: 'My Chat' });
 
 ```
 const agents = await conversationalAgent.getAll(folderId);
+```
+
+### getAvailableConnections()
+
+> **getAvailableConnections**(`agentId`: `number`, `folderId`: `number`): `Promise`\<`AvailableConnectionsResponse`>
+
+Gets available connections for each configurable connector binding of an agent. Only returns bindings that are "configurable by users" (not admin-fixed).
+
+#### Parameters
+
+- `agentId`: `number` — ID of the agent release
+- `folderId`: `number` — ID of the folder containing the agent
+
+#### Returns
+
+`Promise`\<`AvailableConnectionsResponse`>
+
+Promise resolving to an array of connector items with their available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
+
+#### Example
+
+```
+const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+for (const item of connections) {
+  console.log(`${item.connectorName}: ${item.connections.length} available`);
+}
 ```
 
 ### getById()
@@ -6101,6 +8636,31 @@ Retrieves an exchange by ID
 `undefined` | `ExchangeStream`
 
 The exchange stream, or undefined if not found
+
+### onConversationEnd()
+
+> **onConversationEnd**(`cb`: (`event`: `ConversationEndEvent`) => `void`): () => `void`
+
+Registers a handler for the end of the conversation
+
+Fired when the service permanently ends the conversation, for example when the agent's process finishes. After this the conversation accepts no new input, so disable sending and show a message based on the end reason.
+
+#### Parameters
+
+- `cb`: (`event`: `ConversationEndEvent`) => `void` — Callback receiving the [ConversationEndEvent](../ConversationEndEvent/) with the end reason
+
+#### Returns
+
+Cleanup function to remove the handler
+
+#### Example
+
+```
+session.onConversationEnd((event) => {
+  console.log(`Conversation ended: ${event.reason}`);
+  disableChatInput();
+});
+```
 
 ### onErrorEnd()
 
@@ -7485,8 +10045,8 @@ message.onToolCallStart((toolCall) => {
   if (!isClientSideTool) return;
 
   toolCall.onExecutingToolCall(async (event) => {
-    const result = await runLocalProcess(toolName, event.input);
-    toolCall.sendToolCallEnd({ output: result });
+    const result = await runClientTool(toolName, event.input);
+    toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
   });
 });
 ```
@@ -7533,6 +10093,29 @@ Cleanup function to remove the handler
 ```
 toolCall.onErrorStart((error) => {
   console.error(`Tool call error: ${error.message}`);
+});
+```
+
+### onExecutingToolCall()
+
+> **onExecutingToolCall**(`cb`: (`event`: `ExecutingToolCallEvent`) => `void`): () => `void`
+
+Registers a handler for executingToolCall events. Fired when the tool is about to be executed. For client-side tools, the client should begin executing its handler upon receiving this event and return the result via `sendToolCallEnd`.
+
+#### Parameters
+
+- `cb`: (`event`: `ExecutingToolCallEvent`) => `void` — Callback receiving the [ExecutingToolCallEvent](../ExecutingToolCallEvent/) with the final input
+
+#### Returns
+
+Cleanup function to remove the handler
+
+#### Example
+
+```
+toolCall.onExecutingToolCall(async (event) => {
+  const result = await runClientTool(toolCall.startEvent.toolName, event.input);
+  toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
 });
 ```
 
