@@ -9,6 +9,7 @@ import {
 import { registerResource } from '../../utils/cleanup';
 import { createTestFileContent } from '../../utils/helpers';
 import { isNotFoundError } from '../../../../src/core/errors';
+import { resource } from '../../../../src/resources';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -142,6 +143,19 @@ describeIntegration('Orchestrator Buckets - Integration Tests', 'both', modes, (
       expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
 
       const result = await buckets.getByName(existingBucket.name, { folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existingBucket.id);
+      expect(result.name).toBe(existingBucket.name);
+    });
+
+    it('should retrieve a bucket by a resources.ts handle', async () => {
+      const { buckets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const result = await buckets.getByName(resource.bucket({ name: existingBucket.name, folderPath: config.folderPath }));
 
       expect(result).toBeDefined();
       expect(result.id).toBe(existingBucket.id);

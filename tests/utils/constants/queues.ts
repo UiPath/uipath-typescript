@@ -79,4 +79,10 @@ export const QUEUE_TEST_CONSTANTS = {
   TRANSACTION_FAILURE_REASON: 'Vendor not found',
   TRANSACTION_FAILURE_DETAILS: 'lookup failed',
   TRANSACTION_FAILURE_TYPE: 'BusinessException',
+
+  // getByName
+  FOLDER_PATH_WITH_SPACE: 'Shared/My Finance',
+  // base64-of-UTF-16-LE encoded value matching encodeFolderPathHeader().
+  // Reference: Buffer.from(<path>, 'utf16le').toString('base64').
+  FOLDER_PATH_WITH_SPACE_ENCODED: 'UwBoAGEAcgBlAGQALwBNAHkAIABGAGkAbgBhAG4AYwBlAA==',
 } as const;

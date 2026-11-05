@@ -1,6 +1,7 @@
 import { RequestOptions } from '../common/types';
 import { ProcessGetAllOptions, ProcessGetResponse, ProcessRef, ProcessStartRefOptions, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions, ProcessStartOptions } from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import type { ProcessResource } from '../../resources';
 
 /**
  * Service for managing and executing UiPath Automation Processes.
@@ -102,6 +103,30 @@ export interface ProcessServiceModel {
    * ```
    */
   getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
+
+  /**
+   * Retrieves a single process declared in `resources.ts`.
+   *
+   * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
+   * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+   *
+   * @param process - Handle created with `resource.process()` from `@uipath/uipath-typescript/resources`
+   * @param options - Optional folder override and query parameters
+   * @returns Promise resolving to a single {@link ProcessGetResponse}
+   * @example
+   * ```typescript
+   * // resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly nightly = resource.process({ name: 'Nightly Sync', folderPath: 'Finance/Shared' });
+   * }
+   *
+   * // anywhere in the project
+   * await processes.getByName(ProjectResources.nightly);
+   * ```
+   */
+  getByName(process: ProcessResource, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
 
   /**
    * Starts a process. First fetch the process via `processes.getAll()` or

@@ -22,6 +22,7 @@ import {
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints';
 import { isNotFoundError } from '../../../../src/core/errors/guards';
+import { resource } from '../../../../src/resources';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
@@ -1173,6 +1174,18 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         expect(result.fields.length).toBeGreaterThan(0);
         expect(typeof result.insertRecord).toBe('function');
         expect(typeof result.getAllRecords).toBe('function');
+      });
+
+      it('should retrieve entity metadata by a resources.ts handle', async () => {
+        const { entities } = getServices();
+
+        const result = await entities.getByName(resource.entity({ name: byNameEntityName }));
+
+        expect(result).toBeDefined();
+        expect(result.id).toBe(byNameEntityId);
+        expect(result.name).toBe(byNameEntityName);
+        expect(Array.isArray(result.fields)).toBe(true);
+        expect(result.fields.length).toBeGreaterThan(0);
       });
     });
 

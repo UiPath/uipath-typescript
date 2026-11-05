@@ -7,6 +7,12 @@ import { encodeFolderPathHeader } from '../encoding/folder-path';
 // it); Orchestrator resolves a relative path only against an org-unit header the SDK does not send.
 const CURRENT_FOLDER_PATH = '.';
 
+/** `undefined`, blank and `'.'` all name the folder the code runs in; bindings and debug overwrites write them for it. */
+export function isCurrentFolderPath(folderPath: string | undefined): boolean {
+  const trimmed = folderPath?.trim();
+  return !trimmed || trimmed === CURRENT_FOLDER_PATH;
+}
+
 export interface ResolveFolderHeadersInput {
   /** Numeric folder ID — sent as `X-UIPATH-OrganizationUnitId`. */
   folderId?: number;
@@ -68,7 +74,7 @@ export function resolveFolderHeaders(input: ResolveFolderHeadersInput): Record<s
   if (trimmedKey) {
     headers[FOLDER_KEY] = trimmedKey;
   }
-  if (trimmedPath && trimmedPath !== CURRENT_FOLDER_PATH) {
+  if (trimmedPath && !isCurrentFolderPath(trimmedPath)) {
     headers[FOLDER_PATH_ENCODED] = encodeFolderPathHeader(trimmedPath);
   }
 

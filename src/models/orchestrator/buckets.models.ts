@@ -1,5 +1,6 @@
 import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetByNameOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetReadUriRequestOptions, BucketGetUriResponse, BucketRef, BucketUploadFileOptions, BucketUploadFileRequestOptions, BucketUploadResponse, BlobItem, BucketGetFilesOptions, BucketFile, BucketDeleteFileOptions } from './buckets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import type { BucketResource } from '../../resources';
 
 /**
  * Service for managing UiPath storage Buckets.
@@ -102,6 +103,30 @@ export interface BucketServiceModel {
    * ```
    */
   getByName(name: string, options?: BucketGetByNameOptions): Promise<BucketGetResponse>;
+
+  /**
+   * Retrieves a single storage bucket declared in `resources.ts`.
+   *
+   * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
+   * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+   *
+   * @param bucket - Handle created with `resource.bucket()` from `@uipath/uipath-typescript/resources`
+   * @param options - Optional folder override and query parameters
+   * @returns Promise resolving to a single {@link BucketGetResponse}
+   * @example
+   * ```typescript
+   * // resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly bucket = resource.bucket({ name: 'Invoices', folderPath: 'Finance/Shared' });
+   * }
+   *
+   * // anywhere in the project
+   * await buckets.getByName(ProjectResources.bucket);
+   * ```
+   */
+  getByName(bucket: BucketResource, options?: BucketGetByNameOptions): Promise<BucketGetResponse>;
 
   /**
    * Gets metadata for files in a bucket with optional filtering and pagination.

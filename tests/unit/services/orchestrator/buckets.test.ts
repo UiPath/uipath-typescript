@@ -1,5 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { resource } from '../../../../src/resources';
 import { BucketService } from '../../../../src/services/orchestrator/buckets';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
@@ -146,6 +147,33 @@ describe('BucketService Unit Tests', () => {
   });
 
   describe('getByName', () => {
+    it('should accept a resources.ts handle and scope the lookup by its folderPath', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockBucketApiResponse()] });
+
+      await bucketService.getByName(
+        resource.bucket({ name: BUCKET_TEST_CONSTANTS.BUCKET_NAME, folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE }),
+      );
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.params).toMatchObject({ '$filter': `Name eq '${BUCKET_TEST_CONSTANTS.BUCKET_NAME}'` });
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: BUCKET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+      });
+    });
+
+    it('should let an explicit folder option take precedence over the handle folderPath', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockBucketApiResponse()] });
+
+      await bucketService.getByName(
+        resource.bucket({ name: BUCKET_TEST_CONSTANTS.BUCKET_NAME, folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH }),
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({ [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() });
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
     it('should return a transformed bucket when the OData response contains one item', async () => {
       const rawBucket = createMockBucketApiResponse();
       mockApiClient.get.mockResolvedValue({ value: [rawBucket] });

@@ -1,6 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
+import { resource } from '../../../../src/resources';
+import type { ProcessGetResponse } from '../../../../src/models/orchestrator/processes.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -209,18 +211,26 @@ describeIntegration('Orchestrator Processes - Integration Tests', 'both', modes,
   });
 
   describe('getByName', () => {
-    it('should retrieve a process by name using folderKey', async () => {
+    let existing!: ProcessGetResponse;
+
+    beforeAll(async () => {
       const { processes } = getServices();
       const config = getTestConfig();
 
-      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
-
+      // One real process in the folder gives every lookup below a name to resolve
       const allProcesses = await processes.getAll({
         folderId: config.folderId ? Number(config.folderId) : undefined,
         pageSize: 1,
       });
       expect(allProcesses.items.length, 'No processes available to test getByName').toBeGreaterThan(0);
-      const existing = allProcesses.items[0];
+      existing = allProcesses.items[0];
+    });
+
+    it('should retrieve a process by name using folderKey', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
 
       const result = await processes.getByName(existing.name, { folderKey: config.folderKey });
 
@@ -236,14 +246,20 @@ describeIntegration('Orchestrator Processes - Integration Tests', 'both', modes,
 
       expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
 
-      const allProcesses = await processes.getAll({
-        folderId: config.folderId ? Number(config.folderId) : undefined,
-        pageSize: 1,
-      });
-      expect(allProcesses.items.length, 'No processes available to test getByName').toBeGreaterThan(0);
-      const existing = allProcesses.items[0];
-
       const result = await processes.getByName(existing.name, { folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.name).toBe(existing.name);
+    });
+
+    it('should retrieve a process by a resources.ts handle', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const result = await processes.getByName(resource.process({ name: existing.name, folderPath: config.folderPath }));
 
       expect(result).toBeDefined();
       expect(result.id).toBe(existing.id);
@@ -256,13 +272,7 @@ describeIntegration('Orchestrator Processes - Integration Tests', 'both', modes,
 
       expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
 
-      const allProcesses = await processes.getAll({
-        folderId: config.folderId ? Number(config.folderId) : undefined,
-        pageSize: 1,
-      });
-      expect(allProcesses.items.length, 'No processes available to validate transform').toBeGreaterThan(0);
-
-      const result = await processes.getByName(allProcesses.items[0].name, { folderKey: config.folderKey });
+      const result = await processes.getByName(existing.name, { folderKey: config.folderKey });
 
       expect(result.createdTime).toBeDefined();
       expect(result.folderId).toBeDefined();
