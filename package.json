@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.8.3",
+    "version": "1.8.4-dev.ontology.1",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
