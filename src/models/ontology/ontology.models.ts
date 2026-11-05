@@ -12,7 +12,10 @@ import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } fr
  *
  * @internal
  */
-export type OntologySummary = RawOntologySummary;
+export interface OntologySummary extends Omit<RawOntologySummary, 'createTime' | 'updateTime'> {
+  createdTime?: string;
+  updatedTime?: string;
+}
 
 /**
  * Read-only access to deployed UiPath Ontologies and stateless validation of

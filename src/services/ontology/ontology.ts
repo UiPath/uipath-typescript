@@ -1,6 +1,6 @@
-import { ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { OntologySummary, OntologyServiceModel } from '../../models/ontology/ontology.models';
+import { OntologyMap } from '../../models/ontology/ontology.constants';
 import {
   RawOntologySummary,
   ValidationResult,
@@ -15,6 +15,7 @@ import { createHeaders } from '../../utils/http/headers';
 import { HasPaginationOptions, PaginatedResponse, NonPaginatedResponse } from '../../utils/pagination/types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
+import { transformData } from '../../utils/transform';
 import { BaseService } from '../base';
 
 /**
@@ -23,12 +24,12 @@ import { BaseService } from '../base';
 export class OntologyService extends BaseService implements OntologyServiceModel {
   @track('Ontologies.GetAll')
   async getAll<T extends OntologyGetAllOptions>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<OntologySummary> : NonPaginatedResponse<OntologySummary>> {
-    const { folderKey, ...restOptions } = options ?? {};
     return PaginationHelpers.getAll<T, RawOntologySummary, OntologySummary>(
       {
         serviceAccess: this.createPaginationServiceAccess(),
         getEndpoint: () => ONTOLOGY_ENDPOINTS.COLLECTION,
-        transformFn: (raw) => raw,
+        transformFn: (raw) => transformData(raw, OntologyMap) as OntologySummary,
+        processParametersFn: ({ folderKey, ...rest }) => ({ ...rest, folder: folderKey ?? this.config.folderKey }),
         excludeFromPrefix: ['search', 'folder'],
         pagination: {
           paginationType: PaginationType.OFFSET,
@@ -43,7 +44,7 @@ export class OntologyService extends BaseService implements OntologyServiceModel
           },
         },
       },
-      { ...restOptions, folder: folderKey ?? this.config.folderKey } as unknown as T
+      options
     );
   }
 
@@ -53,14 +54,11 @@ export class OntologyService extends BaseService implements OntologyServiceModel
       ONTOLOGY_ENDPOINTS.BY_ID(idOrName),
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey ?? this.config.folderKey }) }
     );
-    return response.data;
+    return transformData(response.data, OntologyMap) as OntologySummary;
   }
 
   @track('Ontologies.ValidateArtifactContent')
   async validateArtifactContent(fileName: string, content: string, options: ArtifactContentValidateOptions): Promise<ValidationResult> {
-    if (!options.mediaType) {
-      throw new ValidationError({ message: 'mediaType is required for validateArtifactContent' });
-    }
     const url = options.type
       ? `${ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName)}?type=${encodeURIComponent(options.type)}`
       : ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName);
