@@ -2,7 +2,7 @@
 
 Build, pack, publish, and deploy a Coded App from a CI/CD pipeline with the `uip` CLI. The lifecycle has three stages:
 
-1. **Create** the solution and the app, once, on your machine.
+1. **Create** the app (and, for a solution, the solution), once, on your machine.
 2. **Develop** the app locally and commit your changes.
 3. **Build and deploy** in the pipeline. Every run packs a new version, publishes it, and deploys it: the first run installs the app, and later runs upgrade it. No run needs manual input.
 
@@ -10,31 +10,33 @@ The examples use GitHub Actions. The `uip` commands are the same in any CI/CD sy
 
 This page covers:
 
-- [A Coded App inside a solution](#githubworkflowsdeployyml): created with `uip codedapp init`, deployed with `uip solution`.
-- [Referencing an existing Coded Action App](#reference-an-existing-coded-action-app): adding it to the solution and linking it to the deployed app.
-- [A standalone Coded App](#standalone-coded-app-no-solution): no solution, deployed with `uip codedapp`.
+- [Standalone Coded App](#standalone-coded-app)
+- [Coded App inside Solution](#coded-app-inside-solution)
+    - [Reference an existing Coded Action App](#reference-an-existing-coded-action-app)
 
 !!! note "Requirements"
-    - `@uipath/cli` **1.205.0** or later, with the `solution` and `codedapp` tools.
-    - Node.js **22** or later, on your machine and in the workflow.
+    - `@uipath/cli` **1.205.0** or later, with the `codedapp` tool (and the `solution` tool for apps inside a solution).
+    - Node.js **22** or later, on your machine and in the workflow. The CLI does not run on older versions.
 
 ## Authentication
 
-### OAuth login (local setup and development)
+A pipeline cannot sign in through a browser, so it authenticates with credentials stored in your CI/CD system's secret store.
 
-Sign in from your own machine for the one-time setup and while developing:
+### Confidential External Application
 
-```bash
-uip login --organization <org> --tenant <tenant>
-```
+Used by the [standalone workflow](#standalone-coded-app).
 
-This opens a browser, so a pipeline cannot use it. Workflows authenticate with a Personal Access Token.
+1. **Create a Confidential External Application** in the UiPath Admin portal with the application scopes `Apps`, `OR.Folders.Read`, and `OR.Execution`.
+2. **Assign the external app** to the Orchestrator folder you deploy to (Settings → Manage Access → Assign external app).
+3. **Store** `UIPATH_CLIENT_ID` and `UIPATH_CLIENT_SECRET` as secrets. In GitHub, use the repository settings (Settings → Secrets and variables → Actions).
 
-### Personal Access Token (workflows)
+The workflow signs in with `uip login --client-id env.UIPATH_CLIENT_ID --client-secret env.UIPATH_CLIENT_SECRET`, which reads both values from the step's environment and keeps the secret out of the command line.
 
-A Personal Access Token (PAT) is created once, stored in your CI/CD system's secret store, and passed to every `uip` command through environment variables. No login step runs in the pipeline.
+### Personal Access Token
 
-1. **Create the token** while signed in:
+Used by the [solution workflow](#coded-app-inside-solution). A Personal Access Token (PAT) is created once and passed to every `uip` command through environment variables, so no login step runs in the pipeline.
+
+1. **Create the token** on your machine, signed in with `uip login`:
 
     ```bash
     uip admin pat create \
@@ -75,9 +77,105 @@ A Personal Access Token (PAT) is created once, stored in your CI/CD system's sec
 !!! warning "A PAT acts as you"
     Commands run with your user's folder permissions. A PAT is never refreshed: create a new one before it expires, because an expired or revoked token fails with `401` without any earlier warning. If a command reports missing credentials, `uip login which` names the variables that are not set.
 
-## One-time setup
+## Standalone Coded App
 
-Run these on your machine, signed in with OAuth, and commit the result.
+Deploy a Coded App on its own, without a solution, with `uip codedapp` and a [Confidential External Application](#confidential-external-application).
+
+### .github/workflows/deploy.yml
+
+```yaml
+name: Deploy Coded App
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      app-name:
+        description: "App name to deploy"
+        required: true
+      path-name:
+        description: "URL path name (https://<org>.uipath.host/<path-name>)"
+        required: true
+      org:
+        description: "UiPath organization name"
+        required: true
+      tenant:
+        description: "UiPath tenant name"
+        required: true
+      folder-key:
+        description: "Orchestrator folder key (UUID)"
+        required: true
+      version:
+        description: "App package version (default: 1.0.<run number>)"
+        required: false
+
+env:
+  NODE_VERSION: "22"
+  # Or pin an exact version for reproducible builds
+  UIP_CLI_VERSION: ">=1.205.0"
+  VERSION: ${{ inputs.version || format('1.0.{0}', github.run_number) }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install uip CLI
+        run: |
+          npm install -g "@uipath/cli@${UIP_CLI_VERSION}"
+          uip tools install codedapp
+
+      - name: Login to UiPath
+        env:
+          UIPATH_CLIENT_ID: ${{ secrets.UIPATH_CLIENT_ID }}
+          UIPATH_CLIENT_SECRET: ${{ secrets.UIPATH_CLIENT_SECRET }}
+        run: |
+          uip login \
+            --organization "${{ inputs.org }}" \
+            --tenant "${{ inputs.tenant }}" \
+            --client-id env.UIPATH_CLIENT_ID \
+            --client-secret env.UIPATH_CLIENT_SECRET \
+            --scope "Apps OR.Folders.Read OR.Execution"
+
+      - name: Pack
+        run: uip codedapp pack ./dist --name "${{ inputs.app-name }}" --version "$VERSION"
+
+      - name: Publish
+        run: uip codedapp publish --name "${{ inputs.app-name }}"
+
+      # A Coded Action App needs no --path-name
+      - name: Deploy
+        run: |
+          uip codedapp deploy \
+            --name "${{ inputs.app-name }}" \
+            --path-name "${{ inputs.path-name }}" \
+            --folder-key "${{ inputs.folder-key }}"
+```
+
+To deploy a new version, run the workflow again: each run packs `1.0.<run number>` unless you pass `version`, and `uip codedapp deploy` upgrades the existing app.
+
+## Coded App inside Solution
+
+Build the app inside a solution with `uip codedapp init` and deploy it with `uip solution`, authenticated with a [Personal Access Token](#personal-access-token).
+
+### One-time setup
+
+Run these on your machine and commit the result.
 
 1. **Create the solution and the app inside it.** `uip codedapp init` registers the app in the surrounding solution:
 
@@ -114,7 +212,7 @@ Run these on your machine, signed in with OAuth, and commit the result.
 
 4. **Commit** the solution folder.
 
-## .github/workflows/deploy.yml
+### .github/workflows/deploy-solution.yml
 
 The `build` job has no access to UiPath credentials. The `deploy` job holds the PAT; give it a [GitHub environment](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment) with required reviewers to approve each deployment before it runs.
 
@@ -230,27 +328,27 @@ jobs:
             --yes
 ```
 
-`deploy run` also activates the solution. After the job succeeds, the app is live at `https://<org>.uipath.host/<routing-name>`.
+`deploy run` also activates the solution. After the job succeeds, the app is live at `https://<org>.uipath.host/<routing-name>`. To deploy a new version, run the workflow again: each run packs `1.0.<run number>` unless you pass `version`, and `deploy run` upgrades the existing deployment in place.
 
 !!! tip "Approval gates"
     Gate the `deploy` job, as above, rather than activation. `deploy run --skip-activate` followed by `uip solution deploy activate <name>` holds back only the first install; on an upgrade the new version goes live during `deploy run`.
 
-## Reference an existing Coded Action App
+### Reference an existing Coded Action App
 
 A solution can use a Coded Action App that is already deployed outside it.
 
-1. **Add the app to the solution.** Run this once, signed in, and commit the files it writes under `resources/`:
+1. **Add the app to the solution.** Run this once on your machine, signed in with `uip login`, and commit the files it writes under `resources/`:
 
     ```bash
     uip solution resources add --source remote --kind App --name my-action-app --folder-path Shared
     ```
 
-    It is safe to run again: an app that is already in the solution is reported as `Unchanged`. To run it in the workflow instead, retry it. A freshly deployed app can take a few minutes to become findable, and until then the command fails with `No remote resource found`:
+    It is safe to run again: an app that is already in the solution is reported as `Unchanged`. To run it in the pipeline instead, allow for a short delay when the app was deployed moments earlier, for example by the same pipeline. A newly deployed app takes up to a couple of minutes to become findable, and until then the command fails with `No remote resource found`. An app deployed earlier is found on the first attempt.
 
     ```yaml
     - name: Add the Coded Action App
       run: |
-        for attempt in 1 2 3 4 5 6 7 8 9 10; do
+        for attempt in 1 2 3 4 5; do
           uip solution resources add --source remote --kind App --name my-action-app --folder-path Shared && exit 0
           sleep 30
         done
@@ -266,15 +364,9 @@ A solution can use a Coded Action App that is already deployed outside it.
 
     - **Install the solution's own copy.** Skip the link. The copy lives in the solution's folder and follows the solution's version; the original deployment is not changed.
 
-## Common variations
+## Deploy on push to main
 
-### Deploy a new version
-
-Run the workflow again. Each run packs a new version (`1.0.<run number>` unless you pass `version`), and `deploy run` upgrades the existing deployment in place.
-
-### Deploy on push to main
-
-Replace the trigger:
+Either workflow can run on every push instead of on demand. Replace the trigger:
 
 ```yaml
 on:
@@ -284,7 +376,7 @@ on:
 
 ## Other CI/CD systems
 
-The build and deploy steps above are plain shell commands, so they run unchanged in Azure DevOps, Jenkins, or any other CI/CD system. Store the PAT in that system's secret store and map it to the same environment variables for the deploy steps. Use its approval mechanism for the gate: environment approvals in Azure DevOps, an `input` step in Jenkins.
+The build and deploy steps above are plain shell commands, so they run unchanged in Azure DevOps, Jenkins, or any other CI/CD system. Store the credentials in that system's secret store and map them to the same environment variables for the deploy steps. Use its approval mechanism for the gate: environment approvals in Azure DevOps, an `input` step in Jenkins. The examples below pass a PAT to the solution workflow.
 
 === "Azure DevOps"
 
@@ -331,102 +423,12 @@ The build and deploy steps above are plain shell commands, so they run unchanged
     }
     ```
 
-## Standalone Coded App (no solution)
-
-To deploy a Coded App on its own, without a solution, use `uip codedapp` with a Confidential External Application.
-
-1. **Create a Confidential External Application** in the UiPath Admin portal with the application scopes `Apps`, `OR.Folders.Read`, and `OR.Execution`.
-2. **Assign the external app** to the Orchestrator folder you deploy to (Settings → Manage Access → Assign external app).
-3. **Store** `UIPATH_CLIENT_ID` and `UIPATH_CLIENT_SECRET` as repository secrets.
-
-```yaml
-name: Deploy Coded App
-
-permissions:
-  contents: read
-
-on:
-  workflow_dispatch:
-    inputs:
-      app-name:
-        description: "App name to deploy"
-        required: true
-      path-name:
-        description: "URL path name (https://<org>.uipath.host/<path-name>)"
-        required: true
-      org:
-        description: "UiPath organization name"
-        required: true
-      tenant:
-        description: "UiPath tenant name"
-        required: true
-      folder-key:
-        description: "Orchestrator folder key (UUID)"
-        required: true
-
-env:
-  NODE_VERSION: "22"
-  # Or pin an exact version for reproducible builds
-  UIP_CLI_VERSION: ">=1.205.0"
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Install uip CLI
-        run: |
-          npm install -g "@uipath/cli@${UIP_CLI_VERSION}"
-          uip tools install codedapp
-
-      - name: Login to UiPath
-        env:
-          UIPATH_CLIENT_ID: ${{ secrets.UIPATH_CLIENT_ID }}
-          UIPATH_CLIENT_SECRET: ${{ secrets.UIPATH_CLIENT_SECRET }}
-        run: |
-          uip login \
-            --organization "${{ inputs.org }}" \
-            --tenant "${{ inputs.tenant }}" \
-            --client-id env.UIPATH_CLIENT_ID \
-            --client-secret env.UIPATH_CLIENT_SECRET \
-            --scope "Apps OR.Folders.Read OR.Execution"
-
-      - name: Pack
-        run: uip codedapp pack ./dist --name "${{ inputs.app-name }}"
-
-      - name: Publish
-        run: uip codedapp publish --name "${{ inputs.app-name }}"
-
-      # A Coded Action App needs no --path-name
-      - name: Deploy
-        run: |
-          uip codedapp deploy \
-            --name "${{ inputs.app-name }}" \
-            --path-name "${{ inputs.path-name }}" \
-            --folder-key "${{ inputs.folder-key }}"
-```
-
-`--client-id env.NAME` and `--client-secret env.NAME` read the values from the step's environment, which keeps the secret out of the command line.
-
 ## Troubleshooting
 
 | Error | Cause and fix |
 |-------|---------------|
 | `Property 'externalClientId' is required` | The deploy config has no client ID for the app. Set it with `uip solution deploy config set deploy-config.json <app> externalClientId <id>`. |
 | The routing name is already in use | Another app owns the URL path. Choose a different `ROUTING_NAME`. |
-| `No remote resource found` from `uip solution resources add` | The app is not findable yet, or the token's user cannot see its folder. Retry after a few minutes, and check the folder path. |
+| `No remote resource found` from `uip solution resources add` | The app is not findable yet, or the token's user cannot see its folder. Retry after a couple of minutes, and check the folder path. |
 | `deploy run` stops because the package is already deployed | Pass `--yes`. With the same `--name`, the existing deployment is upgraded in place. |
 | `401` on every command | The PAT expired or was revoked. Create a new one and update the `UIPATH_PAT` secret. |
