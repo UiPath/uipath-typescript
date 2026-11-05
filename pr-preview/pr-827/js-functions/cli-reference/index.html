@@ -4149,7 +4149,7 @@
 <tr>
 <td><code>--production</code></td>
 <td></td>
-<td>Skip server-runner install and freePort check (used by the platform container)</td>
+<td>Skip the freePort check and run with production permissions (used by the platform container)</td>
 </tr>
 </tbody>
 </table>
@@ -4206,11 +4206,11 @@
 <tr>
 <td><code>--production</code></td>
 <td></td>
-<td>Run under production context; skip the <code>.uipath/server-runner</code> install when it already exists</td>
+<td>Run under production context</td>
 </tr>
 </tbody>
 </table>
-<p>Provide the target with exactly one of <code>--entrypoint</code> (path to the file) or <code>--function</code> (name resolved through <code>uipath.json</code>). Bootstraps runtime dependencies into <code>.uipath/server-runner</code> on first run. The process exit code reflects the job outcome (non-zero on failure).</p>
+<p>Provide the target with exactly one of <code>--entrypoint</code> (path to the file) or <code>--function</code> (name resolved through <code>uipath.json</code>). The process exit code reflects the job outcome (non-zero on failure).</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>run<span class="w"> </span>--function<span class="w"> </span>hello<span class="w"> </span>--input<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;world&quot;}&#39;</span>
 </code></pre></div>
 <hr />
@@ -4370,7 +4370,7 @@
 <p>Called automatically by <code>new</code> as a prerequisite. Run explicitly to set up Deno:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>setup<span class="w"> </span>--runtime<span class="w"> </span>deno
 </code></pre></div>
-<p>Requires Node.js v20+. Installs <code>tsx</code> globally if not found.</p>
+<p>Requires Node.js v20+.</p>
 <hr />
 <h2 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
 <p>All commands that contact the UiPath platform read credentials from environment variables. During <code>serve</code>, the Deno runtime reads <code>.env</code> automatically; the Node runtime requires env vars to be loaded in your shell first.</p>

@@ -3844,28 +3844,39 @@
 <tr>
 <th>Property</th>
 <th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a id="id"></a> <code>id</code></td>
 <td><code>string</code></td>
+<td>-</td>
 </tr>
 <tr>
 <td><a id="name"></a> <code>name</code></td>
 <td><code>string</code></td>
+<td>-</td>
 </tr>
 <tr>
 <td><a id="sla"></a> <code>sla?</code></td>
 <td><a href="../StageSLA/"><code>StageSLA</code></a></td>
+<td>Default (unconditional) SLA of the stage, undefined when the stage has no default SLA rule</td>
+</tr>
+<tr>
+<td><a id="slarules"></a> <code>slaRules?</code></td>
+<td><a href="../StageSLARule/"><code>StageSLARule</code></a>[]</td>
+<td>All SLA rules configured on the stage, including conditional ones</td>
 </tr>
 <tr>
 <td><a id="status"></a> <code>status</code></td>
 <td><code>string</code></td>
+<td>-</td>
 </tr>
 <tr>
 <td><a id="tasks"></a> <code>tasks</code></td>
 <td><a href="../StageTask/"><code>StageTask</code></a>[][]</td>
+<td>-</td>
 </tr>
 </tbody>
 </table>

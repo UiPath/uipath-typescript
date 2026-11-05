@@ -4316,7 +4316,7 @@ a query value, <code>z.coerce.number()</code> accepts and converts it.</p>
 <p><code>uip functions pack</code> overwrites <code>.uipath/&lt;name&gt;.&lt;version&gt;.nupkg</code> if the file already exists. Older version files stay in <code>.uipath/</code>. The <code>publish</code> command picks the most recently modified file by mtime.</p>
 <hr />
 <h2 id="uip-functions-serve-production"><code>uip functions serve --production</code><a class="headerlink" href="#uip-functions-serve-production" title="Permanent link">&para;</a></h2>
-<p>When run in the production container, pass <code>--production</code> to skip the server-runner dependency install and the <code>freePort</code> check. The CLI detects this flag and skips both steps if the server-runner directory already exists.</p>
+<p>The production container passes <code>--production</code>. The CLI then serves the package as provisioned by <code>install-server</code>: no check that dependencies are installed, no <code>freePort</code> kill, no file watching on either runtime, no design-time environment, and contracts read from the packed <code>entry-points.json</code> instead of derived from source. A blocking diagnostic stops the start and is reported to the host rather than printed.</p>
 
 
 

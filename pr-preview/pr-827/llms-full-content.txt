@@ -6678,7 +6678,7 @@ Get stages and its associated tasks information for a case instance
 
 `Promise`\<`CaseGetStageResponse`[]>
 
-Promise resolving to an array of case stages with their tasks and status
+Promise resolving to an array of [CaseGetStageResponse](../CaseGetStageResponse/) with each stage's tasks, status, default `sla` and all configured `slaRules`
 
 #### Example
 
@@ -6692,6 +6692,11 @@ const stages = await caseInstances.getStages(
 // Iterate through stages
 for (const stage of stages) {
   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
+
+  // Default SLA, e.g. "30 min"
+  if (stage.sla) {
+    console.log(`  SLA: ${stage.sla.length} ${stage.sla.duration}`);
+  }
 
   // Check tasks in the stage
   for (const taskGroup of stage.tasks) {

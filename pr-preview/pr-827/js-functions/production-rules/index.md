@@ -190,4 +190,4 @@ ______________________________________________________________________
 
 ## `uip functions serve --production`
 
-When run in the production container, pass `--production` to skip the server-runner dependency install and the `freePort` check. The CLI detects this flag and skips both steps if the server-runner directory already exists.
+The production container passes `--production`. The CLI then serves the package as provisioned by `install-server`: no check that dependencies are installed, no `freePort` kill, no file watching on either runtime, no design-time environment, and contracts read from the packed `entry-points.json` instead of derived from source. A blocking diagnostic stops the start and is reported to the host rather than printed.
