@@ -103,6 +103,39 @@ $ uip codedapp init ./expense-app --template dashboard
 
 ---
 
+## convert
+
+Convert an exported **VB low-code app** (`.uiapp`) into a React + TypeScript coded app. Runs locally; no login needed.
+
+```
+$ uip codedapp convert <file> [options]
+```
+
+| Name | Type | Description | Default |
+|------|------|-------------|---------|
+| `<file>` | string | The exported VB low-code app: a `.uiapp` file | required |
+| `--out` | string | Output directory for the coded app | `./<file name>` |
+| `--force` | boolean | Convert into a non-empty directory (a re-conversion; `uipath.json` and `node_modules` are kept) | — |
+| `--refresh` | boolean | Bind every expression afresh instead of reusing the output directory's bind cache | — |
+
+Requires the **.NET 10 Runtime** on the machine (`dotnet --list-runtimes` lists `Microsoft.NETCore.App 10.`). The converter ships with the `codedapp` tool. Only `.uiapp` (VB apps) is accepted; a `.uis` Solution is refused.
+
+`Code` in the result is one of: `ConvertCompleted` (nothing blamed on the converter), `ConvertCompletedWithGaps` (the project runs; `conversion-report.json` lists what the converter did not manage), `ConvertOutputCannotRun` (written, but cannot run as is). The output includes the `fix-converted-app` skill; `uip skills install --repo ./.uipath/agent-skills --path .` installs it for your coding agent.
+
+**Examples**
+
+<!-- termynal -->
+
+```bash
+$ uip codedapp convert ./expense-app.uiapp
+
+$ uip codedapp convert ./expense-app.uiapp --out ./apps/expense
+
+$ uip codedapp convert ./expense-app.uiapp --force --refresh
+```
+
+---
+
 ## Build app
 
 Before proceeding, make sure you build your coded app using your framework's build command from the root of the project:
