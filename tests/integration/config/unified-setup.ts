@@ -30,6 +30,7 @@ import { ConnectionsService } from '../../../src/services/integration-service/co
 import { ElementsService } from '../../../src/services/integration-service/elements/elements';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Folders } from '../../../src/services/orchestrator/folders';
+import { Logs } from '../../../src/services/orchestrator/logs';
 import { Settings } from '../../../src/services/platform/settings';
 import { Directory } from '../../../src/services/platform/directory';
 import { Groups } from '../../../src/services/platform/groups';
@@ -93,6 +94,7 @@ export interface TestServices {
   integrationServiceElements?: ElementsService;
   functions?: Functions;
   folders?: Folders;
+  logs?: Logs;
   settings?: Settings;
   businessApps?: BusinessApps;
   platformUsers?: Users;
@@ -222,6 +224,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     integrationServiceElements: new ElementsService(sdk),
     functions: new Functions(sdk),
     folders: new Folders(sdk),
+    logs: new Logs(sdk),
     settings: new Settings(sdk),
     businessApps: new BusinessApps(sdk),
     platformUsers: new Users(sdk),

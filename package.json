@@ -126,6 +126,16 @@
                 "default": "./dist/folders/index.cjs"
             }
         },
+        "./logs": {
+            "import": {
+                "types": "./dist/logs/index.d.ts",
+                "default": "./dist/logs/index.mjs"
+            },
+            "require": {
+                "types": "./dist/logs/index.d.ts",
+                "default": "./dist/logs/index.cjs"
+            }
+        },
         "./cases": {
             "import": {
                 "types": "./dist/cases/index.d.ts",
