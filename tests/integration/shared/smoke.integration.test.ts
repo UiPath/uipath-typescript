@@ -5,6 +5,7 @@ import {
   describeIntegration,
   InitMode,
 } from '../config/unified-setup';
+import { GUID_REGEX } from '@/utils/validation/guid';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -93,5 +94,21 @@ describeIntegration('SDK Initialization - Smoke Tests', 'both', modes, () => {
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     }, 60_000);
+  });
+});
+
+// The user is read from the token's claims, so only a user's token has one; a PAT is opaque.
+describeIntegration('SDK Initialization - Authenticated User', 'user', modes, () => {
+  it('should read the signed-in user from the access token', async () => {
+    const { sdk } = getServices();
+
+    const user = await sdk.getAuthenticatedUser();
+
+    expect(user.id).toMatch(GUID_REGEX);
+    expect(user.name).toBeTruthy();
+    expect(user.email).toBeTruthy();
+    expect(user.preferredUsername).toBeTruthy();
+    expect(user).not.toHaveProperty('sub');
+    expect(user).not.toHaveProperty('preferred_username');
   });
 });

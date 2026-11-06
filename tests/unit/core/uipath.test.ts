@@ -15,11 +15,16 @@ import { TEST_CONSTANTS } from '../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../utils/constants/jobs';
 import { DEBUG_JOB_KEY_QUERY_PARAM } from '../../../src/utils/runtime/constants';
 import { functionContext } from '../../utils/function-context';
+import { AuthenticationError } from '@/core/errors';
+import { UiPathEnvVars } from '@/core/config/environment';
+import { TEST_OPAQUE_TOKEN, TEST_USER_CLAIMS, TEST_USER_ID, createTestJwt } from '@tests/utils/jwt';
 
 // ===== MOCKING =====
 const mockTokenManagerDestroy = vi.fn();
+const mockGetValidToken = vi.fn();
 const mockTokenManager = {
   getToken: () => 'mock-access-token',
+  getValidToken: mockGetValidToken,
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
   onTokenChange: vi.fn(),
@@ -364,6 +369,62 @@ describe('UiPath Core', () => {
 
       expect(secretSdk.isInitialized()).toBe(true);
       expect(oauthSdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('getAuthenticatedUser', () => {
+    const createSdk = () => new UiPath({
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      secret: TEST_CONSTANTS.CLIENT_SECRET
+    });
+
+    afterEach(() => {
+      mockGetValidToken.mockReset();
+      vi.unstubAllEnvs();
+    });
+
+    it('should return the user read from the token getValidToken resolves', async () => {
+      mockGetValidToken.mockResolvedValue(createTestJwt(TEST_USER_CLAIMS));
+
+      const user = await createSdk().getAuthenticatedUser();
+
+      // getValidToken is what fetches the token from a UiPath host and refreshes an expired one
+      expect(mockGetValidToken).toHaveBeenCalledTimes(1);
+      expect(user).toEqual({
+        id: TEST_USER_ID,
+        name: TEST_USER_CLAIMS.name,
+        email: TEST_USER_CLAIMS.email,
+        preferredUsername: TEST_USER_CLAIMS.preferred_username,
+        firstName: TEST_USER_CLAIMS.first_name,
+        lastName: TEST_USER_CLAIMS.last_name
+      });
+    });
+
+    it('should reject with AuthenticationError for a personal access token', async () => {
+      mockGetValidToken.mockResolvedValue(TEST_OPAQUE_TOKEN);
+
+      await expect(createSdk().getAuthenticatedUser()).rejects.toBeInstanceOf(AuthenticationError);
+    });
+
+    it('should propagate the error when no valid token can be obtained', async () => {
+      const error = new AuthenticationError({ message: TEST_CONSTANTS.ERROR_MESSAGE });
+      mockGetValidToken.mockRejectedValue(error);
+
+      await expect(createSdk().getAuthenticatedUser()).rejects.toBe(error);
+    });
+
+    it('should reject with AuthenticationError when the SDK is not configured', async () => {
+      vi.stubEnv(UiPathEnvVars.ACCESS_TOKEN, '');
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID
+      });
+
+      await expect(sdk.getAuthenticatedUser()).rejects.toBeInstanceOf(AuthenticationError);
+      expect(mockGetValidToken).not.toHaveBeenCalled();
     });
   });
 

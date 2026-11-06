@@ -14,6 +14,25 @@ export interface TokenInfo {
 }
 
 /**
+ * The signed-in user, read from the claims of the current access token.
+ * Profile fields are absent when the user's profile has no value for them.
+ */
+export interface AuthenticatedUser {
+  /** Identity user ID */
+  id: string;
+  /** Display name */
+  name?: string;
+  /** Email address */
+  email?: string;
+  /** User name the user signs in with */
+  preferredUsername?: string;
+  /** First name */
+  firstName?: string;
+  /** Last name */
+  lastName?: string;
+}
+
+/**
  * Options controlling logout behavior
  */
 export interface LogoutOptions {
