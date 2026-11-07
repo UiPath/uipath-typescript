@@ -214,6 +214,7 @@ Creating a validation action and polling its result both go through the [Documen
 | `updateRecordById()` / `updateRecord()` | `DataFabric.Data.Write` |
 | `updateRecordsById()` / `updateRecords()` | `DataFabric.Data.Write` |
 | `upsert()` | `DataFabric.Data.Write`, `DataFabric.Schema.Read` |
+| `executeSql()` | `DataFabric.Data.Read` (a `SELECT`), `DataFabric.Data.Write` (an `INSERT`, `UPDATE` or `DELETE`) |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
 | `uploadAttachment()` | `DataFabric.Data.Write` |
 | `deleteAttachment()` | `DataFabric.Data.Write` |

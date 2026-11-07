@@ -15,4 +15,9 @@ export const ERROR_PARSER_TEST_CONSTANTS = {
     '<?xml version="1.0" encoding="utf-8"?><Error><Code>AuthenticationFailed</Code>' +
     '<Message>Signature not valid in the specified time frame</Message></Error>',
   XML_ERROR_STATUS_TEXT: 'Server failed to authenticate the request.',
+
+  // Data Service's shape for a refused request: error + traceId, and each reason in problems.
+  ENTITY_ERROR_MESSAGE: 'The SQL query was refused with 2 problem(s).',
+  ENTITY_TRACE_ID: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
+  ENTITY_PROBLEMS: ["Sql line 1, column 15: 'sys.tables' must be a one-part name.", "Sql line 1, column 1: 'OPTION (…)' is not allowed."],
 } as const;

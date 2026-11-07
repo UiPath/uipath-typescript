@@ -67,6 +67,8 @@ export interface IntegrationConfig {
   // a foreign key to the parent.
   dataFabricTestTreeEntityName?: string;
   dataFabricTestTreeChildEntityName?: string;
+  // Tenant-scoped Schema table with an Id column, for the executeSql tests.
+  dataFabricTestSqlTableName?: string;
   orchestratorAttachmentId?: string;
   /**
    * Name of a dedicated queue used by the queue item / transaction
@@ -181,6 +183,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestJoinRelatedFieldName: typeof rawConfig.dataFabricTestJoinRelatedFieldName === 'string' ? rawConfig.dataFabricTestJoinRelatedFieldName : undefined,
     dataFabricTestTreeEntityName: typeof rawConfig.dataFabricTestTreeEntityName === 'string' ? rawConfig.dataFabricTestTreeEntityName : undefined,
     dataFabricTestTreeChildEntityName: typeof rawConfig.dataFabricTestTreeChildEntityName === 'string' ? rawConfig.dataFabricTestTreeChildEntityName : undefined,
+    dataFabricTestSqlTableName: typeof rawConfig.dataFabricTestSqlTableName === 'string' ? rawConfig.dataFabricTestSqlTableName : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     queuesTestQueueName: typeof rawConfig.queuesTestQueueName === 'string' ? rawConfig.queuesTestQueueName : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
@@ -243,6 +246,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestJoinRelatedFieldName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME || undefined,
     dataFabricTestTreeEntityName: process.env.DATA_FABRIC_TEST_TREE_ENTITY_NAME || undefined,
     dataFabricTestTreeChildEntityName: process.env.DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME || undefined,
+    dataFabricTestSqlTableName: process.env.DATA_FABRIC_TEST_SQL_TABLE_NAME || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     queuesTestQueueName: process.env.QUEUES_TEST_QUEUE_NAME || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,

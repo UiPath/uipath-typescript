@@ -50,8 +50,12 @@ class EntityErrorParser implements ErrorParsingStrategy {
 
   parse(errorBody: unknown, response: Response): ParsedErrorInfo {
     const error = errorBody as EntityErrorResponse;
+    // A refused request lists why in `problems`; keep them visible in the message.
+    const message = Array.isArray(error.problems) && error.problems.length > 0
+      ? `${error.error.replace(/\.$/, '')}: ${error.problems.join('; ')}`
+      : error.error;
     return {
-      message: error.error,
+      message,
       code: response?.status?.toString(),
       details: {
         error: error.error,

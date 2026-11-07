@@ -36,6 +36,8 @@ export interface OrchestratorErrorResponse {
 export interface EntityErrorResponse {
   error: string;
   traceId: string;
+  /** Each reason a request was refused, when the service lists them */
+  problems?: string[];
 }
 
 /**

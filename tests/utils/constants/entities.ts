@@ -110,6 +110,13 @@ export const ENTITY_TEST_CONSTANTS = {
   EXTERNAL_OBJECT_ID: 'o1234567-e89b-12d3-a456-426614174000',
   EXTERNAL_FIELD_MAPPING_ID: 'm1234567-e89b-12d3-a456-426614174000',
   
+  // SQL over Schema tables
+  SQL_SELECT: 'SELECT Id, Title FROM Ticket WHERE Id = @id',
+  SQL_UPDATE: 'UPDATE Ticket SET Title = @title WHERE Id = @id',
+  SQL_PARAMETER_ID: 42,
+  SQL_PARAMETER_TITLE: 'Printer jam',
+  SQL_ROWS_AFFECTED: 1,
+
   // Error Messages
   ERROR_MESSAGE: 'Record not found',
   ERROR_MESSAGE_INSERT_UNIQUENESS: 'Insert data failed. Value uniqueness violation.',

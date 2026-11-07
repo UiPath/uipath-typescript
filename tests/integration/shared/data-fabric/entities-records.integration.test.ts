@@ -22,6 +22,7 @@ import {
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints';
 import { isNotFoundError } from '../../../../src/core/errors/guards';
+import { ValidationError } from '@/core/errors';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
@@ -1582,6 +1583,49 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
   });
 
   // ─── Cleanup ──────────────────────────────────────────────────────────────
+
+  // ─── SQL over Schema tables ──────────────────────────────────────────────
+
+  describe('executeSql', () => {
+    let sqlTableName!: string;
+
+    beforeAll(() => {
+      const config = getTestConfig();
+      if (!config.dataFabricTestSqlTableName) {
+        throw new Error('DATA_FABRIC_TEST_SQL_TABLE_NAME must be set to run the executeSql integration tests');
+      }
+      sqlTableName = config.dataFabricTestSqlTableName;
+    });
+
+    it('should bind parameters and return the computed row', async () => {
+      const { entities } = getServices();
+
+      const result = await entities.executeSql('SELECT @n + 1 AS Next', { parameters: { n: 41 } });
+
+      expect(result.columns).toEqual([expect.objectContaining({ name: 'Next' })]);
+      expect(result.rows).toEqual([{ Next: 42 }]);
+      expect(result.truncated).toBe(false);
+      expect(result.rowsAffected).toBeUndefined();
+    });
+
+    it('should read a Schema table by its name', async () => {
+      const { entities } = getServices();
+
+      const result = await entities.executeSql(`SELECT TOP (1) Id FROM ${sqlTableName}`);
+
+      expect(result.columns.map((column) => column.name)).toEqual(['Id']);
+      expect(result.rows.length).toBeLessThanOrEqual(1);
+    });
+
+    it('should refuse a statement outside the Schema tables with its reasons', async () => {
+      const { entities } = getServices();
+
+      const refused = entities.executeSql('SELECT name FROM sys.tables');
+
+      await expect(refused).rejects.toBeInstanceOf(ValidationError);
+      await expect(refused).rejects.toThrow(/sys\.tables/);
+    });
+  });
 
   afterAll(async () => {
     const config = getTestConfig();

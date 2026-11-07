@@ -36,6 +36,8 @@ import {
   EntityGetByNameOptions,
   EntityUpsertOptions,
   EntityUpsertResponse,
+  EntityExecuteSqlOptions,
+  EntityExecuteSqlResponse,
   EntityRef,
   EntityCloneRequest,
   EntityCloneJob,
@@ -594,6 +596,46 @@ export interface EntityServiceModel {
     data: Record<string, any>,
     options?: EntityUpsertOptions
   ): Promise<EntityUpsertResponse>;
+
+  /**
+   * Runs one SQL statement over the SQL tables a solution's Schema resources install, naming tables by
+   * their names in the Schema resource.
+   *
+   * The statement is one `SELECT`, `INSERT`, `UPDATE` or `DELETE`, with joins, subqueries, common table
+   * expressions, grouping and `OUTPUT`. With `folderKey`, it sees that folder's tables; without it, the
+   * tenant's. Values go in `@` parameters, never in the SQL text. Reading needs the record view
+   * permission, and each write its own record permission, for every table the statement touches.
+   *
+   * A `SELECT` returns at most 1,000 rows, with `truncated` set when it had more; page with
+   * `ORDER BY … OFFSET … FETCH`. A statement runs for at most 30 seconds. A refused statement fails
+   * with an error whose message lists each problem.
+   *
+   * @param sql - The SQL statement
+   * @param options - Parameter values, and the folder of folder-scoped tables
+   * @returns Promise resolving to the result's columns and rows, or the rows a write changed ({@link EntityExecuteSqlResponse})
+   * @example
+   * ```typescript
+   * // Tenant-scoped tables
+   * const result = await entities.executeSql("SELECT Id, Title FROM Ticket ORDER BY Id");
+   *
+   * for (const row of result.rows) {
+   *   console.log(row.Id, row.Title);
+   * }
+   * ```
+   * @example
+   * ```typescript
+   * // Folder-scoped tables, with parameters
+   * const result = await entities.executeSql(
+   *   "UPDATE Ticket SET Status = @status WHERE Id = @id",
+   *   { parameters: { status: "Closed", id: 42 }, folderKey: "<folderKey>" }
+   * );
+   *
+   * console.log(result.rowsAffected); // 1
+   * ```
+   *
+   * @experimental Requires Schema resources to be enabled for your tenant.
+   */
+  executeSql(sql: string, options?: EntityExecuteSqlOptions): Promise<EntityExecuteSqlResponse>;
 
   /**
    * Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)

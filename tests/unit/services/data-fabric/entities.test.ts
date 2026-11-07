@@ -18,6 +18,8 @@ import {
   createMockEntityWithDisplayTypeFields,
   createMockUpsertTreeResponse,
   createMockUpsertRecordResponse,
+  createMockExecuteSqlSelectResponse,
+  createMockExecuteSqlWriteResponse,
 } from "../../../utils/mocks/entities";
 import {
   createServiceTestDependencies,
@@ -2769,6 +2771,58 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
         ),
       ).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
+  describe("executeSql", () => {
+    it("should post the statement and return the rows as received", async () => {
+      const raw = createMockExecuteSqlSelectResponse();
+      mockApiClient.post.mockResolvedValue(raw);
+
+      const result = await entityService.executeSql(ENTITY_TEST_CONSTANTS.SQL_SELECT);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.EXECUTE_SQL,
+        { sql: ENTITY_TEST_CONSTANTS.SQL_SELECT, parameters: undefined },
+        { headers: {} },
+      );
+      // Rows are keyed by the statement's own column names, so their casing is kept
+      expect(result).toEqual(raw);
+      expect(result.rows[0].Title).toBe(ENTITY_TEST_CONSTANTS.SQL_PARAMETER_TITLE);
+      expect(result.rowsAffected).toBeUndefined();
+    });
+
+    it("should send the parameters and the folderKey header", async () => {
+      mockApiClient.post.mockResolvedValue(createMockExecuteSqlWriteResponse());
+      const parameters = {
+        id: ENTITY_TEST_CONSTANTS.SQL_PARAMETER_ID,
+        title: ENTITY_TEST_CONSTANTS.SQL_PARAMETER_TITLE,
+      };
+
+      const result = await entityService.executeSql(ENTITY_TEST_CONSTANTS.SQL_UPDATE, {
+        parameters,
+        folderKey: TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.EXECUTE_SQL,
+        { sql: ENTITY_TEST_CONSTANTS.SQL_UPDATE, parameters },
+        { headers: { "X-UIPATH-FolderKey": TEST_CONSTANTS.FOLDER_KEY } },
+      );
+      expect(result.rowsAffected).toBe(ENTITY_TEST_CONSTANTS.SQL_ROWS_AFFECTED);
+    });
+
+    it("should handle API errors", async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        entityService.executeSql(ENTITY_TEST_CONSTANTS.SQL_SELECT),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it.each(["", "   "])("should reject a blank statement with a ValidationError: %j", async (sql) => {
+      await expect(entityService.executeSql(sql)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
   });
 

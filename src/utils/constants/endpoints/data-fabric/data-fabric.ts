@@ -39,6 +39,8 @@ export const DATA_FABRIC_ENDPOINTS = {
     // v3 query — Federated-capable; by-name handles joins, by-id rejects them.
     QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/query`,
     QUERY_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/query`,
+    // One SQL statement over the folder's or tenant's Schema tables.
+    EXECUTE_SQL: `${DATAFABRIC_BASE}/api/v3/QueryExecutor`,
     BULK_UPLOAD_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,
     DOWNLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,

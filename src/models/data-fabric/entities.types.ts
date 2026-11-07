@@ -841,6 +841,57 @@ export interface EntityUpsertOptions extends EntityFolderScopedOptions {
 }
 
 /**
+ * Value of one `@` parameter of a SQL statement. Send dates as ISO 8601 strings.
+ */
+export type EntitySqlParameterValue = string | number | boolean | null;
+
+/**
+ * Options for running a SQL statement over Schema tables
+ */
+export interface EntityExecuteSqlOptions extends EntityFolderScopedOptions {
+  /**
+   * Value of each `@` parameter the statement uses, by name with or without the `@`
+   */
+  parameters?: Record<string, EntitySqlParameterValue>;
+}
+
+/**
+ * A column of a SQL statement's result
+ */
+export interface EntitySqlColumn {
+  /**
+   * Column name, as the statement names it
+   */
+  name: string;
+  /**
+   * SQL Server type name, e.g. `int` or `nvarchar`
+   */
+  type: string;
+}
+
+/**
+ * Result of a SQL statement over Schema tables
+ */
+export interface EntityExecuteSqlResponse {
+  /**
+   * Result columns, in order
+   */
+  columns: EntitySqlColumn[];
+  /**
+   * Result rows, each keyed by column name. At most 1,000.
+   */
+  rows: Record<string, unknown>[];
+  /**
+   * Whether the statement returned more rows than `rows` holds
+   */
+  truncated: boolean;
+  /**
+   * Rows an INSERT, UPDATE or DELETE changed; absent for a SELECT
+   */
+  rowsAffected?: number;
+}
+
+/**
  * Entity type enum
  */
 export enum EntityType {

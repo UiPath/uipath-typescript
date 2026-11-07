@@ -17,7 +17,8 @@ import {
   EntityUpdateResponse,
   EntityDeleteResponse,
   EntityMultiEntityWriteOperation,
-  EntityUpsertResponse
+  EntityUpsertResponse,
+  EntityExecuteSqlResponse
 } from '../../../src/models/data-fabric/entities.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { ENTITY_TEST_CONSTANTS } from '../constants/entities';
@@ -374,6 +375,27 @@ export const createMockUpsertTreeResponse =
 /**
  * Creates a single-record upsert response.
  */
+/**
+ * Creates the result of a SELECT over Schema tables, as Data Service sends it: no `rowsAffected`
+ * @returns Mock EntityExecuteSqlResponse
+ */
+export const createMockExecuteSqlSelectResponse = (): EntityExecuteSqlResponse => ({
+  columns: [{ name: 'Id', type: 'bigint' }, { name: 'Title', type: 'nvarchar' }],
+  rows: [{ Id: ENTITY_TEST_CONSTANTS.SQL_PARAMETER_ID, Title: ENTITY_TEST_CONSTANTS.SQL_PARAMETER_TITLE }],
+  truncated: false
+});
+
+/**
+ * Creates the result of a write over Schema tables
+ * @returns Mock EntityExecuteSqlResponse
+ */
+export const createMockExecuteSqlWriteResponse = (): EntityExecuteSqlResponse => ({
+  columns: [],
+  rows: [],
+  truncated: false,
+  rowsAffected: ENTITY_TEST_CONSTANTS.SQL_ROWS_AFFECTED
+});
+
 export const createMockUpsertRecordResponse = (): EntityUpsertResponse => ({
   Id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
   children: {},
