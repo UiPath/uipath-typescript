@@ -23,6 +23,35 @@ describe('ErrorResponseParser Unit Tests', () => {
       expect(result.requestId).toBe(ERROR_PARSER_TEST_CONSTANTS.ORCHESTRATOR_TRACE_ID);
     });
 
+    it('should list a Data Service error body\'s problems in the message', async () => {
+      const response = new Response(
+        JSON.stringify({
+          error: ERROR_PARSER_TEST_CONSTANTS.ENTITY_ERROR_MESSAGE,
+          traceId: ERROR_PARSER_TEST_CONSTANTS.ENTITY_TRACE_ID,
+          problems: ERROR_PARSER_TEST_CONSTANTS.ENTITY_PROBLEMS,
+        }),
+        { status: 400, statusText: 'Bad Request', headers: { 'content-type': 'application/json' } }
+      );
+
+      const result = await errorResponseParser.parse(response);
+
+      expect(result.message).toBe(
+        `${ERROR_PARSER_TEST_CONSTANTS.ENTITY_ERROR_MESSAGE.replace(/\.$/, '')}: ${ERROR_PARSER_TEST_CONSTANTS.ENTITY_PROBLEMS.join('; ')}`
+      );
+      expect(result.requestId).toBe(ERROR_PARSER_TEST_CONSTANTS.ENTITY_TRACE_ID);
+    });
+
+    it('should keep a Data Service error body without problems as its error', async () => {
+      const response = new Response(
+        JSON.stringify({ error: ERROR_PARSER_TEST_CONSTANTS.ENTITY_ERROR_MESSAGE, traceId: ERROR_PARSER_TEST_CONSTANTS.ENTITY_TRACE_ID }),
+        { status: 400, statusText: 'Bad Request', headers: { 'content-type': 'application/json' } }
+      );
+
+      const result = await errorResponseParser.parse(response);
+
+      expect(result.message).toBe(ERROR_PARSER_TEST_CONSTANTS.ENTITY_ERROR_MESSAGE);
+    });
+
     it('should preserve a non-JSON error body in responseText', async () => {
       // Blob storage answers with XML, not JSON. Parsing the response directly
       // consumes the body, leaving nothing for the fallback to read — so the

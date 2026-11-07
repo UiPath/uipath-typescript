@@ -20,6 +20,8 @@ import {
   EntityDeleteResponse,
   EntityUpsertOptions,
   EntityUpsertResponse,
+  EntityExecuteSqlOptions,
+  EntityExecuteSqlResponse,
   EntityRecord,
   RawEntityGetResponse,
   FieldMetaData,
@@ -313,6 +315,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // The route is name-only, so an id ref costs a lookup.
     const entityName = byId ? await this.resolveEntityName(identifier, options.folderKey) : identifier;
     return this.upsertImpl(entityName, data, options);
+  }
+
+  @track('Entities.ExecuteSql')
+  async executeSql(sql: string, options: EntityExecuteSqlOptions = {}): Promise<EntityExecuteSqlResponse> {
+    if (!sql?.trim()) {
+      throw new ValidationError({ message: 'Entities.executeSql: sql is required.' });
+    }
+
+    // Returned as sent: the envelope is camelCase and rows are keyed by the statement's own column names.
+    const response = await this.post<EntityExecuteSqlResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.EXECUTE_SQL,
+      { sql, parameters: options.parameters },
+      { headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+    );
+    return response.data;
   }
 
   @track('Entities.DeleteRecords')
