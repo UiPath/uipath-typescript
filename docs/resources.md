@@ -1,6 +1,6 @@
 # Resource Declarations
 
-Declare the Solution resources a coded project uses once, in a `resources.ts` file, and pass those declarations to the SDK instead of plain names. Each declaration is a small handle that names a resource and the folder it lives in. Tooling derives the project's `bindings_v2.json` from the declarations, and at run time the SDK resolves the handle through the same override lookup it uses for every name-based call.
+Declare the Solution resources a coded project uses once, in a `uipath_resources.ts` file, and pass those declarations to the SDK instead of plain names. Each declaration is a small handle that names a resource and the folder it lives in. Tooling derives the project's `bindings_v2.json` from the declarations, and at run time the SDK resolves the handle through the same override lookup it uses for every name-based call.
 
 | Factory | Declares | Folder |
 |---------|----------|--------|
@@ -17,7 +17,7 @@ Import the factories from `@uipath/uipath-typescript/resources`.
 Keep every declaration in one class so the handles have stable, discoverable names. Pass literal strings only: the tooling that derives the bindings reads the file statically and skips anything it cannot read.
 
 ```typescript
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {
@@ -37,7 +37,7 @@ Every `getByName` on assets, buckets, queues, processes and entities accepts a h
 
 ```typescript
 import { Assets } from '@uipath/uipath-typescript/assets';
-import { ProjectResources } from '../resources';
+import { ProjectResources } from '../uipath_resources';
 
 const assets = new Assets(sdk);
 const threshold = await assets.getByName(ProjectResources.invoiceThreshold);
@@ -61,8 +61,8 @@ A handle also carries what was declared: `kind`, `name`, `folderPath` and `type`
 
 The SDK never reads `bindings_v2.json`. The file exists for Solutions and Orchestrator, which use it to list the project's dependencies and to offer overrides at deployment. Tooling writes it from the declarations:
 
-- A coded app's `uip codedapp resources add` and `sync` write declarations into `resources.ts` and regenerate `bindings_v2.json`; `push` regenerates it again before uploading.
-- Entries derived from declarations carry `metadata.Source: "code"`. Regeneration replaces those and keeps any hand-written entry, unless a declaration has the same kind and key.
+- `uip resources add` and `uip resources sync` write declarations into `uipath_resources.ts` and nothing else. `bindings_v2.json` is derived from the declarations when the project is pushed or packed, and when its solution is packed or refreshed, so it never has to be kept in the project.
+- Entries derived from declarations carry `metadata.Source: "code"`. A hand-written `bindings_v2.json` already in a project is the base: derivation keeps its entries, unless a declaration has the same kind and key.
 
 ## How overrides reach the code
 

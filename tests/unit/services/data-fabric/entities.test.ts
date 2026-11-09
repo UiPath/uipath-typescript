@@ -2157,7 +2157,7 @@ describe("EntityService Unit Tests", () => {
   // ===== By-name method tests =====
 
   describe("getByName", () => {
-    it("should accept a resources.ts handle and look the entity up by its declared name", async () => {
+    it("should accept a uipath_resources.ts handle and look the entity up by its declared name", async () => {
       mockApiClient.get.mockResolvedValue(createMockEntityResponse());
 
       await entityService.getByName(resource.entity({ name: ENTITY_TEST_CONSTANTS.ENTITY_NAME }));

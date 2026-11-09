@@ -1,14 +1,14 @@
 /**
  * Resource Declarations Module
  *
- * Declare the Solution resources a coded project uses in a `resources.ts` at the
+ * Declare the Solution resources a coded project uses in a `uipath_resources.ts` at the
  * project root and pass the typed handles to the SDK. The `uip` CLI derives
  * `bindings_v2.json` from that file, so a resource is declared exactly once.
  * Keep declarations literal — the CLI reads the file as text, not by running it.
  *
  * @example
  * ```typescript
- * // resources.ts
+ * // uipath_resources.ts
  * import { resource } from '@uipath/uipath-typescript/resources';
  *
  * export class ProjectResources {

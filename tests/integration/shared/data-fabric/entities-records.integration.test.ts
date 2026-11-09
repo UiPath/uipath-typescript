@@ -1176,7 +1176,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         expect(typeof result.getAllRecords).toBe('function');
       });
 
-      it('should retrieve entity metadata by a resources.ts handle', async () => {
+      it('should retrieve entity metadata by a uipath_resources.ts handle', async () => {
         const { entities } = getServices();
 
         const result = await entities.getByName(resource.entity({ name: byNameEntityName }));

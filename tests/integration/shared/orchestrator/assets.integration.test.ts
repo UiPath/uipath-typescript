@@ -123,7 +123,7 @@ describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, ()
       expect(result.name).toBe(existing.name);
     });
 
-    it('should retrieve an asset by a resources.ts handle', async () => {
+    it('should retrieve an asset by a uipath_resources.ts handle', async () => {
       const { assets } = getServices();
       const config = getTestConfig();
 

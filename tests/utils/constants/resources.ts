@@ -1,6 +1,6 @@
 /**
  * Resource declaration test constants
- * Declarations a project's `resources.ts` would make, used to build handles in tests
+ * Declarations a project's `uipath_resources.ts` would make, used to build handles in tests
  */
 
 export const RESOURCE_TEST_CONSTANTS = {

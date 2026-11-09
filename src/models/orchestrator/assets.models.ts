@@ -93,7 +93,7 @@ export interface AssetServiceModel {
   getByName(name: string, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
 
   /**
-   * Retrieves a single asset declared in `resources.ts`.
+   * Retrieves a single asset declared in `uipath_resources.ts`.
    *
    * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
    * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
@@ -103,7 +103,7 @@ export interface AssetServiceModel {
    * @returns Promise resolving to a single {@link AssetGetResponse}
    * @example
    * ```typescript
-   * // resources.ts
+   * // uipath_resources.ts
    * import { resource } from '@uipath/uipath-typescript/resources';
    *
    * export class ProjectResources {

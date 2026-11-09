@@ -105,7 +105,7 @@ export interface ProcessServiceModel {
   getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
 
   /**
-   * Retrieves a single process declared in `resources.ts`.
+   * Retrieves a single process declared in `uipath_resources.ts`.
    *
    * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
    * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
@@ -115,7 +115,7 @@ export interface ProcessServiceModel {
    * @returns Promise resolving to a single {@link ProcessGetResponse}
    * @example
    * ```typescript
-   * // resources.ts
+   * // uipath_resources.ts
    * import { resource } from '@uipath/uipath-typescript/resources';
    *
    * export class ProjectResources {

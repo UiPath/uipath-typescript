@@ -141,7 +141,7 @@ export interface QueueServiceModel {
   getByName(name: string, options?: QueueGetByNameOptions): Promise<QueueGetWithMethodsResponse>;
 
   /**
-   * Retrieves a single queue declared in `resources.ts`.
+   * Retrieves a single queue declared in `uipath_resources.ts`.
    *
    * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
    * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
@@ -151,7 +151,7 @@ export interface QueueServiceModel {
    * @returns Promise resolving to a single {@link QueueGetWithMethodsResponse}
    * @example
    * ```typescript
-   * // resources.ts
+   * // uipath_resources.ts
    * import { resource } from '@uipath/uipath-typescript/resources';
    *
    * export class ProjectResources {

@@ -149,7 +149,7 @@ describeIntegration('Orchestrator Buckets - Integration Tests', 'both', modes, (
       expect(result.name).toBe(existingBucket.name);
     });
 
-    it('should retrieve a bucket by a resources.ts handle', async () => {
+    it('should retrieve a bucket by a uipath_resources.ts handle', async () => {
       const { buckets } = getServices();
       const config = getTestConfig();
 

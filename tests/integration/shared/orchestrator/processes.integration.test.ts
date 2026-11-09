@@ -253,7 +253,7 @@ describeIntegration('Orchestrator Processes - Integration Tests', 'both', modes,
       expect(result.name).toBe(existing.name);
     });
 
-    it('should retrieve a process by a resources.ts handle', async () => {
+    it('should retrieve a process by a uipath_resources.ts handle', async () => {
       const { processes } = getServices();
       const config = getTestConfig();
 

@@ -1021,14 +1021,14 @@ export interface EntityServiceModel {
   getByName(entityName: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse>;
 
   /**
-   * Retrieves entity metadata for an entity declared in `resources.ts`.
+   * Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
    *
    * @param entity - Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`
    * @param options - Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**.
    * @returns Promise resolving to the {@link EntityGetResponse} entity metadata with operation methods
    * @example
    * ```typescript
-   * // resources.ts
+   * // uipath_resources.ts
    * import { resource } from '@uipath/uipath-typescript/resources';
    *
    * export class ProjectResources {

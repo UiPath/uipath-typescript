@@ -132,7 +132,7 @@ describeIntegration('Orchestrator Queues - Integration Tests', 'both', modes, ()
       expect(typeof result.insertItem).toBe('function');
     });
 
-    it('should retrieve a queue by a resources.ts handle with methods attached', async () => {
+    it('should retrieve a queue by a uipath_resources.ts handle with methods attached', async () => {
       const { queues } = getServices();
       const config = getTestConfig();
       expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();

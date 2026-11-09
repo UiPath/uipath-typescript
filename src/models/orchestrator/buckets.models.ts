@@ -105,7 +105,7 @@ export interface BucketServiceModel {
   getByName(name: string, options?: BucketGetByNameOptions): Promise<BucketGetResponse>;
 
   /**
-   * Retrieves a single storage bucket declared in `resources.ts`.
+   * Retrieves a single storage bucket declared in `uipath_resources.ts`.
    *
    * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
    * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
@@ -115,7 +115,7 @@ export interface BucketServiceModel {
    * @returns Promise resolving to a single {@link BucketGetResponse}
    * @example
    * ```typescript
-   * // resources.ts
+   * // uipath_resources.ts
    * import { resource } from '@uipath/uipath-typescript/resources';
    *
    * export class ProjectResources {

@@ -857,7 +857,7 @@ describe('ProcessService Unit Tests', () => {
   });
 
   describe('getByName', () => {
-    it('should accept a resources.ts handle and scope the lookup by its folderPath', async () => {
+    it('should accept a uipath_resources.ts handle and scope the lookup by its folderPath', async () => {
       mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
 
       await service.getByName(
