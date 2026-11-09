@@ -41,6 +41,7 @@ import { loadIntegrationConfig, IntegrationConfig, resolveAuthModes, AuthRequire
 } from './test-config';
 export { resolveAuthModes } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
+import { OntologyService } from '@/services/ontology/ontology';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll, describe } from 'vitest';
 
@@ -99,6 +100,7 @@ export interface TestServices {
   platformRoles?: Roles;
   platformGroups?: Groups;
   platformDirectory?: Directory;
+  ontologies?: OntologyService;
 }
 
 /**
@@ -228,6 +230,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     platformRoles: new Roles(sdk),
     platformGroups: new Groups(sdk),
     platformDirectory: new Directory(sdk),
+    ontologies: new OntologyService(sdk),
   };
 }
 
