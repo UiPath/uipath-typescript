@@ -40,6 +40,17 @@ describe('readEnvValues', () => {
     })
   })
 
+  it('leaves a blank value unset, so the app falls back to its own default', () => {
+    write('.env.local', 'UIPATH_PUBLIC_REGION=\nUIPATH_PUBLIC_THEME=dark\nUIPATH_PUBLIC_EMPTY=""\n')
+    expect(readEnvValues(undefined, dir)).toEqual({ UIPATH_PUBLIC_THEME: 'dark' })
+  })
+
+  it('lets a later file unset a value an earlier one set', () => {
+    write('.env.local', 'UIPATH_PUBLIC_REGION=US\n')
+    write('.env.development', 'UIPATH_PUBLIC_REGION=\n')
+    expect(readEnvValues(undefined, dir)).toEqual({})
+  })
+
   it('does not read plain .env', () => {
     write('.env', 'UIPATH_PUBLIC_REGION=EU\n')
     expect(readEnvValues(undefined, dir)).toEqual({})

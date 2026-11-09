@@ -9,6 +9,7 @@ import type { EnvironmentVariables } from '../types'
  *
  * Files are read in order and a later file overrides an earlier one, the precedence Vite itself
  * uses. Missing files are skipped; a dev server has to start with none of them present.
+ * A blank value leaves the variable unset.
  * `${VAR}` stays literal: the same text means the same thing here and at deploy.
  */
 export function readEnvValues(files: readonly string[] = DEV_ENV_FILES, cwd: string = process.cwd()): EnvironmentVariables {
@@ -24,9 +25,11 @@ export function readEnvValues(files: readonly string[] = DEV_ENV_FILES, cwd: str
     }
   }
 
+  // A blank value (`NAME=`) leaves the variable unset, as a deployment does, so `env.NAME ?? fallback`
+  // behaves the same on the dev server and in the deployed app.
   const values: EnvironmentVariables = {}
   for (const [name, value] of Object.entries(merged)) {
-    if (name.startsWith(ENV_VARIABLE_PREFIX)) values[name] = value
+    if (name.startsWith(ENV_VARIABLE_PREFIX) && value !== '') values[name] = value
   }
   return values
 }
