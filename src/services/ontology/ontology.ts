@@ -18,9 +18,6 @@ import { PaginationType } from '@/utils/pagination/internal-types';
 import { transformData } from '@/utils/transform';
 import { BaseService } from '@/services/base';
 
-/**
- * @internal
- */
 export class OntologyService extends BaseService implements OntologyServiceModel {
   @track('Ontologies.GetAll')
   async getAll<T extends OntologyGetAllOptions>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<OntologySummary> : NonPaginatedResponse<OntologySummary>> {
@@ -29,6 +26,7 @@ export class OntologyService extends BaseService implements OntologyServiceModel
         serviceAccess: this.createPaginationServiceAccess(),
         getEndpoint: () => ONTOLOGY_ENDPOINTS.COLLECTION,
         transformFn: (raw) => transformData(raw, OntologyMap) as OntologySummary,
+        // The list route takes the folder as a `folder` query parameter, not the folder-key header.
         processParametersFn: ({ folderKey, ...rest }) => ({ ...rest, folder: folderKey ?? this.config.folderKey }),
         excludeFromPrefix: ['search', 'folder'],
         pagination: {
@@ -59,13 +57,14 @@ export class OntologyService extends BaseService implements OntologyServiceModel
 
   @track('Ontologies.ValidateArtifactContent')
   async validateArtifactContent(fileName: string, content: string, mediaType: string, options?: ArtifactContentValidateOptions): Promise<ValidationResult> {
-    const url = options?.type
-      ? `${ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName)}?type=${encodeURIComponent(options.type)}`
-      : ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName);
     const response = await this.post<ValidationResult>(
-      url,
+      ONTOLOGY_ENDPOINTS.ARTIFACT.VALIDATE_CONTENT(fileName),
       content,
-      { headers: { 'Content-Type': mediaType }, bodyOptions: { stringify: false } }
+      {
+        params: { type: options?.type },
+        headers: { 'Content-Type': mediaType },
+        bodyOptions: { stringify: false },
+      }
     );
     return response.data;
   }

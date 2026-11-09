@@ -9,9 +9,10 @@ export const ONTOLOGY_TEST_CONSTANTS = {
   ONTOLOGY_DESCRIPTION: 'Sales pipeline ontology',
 
   CREATE_TIME: '2026-07-01T10:00:00Z',
+  UPDATE_TIME: '2026-07-02T11:30:00Z',
   CREATED_BY: 'user@acme.com',
 
-  ARTIFACT_FILE_NAME_2: 'po-shapes.ttl',
+  ARTIFACT_FILE_NAME: 'po-shapes.ttl',
   ARTIFACT_FILE_NAME_SPECIAL: 'my file#1.ttl',
   ARTIFACT_MEDIA_TYPE_TURTLE: 'text/turtle',
   ARTIFACT_CONTENT_SHACL: '@prefix sh: <http://www.w3.org/ns/shacl#> .',

@@ -40,7 +40,7 @@ import { loadIntegrationConfig, IntegrationConfig, resolveAuthModes, AuthRequire
 } from './test-config';
 export { resolveAuthModes } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
-import { OntologyService } from '../../../src/services/ontology/ontology';
+import { OntologyService } from '@/services/ontology/ontology';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll, describe } from 'vitest';
 

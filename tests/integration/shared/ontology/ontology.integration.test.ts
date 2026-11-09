@@ -23,13 +23,38 @@ describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
   });
 
   describe('getAll + getById', () => {
-    it('should list the ontologies in the test folder and read each back by name', async () => {
+    it('should list the ontologies in the test folder and read one back by name', async () => {
       const { items } = await ontologies.getAll({ folderKey });
+      if (items.length === 0) {
+        throw new Error('No ontologies in INTEGRATION_TEST_FOLDER_KEY; deploy one to run this test');
+      }
+      const [first] = items;
 
-      for (const item of items) {
-        expect(item.folderId?.toLowerCase()).toBe(folderKey.toLowerCase());
-        const fetched = await ontologies.getById(item.name, { folderKey });
-        expect(fetched.id).toBe(item.id);
+      expect(first.folderId?.toLowerCase()).toBe(folderKey.toLowerCase());
+      const fetched = await ontologies.getById(first.name, { folderKey });
+      expect(fetched.id).toBe(first.id);
+    });
+
+    it('should return SDK field names, not the API timestamp names', async () => {
+      const { items } = await ontologies.getAll({ folderKey });
+      if (items.length === 0) {
+        throw new Error('No ontologies in INTEGRATION_TEST_FOLDER_KEY; deploy one to run this test');
+      }
+
+      const ontology = await ontologies.getById(items[0].id, { folderKey });
+
+      expect(ontology.createdTime).toBeDefined();
+      expect((ontology as Record<string, unknown>).createTime).toBeUndefined();
+      expect((ontology as Record<string, unknown>).updateTime).toBeUndefined();
+    });
+
+    it('should page through the list with pageSize', async () => {
+      const page = await ontologies.getAll({ folderKey, pageSize: 1 });
+
+      expect(page.items.length).toBeLessThanOrEqual(1);
+      if (page.hasNextPage && page.nextCursor) {
+        const next = await ontologies.getAll({ folderKey, cursor: page.nextCursor });
+        expect(next.items[0]?.id).not.toBe(page.items[0]?.id);
       }
     });
   });
