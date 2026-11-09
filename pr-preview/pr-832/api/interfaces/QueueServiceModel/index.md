@@ -276,7 +276,7 @@ const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' }
 
 > **getByName**(`queue`: `QueueResource`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
 
-Retrieves a single queue declared in `resources.ts`.
+Retrieves a single queue declared in `uipath_resources.ts`.
 
 The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
@@ -296,7 +296,7 @@ Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/Q
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {

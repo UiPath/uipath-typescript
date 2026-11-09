@@ -2146,6 +2146,8 @@
       
         
       
+        
+      
     
     
     
@@ -2212,6 +2214,34 @@
     
   
     Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/DecisionsServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
   
 
     
@@ -3019,6 +3049,17 @@
     <span class="md-ellipsis">
       
         Node globals are available
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-function-runs-with-limited-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A function runs with limited permissions
       
     </span>
   </a>
@@ -4093,6 +4134,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-function-runs-with-limited-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A function runs with limited permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#declare-contracts-schema-first" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4271,6 +4323,9 @@ a query value, <code>z.coerce.number()</code> accepts and converts it.</p>
 <p><code>Buffer</code>, <code>process</code>, <code>setImmediate</code>, <code>clearImmediate</code> and <code>global</code> are all present, and <code>await import("node:buffer")</code> resolves.</p>
 <p>Keep <code>Buffer</code> out of declared contracts: a JSON output schema serializes it as <code>{"type":"Buffer","data":[104,105]}</code>, not bytes — cross the boundary as base64 or <code>number[]</code>.</p>
 <hr />
+<h2 id="a-function-runs-with-limited-permissions">A function runs with limited permissions<a class="headerlink" href="#a-function-runs-with-limited-permissions" title="Permanent link">&para;</a></h2>
+<p>The function process starts in its package folder, where its code and <code>node_modules</code> are. It can read files anywhere, make network calls, read environment variables and access basic system information such as the host name or CPU count. It can write only to <code>os.tmpdir()</code>, a temp folder private to its job or server process. It cannot start other processes. A call outside these limits fails the function.</p>
+<hr />
 <h2 id="declare-contracts-schema-first">Declare contracts schema-first<a class="headerlink" href="#declare-contracts-schema-first" title="Permanent link">&para;</a></h2>
 <p>Declare <code>input</code>/<code>output</code> as a <code>defineSchema&lt;T&gt;()</code> marker (TypeScript) or a JSON Schema literal (JavaScript) — see <a href="../api/define-function/#declaring-contracts">defineFunction — Declaring contracts</a>. These are statically extractable (Studio Web reads the contract without executing your code) and add no runtime dependency.</p>
 <p>Validator schemas remain supported for backwards compatibility: any object implementing both <a href="https://standardschema.dev/">Standard Schema</a> and Standard JSON Schema works (<code>zod</code> &gt;= 4.2, <code>arktype</code> &gt;= 2.1.28, <code>valibot</code> &gt;= 1.2 via <code>@valibot/to-json-schema</code> &gt;= 1.5), but the contract can then only be obtained by executing the module, and the validator must ship in <code>dependencies</code>.</p>
@@ -4291,7 +4346,7 @@ a query value, <code>z.coerce.number()</code> accepts and converts it.</p>
 <p><code>uip functions pack</code> overwrites <code>.uipath/&lt;name&gt;.&lt;version&gt;.nupkg</code> if the file already exists. Older version files stay in <code>.uipath/</code>. The <code>publish</code> command picks the most recently modified file by mtime.</p>
 <hr />
 <h2 id="uip-functions-serve-production"><code>uip functions serve --production</code><a class="headerlink" href="#uip-functions-serve-production" title="Permanent link">&para;</a></h2>
-<p>When run in the production container, pass <code>--production</code> to skip the server-runner dependency install and the <code>freePort</code> check. The CLI detects this flag and skips both steps if the server-runner directory already exists.</p>
+<p>The production container passes <code>--production</code>. The CLI then serves the package as provisioned by <code>install-server</code>: no check that dependencies are installed, no <code>freePort</code> kill, no file watching on either runtime, no design-time environment, and contracts read from the packed <code>entry-points.json</code> instead of derived from source. A blocking diagnostic stops the start and is reported to the host rather than printed.</p>
 
 
 

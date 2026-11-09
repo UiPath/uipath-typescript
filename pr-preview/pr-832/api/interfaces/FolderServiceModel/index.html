@@ -1565,6 +1565,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#getall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        getAll()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getbykey" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2234,6 +2245,8 @@
       
         
       
+        
+      
     
     
     
@@ -2300,6 +2313,34 @@
     
   
     Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DecisionsServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
   
 
     
@@ -3920,6 +3961,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#getall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        getAll()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getbykey" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3968,13 +4020,73 @@ most Orchestrator API calls. <a href="https://docs.uipath.com/orchestrator/autom
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getByKey</span><span class="p">(</span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
+<h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt;&gt;</p>
+</blockquote>
+<p>Gets the folders the calling user has access to, across the tenant.</p>
+<p>Each folder carries its id, key, display name, fully qualified path,
+folder type and parent reference.</p>
+<p>Without pagination options, a single page is returned at the server's
+default page size. Compare <code>totalCount</code> with <code>items.length</code>, or page with
+<code>pageSize</code> and <code>cursor</code>, to retrieve every folder.
+A <code>jumpToPage</code> past the last page returns no items with <code>totalCount: 0</code>.</p>
+<h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Type Parameter</th>
+<th>Default type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T</code> <em>extends</em> <a href="../../type-aliases/PaginationOptions/"><code>PaginationOptions</code></a></td>
+<td><a href="../../type-aliases/PaginationOptions/"><code>PaginationOptions</code></a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>options?</code></td>
+<td><code>T</code></td>
+<td>Optional pagination options.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt;&gt;</p>
+<p>Promise resolving to a <a href="../NonPaginatedResponse/">NonPaginatedResponse</a> of <a href="../FolderGetAllResponse/">FolderGetAllResponse</a> without pagination options, or a <a href="../PaginatedResponse/">PaginatedResponse</a> of <a href="../FolderGetAllResponse/">FolderGetAllResponse</a> when pagination options are used.</p>
+<h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Get folders (first page at the server&#39;s default page size)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nx">result</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">folder</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">folder</span><span class="p">.</span><span class="nx">fullyQualifiedName</span><span class="p">));</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Page through every folder</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">100</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allFolders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[...</span><span class="nx">page</span><span class="p">.</span><span class="nx">items</span><span class="p">];</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nx">page</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">page</span><span class="p">.</span><span class="nx">nextCursor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nx">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page.nextCursor</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">allFolders</span><span class="p">.</span><span class="nx">push</span><span class="p">(...</span><span class="nx">page</span><span class="p">.</span><span class="nx">items</span><span class="p">);</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
 <h3 id="getbykey">getByKey()<a class="headerlink" href="#getbykey" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>getByKey</strong>(<code>key</code>: <code>string</code>, <code>options?</code>: <a href="../FolderGetByKeyOptions/"><code>FolderGetByKeyOptions</code></a>): <code>Promise</code>&lt;<a href="../FolderGetResponse/"><code>FolderGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a single folder by its key (GUID). Unlike most Orchestrator reads,
 this lookup is not folder-scoped: no folder headers are sent.</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3996,16 +4108,16 @@ this lookup is not folder-scoped: no folder headers are sent.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../FolderGetResponse/"><code>FolderGetResponse</code></a>&gt;</p>
 <p>Promise resolving to the matching <a href="../FolderGetResponse/">FolderGetResponse</a>. Rejects with <code>ValidationError</code> when <code>key</code> is missing or not a GUID, and with <code>NotFoundError</code> when no folder matches the key.</p>
-<h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Get a folder by key</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getByKey</span><span class="p">(</span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
+<h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Get a folder by key</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getByKey</span><span class="p">(</span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// With select</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getByKey</span><span class="p">(</span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">select</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;fullyQualifiedName&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">folder</span><span class="p">.</span><span class="nx">fullyQualifiedName</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// With select</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getByKey</span><span class="p">(</span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">select</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;fullyQualifiedName&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">folder</span><span class="p">.</span><span class="nx">fullyQualifiedName</span><span class="p">);</span>
 </code></pre></div>
 
 

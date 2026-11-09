@@ -147,6 +147,12 @@ Keep `Buffer` out of declared contracts: a JSON output schema serializes it as `
 
 ______________________________________________________________________
 
+## A function runs with limited permissions
+
+The function process starts in its package folder, where its code and `node_modules` are. It can read files anywhere, make network calls, read environment variables and access basic system information such as the host name or CPU count. It can write only to `os.tmpdir()`, a temp folder private to its job or server process. It cannot start other processes. A call outside these limits fails the function.
+
+______________________________________________________________________
+
 ## Declare contracts schema-first
 
 Declare `input`/`output` as a `defineSchema<T>()` marker (TypeScript) or a JSON Schema literal (JavaScript) — see [defineFunction — Declaring contracts](../api/define-function/#declaring-contracts). These are statically extractable (Studio Web reads the contract without executing your code) and add no runtime dependency.
@@ -184,4 +190,4 @@ ______________________________________________________________________
 
 ## `uip functions serve --production`
 
-When run in the production container, pass `--production` to skip the server-runner dependency install and the `freePort` check. The CLI detects this flag and skips both steps if the server-runner directory already exists.
+The production container passes `--production`. The CLI then serves the package as provisioned by `install-server`: no check that dependencies are installed, no `freePort` kill, no file watching on either runtime, no design-time environment, and contracts read from the packed `entry-points.json` instead of derived from source. A blocking diagnostic stops the start and is reported to the host rather than printed.

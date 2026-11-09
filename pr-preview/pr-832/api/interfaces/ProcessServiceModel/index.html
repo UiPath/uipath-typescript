@@ -2267,6 +2267,8 @@
       
         
       
+        
+      
     
     
     
@@ -2333,6 +2335,34 @@
     
   
     Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DecisionsServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
   
 
     
@@ -4195,7 +4225,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <blockquote>
 <p><strong>getByName</strong>(<code>process</code>: <code>ProcessResource</code>, <code>options?</code>: <a href="../ProcessGetByNameOptions/"><code>ProcessGetByNameOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessGetResponse/"><code>ProcessGetResponse</code></a>&gt;</p>
 </blockquote>
-<p>Retrieves a single process declared in <code>resources.ts</code>.</p>
+<p>Retrieves a single process declared in <code>uipath_resources.ts</code>.</p>
 <p>The handle's <code>folderPath</code> scopes the lookup. A folder option passed explicitly
 (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) takes precedence over the handle.</p>
 <h5 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h5>
@@ -4224,7 +4254,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <p><code>Promise</code>&lt;<a href="../ProcessGetResponse/"><code>ProcessGetResponse</code></a>&gt;</p>
 <p>Promise resolving to a single <a href="../ProcessGetResponse/">ProcessGetResponse</a></p>
 <h5 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h5>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// resources.ts</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// uipath_resources.ts</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resource</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/resources&#39;</span><span class="p">;</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">ProjectResources</span><span class="w"> </span><span class="p">{</span>

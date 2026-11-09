@@ -576,6 +576,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets                           | `getAll()`                 | ✅ Yes                 |
 | Buckets                           | `getFiles()`               | ✅ Yes                 |
 | Buckets                           | `getFileMetaData()`        | ❌ No                  |
+| Folders                           | `getAll()`                 | ✅ Yes                 |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
 | Users                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAll()`                 | ✅ Yes                 |
@@ -603,6 +604,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
 | Feedback                          | `getCategories()`          | ✅ Yes                 |
 | Governance                        | `getPolicyTraces()`        | ✅ Yes                 |
+| Decisions                         | `getAll()`                 | ✅ Yes                 |
+| Decisions                         | `query()`                  | ❌ No                  |
 
 # Helper Methods
 
@@ -930,7 +933,7 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyVal
 
 > **getByName**(`asset`: `AssetResource`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
 
-Retrieves a single asset declared in `resources.ts`.
+Retrieves a single asset declared in `uipath_resources.ts`.
 
 The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
@@ -950,7 +953,7 @@ Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {
@@ -1475,7 +1478,7 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: '
 
 > **getByName**(`process`: `ProcessResource`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
 
-Retrieves a single process declared in `resources.ts`.
+Retrieves a single process declared in `uipath_resources.ts`.
 
 The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
@@ -1495,7 +1498,7 @@ Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {
@@ -1827,7 +1830,7 @@ const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' }
 
 > **getByName**(`queue`: `QueueResource`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
 
-Retrieves a single queue declared in `resources.ts`.
+Retrieves a single queue declared in `uipath_resources.ts`.
 
 The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
@@ -1847,7 +1850,7 @@ Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/Q
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {
@@ -2155,7 +2158,7 @@ await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
 
 > **getByName**(`bucket`: `BucketResource`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
 
-Retrieves a single storage bucket declared in `resources.ts`.
+Retrieves a single storage bucket declared in `uipath_resources.ts`.
 
 The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
@@ -2175,7 +2178,7 @@ Promise resolving to a single [BucketGetResponse](../BucketGetResponse/)
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {
@@ -3984,7 +3987,7 @@ const records = await entity.getAllRecords();
 
 > **getByName**(`entity`: `EntityResource`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
-Retrieves entity metadata for an entity declared in `resources.ts`.
+Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
 
 ##### Parameters
 
@@ -4002,7 +4005,7 @@ Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetRespons
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {
@@ -6868,7 +6871,7 @@ Get stages and its associated tasks information for a case instance
 
 `Promise`\<`CaseGetStageResponse`[]>
 
-Promise resolving to an array of case stages with their tasks and status
+Promise resolving to an array of [CaseGetStageResponse](../CaseGetStageResponse/) with each stage's tasks, status, default `sla` and all configured `slaRules`
 
 #### Example
 
@@ -6882,6 +6885,11 @@ const stages = await caseInstances.getStages(
 // Iterate through stages
 for (const stage of stages) {
   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
+
+  // Default SLA, e.g. "30 min"
+  if (stage.sla) {
+    console.log(`  SLA: ${stage.sla.length} ${stage.sla.duration}`);
+  }
 
   // Check tasks in the stage
   for (const taskGroup of stage.tasks) {

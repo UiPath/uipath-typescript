@@ -913,6 +913,12 @@ Keep `Buffer` out of declared contracts: a JSON output schema serializes it as `
 
 ______________________________________________________________________
 
+## A function runs with limited permissions
+
+The function process starts in its package folder, where its code and `node_modules` are. It can read files anywhere, make network calls, read environment variables and access basic system information such as the host name or CPU count. It can write only to `os.tmpdir()`, a temp folder private to its job or server process. It cannot start other processes. A call outside these limits fails the function.
+
+______________________________________________________________________
+
 ## Declare contracts schema-first
 
 Declare `input`/`output` as a `defineSchema<T>()` marker (TypeScript) or a JSON Schema literal (JavaScript) — see [defineFunction — Declaring contracts](../api/define-function/#declaring-contracts). These are statically extractable (Studio Web reads the contract without executing your code) and add no runtime dependency.
@@ -950,7 +956,7 @@ ______________________________________________________________________
 
 ## `uip functions serve --production`
 
-When run in the production container, pass `--production` to skip the server-runner dependency install and the `freePort` check. The CLI detects this flag and skips both steps if the server-runner directory already exists.
+The production container passes `--production`. The CLI then serves the package as provisioned by `install-server`: no check that dependencies are installed, no `freePort` kill, no file watching on either runtime, no design-time environment, and contracts read from the packed `entry-points.json` instead of derived from source. A blocking diagnostic stops the start and is reported to the host rather than printed.
 
 # Deployment
 
@@ -1202,11 +1208,11 @@ Start local function server with hot reload.
 uip functions serve [options]
 ```
 
-| Option                   | Default | Description                                                                    |
-| ------------------------ | ------- | ------------------------------------------------------------------------------ |
-| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                             |
-| `--port <port>`          | `7070`  | Port to listen on                                                              |
-| `--production`           |         | Skip server-runner install and freePort check (used by the platform container) |
+| Option                   | Default | Description                                                                                  |
+| ------------------------ | ------- | -------------------------------------------------------------------------------------------- |
+| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                                           |
+| `--port <port>`          | `7070`  | Port to listen on                                                                            |
+| `--production`           |         | Skip the freePort check and run with production permissions (used by the platform container) |
 
 Auto-syncs the `functions` map in `uipath.json` before starting. A `.env` file at the project root is loaded on both runtimes — `serve` passes `--env-file` to Node (through tsx) and to Deno (see [Getting Started — local dev](../getting-started/#2-run-locally)).
 
@@ -1220,18 +1226,18 @@ Execute a single coded function once (one-shot job) and report the result. Unlik
 uip functions run [options]
 ```
 
-| Option                   | Default | Description                                                                                   |
-| ------------------------ | ------- | --------------------------------------------------------------------------------------------- |
-| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                                            |
-| `--entrypoint <path>`    |         | Path to the function file                                                                     |
-| `--function <name>`      |         | Function name resolved via `uipath.json`                                                      |
-| `--input <json>`         | `{}`    | JSON input payload                                                                            |
-| `--input-file <path>`    |         | Path to a JSON input file (takes priority over `--input`)                                     |
-| `--context <json>`       |         | JSON runtime-context payload (used when `--context-file` is absent)                           |
-| `--context-file <path>`  |         | Path to the runtime-context JSON file (takes priority over `--context`)                       |
-| `--production`           |         | Run under production context; skip the `.uipath/server-runner` install when it already exists |
+| Option                   | Default | Description                                                             |
+| ------------------------ | ------- | ----------------------------------------------------------------------- |
+| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                      |
+| `--entrypoint <path>`    |         | Path to the function file                                               |
+| `--function <name>`      |         | Function name resolved via `uipath.json`                                |
+| `--input <json>`         | `{}`    | JSON input payload                                                      |
+| `--input-file <path>`    |         | Path to a JSON input file (takes priority over `--input`)               |
+| `--context <json>`       |         | JSON runtime-context payload (used when `--context-file` is absent)     |
+| `--context-file <path>`  |         | Path to the runtime-context JSON file (takes priority over `--context`) |
+| `--production`           |         | Run under production context                                            |
 
-Provide the target with exactly one of `--entrypoint` (path to the file) or `--function` (name resolved through `uipath.json`). Bootstraps runtime dependencies into `.uipath/server-runner` on first run. The process exit code reflects the job outcome (non-zero on failure).
+Provide the target with exactly one of `--entrypoint` (path to the file) or `--function` (name resolved through `uipath.json`). The process exit code reflects the job outcome (non-zero on failure).
 
 ```
 uip functions run --function hello --input '{"name":"world"}'
@@ -1348,7 +1354,7 @@ Called automatically by `new` as a prerequisite. Run explicitly to set up Deno:
 uip functions setup --runtime deno
 ```
 
-Requires Node.js v20+. Installs `tsx` globally if not found.
+Requires Node.js v20+.
 
 ______________________________________________________________________
 

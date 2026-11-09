@@ -190,7 +190,7 @@ await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
 
 > **getByName**(`bucket`: `BucketResource`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
 
-Retrieves a single storage bucket declared in `resources.ts`.
+Retrieves a single storage bucket declared in `uipath_resources.ts`.
 
 The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
@@ -210,7 +210,7 @@ Promise resolving to a single [BucketGetResponse](../BucketGetResponse/)
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {

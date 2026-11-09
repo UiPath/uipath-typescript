@@ -607,7 +607,7 @@ const records = await entity.getAllRecords();
 
 > **getByName**(`entity`: `EntityResource`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
-Retrieves entity metadata for an entity declared in `resources.ts`.
+Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
 
 ##### Parameters
 
@@ -625,7 +625,7 @@ Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetRespons
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {

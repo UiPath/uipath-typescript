@@ -2269,6 +2269,8 @@
       
         
       
+        
+      
     
     
     
@@ -2335,6 +2337,34 @@
     
   
     Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/interfaces/DecisionsServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
   
 
     
@@ -4026,7 +4056,7 @@
 
 
 <h1 id="resource-declarations">Resource Declarations<a class="headerlink" href="#resource-declarations" title="Permanent link">&para;</a></h1>
-<p>Declare the Solution resources a coded project uses once, in a <code>resources.ts</code> file, and pass those declarations to the SDK instead of plain names. Each declaration is a small handle that names a resource and the folder it lives in. Tooling derives the project's <code>bindings_v2.json</code> from the declarations, and at run time the SDK resolves the handle through the same override lookup it uses for every name-based call.</p>
+<p>Declare the Solution resources a coded project uses once, in a <code>uipath_resources.ts</code> file, and pass those declarations to the SDK instead of plain names. Each declaration is a small handle that names a resource and the folder it lives in. Tooling derives the project's <code>bindings_v2.json</code> from the declarations, and at run time the SDK resolves the handle through the same override lookup it uses for every name-based call.</p>
 <table>
 <thead>
 <tr>
@@ -4066,7 +4096,7 @@
 <p>Import the factories from <code>@uipath/uipath-typescript/resources</code>.</p>
 <h2 id="declaring-resources">Declaring resources<a class="headerlink" href="#declaring-resources" title="Permanent link">&para;</a></h2>
 <p>Keep every declaration in one class so the handles have stable, discoverable names. Pass literal strings only: the tooling that derives the bindings reads the file statically and skips anything it cannot read.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// resources.ts</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// uipath_resources.ts</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resource</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/resources&#39;</span><span class="p">;</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">ProjectResources</span><span class="w"> </span><span class="p">{</span>
@@ -4081,7 +4111,7 @@
 <h2 id="using-a-handle">Using a handle<a class="headerlink" href="#using-a-handle" title="Permanent link">&para;</a></h2>
 <p>Every <code>getByName</code> on assets, buckets, queues, processes and entities accepts a handle in place of the name. The handle supplies both the name and the folder, so no folder option is needed.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Assets</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/assets&#39;</span><span class="p">;</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ProjectResources</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../resources&#39;</span><span class="p">;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ProjectResources</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../uipath_resources&#39;</span><span class="p">;</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">assets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Assets</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">assets</span><span class="p">.</span><span class="nx">getByName</span><span class="p">(</span><span class="nx">ProjectResources</span><span class="p">.</span><span class="nx">invoiceThreshold</span><span class="p">);</span>
@@ -4097,8 +4127,8 @@
 <h2 id="where-the-bindings-come-from">Where the bindings come from<a class="headerlink" href="#where-the-bindings-come-from" title="Permanent link">&para;</a></h2>
 <p>The SDK never reads <code>bindings_v2.json</code>. The file exists for Solutions and Orchestrator, which use it to list the project's dependencies and to offer overrides at deployment. Tooling writes it from the declarations:</p>
 <ul>
-<li>A coded app's <code>uip codedapp resources add</code> and <code>sync</code> write declarations into <code>resources.ts</code> and regenerate <code>bindings_v2.json</code>; <code>push</code> regenerates it again before uploading.</li>
-<li>Entries derived from declarations carry <code>metadata.Source: "code"</code>. Regeneration replaces those and keeps any hand-written entry, unless a declaration has the same kind and key.</li>
+<li><code>uip resources add</code> and <code>uip resources sync</code> write declarations into <code>uipath_resources.ts</code> and nothing else. <code>bindings_v2.json</code> is derived from the declarations when the project is pushed or packed, and when its solution is packed or refreshed, so it never has to be kept in the project.</li>
+<li>Entries derived from declarations carry <code>metadata.Source: "code"</code>. A hand-written <code>bindings_v2.json</code> already in a project is the base: derivation keeps its entries, unless a declaration has the same kind and key.</li>
 </ul>
 <h2 id="how-overrides-reach-the-code">How overrides reach the code<a class="headerlink" href="#how-overrides-reach-the-code" title="Permanent link">&para;</a></h2>
 <p>Overrides are delivered by the host, not fetched by the SDK. A coded app's page carries a <code>&lt;script id="uipath-overrides"&gt;</code> block that the platform injects at install; other hosts install an accessor on <code>globalThis[Symbol.for('uipath.resourceOverwrites.v1')]</code>. The SDK reads whichever is present, looks up <code>kind.name.folderPath</code> and then <code>kind.name</code>, and uses the mapped name and folder. See <a href="../authentication/">Authentication</a> for how a coded app is configured in the first place.</p>

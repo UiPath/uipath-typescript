@@ -2311,6 +2311,8 @@
       
         
       
+        
+      
     
     
     
@@ -2377,6 +2379,34 @@
     
   
     Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DecisionsServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
   
 
     
@@ -4482,7 +4512,7 @@ operational methods attached. This form keeps returning plain queue data.</p>
 <blockquote>
 <p><strong>getByName</strong>(<code>queue</code>: <code>QueueResource</code>, <code>options?</code>: <a href="../QueueGetByNameOptions/"><code>QueueGetByNameOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt;</p>
 </blockquote>
-<p>Retrieves a single queue declared in <code>resources.ts</code>.</p>
+<p>Retrieves a single queue declared in <code>uipath_resources.ts</code>.</p>
 <p>The handle's <code>folderPath</code> scopes the lookup. A folder option passed explicitly
 (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) takes precedence over the handle.</p>
 <h5 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h5>
@@ -4511,7 +4541,7 @@ operational methods attached. This form keeps returning plain queue data.</p>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt;</p>
 <p>Promise resolving to a single <a href="../../type-aliases/QueueGetWithMethodsResponse/">QueueGetWithMethodsResponse</a></p>
 <h5 id="example_6">Example<a class="headerlink" href="#example_6" title="Permanent link">&para;</a></h5>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// resources.ts</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// uipath_resources.ts</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resource</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/resources&#39;</span><span class="p">;</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">ProjectResources</span><span class="w"> </span><span class="p">{</span>

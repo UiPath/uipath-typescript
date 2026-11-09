@@ -130,7 +130,7 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: '
 
 > **getByName**(`process`: `ProcessResource`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
 
-Retrieves a single process declared in `resources.ts`.
+Retrieves a single process declared in `uipath_resources.ts`.
 
 The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
@@ -150,7 +150,7 @@ Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
 ##### Example
 
 ```
-// resources.ts
+// uipath_resources.ts
 import { resource } from '@uipath/uipath-typescript/resources';
 
 export class ProjectResources {
