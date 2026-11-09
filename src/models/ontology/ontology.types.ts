@@ -3,7 +3,7 @@ import type { PaginationOptions } from '@/utils/pagination/types';
 /**
  * Semantic kind of an ontology artifact, independent of its media type.
  */
-export enum ArtifactType {
+export enum OntologyArtifactType {
   /** OWL ontology file defining classes and properties; one per ontology. */
   Schema = 'schema',
   /** SHACL shapes constraining the ontology's data; an ontology can have many. */
@@ -25,7 +25,7 @@ export enum ArtifactType {
 /**
  * Severity of a single artifact validation violation.
  */
-export enum ValidationSeverity {
+export enum OntologyValidationSeverity {
   /** The artifact is invalid; `valid` is `false`. */
   Error = 'ERROR',
   /** The artifact is valid but has a non-blocking issue. */
@@ -68,15 +68,15 @@ export interface OntologyGetByIdOptions extends OntologyFolderScopedOptions {}
 /**
  * Options for validating artifact content.
  */
-export interface ArtifactContentValidateOptions {
+export interface OntologyValidateArtifactContentOptions {
   /** Semantic type; required when not inferrable from the media type. */
-  type?: ArtifactType;
+  type?: OntologyArtifactType;
 }
 
 /**
- * An ontology as returned by the ontology service, before SDK field renames.
+ * An ontology as returned by the SDK.
  */
-export interface RawOntologySummary {
+export interface OntologyGetResponse {
   /** Ontology ID (GUID). */
   id: string;
   /** User-supplied name, unique within its folder. */
@@ -85,26 +85,26 @@ export interface RawOntologySummary {
   displayName: string;
   /** Free-text description. */
   description?: string;
-  /** Key (GUID) of the folder the ontology belongs to; the same value accepted as `folderKey`. */
-  folderId?: string;
+  /** Key (GUID) of the folder the ontology belongs to. */
+  folderKey?: string;
   /** Lifecycle state. */
   state?: OntologyState;
   /** User who created the ontology. */
   createdBy?: string;
   /** Creation timestamp (ISO 8601). */
-  createTime?: string;
+  createdTime?: string;
   /** User who last updated the ontology. */
   updatedBy?: string;
   /** Last update timestamp (ISO 8601). */
-  updateTime?: string;
+  updatedTime?: string;
 }
 
 /**
  * A single problem found while validating artifact content.
  */
-export interface ValidationViolation {
+export interface OntologyValidationViolation {
   /** Whether the violation makes the artifact invalid. */
-  severity: ValidationSeverity;
+  severity: OntologyValidationSeverity;
   /** Description of the problem. */
   message: string;
   /** 1-based line in the content where the problem was found, when known. */
@@ -114,11 +114,11 @@ export interface ValidationViolation {
 /**
  * Outcome of validating artifact content.
  */
-export interface ValidationResult {
+export interface OntologyValidateArtifactContentResponse {
   /** `false` when any violation has `Error` severity. */
   valid: boolean;
   /** Artifact type the content was validated as. */
-  type: ArtifactType;
+  type: OntologyArtifactType;
   /** Problems found; empty when the content is clean. */
-  violations: ValidationViolation[];
+  violations: OntologyValidationViolation[];
 }

@@ -4,4 +4,5 @@
 export const OntologyMap = {
   createTime: 'createdTime',
   updateTime: 'updatedTime',
+  folderId: 'folderKey',
 };

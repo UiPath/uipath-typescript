@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { OntologyService } from '@/services/ontology/ontology';
-import { ArtifactType } from '@/models/ontology/ontology.types';
-import type { OntologySummary } from '@/models/ontology/ontology.models';
+import { OntologyArtifactType } from '@/models/ontology/ontology.types';
+import type { OntologyGetResponse } from '@/models/ontology/ontology.types';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { ApiClient } from '@/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
@@ -71,7 +71,7 @@ describe('OntologyService Unit Tests', () => {
       await service.getAll();
 
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
-      const item = config.transformFn!(createMockRawOntology({ updateTime: ONTOLOGY_TEST_CONSTANTS.UPDATE_TIME })) as OntologySummary;
+      const item = config.transformFn!(createMockRawOntology({ updateTime: ONTOLOGY_TEST_CONSTANTS.UPDATE_TIME })) as OntologyGetResponse;
       expect(item.createdTime).toBe(ONTOLOGY_TEST_CONSTANTS.CREATE_TIME);
       expect(item.updatedTime).toBe(ONTOLOGY_TEST_CONSTANTS.UPDATE_TIME);
       expect(item).not.toHaveProperty('createTime');
@@ -117,8 +117,9 @@ describe('OntologyService Unit Tests', () => {
 
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
       expect(config.getEndpoint()).toBe(ONTOLOGY_ENDPOINTS.COLLECTION);
-      const { createTime, ...rest } = createMockRawOntology();
-      expect(config.transformFn!({ ...rest, createTime })).toEqual({ ...rest, createdTime: createTime });
+      const raw = createMockRawOntology();
+      const { createTime, folderId, ...rest } = raw;
+      expect(config.transformFn!(raw)).toEqual({ ...rest, createdTime: createTime, folderKey: folderId });
     });
 
     it('should propagate API errors', async () => {
@@ -141,9 +142,10 @@ describe('OntologyService Unit Tests', () => {
         ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID),
         expect.any(Object)
       );
-      const { createTime, ...rest } = raw;
-      expect(result).toEqual({ ...rest, createdTime: createTime });
+      const { createTime, folderId, ...rest } = raw;
+      expect(result).toEqual({ ...rest, createdTime: createTime, folderKey: folderId });
       expect(result).not.toHaveProperty('createTime');
+      expect(result).not.toHaveProperty('folderId');
     });
 
     it('should rename createTime and updateTime to createdTime and updatedTime', async () => {
@@ -208,12 +210,13 @@ describe('OntologyService Unit Tests', () => {
       expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
     });
 
-    it('should return the folderId the service sends', async () => {
+    it('should return the folder the service reports as folderKey', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY }));
 
       const result = await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
 
-      expect(result.folderId).toBe(ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY);
+      expect(result.folderKey).toBe(ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY);
+      expect(result).not.toHaveProperty('folderId');
     });
 
     it('should reject with NotFoundError on 404', async () => {
@@ -225,20 +228,20 @@ describe('OntologyService Unit Tests', () => {
 
   describe('validateArtifactContent', () => {
     it('should POST raw content to the ontology-free route with the type param', async () => {
-      mockApiClient.post.mockResolvedValue(createMockValidationResult({ type: ArtifactType.Constraints }));
+      mockApiClient.post.mockResolvedValue(createMockValidationResult({ type: OntologyArtifactType.Constraints }));
 
       await service.validateArtifactContent(
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_FILE_NAME,
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE,
-        { type: ArtifactType.Constraints }
+        { type: OntologyArtifactType.Constraints }
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         'ontology_/api/v1/artifact/po-shapes.ttl/validate',
         ONTOLOGY_TEST_CONSTANTS.ARTIFACT_CONTENT_SHACL,
         expect.objectContaining({
-          params: { type: ArtifactType.Constraints },
+          params: { type: OntologyArtifactType.Constraints },
           headers: { 'Content-Type': ONTOLOGY_TEST_CONSTANTS.ARTIFACT_MEDIA_TYPE_TURTLE },
           bodyOptions: { stringify: false },
         })

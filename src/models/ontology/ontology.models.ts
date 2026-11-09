@@ -1,21 +1,11 @@
 import type {
-  RawOntologySummary,
-  ValidationResult,
-  ArtifactContentValidateOptions,
+  OntologyGetResponse,
+  OntologyValidateArtifactContentResponse,
+  OntologyValidateArtifactContentOptions,
   OntologyGetAllOptions,
   OntologyGetByIdOptions,
 } from './ontology.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination/types';
-
-/**
- * An ontology as the service returns it.
- */
-export interface OntologySummary extends Omit<RawOntologySummary, 'createTime' | 'updateTime'> {
-  /** Creation timestamp (ISO 8601). */
-  createdTime?: string;
-  /** Last update timestamp (ISO 8601). */
-  updatedTime?: string;
-}
 
 /**
  * Read-only access to deployed UiPath Ontologies and stateless validation of
@@ -29,7 +19,7 @@ export interface OntologyServiceModel {
    * Each ontology includes its name, display name, lifecycle state, folder and audit fields.
    *
    * @param options - Optional search, folder scoping, and pagination options
-   * @returns Promise resolving to the {@link OntologySummary} list, or a paginated response when pagination options are provided
+   * @returns Promise resolving to the {@link OntologyGetResponse} list, or a paginated response when pagination options are provided
    *
    * @example
    * ```typescript
@@ -48,7 +38,7 @@ export interface OntologyServiceModel {
    * }
    * ```
    */
-  getAll<T extends OntologyGetAllOptions>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<OntologySummary> : NonPaginatedResponse<OntologySummary>>;
+  getAll<T extends OntologyGetAllOptions>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<OntologyGetResponse> : NonPaginatedResponse<OntologyGetResponse>>;
 
   /**
    * Gets a single ontology by its ID or name.
@@ -57,7 +47,7 @@ export interface OntologyServiceModel {
    *
    * @param idOrName - Ontology ID (GUID) or name; an ID is matched first
    * @param options - Optional folder to read from; defaults to the configured folder
-   * @returns Promise resolving to the {@link OntologySummary}, including the key of the folder it belongs to in `folderId`
+   * @returns Promise resolving to the {@link OntologyGetResponse}, including the key of the folder it belongs to
    *
    * @example
    * ```typescript
@@ -68,10 +58,10 @@ export interface OntologyServiceModel {
    *
    * // By name, in a specific folder
    * const byName = await ontologies.getById('<ontologyName>', { folderKey: '<folderKey>' });
-   * console.log(byName.state, byName.folderId);
+   * console.log(byName.state, byName.folderKey);
    * ```
    */
-  getById(idOrName: string, options?: OntologyGetByIdOptions): Promise<OntologySummary>;
+  getById(idOrName: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse>;
 
   /**
    * Validates artifact content without an ontology and without storing anything.
@@ -82,7 +72,7 @@ export interface OntologyServiceModel {
    * @param content - Raw artifact content to validate
    * @param mediaType - MIME type of the content (e.g. `text/turtle`)
    * @param options - Optional semantic type hint
-   * @returns Promise resolving to the {@link ValidationResult}, including any violations
+   * @returns Promise resolving to the {@link OntologyValidateArtifactContentResponse}, including any violations
    *
    * @example
    * ```typescript
@@ -93,19 +83,19 @@ export interface OntologyServiceModel {
    *
    * @example
    * ```typescript
-   * import { Ontologies, ArtifactType } from '@uipath/uipath-typescript/ontologies';
+   * import { Ontologies, OntologyArtifactType } from '@uipath/uipath-typescript/ontologies';
    *
    * const ontologies = new Ontologies(sdk);
    * const result = await ontologies.validateArtifactContent(
    *   'po-shapes.ttl',
    *   '@prefix sh: … ',
    *   'text/turtle',
-   *   { type: ArtifactType.Constraints }
+   *   { type: OntologyArtifactType.Constraints }
    * );
    * if (!result.valid) {
    *   result.violations.forEach(v => console.error(v.severity, v.message));
    * }
    * ```
    */
-  validateArtifactContent(fileName: string, content: string, mediaType: string, options?: ArtifactContentValidateOptions): Promise<ValidationResult>;
+  validateArtifactContent(fileName: string, content: string, mediaType: string, options?: OntologyValidateArtifactContentOptions): Promise<OntologyValidateArtifactContentResponse>;
 }

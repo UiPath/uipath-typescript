@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '@tests/integration/config/unified-setup';
 import { Ontologies } from '@/services/ontology';
-import { ArtifactType, ValidationSeverity } from '@/models/ontology/ontology.types';
+import { OntologyArtifactType, OntologyValidationSeverity } from '@/models/ontology/ontology.types';
 
 const modes: InitMode[] = ['v1'];
 
@@ -30,7 +30,7 @@ describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
       }
       const [first] = items;
 
-      expect(first.folderId?.toLowerCase()).toBe(folderKey.toLowerCase());
+      expect(first.folderKey?.toLowerCase()).toBe(folderKey.toLowerCase());
       const fetched = await ontologies.getById(first.name, { folderKey });
       expect(fetched.id).toBe(first.id);
     });
@@ -46,6 +46,7 @@ describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
       expect(ontology.createdTime).toBeDefined();
       expect((ontology as Record<string, unknown>).createTime).toBeUndefined();
       expect((ontology as Record<string, unknown>).updateTime).toBeUndefined();
+      expect((ontology as Record<string, unknown>).folderId).toBeUndefined();
     });
 
     it('should page through the list with pageSize', async () => {
@@ -62,7 +63,7 @@ describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
   describe('validateArtifactContent', () => {
     it('should return valid=true for well-formed Turtle', async () => {
       const result = await ontologies.validateArtifactContent('x.ttl', '@prefix : <urn:x#> .', 'text/turtle', {
-        type: ArtifactType.Constraints,
+        type: OntologyArtifactType.Constraints,
       });
 
       expect(result.valid).toBe(true);
@@ -70,11 +71,11 @@ describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
 
     it('should return valid=false with an ERROR for malformed Turtle', async () => {
       const result = await ontologies.validateArtifactContent('x.ttl', 'not turtle', 'text/turtle', {
-        type: ArtifactType.Constraints,
+        type: OntologyArtifactType.Constraints,
       });
 
       expect(result.valid).toBe(false);
-      expect(result.violations.some((v) => v.severity === ValidationSeverity.Error)).toBe(true);
+      expect(result.violations.some((v) => v.severity === OntologyValidationSeverity.Error)).toBe(true);
     });
   });
 });
