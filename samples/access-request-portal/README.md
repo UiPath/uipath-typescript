@@ -2,6 +2,10 @@
 
 A coded app showcasing the UiPath TypeScript SDK **platform RBAC services** (`@uipath/uipath-typescript/users`, `/groups`, `/directory`, `/roles`): a self-service portal where members request access to groups and roles, and access admins review, grant, audit, and clone access — without leaving the app.
 
+## Preview
+
+![A member requests a group, an admin approves it, audits role assignments and clones a teammate's access, and the member sees the new group](./screenshots/preview.gif)
+
 ## What it demonstrates
 
 | Feature | SDK methods |
