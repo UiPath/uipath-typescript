@@ -61,7 +61,7 @@ A handle also carries what was declared: `kind`, `name`, `folderPath` and `type`
 
 The SDK never reads `bindings_v2.json`. The file exists for Solutions and Orchestrator, which use it to list the project's dependencies and to offer overrides at deployment. Tooling writes it from the declarations:
 
-- `uip resources add` and `uip resources sync` write declarations into `uipath_resources.ts` and nothing else. `bindings_v2.json` is derived from the declarations when the project is pushed or packed, and when its solution is packed or refreshed, so it never has to be kept in the project.
+- `uip codedapp resources add` and `uip codedapp resources sync` write declarations into `uipath_resources.ts` and nothing else. `bindings_v2.json` is derived from the declarations when the project is pushed or packed, and when its solution is packed or refreshed, so it never has to be kept in the project.
 - Entries derived from declarations carry `metadata.Source: "code"`. A hand-written `bindings_v2.json` already in a project is the base: derivation keeps its entries, unless a declaration has the same kind and key.
 
 ## How overrides reach the code
