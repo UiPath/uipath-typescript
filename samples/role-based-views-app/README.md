@@ -5,6 +5,10 @@ same app; members of the organization's built-in **Administrators** group get an
 everyone else gets a view of their own profile and groups. It uses the UiPath TypeScript SDK platform services
 (`@uipath/uipath-typescript/users`, `/groups`, `/directory`).
 
+## Preview
+
+![An administrator sees the organization overview and the member view, then a member signs in and sees only their own profile and groups](./screenshots/preview.gif)
+
 ## The two views
 
 | View | Who sees it | What it shows | SDK methods |
