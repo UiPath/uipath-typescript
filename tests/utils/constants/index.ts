@@ -30,3 +30,4 @@ export * from './integration-service';
 export * from './case-app';
 export * from './case-explore';
 export * from './decisions';
+export * from './ontology';

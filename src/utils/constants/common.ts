@@ -303,6 +303,28 @@ export const PROCESS_INSTANCE_TOKEN_PARAMS = {
 };
 
 /**
+ * Ontology pagination response shape constants
+ */
+export const ONTOLOGY_PAGINATION = {
+  ITEMS_FIELD: 'items',
+  TOTAL_COUNT_FIELD: 'total',
+};
+
+/**
+ * Ontology OFFSET pagination parameter names (1-based page number)
+ */
+export const ONTOLOGY_OFFSET_PARAMS = {
+  PAGE_SIZE_PARAM: 'limit',
+  OFFSET_PARAM: 'page',
+  COUNT_PARAM: undefined,
+};
+
+/**
+ * Largest page the ontology list route returns
+ */
+export const ONTOLOGY_MAX_PAGE_SIZE = 100;
+
+/**
  * Conversational Agent pagination constants for cursor-based pagination
  */
 export const CONVERSATIONAL_PAGINATION = {

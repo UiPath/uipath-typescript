@@ -330,6 +330,14 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## Ontologies
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | None |
+| `getById()` | None |
+| `validateArtifactContent()` | None |
+
 ## Orchestrator Users
 
 | Method | OAuth Scope |

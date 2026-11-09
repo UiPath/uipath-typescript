@@ -289,6 +289,11 @@ const serviceEntries = [
     input: 'src/services/platform/directory/index.ts',
     output: 'directory/index'
   },
+  {
+    name: 'ontologies',
+    input: 'src/services/ontology/index.ts',
+    output: 'ontologies/index'
+  }
 ];
 
 // Generate ESM, CJS, and DTS builds for each service entry

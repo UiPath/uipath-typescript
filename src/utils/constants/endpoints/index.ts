@@ -47,6 +47,9 @@ export * from './observability/agent-traces';
 export * from './observability/decisions';
 export * from './observability/traces';
 
+// Ontology
+export * from './ontology/ontology';
+
 // Orchestrator
 export * from './orchestrator/orchestrator';
 
