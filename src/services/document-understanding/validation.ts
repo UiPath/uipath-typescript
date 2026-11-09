@@ -1,22 +1,35 @@
 import { track } from '../../core/telemetry';
 import { ValidationError } from '../../core/errors';
+import type { GetModelDetailsResponse } from '../../models/document-understanding/framework/folder-based.types';
 import type {
+  GetExtractionValidationArtifactsResultTaskResponse,
+  GetExtractionValidationArtifactsTaskResponse,
   GetExtractionValidationTaskResponse,
+  StartValidationArtifactsTaskResponse,
   StartValidationTaskResponse,
 } from '../../models/document-understanding/framework/validation.types';
 import type { DuValidationServiceModel } from '../../models/document-understanding/validation.models';
 import { DuValidationMap } from '../../models/document-understanding/validation.constants';
 import type {
+  DuModelGetResponse,
+  DuValidationArtifactsGetResponse,
+  DuValidationArtifactsResultGetResponse,
+  DuValidationArtifactsStartRequest,
+  DuValidationArtifactsStartResponse,
   DuValidationGetResponse,
   DuValidationRequestOptions,
   DuValidationStartRequest,
   DuValidationStartResponse,
 } from '../../models/document-understanding/validation.types';
-import { DU_VALIDATION_ENDPOINTS } from '../../utils/constants/endpoints';
+import { DU_MODEL_ENDPOINTS, DU_VALIDATION_ENDPOINTS } from '../../utils/constants/endpoints';
+import { FOLDER_KEY } from '../../utils/constants/headers';
+import { createHeaders } from '../../utils/http/headers';
 import { camelToPascalCase, pascalToCamelCase, transformData } from '../../utils/transform';
 import { BaseService } from '../base';
 
 const DEFAULT_API_VERSION = '1.1';
+// Folder-deployed models are served by framework v2 only.
+const FOLDER_MODELS_API_VERSION = '2';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -107,5 +120,63 @@ export class DocumentUnderstanding
       { params: { 'api-version': options.apiVersion ?? DEFAULT_API_VERSION } },
     );
     return transformData(shallowCamelCaseEnvelope(response.data), DuValidationMap) as DuValidationGetResponse;
+  }
+
+  @track('DocumentUnderstanding.GetModelByName')
+  async getModelByName(modelName: string, folderKey: string): Promise<DuModelGetResponse> {
+    if (!modelName) {
+      throw new ValidationError({ message: 'modelName is required for getModelByName' });
+    }
+    if (!folderKey) {
+      throw new ValidationError({ message: 'folderKey is required for getModelByName' });
+    }
+
+    const response = await this.get<GetModelDetailsResponse>(DU_MODEL_ENDPOINTS.GET_BY_NAME(modelName), {
+      params: { 'api-version': FOLDER_MODELS_API_VERSION },
+      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+    });
+    return shallowConvertKeys(response.data, pascalToCamelCase) as DuModelGetResponse;
+  }
+
+  @track('DocumentUnderstanding.StartExtractionValidationArtifacts')
+  async startExtractionValidationArtifacts(
+    request: DuValidationArtifactsStartRequest,
+  ): Promise<DuValidationArtifactsStartResponse> {
+    if (!request) {
+      throw new ValidationError({ message: 'request is required for startExtractionValidationArtifacts' });
+    }
+
+    const response = await this.post<StartValidationArtifactsTaskResponse>(
+      DU_VALIDATION_ENDPOINTS.ARTIFACTS.START,
+      shallowConvertKeys(request, camelToPascalCase),
+      { params: { 'api-version': FOLDER_MODELS_API_VERSION } },
+    );
+    return shallowConvertKeys(response.data, pascalToCamelCase) as DuValidationArtifactsStartResponse;
+  }
+
+  @track('DocumentUnderstanding.GetExtractionValidationArtifacts')
+  async getExtractionValidationArtifacts(operationId: string): Promise<DuValidationArtifactsGetResponse> {
+    if (!operationId) {
+      throw new ValidationError({ message: 'operationId is required for getExtractionValidationArtifacts' });
+    }
+
+    const response = await this.get<GetExtractionValidationArtifactsTaskResponse>(
+      DU_VALIDATION_ENDPOINTS.ARTIFACTS.GET(operationId),
+      { params: { 'api-version': FOLDER_MODELS_API_VERSION } },
+    );
+    return transformData(shallowCamelCaseEnvelope(response.data), DuValidationMap) as DuValidationArtifactsGetResponse;
+  }
+
+  @track('DocumentUnderstanding.GetExtractionValidationArtifactsResult')
+  async getExtractionValidationArtifactsResult(operationId: string): Promise<DuValidationArtifactsResultGetResponse> {
+    if (!operationId) {
+      throw new ValidationError({ message: 'operationId is required for getExtractionValidationArtifactsResult' });
+    }
+
+    const response = await this.get<GetExtractionValidationArtifactsResultTaskResponse>(
+      DU_VALIDATION_ENDPOINTS.ARTIFACTS.GET_RESULT(operationId),
+      { params: { 'api-version': FOLDER_MODELS_API_VERSION } },
+    );
+    return shallowCamelCaseEnvelope(response.data) as DuValidationArtifactsResultGetResponse;
   }
 }
