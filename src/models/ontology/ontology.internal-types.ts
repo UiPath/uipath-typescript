@@ -15,7 +15,7 @@ export interface RawOntologyGetResponse {
   /** Key (GUID) of the folder the ontology belongs to. */
   folderId?: string;
   /** Lifecycle state. */
-  state?: OntologyState;
+  state: OntologyState;
   /** User who created the ontology. */
   createdBy?: string;
   /** Creation timestamp (ISO 8601). */

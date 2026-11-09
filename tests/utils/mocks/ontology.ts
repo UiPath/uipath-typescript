@@ -30,6 +30,6 @@ export const createMockValidationFailure = (): OntologyValidateArtifactContentRe
   valid: false,
   type: OntologyArtifactType.Constraints,
   violations: [
-    { severity: OntologyValidationSeverity.Error, message: "Undefined prefix 'shx' at line 12", line: 12 },
+    { severity: OntologyValidationSeverity.Error, message: "Undefined prefix 'shx' at line 12" },
   ],
 });

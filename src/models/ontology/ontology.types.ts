@@ -4,22 +4,18 @@ import type { PaginationOptions } from '@/utils/pagination/types';
  * Semantic kind of an ontology artifact, independent of its media type.
  */
 export enum OntologyArtifactType {
-  /** OWL ontology file defining classes and properties; one per ontology. */
+  /** OWL schema defining the ontology's classes and properties; one per ontology. */
   Schema = 'schema',
   /** SHACL shapes constraining the ontology's data; an ontology can have many. */
   Constraints = 'constraints',
-  /** R2RML mapping from source data to the ontology; one per ontology. */
+  /** Mapping that binds the schema to its data sources (YARRRML or R2RML); one per ontology. */
   Mapping = 'mapping',
   /** Business rules over the ontology's data; an ontology can have many. */
   BusinessRules = 'business-rules',
-  /** Ontology summary; one per ontology. */
+  /** Summary document for people and agents; one per ontology. */
   Summary = 'summary',
-  /** JSON-LD context; one per ontology. */
+  /** Context document for agents; one per ontology. */
   Context = 'context',
-  /** Function definitions for the ontology. */
-  Functions = 'functions',
-  /** Action definitions for the ontology. */
-  Actions = 'actions',
 }
 
 /**
@@ -56,7 +52,7 @@ export interface OntologyFolderScopedOptions {
  * Options for listing ontologies.
  */
 export type OntologyGetAllOptions = PaginationOptions & OntologyFolderScopedOptions & {
-  /** Search text matched against the ontology name. */
+  /** Text matched case-insensitively against the ontology's ID, name, display name or description. */
   search?: string;
 };
 
@@ -88,7 +84,7 @@ export interface OntologyGetResponse {
   /** Key (GUID) of the folder the ontology belongs to. */
   folderKey?: string;
   /** Lifecycle state. */
-  state?: OntologyState;
+  state: OntologyState;
   /** User who created the ontology. */
   createdBy?: string;
   /** Creation timestamp (ISO 8601). */
@@ -107,8 +103,6 @@ export interface OntologyValidationViolation {
   severity: OntologyValidationSeverity;
   /** Description of the problem. */
   message: string;
-  /** 1-based line in the content where the problem was found, when known. */
-  line?: number;
 }
 
 /**

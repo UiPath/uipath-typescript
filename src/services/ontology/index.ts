@@ -16,7 +16,7 @@
  * @module
  */
 
-export { OntologyService as Ontologies, OntologyService } from './ontology';
+export { OntologyService as Ontologies } from './ontology';
 
 export * from '@/models/ontology/ontology.types';
 export * from '@/models/ontology/ontology.models';

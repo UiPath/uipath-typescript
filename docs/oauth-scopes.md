@@ -334,9 +334,9 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `DataFabric` or `DataFabric.Read` |
-| `getById()` | `DataFabric` or `DataFabric.Read` |
-| `validateArtifactContent()` | `DataFabric` or `DataFabric.Read` |
+| `getAll()` | None |
+| `getById()` | None |
+| `validateArtifactContent()` | None |
 
 ## Platform
 
