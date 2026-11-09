@@ -21,12 +21,14 @@ export * from './feedback';
 export * from './attachments';
 export * from './memory';
 export * from './traces';
+export * from './decisions';
 export * from './governance';
 export * from './notification';
 export * from './platform';
 export * from './business-apps';
 export * from './integration-service';
 export * from './case-app';
+export * from './case-explore';
 
 // Re-export constants for convenience
 export * from '../constants';

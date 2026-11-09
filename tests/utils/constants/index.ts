@@ -28,3 +28,5 @@ export * from './tracing';
 export * from './business-apps';
 export * from './integration-service';
 export * from './case-app';
+export * from './case-explore';
+export * from './decisions';

@@ -12,6 +12,8 @@ import {
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
+  StageSLA,
+  StageSLARule,
   StageTask,
   ElementExecutionMetadata,
   CaseInstanceExecutionHistoryResponse,
@@ -515,11 +517,18 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     bindingsMap: Map<string, any>
   ): CaseGetStageResponse {
     const execution = executionMap.get(node.id);
-    
+    const slaRules: StageSLARule[] | undefined = Array.isArray(node.data?.slaRules)
+      ? transformData(node.data.slaRules.filter((rule: unknown) => rule !== null && typeof rule === 'object'), StageSLAMap) as StageSLARule[]
+      : undefined;
+    const defaultSlaRule = slaRules?.find(rule => rule.expression === CASE_STAGE_CONSTANTS.DEFAULT_SLA_EXPRESSION);
+    // Pre-v11 case documents carry a single `sla` object instead of `slaRules`; read it only when `slaRules` is absent
+    const legacySla = !slaRules && node.data?.sla ? transformData(node.data.sla, StageSLAMap) as StageSLA : undefined;
+
     const stage: CaseGetStageResponse = {
       id: node.id,
       name: node.data?.label || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
-      sla: node.data?.sla ? transformData(node.data.sla, StageSLAMap) : undefined,
+      sla: defaultSlaRule ?? legacySla,
+      slaRules,
       status: execution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
       tasks: this.processTasks(node, executionMap, bindingsMap)
     };

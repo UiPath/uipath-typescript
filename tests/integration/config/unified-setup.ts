@@ -21,6 +21,7 @@ import { AgentMemory } from '../../../src/services/agents/memory';
 import { AgentHub } from '../../../src/services/agenthub';
 import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
+import { Decisions } from '../../../src/services/observability/traces/decisions';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
@@ -80,6 +81,7 @@ export interface TestServices {
   memory?: AgentMemory;
   agentTraces?: AgentTraces;
   traces?: Traces;
+  decisions?: Decisions;
   agents?: Agents;
   agentHub?: AgentHub;
   governance?: Governance;
@@ -208,6 +210,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     memory: new AgentMemory(sdk),
     agentTraces: new AgentTraces(sdk),
     traces: new Traces(sdk),
+    decisions: new Decisions(sdk),
     agents: new Agents(sdk),
     agentHub: new AgentHub(sdk),
     governance: new Governance(sdk),

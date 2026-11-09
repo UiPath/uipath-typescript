@@ -7,6 +7,7 @@ import {
 } from '../../config/unified-setup';
 import { hasValidPagination, generateRandomString } from '../../utils/helpers';
 import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/maestro';
+import { isValidationError } from '@/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -296,6 +297,32 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         console.log('Stage fields:', Object.keys(stage));
       }
     });
+
+    it('should expose stage SLA rules with transformed fields', async () => {
+      if (!seededInstance) {
+        throw new Error('MAESTRO_TEST_CASE_PROCESS_KEY / folder config not set — cannot validate stage SLA rules');
+      }
+
+      const { caseInstances } = getServices();
+
+      const stages = await caseInstances.getStages(seededInstance.instanceId, seededInstance.folderKey);
+
+      if (!stages.some((stage) => stage.slaRules?.length)) {
+        throw new Error('No stage of the MAESTRO_TEST_CASE_PROCESS_KEY process has an SLA configured — cannot validate stage SLA rules');
+      }
+
+      for (const stage of stages) {
+        for (const rule of stage.slaRules ?? []) {
+          expect(typeof rule.expression).toBe('string');
+          expect((rule as any).count).toBeUndefined();
+          expect((rule as any).unit).toBeUndefined();
+        }
+        if (stage.sla) {
+          expect((stage.sla as any).count).toBeUndefined();
+          expect((stage.sla as any).unit).toBeUndefined();
+        }
+      }
+    });
   });
 
   describe('getVariables', () => {
@@ -495,6 +522,29 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       const folderId = Number(config.folderId);
       const folderKey = config.folderKey;
 
+      // For a case published with the current model, PIMS accepts only an enterable stage and answers 400
+      // for any other id, such as the case manager stage getStages lists first. The 400 comes before the
+      // status changes, so the next stage can be tried on the same instance.
+      const reopenAtEnterableStage = async (id: string) => {
+        const stages = await caseInstances.getStages(id, folderKey);
+        expect(stages.length).toBeGreaterThan(0);
+        let rejection: unknown;
+        for (const stage of stages) {
+          try {
+            const reopened = await caseInstances.reopen(id, folderKey, {
+              stageId: stage.id,
+              comment: 'Reopened by the SDK integration suite',
+            });
+            console.log(`reopen accepted stage ${stage.id}`);
+            return reopened;
+          } catch (error) {
+            if (!isValidationError(error)) throw error;
+            rejection = error;
+          }
+        }
+        throw rejection;
+      };
+
       const startOwnInstance = async (): Promise<string> => {
         const [job] = await processes.start({ processKey: completedProcessKey }, { folderId });
         return job.key;
@@ -524,13 +574,8 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         }
 
         if (status === InstanceStatus.COMPLETED) {
-          const stages = await caseInstances.getStages(instanceId, folderKey);
-          expect(stages.length).toBeGreaterThan(0);
           try {
-            result = await caseInstances.reopen(instanceId, folderKey, {
-              stageId: stages[0].id,
-              comment: 'Reopened by the SDK integration suite',
-            });
+            result = await reopenAtEnterableStage(instanceId);
             break;
           } catch (error) {
             if (!shared) throw error;

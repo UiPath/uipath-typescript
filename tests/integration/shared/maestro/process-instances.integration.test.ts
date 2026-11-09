@@ -364,7 +364,8 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       expect(Array.isArray(result.globalVariables)).toBe(true);
     });
 
-    describe('execution history', () => {
+    // TODO: unskip once the fixture is stable. Fails intermittently with no folder key or a 503 from PIMS.
+    describe.skip('execution history', () => {
       let executionHistory!: ProcessInstanceExecutionHistoryResponse[];
 
       beforeAll(async () => {

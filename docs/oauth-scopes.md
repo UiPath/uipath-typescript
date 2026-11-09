@@ -229,6 +229,7 @@ Creating a validation action and polling its result both go through the [Documen
 
 | Method | OAuth Scope |
 |--------|-------------|
+| `getAll()` | `OR.Folders` or `OR.Folders.Read` |
 | `getByKey()` | `OR.Folders` or `OR.Folders.Read` |
 
 ## Functions
@@ -335,8 +336,8 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `search()` | `PM.Directory.Read` |
-| `getGroupMembership()` | `PM.Directory.Read` |
+| `search()` | `PM.Directory` |
+| `getGroupMembership()` | `PM.Directory` |
 
 ### Groups
 
@@ -441,3 +442,12 @@ Caller's platform roles govern access
 |--------|-------------|
 | `getById()` | `Traces.Api` |
 | `getSpansByIds()` | `Traces.Api` |
+
+### Decisions
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `Traces.Api` |
+| `getById()` | `Traces.Api` |
+| `getAll()` | `Traces.Api` |
+| `query()` | `Traces.Api` |
