@@ -4127,7 +4127,7 @@
 <h2 id="where-the-bindings-come-from">Where the bindings come from<a class="headerlink" href="#where-the-bindings-come-from" title="Permanent link">&para;</a></h2>
 <p>The SDK never reads <code>bindings_v2.json</code>. The file exists for Solutions and Orchestrator, which use it to list the project's dependencies and to offer overrides at deployment. Tooling writes it from the declarations:</p>
 <ul>
-<li><code>uip codedapp resources add</code> and <code>uip codedapp resources sync</code> write declarations into <code>uipath_resources.ts</code> and nothing else. No tool writes <code>bindings_v2.json</code> into the project: push registers the declared resources with the solution, and packing and debugging derive the bindings from the declarations.</li>
+<li><code>uip resources add</code> and <code>uip resources sync</code> write declarations into <code>uipath_resources.ts</code> and nothing else. No tool writes <code>bindings_v2.json</code> into the project: push registers the declared resources with the solution, and packing and debugging derive the bindings from the declarations.</li>
 <li>Entries derived from declarations carry <code>metadata.Source: "code"</code>. A hand-written <code>bindings_v2.json</code> already in a project is the base: derivation keeps its entries, unless a declaration has the same kind and key.</li>
 </ul>
 <h2 id="how-overrides-reach-the-code">How overrides reach the code<a class="headerlink" href="#how-overrides-reach-the-code" title="Permanent link">&para;</a></h2>
