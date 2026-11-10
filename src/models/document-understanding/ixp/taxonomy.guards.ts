@@ -7,7 +7,7 @@ const FIELD_GROUP_TYPES: readonly string[] = Object.values(IXPFieldGroupType);
  * Whether a taxonomy property is a field group rather than a single-value
  * field: its `type` is, or includes, `'array'` or `'object'`.
  *
- * @param property - A property of {@link IXPTaxonomy.properties} or of a field group.
+ * @param property - A property of `IXPTaxonomy.properties` or of a field group.
  * @returns `true` when `property` is an {@link IXPTaxonomyFieldGroup}.
  *
  * @example
