@@ -4094,6 +4094,7 @@ gets an empty list.</p>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
+<h4 id="call-signature">Call Signature<a class="headerlink" href="#call-signature" title="Permanent link">&para;</a></h4>
 <blockquote>
 <p><strong>getById</strong>(<code>connectionId</code>: <code>string</code>, <code>options?</code>: <a href="../ConnectionGetByIdOptions/"><code>ConnectionGetByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../ConnectionGetResponse/"><code>ConnectionGetResponse</code></a>&gt;</p>
 </blockquote>
@@ -4103,7 +4104,9 @@ gets an empty list.</p>
 <p class="admonition-title">Warning</p>
 <p>Preview: This method is experimental and may change or be removed in future releases.</p>
 </div>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<p>When an admin remapped this connection id at deployment, the call targets the
+connection it was mapped to.</p>
+<h5 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4125,10 +4128,10 @@ gets an empty list.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<h5 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<a href="../ConnectionGetResponse/"><code>ConnectionGetResponse</code></a>&gt;</p>
 <p>Promise resolving to a <a href="../ConnectionGetResponse/">ConnectionGetResponse</a></p>
-<h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
+<h5 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h5>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Connections</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/connections&#39;</span><span class="p">;</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">connections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Connections</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
@@ -4145,6 +4148,58 @@ gets an empty list.</p>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Scope the lookup to a folder path</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">connections</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;connectionId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
+<h4 id="call-signature_1">Call Signature<a class="headerlink" href="#call-signature_1" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p><strong>getById</strong>(<code>connection</code>: <code>ConnectionResource</code>, <code>options?</code>: <a href="../ConnectionGetByIdOptions/"><code>ConnectionGetByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../ConnectionGetResponse/"><code>ConnectionGetResponse</code></a>&gt;</p>
+</blockquote>
+<p><strong><code>Experimental</code></strong></p>
+<p>Get a single connection declared in <code>uipath_resources.ts</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: This method is experimental and may change or be removed in future releases.</p>
+</div>
+<p>When an admin remapped the connection at deployment, the call targets the
+connection it was mapped to, in that connection's folder. A folder option passed
+explicitly (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) takes precedence.</p>
+<h5 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>connection</code></td>
+<td><code>ConnectionResource</code></td>
+<td>Handle created with <code>resource.connection()</code> from <code>@uipath/uipath-typescript/resources</code></td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../ConnectionGetByIdOptions/"><code>ConnectionGetByIdOptions</code></a></td>
+<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) and optional <code>includeConfigs</code> flag</td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h5>
+<p><code>Promise</code>&lt;<a href="../ConnectionGetResponse/"><code>ConnectionGetResponse</code></a>&gt;</p>
+<p>Promise resolving to a <a href="../ConnectionGetResponse/">ConnectionGetResponse</a></p>
+<h5 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// uipath_resources.ts</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resource</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/resources&#39;</span><span class="p">;</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">ProjectResources</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="k">readonly</span><span class="w"> </span><span class="nx">financeSlack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">connection</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;connectionId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">connector</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;uipath-slack&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="p">}</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1">// anywhere in the project</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Connections</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/connections&#39;</span><span class="p">;</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">connections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Connections</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">connections</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">ProjectResources</span><span class="p">.</span><span class="nx">financeSlack</span><span class="p">);</span>
 </code></pre></div>
 
 
