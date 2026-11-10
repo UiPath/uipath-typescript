@@ -1,5 +1,5 @@
 import { pageOverrides } from './page-overrides';
-import type { ResourceOverride, ResourceOverrides } from './overrides.types';
+import type { ConnectionOverride, ResourceOverride, ResourceOverrides } from './overrides.types';
 
 const RESOURCE_OVERWRITES_KEY = Symbol.for('uipath.resourceOverwrites.v1');
 
@@ -43,5 +43,28 @@ export function resolveOverride(
   return {
     name: entry.name,
     folderPath: entry.folderPath,
+  };
+}
+
+const CONNECTION_PREFIX = 'connection.';
+
+/**
+ * The override published for a connection binding, keyed `connection.<id>` by the id it
+ * was designed against. The target id is `ConnectionId`, as Orchestrator spells it, or
+ * `connectionId`. A GUID's case carries no meaning, so a key differing only in case still
+ * matches when no exact key does.
+ */
+export function resolveConnectionOverride(connectionId: string): ConnectionOverride | undefined {
+  const table = readOverrides();
+  if (!table) return undefined;
+
+  const key = `${CONNECTION_PREFIX}${connectionId}`;
+  const lowerKey = key.toLowerCase();
+  const entry = table[key] ?? Object.entries(table).find(([candidate]) => candidate.toLowerCase() === lowerKey)?.[1];
+  if (!entry) return undefined;
+
+  return {
+    connectionId: entry.ConnectionId || entry.connectionId || undefined,
+    folderKey: entry.folderKey || undefined,
   };
 }

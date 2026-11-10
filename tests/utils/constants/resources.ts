@@ -14,6 +14,7 @@ export const RESOURCE_TEST_CONSTANTS = {
   PROCESS_NAME: 'Nightly Sync',
   PROCESS_TYPE: 'process',
   ENTITY_NAME: 'Customers',
+  CONNECTION_LABEL: 'Finance Slack',
 
   LOCAL_QUEUE_NAME: 'Local',
   PLAIN_NAME: 'Plain',

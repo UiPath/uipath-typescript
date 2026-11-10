@@ -15,8 +15,11 @@ import {
   TRACEPARENT,
   UIPATH_TRACEPARENT_ID,
 } from '../../../../src/utils/constants/headers';
+import { resource } from '../../../../src/resources';
+import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 
 const OBJECT_NAME = 'tickets';
+const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
 
 const buildResponse = (init: {
   status?: number;
@@ -239,6 +242,95 @@ describe('execute', () => {
     await expect(
       execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, ''),
     ).rejects.toThrow(ValidationError);
+  });
+
+  describe('with a declared connection or a published override', () => {
+    const handle = resource.connection({ id: IS_TEST_CONSTANTS.CONNECTION_ID, connector: IS_TEST_CONSTANTS.CONNECTOR_KEY });
+    const remappedPath = `/elements_/v3/element/instances/${OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID}/${OBJECT_NAME}`;
+
+    const publishRemap = (properties: Record<string, string>) => {
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`connection.${IS_TEST_CONSTANTS.CONNECTION_ID}`]: properties,
+      });
+    };
+
+    afterEach(() => {
+      delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+    });
+
+    it('executes against the connection a handle declares', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      const result = await execute(instance, handle, OBJECT_NAME);
+
+      const [url, init] = fetchSpy.mock.calls[0];
+      expect(url).toContain(`/elements_/v3/element/instances/${IS_TEST_CONSTANTS.CONNECTION_ID}/${OBJECT_NAME}`);
+      expect(init.method).toBe('GET');
+      expect(result.ok).toBe(true);
+    });
+
+    it.each([
+      ['a handle', handle],
+      ['a plain id', IS_TEST_CONSTANTS.CONNECTION_ID],
+    ])('executes against the remapped connection in its folder for %s', async (_label, connection) => {
+      const { instance } = createServiceTestDependencies();
+      publishRemap({
+        ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
+        folderKey: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY,
+      });
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await (typeof connection === 'string'
+        ? execute(instance, connection, OBJECT_NAME)
+        : execute(instance, connection, OBJECT_NAME));
+
+      const [url, init] = fetchSpy.mock.calls[0];
+      expect(url).toContain(remappedPath);
+      expect(init.headers[FOLDER_KEY]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY);
+    });
+
+    it("scopes to the override's folder over the meta-tag folder key", async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      publishRemap({
+        ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
+        folderKey: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY,
+      });
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await execute(instance, handle, OBJECT_NAME);
+
+      const [, init] = fetchSpy.mock.calls[0];
+      expect(init.headers[FOLDER_KEY]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY);
+    });
+
+    it("lets an explicit folder option win over the override's folder", async () => {
+      const { instance } = createServiceTestDependencies();
+      publishRemap({
+        ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
+        folderKey: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY,
+      });
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await execute(instance, handle, OBJECT_NAME, 'GET', { folderId: IS_TEST_CONSTANTS.FOLDER_ID });
+
+      const [url, init] = fetchSpy.mock.calls[0];
+      expect(url).toContain(remappedPath);
+      expect(init.headers[FOLDER_ID]).toBe(String(IS_TEST_CONSTANTS.FOLDER_ID));
+      expect(init.headers[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('keeps the meta-tag folder fallback when the override names no folder', async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      publishRemap({ ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID });
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await execute(instance, handle, OBJECT_NAME);
+
+      const [url, init] = fetchSpy.mock.calls[0];
+      expect(url).toContain(remappedPath);
+      expect(init.headers[FOLDER_KEY]).toBe(IS_TEST_CONSTANTS.FOLDER_KEY);
+    });
   });
 
   describe('retry', () => {

@@ -16,6 +16,8 @@ import {
   ElementEventObjectMetadataGetOptions,
 } from '../../../models/integration-service/elements.types';
 import { ElementsServiceModel } from '../../../models/integration-service/elements.models';
+import type { ConnectionResource } from '@/resources';
+import { resolveConnectionTarget } from '../connection-target';
 
 function requireArg(value: string, name: string, method: string): void {
   if (!value) {
@@ -111,69 +113,117 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data;
   }
 
-  @track('Elements.GetInstanceObjects')
-  async getInstanceObjects(
+  getInstanceObjects(
     connectionId: string,
     elementKey: string,
     options?: ElementObjectsGetOptions,
+  ): Promise<ElementObject[]>;
+  getInstanceObjects(
+    connection: ConnectionResource,
+    elementKey: string,
+    options?: ElementObjectsGetOptions,
+  ): Promise<ElementObject[]>;
+  @track('Elements.GetInstanceObjects')
+  async getInstanceObjects(
+    connection: string | ConnectionResource,
+    elementKey: string,
+    options?: ElementObjectsGetOptions,
   ): Promise<ElementObject[]> {
-    requireArg(connectionId, 'connectionId', 'getInstanceObjects');
+    const { id } = resolveConnectionTarget(connection, 'getInstanceObjects');
     requireArg(elementKey, 'elementKey', 'getInstanceObjects');
     const response = await this.get<ElementObject[]>(
-      ELEMENT_ENDPOINTS.INSTANCE.OBJECTS.LIST(connectionId, elementKey),
+      ELEMENT_ENDPOINTS.INSTANCE.OBJECTS.LIST(id, elementKey),
       { params: options as QueryParams | undefined },
     );
     return response.data ?? [];
   }
 
-  @track('Elements.GetInstanceObjectMetadata')
-  async getInstanceObjectMetadata(
+  getInstanceObjectMetadata(
     connectionId: string,
     elementKey: string,
     objectName: string,
     options?: ElementObjectMetadataGetOptions,
+  ): Promise<ElementObjectMetadataResponse>;
+  getInstanceObjectMetadata(
+    connection: ConnectionResource,
+    elementKey: string,
+    objectName: string,
+    options?: ElementObjectMetadataGetOptions,
+  ): Promise<ElementObjectMetadataResponse>;
+  @track('Elements.GetInstanceObjectMetadata')
+  async getInstanceObjectMetadata(
+    connection: string | ConnectionResource,
+    elementKey: string,
+    objectName: string,
+    options?: ElementObjectMetadataGetOptions,
   ): Promise<ElementObjectMetadataResponse> {
-    requireArg(connectionId, 'connectionId', 'getInstanceObjectMetadata');
+    const { id } = resolveConnectionTarget(connection, 'getInstanceObjectMetadata');
     requireArg(elementKey, 'elementKey', 'getInstanceObjectMetadata');
     requireArg(objectName, 'objectName', 'getInstanceObjectMetadata');
     const response = await this.get<ElementObjectMetadataResponse>(
-      ELEMENT_ENDPOINTS.INSTANCE.OBJECTS.METADATA(connectionId, elementKey, objectName),
+      ELEMENT_ENDPOINTS.INSTANCE.OBJECTS.METADATA(id, elementKey, objectName),
       { params: options as QueryParams | undefined },
     );
     return response.data;
   }
 
-  @track('Elements.GetInstanceEventObjects')
-  async getInstanceEventObjects(
+  getInstanceEventObjects(
     connectionId: string,
     elementKey: string,
     operationName: string,
     options?: ElementEventObjectsGetOptions,
+  ): Promise<ElementEventObject[]>;
+  getInstanceEventObjects(
+    connection: ConnectionResource,
+    elementKey: string,
+    operationName: string,
+    options?: ElementEventObjectsGetOptions,
+  ): Promise<ElementEventObject[]>;
+  @track('Elements.GetInstanceEventObjects')
+  async getInstanceEventObjects(
+    connection: string | ConnectionResource,
+    elementKey: string,
+    operationName: string,
+    options?: ElementEventObjectsGetOptions,
   ): Promise<ElementEventObject[]> {
-    requireArg(connectionId, 'connectionId', 'getInstanceEventObjects');
+    const { id } = resolveConnectionTarget(connection, 'getInstanceEventObjects');
     requireArg(elementKey, 'elementKey', 'getInstanceEventObjects');
     requireArg(operationName, 'operationName', 'getInstanceEventObjects');
     const response = await this.get<ElementEventObject[]>(
-      ELEMENT_ENDPOINTS.INSTANCE.EVENTS.OBJECTS(connectionId, elementKey, operationName),
+      ELEMENT_ENDPOINTS.INSTANCE.EVENTS.OBJECTS(id, elementKey, operationName),
       { params: options as QueryParams | undefined },
     );
     return response.data ?? [];
   }
 
-  @track('Elements.GetInstanceEventObjectMetadata')
-  async getInstanceEventObjectMetadata(
+  getInstanceEventObjectMetadata(
     connectionId: string,
     elementKey: string,
     operationName: string,
     objectName: string,
     options?: ElementEventObjectMetadataGetOptions,
+  ): Promise<ElementEventObjectMetadataResponse>;
+  getInstanceEventObjectMetadata(
+    connection: ConnectionResource,
+    elementKey: string,
+    operationName: string,
+    objectName: string,
+    options?: ElementEventObjectMetadataGetOptions,
+  ): Promise<ElementEventObjectMetadataResponse>;
+  @track('Elements.GetInstanceEventObjectMetadata')
+  async getInstanceEventObjectMetadata(
+    connection: string | ConnectionResource,
+    elementKey: string,
+    operationName: string,
+    objectName: string,
+    options?: ElementEventObjectMetadataGetOptions,
   ): Promise<ElementEventObjectMetadataResponse> {
-    requireArg(connectionId, 'connectionId', 'getInstanceEventObjectMetadata');
+    const { id } = resolveConnectionTarget(connection, 'getInstanceEventObjectMetadata');
     requireArg(elementKey, 'elementKey', 'getInstanceEventObjectMetadata');
     requireArg(operationName, 'operationName', 'getInstanceEventObjectMetadata');
     requireArg(objectName, 'objectName', 'getInstanceEventObjectMetadata');
     const response = await this.get<ElementEventObjectMetadataResponse>(
-      ELEMENT_ENDPOINTS.INSTANCE.EVENTS.METADATA(connectionId, elementKey, operationName, objectName),
+      ELEMENT_ENDPOINTS.INSTANCE.EVENTS.METADATA(id, elementKey, operationName, objectName),
       { params: options as QueryParams | undefined },
     );
     return response.data;

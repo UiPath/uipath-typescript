@@ -6,6 +6,7 @@ import {
   isQueueResource,
   isProcessResource,
   isEntityResource,
+  isConnectionResource,
   unpackFolderScopedHandle,
 } from '../../../src/resources';
 import { ValidationError } from '../../../src/core/errors';
@@ -13,6 +14,7 @@ import { OVERRIDE_TEST_CONSTANTS } from '../../utils/constants/overrides';
 import { RESOURCE_TEST_CONSTANTS } from '../../utils/constants/resources';
 import { BUCKET_TEST_CONSTANTS } from '../../utils/constants/buckets';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
+import { IS_TEST_CONSTANTS } from '../../utils/constants/integration-service';
 
 const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
 const { FOLDER_PATH } = RESOURCE_TEST_CONSTANTS;
@@ -108,6 +110,65 @@ describe('resource factories', () => {
     });
   });
 
+  describe('resource.connection', () => {
+    const declare = () =>
+      resource.connection({
+        id: IS_TEST_CONSTANTS.CONNECTION_ID,
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+        name: RESOURCE_TEST_CONSTANTS.CONNECTION_LABEL,
+      });
+
+    it('returns a frozen handle carrying the id, connector and label, with no folder', () => {
+      const handle = declare();
+
+      expect(Object.keys(handle)).toEqual(['kind', 'id', 'connector', 'name', 'value']);
+      expect(handle.kind).toBe('connection');
+      expect(handle.id).toBe(IS_TEST_CONSTANTS.CONNECTION_ID);
+      expect(handle.connector).toBe(IS_TEST_CONSTANTS.CONNECTOR_KEY);
+      expect(handle.name).toBe(RESOURCE_TEST_CONSTANTS.CONNECTION_LABEL);
+      expect(Object.isFrozen(handle)).toBe(true);
+    });
+
+    it('omits the label when the declaration leaves it out', () => {
+      const handle = resource.connection({ id: IS_TEST_CONSTANTS.CONNECTION_ID, connector: IS_TEST_CONSTANTS.CONNECTOR_KEY });
+
+      expect(Object.keys(handle)).toEqual(['kind', 'id', 'connector', 'value']);
+    });
+
+    it('resolves value to the declared id when no override is published', () => {
+      expect(declare().value).toEqual({ id: IS_TEST_CONSTANTS.CONNECTION_ID });
+    });
+
+    it('resolves value to the connection and folder the override maps the id to', () => {
+      const handle = declare();
+      publishOverrides({
+        [`connection.${IS_TEST_CONSTANTS.CONNECTION_ID}`]: {
+          ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
+          folderKey: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY,
+        },
+      });
+
+      expect(handle.value).toEqual({
+        id: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
+        folderKey: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY,
+      });
+    });
+
+    it('ignores a name-keyed override of another kind that happens to use the id', () => {
+      const handle = declare();
+      publishOverrides({
+        [`asset.${IS_TEST_CONSTANTS.CONNECTION_ID}`]: { name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME },
+      });
+
+      expect(handle.value).toEqual({ id: IS_TEST_CONSTANTS.CONNECTION_ID });
+    });
+
+    it('rejects an empty id or connector', () => {
+      expect(() => resource.connection({ id: '', connector: IS_TEST_CONSTANTS.CONNECTOR_KEY })).toThrow(ValidationError);
+      expect(() => resource.connection({ id: IS_TEST_CONSTANTS.CONNECTION_ID, connector: '' })).toThrow(ValidationError);
+    });
+  });
+
   it('re-reads the override table on every value access', () => {
     const handle = resource.asset({ name: RESOURCE_TEST_CONSTANTS.ASSET_NAME, folderPath: FOLDER_PATH });
     expect(handle.value.name).toBe(RESOURCE_TEST_CONSTANTS.ASSET_NAME);
@@ -152,6 +213,18 @@ describe('kind guards', () => {
     expect(isEntityResource({ name: RESOURCE_TEST_CONSTANTS.ENTITY_NAME })).toBe(false);
     expect(isAssetResource(RESOURCE_TEST_CONSTANTS.ASSET_NAME)).toBe(false);
     expect(isAssetResource(null)).toBe(false);
+  });
+
+  it('isConnectionResource accepts only a connection handle', () => {
+    const connection = resource.connection({ id: IS_TEST_CONSTANTS.CONNECTION_ID, connector: IS_TEST_CONSTANTS.CONNECTOR_KEY });
+    const asset = resource.asset({ name: RESOURCE_TEST_CONSTANTS.ASSET_NAME });
+
+    expect(isConnectionResource(connection)).toBe(true);
+    expect(isConnectionResource(asset)).toBe(false);
+    expect(isAssetResource(connection)).toBe(false);
+    expect(isConnectionResource({ kind: 'connection' })).toBe(false);
+    expect(isConnectionResource(IS_TEST_CONSTANTS.CONNECTION_ID)).toBe(false);
+    expect(isConnectionResource(null)).toBe(false);
   });
 });
 

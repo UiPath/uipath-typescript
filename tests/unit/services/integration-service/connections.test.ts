@@ -10,6 +10,21 @@ import {
   createMockConnection,
   createMockError,
 } from '../../../utils/mocks';
+import { resource } from '../../../../src/resources';
+import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
+
+const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+
+function publishOverrides(table: Record<string, Record<string, string>>): void {
+  (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => table;
+}
+
+const REMAPPED = {
+  [`connection.${IS_TEST_CONSTANTS.CONNECTION_ID}`]: {
+    ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
+    folderKey: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY,
+  },
+};
 
 vi.mock('../../../../src/core/http/api-client');
 
@@ -26,6 +41,7 @@ describe('ConnectionsService', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
   });
 
   describe('getAll', () => {
@@ -259,6 +275,98 @@ describe('ConnectionsService', () => {
 
     it('should throw ValidationError when connectionId is empty', async () => {
       await expect(service.getById('')).rejects.toThrow(ValidationError);
+    });
+
+    describe('with a declared connection or a published override', () => {
+      const handle = resource.connection({
+        id: IS_TEST_CONSTANTS.CONNECTION_ID,
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+      });
+
+      it('should get the connection a handle declares', async () => {
+        mockApiClient.get.mockResolvedValue(createMockConnection());
+
+        await service.getById(handle);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          CONNECTION_ENDPOINTS.GET_BY_ID(IS_TEST_CONSTANTS.CONNECTION_ID),
+          { headers: {}, params: {} },
+        );
+      });
+
+      it('should target the remapped connection in its folder for a handle', async () => {
+        publishOverrides(REMAPPED);
+        mockApiClient.get.mockResolvedValue(createMockConnection());
+
+        await service.getById(handle, { includeConfigs: true });
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          CONNECTION_ENDPOINTS.GET_BY_ID(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID),
+          {
+            headers: { [FOLDER_KEY]: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY },
+            params: { includeConfigs: true },
+          },
+        );
+      });
+
+      it('should target the remapped connection for a plain id too', async () => {
+        publishOverrides(REMAPPED);
+        mockApiClient.get.mockResolvedValue(createMockConnection());
+
+        await service.getById(IS_TEST_CONSTANTS.CONNECTION_ID);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          CONNECTION_ENDPOINTS.GET_BY_ID(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID),
+          { headers: { [FOLDER_KEY]: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY }, params: {} },
+        );
+      });
+
+      it("should scope to the override's folder over the meta-tag folder key", async () => {
+        const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+        const scopedService = new ConnectionsService(instance);
+        publishOverrides(REMAPPED);
+        mockApiClient.get.mockResolvedValue(createMockConnection());
+
+        await scopedService.getById(handle);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          CONNECTION_ENDPOINTS.GET_BY_ID(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID),
+          { headers: { [FOLDER_KEY]: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY }, params: {} },
+        );
+      });
+
+      it("should let an explicit folder option win over the override's folder", async () => {
+        publishOverrides(REMAPPED);
+        mockApiClient.get.mockResolvedValue(createMockConnection());
+
+        await service.getById(handle, { folderPath: IS_TEST_CONSTANTS.FOLDER_PATH });
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          CONNECTION_ENDPOINTS.GET_BY_ID(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID),
+          { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
+        );
+      });
+
+      it('should keep the meta-tag folder fallback when the override names no folder', async () => {
+        const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+        const scopedService = new ConnectionsService(instance);
+        publishOverrides({
+          [`connection.${IS_TEST_CONSTANTS.CONNECTION_ID}`]: { ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID },
+        });
+        mockApiClient.get.mockResolvedValue(createMockConnection());
+
+        await scopedService.getById(handle);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          CONNECTION_ENDPOINTS.GET_BY_ID(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID),
+          { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
+        );
+      });
+
+      it('should propagate API errors for a handle', async () => {
+        mockApiClient.get.mockRejectedValue(createMockError(IS_TEST_CONSTANTS.ERROR_CONNECTION_NOT_FOUND));
+        await expect(service.getById(handle)).rejects.toThrow(IS_TEST_CONSTANTS.ERROR_CONNECTION_NOT_FOUND);
+      });
     });
   });
 

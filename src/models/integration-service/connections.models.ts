@@ -7,6 +7,7 @@ import {
   ConnectionGetAllOptions,
   ConnectionGetByIdOptions,
 } from './connections.types';
+import type { ConnectionResource } from '@/resources';
 
 /**
  *
@@ -100,6 +101,9 @@ export interface ConnectionsServiceModel {
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
    *
+   * When an admin remapped this connection id at deployment, the call targets the
+   * connection it was mapped to.
+   *
    * @param connectionId - Connection GUID
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag
    * @returns Promise resolving to a {@link ConnectionGetResponse}
@@ -130,5 +134,39 @@ export interface ConnectionsServiceModel {
    * ```
    */
   getById(connectionId: string, options?: ConnectionGetByIdOptions): Promise<ConnectionGetResponse>;
+
+  /**
+   * Get a single connection declared in `uipath_resources.ts`.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * When an admin remapped the connection at deployment, the call targets the
+   * connection it was mapped to, in that connection's folder. A folder option passed
+   * explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence.
+   *
+   * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag
+   * @returns Promise resolving to a {@link ConnectionGetResponse}
+   * @example
+   * ```typescript
+   * // uipath_resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly financeSlack = resource.connection({ id: '<connectionId>', connector: 'uipath-slack' });
+   * }
+   *
+   * // anywhere in the project
+   * import { Connections } from '@uipath/uipath-typescript/connections';
+   *
+   * const connections = new Connections(sdk);
+   * const conn = await connections.getById(ProjectResources.financeSlack);
+   * ```
+   */
+  getById(connection: ConnectionResource, options?: ConnectionGetByIdOptions): Promise<ConnectionGetResponse>;
 
 }
