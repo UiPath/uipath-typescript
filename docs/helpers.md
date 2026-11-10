@@ -163,4 +163,4 @@ Each call is recorded under the method's name, with its arguments and its result
 - It applies to class methods only.
 
 !!! warning "What gets recorded"
-    Markers can include the values you pass, the arguments and results of traced methods, and the local variables of the calling function. Do not trace code that handles secrets or personal data.
+    A marker records the values you pass, and a traced method its arguments and result. Do not pass secrets or personal data, and do not trace methods that handle them.

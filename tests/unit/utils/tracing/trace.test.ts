@@ -117,7 +117,6 @@ describe('trace', () => {
           kind: 'marker',
           label: TRACE_TEST_CONSTANTS.LABEL,
           values,
-          locals: { [TRACE_TEST_CONSTANTS.LOCAL_NAME]: TRACE_TEST_CONSTANTS.LOCAL_VALUE },
           stack: expect.any(String),
           startTime: expect.any(String),
           endTime: expect.any(String),
@@ -148,35 +147,16 @@ describe('trace', () => {
       expect(firstFrame(host.spans[0].stack)).toContain('placeOrder');
     });
 
-    it('asks the host for locals straight from trace(), so the caller is the frame right above it', () => {
-      let frames: string[] = [];
-      installHost({
-        ...host.tracing,
-        callerLocals: () => {
-          frames = new Error().stack?.split('\n') ?? [];
-          return {};
-        },
-      });
-      function checkout(): void {
-        trace(TRACE_TEST_CONSTANTS.LABEL);
-      }
-
-      checkout();
-
-      expect(frames[2]).toContain('utils/tracing/trace.ts');
-      expect(frames[3]).toContain('checkout');
-    });
-
-    it('records the marker without locals from a host that offers none', () => {
-      const { callerLocals: _unused, ...withoutLocals } = host.tracing;
-      installHost(withoutLocals);
+    it('never asks the host for the caller\'s locals, even when the host offers them', () => {
+      installHost();
 
       trace(TRACE_TEST_CONSTANTS.LABEL);
 
-      expect(host.spans[0].locals).toBeUndefined();
+      expect(host.tracing.callerLocals).not.toHaveBeenCalled();
+      expect(host.spans[0]).not.toHaveProperty('locals');
     });
 
-    it.each(['callerLocals', 'activeSpan', 'recordSpan'] as const)(
+    it.each(['activeSpan', 'recordSpan'] as const)(
       'drops the marker and warns, never throwing, when the host fails in %s',
       (member) => {
         host.tracing[member].mockImplementation(() => {

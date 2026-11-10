@@ -16,7 +16,6 @@ interface TracingCapability {
   activeSpan(): unknown;
   withActiveSpan(span: { spanId: string }, fn: () => unknown): unknown;
   recordSpan(span: TraceSpan): unknown;
-  callerLocals?: unknown;
 }
 
 interface TraceSpan {
@@ -25,7 +24,6 @@ interface TraceSpan {
   kind: 'marker' | 'call';
   label: string;
   values: unknown;
-  locals?: unknown;
   stack: string | undefined;
   startTime: string;
   endTime: string;
@@ -174,8 +172,7 @@ function warnUntraced(name: string | symbol, kind: string): void {
  * When tracing is available, such as in a UiPath coded function, the marker is added to the trace. Otherwise it is
  * printed with `console.debug`. `trace` never throws.
  *
- * A marker can include the values you pass and the local variables of the calling function, so do not trace secrets
- * or personal data.
+ * A marker records only the values you pass, so do not pass secrets or personal data.
  *
  * @param label - A short name for this point in the code
  * @param values - Named values to record with the marker
@@ -241,7 +238,6 @@ export function trace(...args: unknown[]): unknown {
     }
 
     try {
-      const locals = typeof tracing.callerLocals === 'function' ? tracing.callerLocals() : undefined;
       const time = new Date().toISOString();
       record(tracing, {
         id: crypto.randomUUID(),
@@ -249,7 +245,6 @@ export function trace(...args: unknown[]): unknown {
         kind: 'marker',
         label: first,
         values: second,
-        locals,
         stack: captureStack(trace),
         startTime: time,
         endTime: time,
