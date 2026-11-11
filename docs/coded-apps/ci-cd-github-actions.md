@@ -52,8 +52,8 @@ Used by the [solution workflow](#coded-app-inside-solution). A Personal Access T
     | `Apps` | Publishing, deploying, and exporting apps |
     | `OR.Folders`, `OR.Execution` | Folder lookups, package upload and download |
     | `OR.AutomationSolutions.Access` | Adding a deployed Coded App to a solution (`uip solution resources add`) |
-    | `Solutions.Packages`, `Solutions.Deployments` | Publishing and deploying the solution |
     | `OR.Users.Read` | Checking your permissions when the solution is published and deployed |
+    | `Solutions.Packages`, `Solutions.Deployments` | Publishing and deploying the solution |
     | `RCS.FolderAuthorization` | Finding deployed apps by name (`uip solution resources add`) |
 
 2. **Find your organization and tenant IDs**: run `uip login status --output json` and read `OrganizationId` and `TenantId`.
