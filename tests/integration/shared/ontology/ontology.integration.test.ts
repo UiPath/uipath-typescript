@@ -5,7 +5,10 @@ import { OntologyArtifactType, OntologyState, OntologyValidationSeverity } from 
 
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Ontologies - Integration Tests', 'both', modes, () => {
+// The CI PAT gets 403 Forbidden from ontology_ while a user token passes, so
+// this suite authenticates with a user token and skips when one is not
+// configured. Switch back to 'both' once the PAT can reach the service.
+describeIntegration('Ontologies - Integration Tests', 'user', modes, () => {
   let ontologies!: Ontologies;
   let folderKey!: string;
 
