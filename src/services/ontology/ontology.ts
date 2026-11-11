@@ -69,7 +69,7 @@ export class OntologyService extends BaseService implements OntologyServiceModel
 
   @track('Ontologies.GetById')
   async getById(id: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse> {
-    return this.fetchOntology(id, this.folderHeaders(options?.folderKey, options?.folderPath, 'Ontologies.getById'));
+    return this.fetchOntology(id, this.getHeaders(options?.folderKey, options?.folderPath, 'Ontologies.getById'));
   }
 
   @track('Ontologies.GetByName')
@@ -79,8 +79,8 @@ export class OntologyService extends BaseService implements OntologyServiceModel
     // An override's folderPath redirects the folder, so it replaces the caller's folder: sent
     // alongside a folder key, the path would be ignored, as the service lets a key win.
     const headers = override?.folderPath
-      ? this.folderHeaders(undefined, override.folderPath, 'Ontologies.getByName')
-      : this.folderHeaders(options?.folderKey, options?.folderPath, 'Ontologies.getByName');
+      ? this.getHeaders(undefined, override.folderPath, 'Ontologies.getByName')
+      : this.getHeaders(options?.folderKey, options?.folderPath, 'Ontologies.getByName');
     return this.fetchOntology(resolvedName, headers);
   }
 
@@ -111,7 +111,7 @@ export class OntologyService extends BaseService implements OntologyServiceModel
    * service, so only one is sent; with neither, the configured folder key is used, and without
    * that no folder header is sent (the service then looks in no folder).
    */
-  private folderHeaders(folderKey: string | undefined, folderPath: string | undefined, resourceType: string): Record<string, string> {
+  private getHeaders(folderKey: string | undefined, folderPath: string | undefined, resourceType: string): Record<string, string> {
     const key = folderKey?.trim();
     const path = folderPath?.trim();
     if (!key && !isFolderPath(path)) {
