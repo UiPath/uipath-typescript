@@ -5,6 +5,8 @@
 export const ONTOLOGY_TEST_CONSTANTS = {
   ONTOLOGY_ID: 'a1b2c3d4-0000-0000-0000-000000000001',
   ONTOLOGY_NAME: 'ecommerce',
+  ONTOLOGY_NAME_WITH_SPACE: 'Sales Ops',
+  ONTOLOGY_NAME_WITH_SPACE_PATH: 'ontology_/api/v1/ontology/Sales%20Ops',
   ONTOLOGY_DISPLAY_NAME: 'E-Commerce',
   ONTOLOGY_DESCRIPTION: 'Sales pipeline ontology',
 

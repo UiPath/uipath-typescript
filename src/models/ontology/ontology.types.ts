@@ -64,6 +64,11 @@ export type OntologyGetAllOptions = PaginationOptions & OntologyFolderScopedOpti
 export interface OntologyGetByIdOptions extends OntologyFolderScopedOptions {}
 
 /**
+ * Options for reading a single ontology by name.
+ */
+export interface OntologyGetByNameOptions extends OntologyFolderScopedOptions {}
+
+/**
  * Options for validating artifact content.
  */
 export interface OntologyValidateArtifactContentOptions {

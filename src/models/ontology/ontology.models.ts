@@ -4,6 +4,7 @@ import type {
   OntologyValidateArtifactContentOptions,
   OntologyGetAllOptions,
   OntologyGetByIdOptions,
+  OntologyGetByNameOptions,
 } from './ontology.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination/types';
 
@@ -72,27 +73,60 @@ export interface OntologyServiceModel {
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
    *
-   * Gets a single ontology by its ID or name.
+   * Gets a single ontology by its ID.
    *
-   * First, get ontology IDs and names with `ontologies.getAll()`.
+   * First, get ontology IDs with `ontologies.getAll()`.
    *
-   * @param idOrName - Ontology ID (GUID) or name; an ID is matched first
+   * @param id - Ontology ID (GUID)
    * @param options - Optional folder to read from; defaults to the configured folder
    * @returns Promise resolving to the {@link OntologyGetResponse}, including the key of the folder it belongs to
    *
    * @example
    * ```typescript
    * const ontologies = new Ontologies(sdk);
-   *
-   * // By ID
    * const ontology = await ontologies.getById('<ontologyId>');
+   * ```
    *
-   * // By name, in a specific folder
-   * const byName = await ontologies.getById('<ontologyName>', { folderKey: '<folderKey>' });
-   * console.log(byName.state, byName.folderKey);
+   * @example
+   * ```typescript
+   * const ontologies = new Ontologies(sdk);
+   * const ontology = await ontologies.getById('<ontologyId>', { folderKey: '<folderKey>' });
+   * console.log(ontology.state, ontology.folderKey);
    * ```
    */
-  getById(idOrName: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse>;
+  getById(id: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse>;
+
+  /**
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Gets a single ontology by its name.
+   *
+   * In an app deployed with a solution, the name is redirected to the ontology the
+   * solution's resource overrides point to, so code can use the design-time name.
+   *
+   * @param name - Ontology name (case-sensitive)
+   * @param options - Optional folder to read from; defaults to the configured folder
+   * @returns Promise resolving to the {@link OntologyGetResponse}, including the key of the folder it belongs to
+   *
+   * @example
+   * ```typescript
+   * const ontologies = new Ontologies(sdk);
+   * const ontology = await ontologies.getByName('<ontologyName>');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * const ontologies = new Ontologies(sdk);
+   * const ontology = await ontologies.getByName('<ontologyName>', { folderKey: '<folderKey>' });
+   * console.log(ontology.id, ontology.state);
+   * ```
+   */
+  getByName(name: string, options?: OntologyGetByNameOptions): Promise<OntologyGetResponse>;
 
   /**
    *

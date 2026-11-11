@@ -16,6 +16,7 @@ import { ONTOLOGY_TEST_CONSTANTS } from '@tests/utils/constants/ontology';
 import { TEST_CONSTANTS } from '@tests/utils/constants/common';
 import { ONTOLOGY_ENDPOINTS } from '@/utils/constants/endpoints';
 import { FOLDER_KEY } from '@/utils/constants/headers';
+import { OVERRIDE_TEST_CONSTANTS } from '@tests/utils/constants/overrides';
 
 vi.mock('@/core/http/api-client');
 
@@ -170,6 +171,17 @@ describe('OntologyService Unit Tests', () => {
         expect(result.items[0]).not.toHaveProperty('folderId');
       });
 
+      it('should rename updateTime to updatedTime and remove the wire field', async () => {
+        mockApiClient.get.mockResolvedValue(
+          listPage([createMockRawOntology({ updateTime: ONTOLOGY_TEST_CONSTANTS.UPDATE_TIME })], 1, 1)
+        );
+
+        const result = await service.getAll();
+
+        expect(result.items[0].updatedTime).toBe(ONTOLOGY_TEST_CONSTANTS.UPDATE_TIME);
+        expect(result.items[0]).not.toHaveProperty('updateTime');
+      });
+
       it('should keep fetching until a short page and combine every page', async () => {
         mockApiClient.get
           .mockResolvedValueOnce(listPage(ontologies(MAX), 1, MAX + 1))
@@ -269,33 +281,13 @@ describe('OntologyService Unit Tests', () => {
       expect(result).not.toHaveProperty('updateTime');
     });
 
-    it('should URL-encode the name in the api v1 path', async () => {
-      mockApiClient.get.mockResolvedValue(createMockRawOntology());
-
-      await service.getById('Sales Ops');
-
-      expect(mockApiClient.get).toHaveBeenCalledWith('ontology_/api/v1/ontology/Sales%20Ops', expect.anything());
-    });
-
-    it('should also accept a name as idOrName', async () => {
-      const raw = createMockRawOntology();
-      mockApiClient.get.mockResolvedValue(raw);
-
-      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
-        expect.any(Object)
-      );
-    });
-
     it('should send the folder key header when given', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawOntology());
 
-      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
+        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID),
         expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_KEY]: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY }) })
       );
     });
@@ -303,7 +295,7 @@ describe('OntologyService Unit Tests', () => {
     it('should send no folder header without a folder', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawOntology());
 
-      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+      await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID);
 
       expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBeUndefined();
     });
@@ -313,7 +305,7 @@ describe('OntologyService Unit Tests', () => {
       const folderService = new OntologyService(instance);
       mockApiClient.get.mockResolvedValue(createMockRawOntology());
 
-      await folderService.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+      await folderService.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID);
 
       expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
     });
@@ -321,16 +313,131 @@ describe('OntologyService Unit Tests', () => {
     it('should return the folder the service reports as folderKey', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawOntology({ folderId: ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY }));
 
-      const result = await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      const result = await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
 
       expect(result.folderKey).toBe(ONTOLOGY_TEST_CONSTANTS.OTHER_FOLDER_KEY);
       expect(result).not.toHaveProperty('folderId');
     });
 
+    it('should not apply a name override to an ID', async () => {
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`ontology.${ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID}`]: { name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+        await service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID),
+          expect.anything()
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
     it('should reject with NotFoundError on 404', async () => {
       mockApiClient.get.mockRejectedValue(new NotFoundError({ message: ONTOLOGY_TEST_CONSTANTS.ERROR_NOT_FOUND }));
 
-      await expect(service.getById('Missing')).rejects.toBeInstanceOf(NotFoundError);
+      await expect(service.getById(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_ID)).rejects.toBeInstanceOf(NotFoundError);
+    });
+  });
+
+  describe('getByName', () => {
+    it('should return the ontology with SDK field names', async () => {
+      const raw = createMockRawOntology({ updateTime: ONTOLOGY_TEST_CONSTANTS.UPDATE_TIME });
+      mockApiClient.get.mockResolvedValue(raw);
+
+      const result = await service.getByName(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
+        expect.any(Object)
+      );
+      const { createTime, updateTime, folderId, ...rest } = raw;
+      expect(result).toEqual({ ...rest, createdTime: createTime, updatedTime: updateTime, folderKey: folderId });
+      expect(result).not.toHaveProperty('createTime');
+      expect(result).not.toHaveProperty('updateTime');
+      expect(result).not.toHaveProperty('folderId');
+    });
+
+    it('should URL-encode the name in the api v1 path', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getByName(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME_WITH_SPACE);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME_WITH_SPACE_PATH, expect.anything());
+    });
+
+    it('should send the folder key header when given', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await service.getByName(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
+    });
+
+    it('should fall back to the configured folder key for the header', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+      const folderService = new OntologyService(instance);
+      mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+      await folderService.getByName(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+      expect(mockApiClient.get.mock.calls[0][1]?.headers?.[FOLDER_KEY]).toBe(ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY);
+    });
+
+    it('should redirect the name when a runtime override matches (unscoped ontology.<name> key)', async () => {
+      // The route takes a folder key, so only the redirected name is applied.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`ontology.${ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+        await service.getByName(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME, { folderKey: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY });
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          ONTOLOGY_ENDPOINTS.BY_ID(OVERRIDE_TEST_CONSTANTS.TARGET_NAME),
+          expect.objectContaining({ headers: { [FOLDER_KEY]: ONTOLOGY_TEST_CONSTANTS.FOLDER_KEY } })
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
+    it('should keep the name when no override matches', async () => {
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`entity.${ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME}`]: { name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue(createMockRawOntology());
+
+        await service.getByName(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          ONTOLOGY_ENDPOINTS.BY_ID(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME),
+          expect.anything()
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
+    it('should reject with NotFoundError on 404', async () => {
+      mockApiClient.get.mockRejectedValue(new NotFoundError({ message: ONTOLOGY_TEST_CONSTANTS.ERROR_NOT_FOUND }));
+
+      await expect(service.getByName(ONTOLOGY_TEST_CONSTANTS.ONTOLOGY_NAME)).rejects.toBeInstanceOf(NotFoundError);
     });
   });
 
