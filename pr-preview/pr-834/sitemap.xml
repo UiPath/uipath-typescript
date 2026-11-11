@@ -905,6 +905,18 @@
          <lastmod>2026-11-11</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/OrchestratorUserProvisionType/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/OrchestratorUserRoleType/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/OrchestratorUserType/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PackageSourceType/</loc>
          <lastmod>2026-11-11</lastmod>
     </url>
@@ -2853,6 +2865,18 @@
          <lastmod>2026-11-11</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/OrchestratorUserGetResponse/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/OrchestratorUserRole/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/OrchestratorUserServiceModel/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PaginatedResponse/</loc>
          <lastmod>2026-11-11</lastmod>
     </url>
@@ -3786,6 +3810,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/MetaData/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/OrchestratorUserGetAllOptions/</loc>
          <lastmod>2026-11-11</lastmod>
     </url>
     <url>
