@@ -353,10 +353,7 @@ export class AuthService {
       return authorizeUrl;
     }
 
-    // An org name is sent as `tenantName:` and the platform's routing layer
-    // rewrites it to `tenant:<guid>` before Identity sees it. That rewrite only
-    // happens when the authorize URL has no org segment in its path, which is
-    // why IDENTITY_ENDPOINTS.AUTHORIZE must stay org-less.
+    // Routing rewrites tenantName to tenant:<guid> only on the org-less authorize path.
     const orgName = this.config.orgName;
     const acrKey = GUID_REGEX.test(orgName) ? 'tenant' : 'tenantName';
     return `${authorizeUrl}&acr_values=${encodeURIComponent(`${acrKey}:${orgName}`)}`;
