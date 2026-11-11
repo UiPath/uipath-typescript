@@ -43,10 +43,12 @@ export interface AccessRequest {
   /** Set when an admin resolves the request. */
   resolvedByName?: string;
   resolvedTime?: string;
+  /** Account that actually created the row, stamped by Data Fabric (`CreatedBy`); read-only. */
+  createdById?: string;
 }
 
-/** What callers provide on create — the store assigns the id. */
-export type NewAccessRequest = Omit<AccessRequest, 'id'>;
+/** What callers provide on create — the store assigns the id and Data Fabric the creator. */
+export type NewAccessRequest = Omit<AccessRequest, 'id' | 'createdById'>;
 
 export interface RequestStore {
   list(): Promise<AccessRequest[]>;
@@ -54,8 +56,9 @@ export interface RequestStore {
   update(request: AccessRequest): Promise<void>;
 }
 
-/** DF record shape: the entity's user-defined columns plus the system Id. */
+/** DF record shape: the entity's user-defined columns plus the system Id and CreatedBy. */
 interface AccessRequestRecord extends EntityRecord {
+  CreatedBy?: string | null;
   kind: string;
   targetId: string;
   targetName: string;
@@ -67,6 +70,9 @@ interface AccessRequestRecord extends EntityRecord {
   resolvedByName?: string | null;
   resolvedTime?: string | null;
 }
+
+/** Rows per query page; a query without paging returns only Data Fabric's first 100 rows. */
+const QUERY_PAGE_SIZE = 1000;
 
 /** How long a write may take to become visible to queries before we give up waiting. */
 const VISIBILITY_ATTEMPTS = 10;
@@ -92,6 +98,7 @@ function toAccessRequest(record: AccessRequestRecord): AccessRequest {
     createdTime: readStoredTime(record.createdTime) ?? '',
     resolvedByName: record.resolvedByName ?? undefined,
     resolvedTime: readStoredTime(record.resolvedTime),
+    createdById: record.CreatedBy ?? undefined,
   };
 }
 
@@ -103,8 +110,13 @@ class DataFabricRequestStore implements RequestStore {
   }
 
   async list(): Promise<AccessRequest[]> {
-    const result = await this.entities.queryRecords(this.entity);
-    return result.items
+    let page = await this.entities.queryRecords(this.entity, { pageSize: QUERY_PAGE_SIZE });
+    const records = [...page.items];
+    while (page.hasNextPage && page.nextCursor) {
+      page = await this.entities.queryRecords(this.entity, { pageSize: QUERY_PAGE_SIZE, cursor: page.nextCursor });
+      records.push(...page.items);
+    }
+    return records
       .map(record => toAccessRequest(record as AccessRequestRecord))
       .sort((a, b) => b.createdTime.localeCompare(a.createdTime));
   }
@@ -116,7 +128,8 @@ class DataFabricRequestStore implements RequestStore {
   }
 
   async update(request: AccessRequest): Promise<void> {
-    const { id, ...fields } = request;
+    // CreatedBy belongs to Data Fabric, so it is never written back
+    const { id, createdById: _createdById, ...fields } = request;
     await this.entities.updateRecord(this.entity, id, { ...fields });
     await this.awaitVisible(id, record => record.status === request.status);
   }

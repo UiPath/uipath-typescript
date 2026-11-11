@@ -20,7 +20,9 @@ import { groupLabel, roleLabel } from '../lib/labels';
  * platform first — the target via `groups.getById()` / `roles.getById()`, the
  * requester via `users.getById()` — and the admin reviews those authoritative
  * values. A row whose stored target label no longer matches what its ID
- * resolves to was edited after submission; it is flagged and cannot be approved.
+ * resolves to was edited after submission, and a row whose requester is not the
+ * account Data Fabric recorded as its creator was filed in someone else's name;
+ * both are flagged and cannot be approved.
  */
 
 /** A pending request with its target and requester resolved from the platform. */
@@ -29,8 +31,10 @@ interface VerifiedRequest {
   targetName: string;
   /** Authoritative identity of the account that would receive the access. */
   requester: string;
-  /** The stored target label disagrees with the platform — the row was edited after submission. */
+  /** The row was edited after submission or filed in someone else's name. */
   tampered: boolean;
+  /** Why the row is flagged, shown on the badge; set only when `tampered`. */
+  tamperReason?: string;
 }
 
 async function verify(services: PlatformServices, request: AccessRequest): Promise<VerifiedRequest> {
@@ -40,10 +44,16 @@ async function verify(services: PlatformServices, request: AccessRequest): Promi
       : services.roles.getById(request.targetId).then(roleLabel),
     services.users.getById(request.requestedById),
   ]);
+  // Data Fabric stamps CreatedBy itself, so unlike requestedById the requester cannot set it
+  const filedByRequester = request.createdById?.toLowerCase() === request.requestedById.toLowerCase();
+  const tamperReason = targetName !== request.targetName
+    ? `Submitted as "${request.targetName}"`
+    : !filedByRequester ? 'Filed by a different account than the requester' : undefined;
   return {
     targetName,
     requester: `${requester.displayName || requester.userName} <${requester.email}>`,
-    tampered: targetName !== request.targetName,
+    tampered: tamperReason !== undefined,
+    tamperReason,
   };
 }
 
@@ -175,7 +185,7 @@ export function Approvals({
                     {check?.tampered && (
                       <>
                         {' '}
-                        <span className="badge denied" title={`Submitted as "${r.targetName}"`}>altered</span>
+                        <span className="badge denied" title={check.tamperReason}>altered</span>
                       </>
                     )}
                     {unverified[r.id] && (
