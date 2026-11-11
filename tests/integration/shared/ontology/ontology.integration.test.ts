@@ -25,7 +25,7 @@ describeIntegration('Ontologies - Integration Tests', 'user', modes, () => {
     folderKey = config.folderKey;
   });
 
-  describe('getAll + getById', () => {
+  describe('getAll + getById + getByName', () => {
     it('should list the ontologies in the test folder and read one back by name', async () => {
       const { items } = await ontologies.getAll({ folderKey });
       if (items.length === 0) {
@@ -34,7 +34,7 @@ describeIntegration('Ontologies - Integration Tests', 'user', modes, () => {
       const [first] = items;
 
       expect(first.folderKey?.toLowerCase()).toBe(folderKey.toLowerCase());
-      const fetched = await ontologies.getById(first.name, { folderKey });
+      const fetched = await ontologies.getByName(first.name, { folderKey });
       expect(fetched.id).toBe(first.id);
     });
 

@@ -6,6 +6,7 @@ import {
   OntologyValidateArtifactContentResponse,
   OntologyGetAllOptions,
   OntologyGetByIdOptions,
+  OntologyGetByNameOptions,
   OntologyValidateArtifactContentOptions,
 } from '@/models/ontology/ontology.types';
 import { RawOntologyGetResponse, RawOntologyListResponse } from '@/models/ontology/ontology.internal-types';
@@ -17,6 +18,7 @@ import { HasPaginationOptions, PaginatedResponse, NonPaginatedResponse } from '@
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 import { transformData } from '@/utils/transform';
+import { resolveOverride } from '@/utils/overrides/resolve-override';
 import { BaseService } from '@/services/base';
 
 /**
@@ -63,12 +65,15 @@ export class OntologyService extends BaseService implements OntologyServiceModel
   }
 
   @track('Ontologies.GetById')
-  async getById(idOrName: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse> {
-    const response = await this.get<RawOntologyGetResponse>(
-      ONTOLOGY_ENDPOINTS.BY_ID(idOrName),
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey ?? this.config.folderKey }) }
-    );
-    return this.toOntology(response.data);
+  async getById(id: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse> {
+    return this.fetchOntology(id, options?.folderKey);
+  }
+
+  @track('Ontologies.GetByName')
+  async getByName(name: string, options?: OntologyGetByNameOptions): Promise<OntologyGetResponse> {
+    // The route takes a folder key, not a path, so an override's folderPath is not applied.
+    const resolvedName = resolveOverride('Ontology', name)?.name ?? name;
+    return this.fetchOntology(resolvedName, options?.folderKey);
   }
 
   @track('Ontologies.ValidateArtifactContent')
@@ -83,6 +88,17 @@ export class OntologyService extends BaseService implements OntologyServiceModel
       }
     );
     return response.data;
+  }
+
+  /**
+   * Reads one ontology; the route resolves its segment as an ID first, then as a name.
+   */
+  private async fetchOntology(idOrName: string, folderKey: string | undefined): Promise<OntologyGetResponse> {
+    const response = await this.get<RawOntologyGetResponse>(
+      ONTOLOGY_ENDPOINTS.BY_ID(idOrName),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey ?? this.config.folderKey }) }
+    );
+    return this.toOntology(response.data);
   }
 
   /**

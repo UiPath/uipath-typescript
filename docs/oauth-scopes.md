@@ -336,6 +336,7 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 |--------|-------------|
 | `getAll()` | None |
 | `getById()` | None |
+| `getByName()` | None |
 | `validateArtifactContent()` | None |
 
 ## Platform
