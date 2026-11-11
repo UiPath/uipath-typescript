@@ -121,7 +121,7 @@ class DataFabricRequestStore implements RequestStore {
     await this.awaitVisible(id, record => record.status === request.status);
   }
 
-  /** Polls the query path until the record is there and `isCurrent` accepts it; gives up quietly after the budget. */
+  /** Polls the query path until the record is there and `isCurrent` accepts it; warns and gives up after the budget. */
   private async awaitVisible(id: string, isCurrent: (record: AccessRequestRecord) => boolean): Promise<void> {
     for (let attempt = 0; attempt < VISIBILITY_ATTEMPTS; attempt++) {
       const result = await this.entities.queryRecords(this.entity, {
@@ -131,6 +131,7 @@ class DataFabricRequestStore implements RequestStore {
       if (record && isCurrent(record)) return;
       await new Promise(resolve => setTimeout(resolve, VISIBILITY_DELAY_MS));
     }
+    console.warn(`Access request ${id} was not visible in queries after ${VISIBILITY_ATTEMPTS} attempts.`);
   }
 }
 
