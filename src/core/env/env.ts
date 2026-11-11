@@ -78,8 +78,7 @@ const GET = 'get';
  * from `.env.local` / `.env.development` under the dev server. They are visible to anyone who can
  * open the app, so never put secrets in them.
  *
- * A variable the deployment did not set, or set to a blank value, reads as `undefined`, so give it a
- * fallback. Augment
+ * A variable the deployment did not set reads as `undefined`, so give it a fallback. Augment
  * {@link UiPathEnvironment} to type the names your app uses.
  *
  * @example
