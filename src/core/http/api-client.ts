@@ -94,6 +94,8 @@ export class ApiClient {
       if (isFormData) {
         body = options.body as FormData;
       } else if (options.bodyOptions?.stringify === false) {
+        // Raw payloads (e.g. ontology artifact text sent with its own Content-Type) must reach the
+        // service as-is; JSON.stringify would quote the text and escape its newlines.
         body = options.body as string;
       } else {
         body = JSON.stringify(options.body);

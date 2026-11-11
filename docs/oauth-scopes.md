@@ -334,10 +334,12 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | None |
-| `getById()` | None |
-| `getByName()` | None |
-| `validateArtifactContent()` | None |
+| `getAll()` | `DataFabric.Schema.Read` |
+| `getById()` | `DataFabric.Schema.Read` |
+| `getByName()` | `DataFabric.Schema.Read` |
+| `validateArtifactContent()` | `DataFabric.Schema.Read` |
+
+Passing `folderPath` to `getAll()`, `getById()` or `getByName()` also needs `OR.Folders.Read`: the service resolves the path through Orchestrator with the caller's token.
 
 ## Orchestrator Users
 
