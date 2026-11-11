@@ -42,7 +42,7 @@ Used by the [solution workflow](#coded-app-inside-solution). A Personal Access T
     uip admin pat create \
       --description "GitHub Actions deploy" \
       --expiration 2027-03-31 \
-      --scope "Apps,OR.Folders,OR.Execution,OR.AutomationSolutions.Access,Solutions.Packages,Solutions.Deployments,RCS.FolderAuthorization"
+      --scope "Apps,OR.Folders,OR.Execution,OR.AutomationSolutions.Access,OR.Users.Read,Solutions.Packages,Solutions.Deployments,RCS.FolderAuthorization"
     ```
 
     The token is printed once, in `Data.Token`. Manage it later with `uip admin pat list`, `uip admin pat regenerate`, and `uip admin pat revoke`.
@@ -53,6 +53,7 @@ Used by the [solution workflow](#coded-app-inside-solution). A Personal Access T
     | `OR.Folders`, `OR.Execution` | Folder lookups, package upload and download |
     | `OR.AutomationSolutions.Access` | Adding a deployed Coded App to a solution (`uip solution resources add`) |
     | `Solutions.Packages`, `Solutions.Deployments` | Publishing and deploying the solution |
+    | `OR.Users.Read` | Checking your permissions when the solution is published and deployed |
     | `RCS.FolderAuthorization` | Finding deployed apps by name (`uip solution resources add`) |
 
 2. **Find your organization and tenant IDs**: run `uip login status --output json` and read `OrganizationId` and `TenantId`.
@@ -431,4 +432,7 @@ The build and deploy steps above are plain shell commands, so they run unchanged
 | The routing name is already in use | Another app owns the URL path. Choose a different `ROUTING_NAME`. |
 | `No remote resource found` from `uip solution resources add` | The app is not findable yet, or the token's user cannot see its folder. Retry after a couple of minutes, and check the folder path. |
 | `deploy run` stops because the package is already deployed | Pass `--yes`. With the same `--name`, the existing deployment is upgraded in place. |
+| `A Coded App named '<app>' is already deployed in this folder` from `deploy run` | An app with the same name was deployed into the solution's folder outside the solution, for example with `uip codedapp deploy`. [Link](#reference-an-existing-coded-action-app) the solution's app to that deployment, or remove the other deployment. |
 | `401` on every command | The PAT expired or was revoked. Create a new one and update the `UIPATH_PAT` secret. |
+| `Forbidden (403)` from `uip solution publish` or `deploy run` with a PAT | The PAT has no `OR.Users.Read` scope, which is needed to check your permissions. Create a PAT that includes it. |
+| `Download failed … apps.uipath.com/v1 … Unauthorized` from `uip solution pack` with a PAT | The solution references a low-code app, and the Apps service in your region does not yet accept a PAT for downloading the app's package. Sign in with `uip login` for these runs until the update reaches your region. |
