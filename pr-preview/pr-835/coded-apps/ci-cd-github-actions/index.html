@@ -604,6 +604,8 @@
       
         
       
+        
+      
     
     
     
@@ -1740,6 +1742,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/OrchestratorUserServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestrator Users
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -1763,10 +1793,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_14" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
             
   
   
@@ -1784,8 +1814,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2024,7 +2054,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_16" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_17" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2046,14 +2076,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_16" id="__nav_2_1_16_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_17" id="__nav_2_1_17_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_16">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2128,7 +2158,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_17" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_18" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2150,14 +2180,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_17" id="__nav_2_1_17_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_18" id="__nav_2_1_18_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_17_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_17">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_18_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_18">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4224,7 +4254,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uip<span class="w"> </span>admin<span class="w"> </span>pat<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>--description<span class="w"> </span><span class="s2">&quot;GitHub Actions deploy&quot;</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--expiration<span class="w"> </span><span class="m">2027</span>-03-31<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;Apps,OR.Folders,OR.Execution,OR.AutomationSolutions.Access,Solutions.Packages,Solutions.Deployments,RCS.FolderAuthorization&quot;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;Apps,OR.Folders,OR.Execution,OR.AutomationSolutions.Access,OR.Users.Read,Solutions.Packages,Solutions.Deployments,RCS.FolderAuthorization&quot;</span>
 </code></pre></div>
 <p>The token is printed once, in <code>Data.Token</code>. Manage it later with <code>uip admin pat list</code>, <code>uip admin pat regenerate</code>, and <code>uip admin pat revoke</code>.</p>
 <table>
@@ -4246,6 +4276,10 @@
 <tr>
 <td><code>OR.AutomationSolutions.Access</code></td>
 <td>Adding a deployed Coded App to a solution (<code>uip solution resources add</code>)</td>
+</tr>
+<tr>
+<td><code>OR.Users.Read</code></td>
+<td>Checking your permissions when the solution is published and deployed</td>
 </tr>
 <tr>
 <td><code>Solutions.Packages</code>, <code>Solutions.Deployments</code></td>
@@ -4635,8 +4669,20 @@
 <td>Pass <code>--yes</code>. With the same <code>--name</code>, the existing deployment is upgraded in place.</td>
 </tr>
 <tr>
+<td><code>A Coded App named '&lt;app&gt;' is already deployed in this folder</code> from <code>deploy run</code></td>
+<td>An app with the same name was deployed into the solution's folder outside the solution, for example with <code>uip codedapp deploy</code>. <a href="#reference-an-existing-coded-action-app">Link</a> the solution's app to that deployment, or remove the other deployment.</td>
+</tr>
+<tr>
 <td><code>401</code> on every command</td>
 <td>The PAT expired or was revoked. Create a new one and update the <code>UIPATH_PAT</code> secret.</td>
+</tr>
+<tr>
+<td><code>Forbidden (403)</code> from <code>uip solution publish</code> or <code>deploy run</code> with a PAT</td>
+<td>The PAT has no <code>OR.Users.Read</code> scope, which is needed to check your permissions. Create a PAT that includes it.</td>
+</tr>
+<tr>
+<td><code>Download failed … apps.uipath.com/v1 … Unauthorized</code> from <code>uip solution pack</code> with a PAT</td>
+<td>The solution references a low-code app, and the Apps service in your region does not yet accept a PAT for downloading the app's package. Sign in with <code>uip login</code> for these runs until the update reaches your region.</td>
 </tr>
 </tbody>
 </table>
