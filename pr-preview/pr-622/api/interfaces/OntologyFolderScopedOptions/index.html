@@ -3878,7 +3878,8 @@
 
   <h1>OntologyFolderScopedOptions</h1>
 
-<p>Folder scoping for ontology reads.</p>
+<p>Folder scoping for ontology reads. Provide <code>folderKey</code> or <code>folderPath</code>; when both are
+given, <code>folderKey</code> wins.</p>
 <h2 id="extended-by">Extended by<a class="headerlink" href="#extended-by" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../OntologyGetByIdOptions/"><code>OntologyGetByIdOptions</code></a></li>
@@ -3898,6 +3899,11 @@
 <td><a id="folderkey"></a> <code>folderKey?</code></td>
 <td><code>string</code></td>
 <td>Key (GUID) of the folder.</td>
+</tr>
+<tr>
+<td><a id="folderpath"></a> <code>folderPath?</code></td>
+<td><code>string</code></td>
+<td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>, matched without case.</td>
 </tr>
 </tbody>
 </table>
