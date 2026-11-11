@@ -35,7 +35,7 @@ access.
 Requires [Node.js 20+](https://uipath.github.io/uipath-typescript/getting-started/#prerequisites).
 
 1. Create an **external application** (non-confidential, user-mode) in UiPath Admin with redirect URI
-   `http://localhost:5173` and scopes `PM.User.Read PM.Group PM.Directory`. The SDK requests `offline_access`
+   `http://localhost:5173` and scopes `PM.User.Read PM.Group.Read PM.Directory`. The SDK requests `offline_access`
    (refresh tokens) automatically, so it does not need to be configured.
 2. Copy `uipath.json.example` to `uipath.json` and fill in your `clientId`, `baseUrl`, `orgName` and
    `tenantName`.
