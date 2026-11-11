@@ -19,6 +19,7 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 import { transformData } from '@/utils/transform';
 import { resolveOverride } from '@/utils/overrides/resolve-override';
+import { resolveFolderHeaders } from '@/utils/folder/folder-headers';
 import { BaseService } from '@/services/base';
 
 /**
@@ -44,8 +45,10 @@ export class OntologyService extends BaseService implements OntologyServiceModel
         serviceAccess: this.createPaginationServiceAccess(),
         getEndpoint: () => ONTOLOGY_ENDPOINTS.COLLECTION,
         transformFn: (raw) => this.toOntology(raw),
-        // The list route takes the folder as a `folder` query parameter; omitting it lists every folder.
-        processParametersFn: ({ folderKey, ...rest }) => ({ ...rest, folder: folderKey }),
+        // The list route takes a folder key as the `folder` query parameter and a folder path as
+        // its header; with neither it lists every folder.
+        headers: this.listFolderHeaders(options),
+        processParametersFn: ({ folderKey, folderPath: _folderPath, ...rest }) => ({ ...rest, folder: folderKey }),
         excludeFromPrefix: ['search', 'state', 'folder'],
         pagination: {
           paginationType: PaginationType.OFFSET,
@@ -66,14 +69,19 @@ export class OntologyService extends BaseService implements OntologyServiceModel
 
   @track('Ontologies.GetById')
   async getById(id: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse> {
-    return this.fetchOntology(id, options?.folderKey);
+    return this.fetchOntology(id, this.folderHeaders(options?.folderKey, options?.folderPath, 'Ontologies.getById'));
   }
 
   @track('Ontologies.GetByName')
   async getByName(name: string, options?: OntologyGetByNameOptions): Promise<OntologyGetResponse> {
-    // The route takes a folder key, not a path, so an override's folderPath is not applied.
-    const resolvedName = resolveOverride('Ontology', name)?.name ?? name;
-    return this.fetchOntology(resolvedName, options?.folderKey);
+    const override = resolveOverride('Ontology', name, options?.folderPath);
+    const resolvedName = override?.name ?? name;
+    // An override's folderPath redirects the folder, so it replaces the caller's folder: sent
+    // alongside a folder key, the path would be ignored, as the service lets a key win.
+    const headers = override?.folderPath
+      ? this.folderHeaders(undefined, override.folderPath, 'Ontologies.getByName')
+      : this.folderHeaders(options?.folderKey, options?.folderPath, 'Ontologies.getByName');
+    return this.fetchOntology(resolvedName, headers);
   }
 
   @track('Ontologies.ValidateArtifactContent')
@@ -93,12 +101,41 @@ export class OntologyService extends BaseService implements OntologyServiceModel
   /**
    * Reads one ontology; the route resolves its segment as an ID first, then as a name.
    */
-  private async fetchOntology(idOrName: string, folderKey: string | undefined): Promise<OntologyGetResponse> {
-    const response = await this.get<RawOntologyGetResponse>(
-      ONTOLOGY_ENDPOINTS.BY_ID(idOrName),
-      { headers: createHeaders({ [FOLDER_KEY]: folderKey ?? this.config.folderKey }) }
-    );
+  private async fetchOntology(idOrName: string, headers: Record<string, string>): Promise<OntologyGetResponse> {
+    const response = await this.get<RawOntologyGetResponse>(ONTOLOGY_ENDPOINTS.BY_ID(idOrName), { headers });
     return this.toOntology(response.data);
+  }
+
+  /**
+   * Folder headers for a single-ontology read. A folder key wins over a path, as it does on the
+   * service, so only one is sent; with neither, the configured folder key is used, and without
+   * that no folder header is sent (the service then looks in no folder).
+   */
+  private folderHeaders(folderKey: string | undefined, folderPath: string | undefined, resourceType: string): Record<string, string> {
+    const key = folderKey?.trim();
+    const path = folderPath?.trim();
+    if (!key && !isFolderPath(path)) {
+      return createHeaders({ [FOLDER_KEY]: this.config.folderKey });
+    }
+    return resolveFolderHeaders({
+      folderKey: key || undefined,
+      folderPath: key ? undefined : path,
+      resourceType,
+      fallbackFolderKey: this.config.folderKey,
+    });
+  }
+
+  /**
+   * The folder path header for a list. A folder key travels as the `folder` query parameter and
+   * wins, so the path is sent only without one; the configured folder key is never applied, so
+   * an unscoped list still covers every folder.
+   */
+  private listFolderHeaders(options: OntologyGetAllOptions | undefined): Record<string, string> {
+    const path = options?.folderPath?.trim();
+    if (options?.folderKey?.trim() || !isFolderPath(path)) {
+      return {};
+    }
+    return resolveFolderHeaders({ folderPath: path, resourceType: 'Ontologies.getAll' });
   }
 
   /**
@@ -106,6 +143,7 @@ export class OntologyService extends BaseService implements OntologyServiceModel
    */
   private async getAllPages(options: OntologyGetAllOptions): Promise<NonPaginatedResponse<OntologyGetResponse>> {
     const { search, state, folderKey } = options;
+    const headers = this.listFolderHeaders(options);
     const ontologiesById = new Map<string, OntologyGetResponse>();
     let totalCount = 0;
 
@@ -118,6 +156,7 @@ export class OntologyService extends BaseService implements OntologyServiceModel
           [ONTOLOGY_OFFSET_PARAMS.OFFSET_PARAM]: page,
           [ONTOLOGY_OFFSET_PARAMS.PAGE_SIZE_PARAM]: ONTOLOGY_MAX_PAGE_SIZE,
         },
+        headers,
       });
       const { items, total } = response.data;
       totalCount = total;
@@ -139,4 +178,9 @@ export class OntologyService extends BaseService implements OntologyServiceModel
   private toOntology(raw: RawOntologyGetResponse): OntologyGetResponse {
     return transformData(raw, OntologyMap) as OntologyGetResponse;
   }
+}
+
+/** Whether `path` names a folder: `'.'` (the current folder) reads as no path, as in `resolveFolderHeaders`. */
+function isFolderPath(path: string | undefined): path is string {
+  return !!path && path !== '.';
 }

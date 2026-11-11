@@ -27,4 +27,8 @@ export const ONTOLOGY_TEST_CONSTANTS = {
 
   FOLDER_KEY: 'test-folder-key',
   OTHER_FOLDER_KEY: 'other-folder-key',
+
+  /** A folder path, and its `X-UIPATH-FolderPath-Encoded` form (base64 of UTF-16LE). */
+  FOLDER_PATH: 'Shared/Finance',
+  FOLDER_PATH_ENCODED: 'UwBoAGEAcgBlAGQALwBGAGkAbgBhAG4AYwBlAA==',
 };

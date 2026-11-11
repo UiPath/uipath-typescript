@@ -41,11 +41,14 @@ export enum OntologyState {
 }
 
 /**
- * Folder scoping for ontology reads.
+ * Folder scoping for ontology reads. Provide `folderKey` or `folderPath`; when both are
+ * given, `folderKey` wins.
  */
 export interface OntologyFolderScopedOptions {
   /** Key (GUID) of the folder. */
   folderKey?: string;
+  /** Slash-delimited folder path, e.g. `'Shared/Finance'`, matched without case. */
+  folderPath?: string;
 }
 
 /**

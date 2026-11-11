@@ -29,8 +29,8 @@ export interface OntologyServiceModel {
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
    *
-   * Lists ontologies across every folder, or in one folder when `folderKey` is given,
-   * with optional search, state filter and pagination. Without pagination options,
+   * Lists ontologies across every folder, or in one folder when `folderKey` or `folderPath`
+   * is given, with optional search, state filter and pagination. Without pagination options,
    * every ontology is returned.
    *
    * Each ontology includes its name, display name, lifecycle state, folder and audit fields.
@@ -49,6 +49,9 @@ export interface OntologyServiceModel {
    *
    * // In one folder
    * const inFolder = await ontologies.getAll({ folderKey: '<folderKey>' });
+   *
+   * // In one folder, by its path
+   * const byPath = await ontologies.getAll({ folderPath: 'Shared/Finance' });
    *
    * // Search by name
    * const filtered = await ontologies.getAll({ search: 'ecommerce' });
@@ -78,7 +81,7 @@ export interface OntologyServiceModel {
    * First, get ontology IDs with `ontologies.getAll()`.
    *
    * @param id - Ontology ID (GUID)
-   * @param options - Optional folder to read from; defaults to the configured folder
+   * @param options - Optional folder to read from (`folderKey` or `folderPath`; a key wins); defaults to the configured folder
    * @returns Promise resolving to the {@link OntologyGetResponse}, including the key of the folder it belongs to
    *
    * @example
@@ -92,6 +95,12 @@ export interface OntologyServiceModel {
    * const ontologies = new Ontologies(sdk);
    * const ontology = await ontologies.getById('<ontologyId>', { folderKey: '<folderKey>' });
    * console.log(ontology.state, ontology.folderKey);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * const ontologies = new Ontologies(sdk);
+   * const ontology = await ontologies.getById('<ontologyId>', { folderPath: 'Shared/Finance' });
    * ```
    */
   getById(id: string, options?: OntologyGetByIdOptions): Promise<OntologyGetResponse>;
@@ -107,10 +116,11 @@ export interface OntologyServiceModel {
    * Gets a single ontology by its name.
    *
    * In an app deployed with a solution, the name is redirected to the ontology the
-   * solution's resource overrides point to, so code can use the design-time name.
+   * solution's resource overrides point to, so code can use the design-time name. An
+   * override that names a folder path reads from that folder.
    *
    * @param name - Ontology name (case-sensitive)
-   * @param options - Optional folder to read from; defaults to the configured folder
+   * @param options - Optional folder to read from (`folderKey` or `folderPath`; a key wins); defaults to the configured folder
    * @returns Promise resolving to the {@link OntologyGetResponse}, including the key of the folder it belongs to
    *
    * @example
@@ -124,6 +134,12 @@ export interface OntologyServiceModel {
    * const ontologies = new Ontologies(sdk);
    * const ontology = await ontologies.getByName('<ontologyName>', { folderKey: '<folderKey>' });
    * console.log(ontology.id, ontology.state);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * const ontologies = new Ontologies(sdk);
+   * const ontology = await ontologies.getByName('<ontologyName>', { folderPath: 'Shared/Finance' });
    * ```
    */
   getByName(name: string, options?: OntologyGetByNameOptions): Promise<OntologyGetResponse>;
