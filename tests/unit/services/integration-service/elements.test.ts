@@ -5,11 +5,52 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { IS_TEST_CONSTANTS, createMockError, TEST_CONSTANTS } from '../../../utils/mocks';
+import { resource, type ConnectionResource } from '../../../../src/resources';
+import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 
 vi.mock('../../../../src/core/http/api-client');
 
 const EVENT_OPERATION = 'INDEX_COMPLETED';
 const OBJECT_NAME = 'indexes';
+const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+
+type InstanceCall = (service: ElementsService, connection: ConnectionResource | string) => Promise<unknown>;
+
+const INSTANCE_METHODS: ReadonlyArray<[string, InstanceCall, (connectionId: string) => string]> = [
+  [
+    'getInstanceObjects',
+    (service, c) =>
+      typeof c === 'string'
+        ? service.getInstanceObjects(c, IS_TEST_CONSTANTS.CONNECTOR_KEY)
+        : service.getInstanceObjects(c, IS_TEST_CONSTANTS.CONNECTOR_KEY),
+    (connectionId) => ELEMENT_ENDPOINTS.INSTANCE.OBJECTS.LIST(connectionId, IS_TEST_CONSTANTS.CONNECTOR_KEY),
+  ],
+  [
+    'getInstanceObjectMetadata',
+    (service, c) =>
+      typeof c === 'string'
+        ? service.getInstanceObjectMetadata(c, IS_TEST_CONSTANTS.CONNECTOR_KEY, OBJECT_NAME)
+        : service.getInstanceObjectMetadata(c, IS_TEST_CONSTANTS.CONNECTOR_KEY, OBJECT_NAME),
+    (connectionId) => ELEMENT_ENDPOINTS.INSTANCE.OBJECTS.METADATA(connectionId, IS_TEST_CONSTANTS.CONNECTOR_KEY, OBJECT_NAME),
+  ],
+  [
+    'getInstanceEventObjects',
+    (service, c) =>
+      typeof c === 'string'
+        ? service.getInstanceEventObjects(c, IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION)
+        : service.getInstanceEventObjects(c, IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION),
+    (connectionId) => ELEMENT_ENDPOINTS.INSTANCE.EVENTS.OBJECTS(connectionId, IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION),
+  ],
+  [
+    'getInstanceEventObjectMetadata',
+    (service, c) =>
+      typeof c === 'string'
+        ? service.getInstanceEventObjectMetadata(c, IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION, OBJECT_NAME)
+        : service.getInstanceEventObjectMetadata(c, IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION, OBJECT_NAME),
+    (connectionId) =>
+      ELEMENT_ENDPOINTS.INSTANCE.EVENTS.METADATA(connectionId, IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION, OBJECT_NAME),
+  ],
+];
 
 describe('ElementsService', () => {
   let service: ElementsService;
@@ -24,6 +65,7 @@ describe('ElementsService', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
   });
 
   describe('static (connection-independent)', () => {
@@ -150,6 +192,40 @@ describe('ElementsService', () => {
         ),
         { params: undefined },
       );
+    });
+  });
+
+  describe.each(INSTANCE_METHODS)('%s with a declared connection or a published override', (_name, call, endpoint) => {
+    const handle = resource.connection({ id: IS_TEST_CONSTANTS.CONNECTION_ID, connector: IS_TEST_CONSTANTS.CONNECTOR_KEY });
+
+    it('reads the connection a handle declares', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+
+      await call(service, handle);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(endpoint(IS_TEST_CONSTANTS.CONNECTION_ID), { params: undefined });
+    });
+
+    it.each([
+      ['a handle', handle],
+      ['a plain id', IS_TEST_CONSTANTS.CONNECTION_ID],
+    ])('reads the remapped connection for %s', async (_label, connection) => {
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`connection.${IS_TEST_CONSTANTS.CONNECTION_ID}`]: {
+          ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
+          folderKey: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY,
+        },
+      });
+      mockApiClient.get.mockResolvedValue([]);
+
+      await call(service, connection);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(endpoint(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID), { params: undefined });
+    });
+
+    it('throws ValidationError when the connection id is empty', async () => {
+      await expect(call(service, '')).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
   });
 

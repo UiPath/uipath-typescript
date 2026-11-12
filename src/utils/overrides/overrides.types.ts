@@ -10,3 +10,9 @@ export interface ResourceOverride {
   name?: string;
   folderPath?: string;
 }
+
+/** The fields a connection lookup acts on, projected out of a `connection.<id>` entry. */
+export interface ConnectionOverride {
+  connectionId?: string;
+  folderKey?: string;
+}

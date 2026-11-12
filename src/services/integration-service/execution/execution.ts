@@ -5,6 +5,8 @@ import { SDKInternalsRegistry } from '../../../core/internals';
 import { ELEMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../utils/constants/headers';
 import { resolveFolderScope } from '../folder-scope';
+import type { ConnectionResource } from '@/resources';
+import { resolveConnectionTarget, withConnectionFolder } from '../connection-target';
 import { fetchWithRetry } from '../../../utils/http/fetch-with-retry';
 import { resolveRetryOptions, DEFAULT_API_CLIENT_RETRY } from '../../../utils/http/retry-policy';
 import type { IUiPath } from '../../../core/types';
@@ -40,21 +42,19 @@ class Execution extends BaseService {
 
   @track('Execution.Execute')
   async execute(
-    connectionId: string,
+    connection: string | ConnectionResource,
     objectName: string,
     method: ExecuteMethod,
     options: ExecuteOptions,
   ): Promise<ExecuteResult> {
-    if (!connectionId) {
-      throw new ValidationError({ message: 'connectionId is required for execute' });
-    }
+    const target = resolveConnectionTarget(connection, 'execute');
     if (!objectName) {
       throw new ValidationError({ message: 'objectName is required for execute' });
     }
 
     const token = await this.getValidAuthToken();
 
-    const relativePath = ELEMENT_ENDPOINTS.INSTANCE.EXECUTE(connectionId, objectName);
+    const relativePath = ELEMENT_ENDPOINTS.INSTANCE.EXECUTE(target.id, objectName);
     const baseSegment = `${this.execConfig.orgName}/${this.execConfig.tenantName}/`;
     const url = new URL(baseSegment + relativePath, this.execConfig.baseUrl).toString();
 
@@ -70,7 +70,7 @@ class Execution extends BaseService {
     const traceparentValue = `00-${traceId}-${spanId}-01`;
 
     const { headers: folderHeaders } = resolveFolderScope(
-      options,
+      withConnectionFolder(options, target),
       'Execution.execute',
       this.config.metaFolderKey,
     );
@@ -147,6 +147,9 @@ class Execution extends BaseService {
  * The full HTTP envelope (`ok`, `status`, `body`, `headers`) is returned so
  * callers can surface connector-specific error bodies.
  *
+ * When an admin remapped this connection id at deployment, the call targets the
+ * connection it was mapped to.
+ *
  * @param uipath - UiPath SDK instance providing authentication and configuration
  * @param connectionId - Connection GUID
  * @param objectName - Connector object name (e.g. `tickets`, `messages`)
@@ -214,12 +217,64 @@ class Execution extends BaseService {
  * });
  * ```
  */
-export async function execute(
+export function execute(
   uipath: IUiPath,
   connectionId: string,
+  objectName: string,
+  method?: ExecuteMethod,
+  options?: ExecuteOptions,
+): Promise<ExecuteResult>;
+/**
+ * Execute an arbitrary HTTP operation against a connection declared in
+ * `uipath_resources.ts`, through the Integration Service passthrough endpoint.
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This function is experimental and may change or be removed in future releases.
+ * ///
+ *
+ * When an admin remapped the connection at deployment, the call targets the
+ * connection it was mapped to, in that connection's folder. A folder option passed
+ * explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence. Like the
+ * id form, this does not throw on non-2xx responses.
+ *
+ * @param uipath - UiPath SDK instance providing authentication and configuration
+ * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
+ * @param objectName - Connector object name (e.g. `tickets`, `messages`)
+ * @param method - HTTP method (defaults to `GET`)
+ * @param options - Body, query params, folder scoping (`folderId` / `folderKey` / `folderPath`),
+ *   and robustness knobs (`retry`, `timeoutMs`, `signal`)
+ * @returns Promise resolving to an {@link ExecuteResult}
+ *
+ * @example
+ * ```typescript
+ * // uipath_resources.ts
+ * import { resource } from '@uipath/uipath-typescript/resources';
+ *
+ * export class ProjectResources {
+ *   static readonly helpdesk = resource.connection({ id: '<connectionId>', connector: 'uipath-zendesk' });
+ * }
+ *
+ * // anywhere in the project
+ * import { execute } from '@uipath/uipath-typescript/connections';
+ *
+ * const result = await execute(sdk, ProjectResources.helpdesk, 'tickets', 'GET');
+ * ```
+ */
+export function execute(
+  uipath: IUiPath,
+  connection: ConnectionResource,
+  objectName: string,
+  method?: ExecuteMethod,
+  options?: ExecuteOptions,
+): Promise<ExecuteResult>;
+export async function execute(
+  uipath: IUiPath,
+  connection: string | ConnectionResource,
   objectName: string,
   method: ExecuteMethod = 'GET',
   options: ExecuteOptions = {},
 ): Promise<ExecuteResult> {
-  return new Execution(uipath).execute(connectionId, objectName, method, options);
+  return new Execution(uipath).execute(connection, objectName, method, options);
 }

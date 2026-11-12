@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { resolveOverride } from '../../../../src/utils/overrides/resolve-override';
+import { resolveConnectionOverride, resolveOverride } from '../../../../src/utils/overrides/resolve-override';
 import type { ResourceOverrides } from '../../../../src/utils/overrides/overrides.types';
 import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
+import { IS_TEST_CONSTANTS } from '../../../utils/constants/integration-service';
 
 const KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
 
@@ -122,5 +123,72 @@ describe('resolveOverride', () => {
       throw new Error('host broke');
     });
     expect(resolveOverride('Asset', 'MyAsset')).toBeUndefined();
+  });
+});
+
+describe('resolveConnectionOverride', () => {
+  const { CONNECTION_ID, CONNECTION_ID_2, FOLDER_KEY } = IS_TEST_CONSTANTS;
+  const { TARGET_CONNECTION_ID, TARGET_CONNECTION_FOLDER_KEY } = OVERRIDE_TEST_CONSTANTS;
+
+  it('reads the target id from ConnectionId and its folder from folderKey', () => {
+    install(() => ({
+      [`connection.${CONNECTION_ID}`]: { ConnectionId: TARGET_CONNECTION_ID, folderKey: TARGET_CONNECTION_FOLDER_KEY },
+    }));
+    expect(resolveConnectionOverride(CONNECTION_ID)).toEqual({
+      connectionId: TARGET_CONNECTION_ID,
+      folderKey: TARGET_CONNECTION_FOLDER_KEY,
+    });
+  });
+
+  it('falls back to connectionId when the entry spells the id property in camelCase', () => {
+    install(() => ({ [`connection.${CONNECTION_ID}`]: { connectionId: TARGET_CONNECTION_ID } }));
+    expect(resolveConnectionOverride(CONNECTION_ID)).toEqual({ connectionId: TARGET_CONNECTION_ID, folderKey: undefined });
+  });
+
+  it('prefers ConnectionId when an entry carries both spellings', () => {
+    install(() => ({
+      [`connection.${CONNECTION_ID}`]: { ConnectionId: TARGET_CONNECTION_ID, connectionId: CONNECTION_ID_2 },
+    }));
+    expect(resolveConnectionOverride(CONNECTION_ID)?.connectionId).toBe(TARGET_CONNECTION_ID);
+  });
+
+  it('treats empty properties as absent', () => {
+    install(() => ({ [`connection.${CONNECTION_ID}`]: { ConnectionId: '', folderKey: '' } }));
+    expect(resolveConnectionOverride(CONNECTION_ID)).toEqual({ connectionId: undefined, folderKey: undefined });
+  });
+
+  it('matches a key whose GUID differs from the caller id only in case', () => {
+    install(() => ({ [`connection.${CONNECTION_ID}`]: { ConnectionId: TARGET_CONNECTION_ID } }));
+    expect(resolveConnectionOverride(CONNECTION_ID.toUpperCase())?.connectionId).toBe(TARGET_CONNECTION_ID);
+
+    install(() => ({ [`connection.${CONNECTION_ID.toUpperCase()}`]: { ConnectionId: TARGET_CONNECTION_ID } }));
+    expect(resolveConnectionOverride(CONNECTION_ID)?.connectionId).toBe(TARGET_CONNECTION_ID);
+  });
+
+  it('prefers the exact key over one that differs only in case', () => {
+    install(() => ({
+      [`connection.${CONNECTION_ID.toUpperCase()}`]: { ConnectionId: CONNECTION_ID_2 },
+      [`connection.${CONNECTION_ID}`]: { ConnectionId: TARGET_CONNECTION_ID },
+    }));
+    expect(resolveConnectionOverride(CONNECTION_ID)?.connectionId).toBe(TARGET_CONNECTION_ID);
+  });
+
+  it('reads only connection entries, not another kind keyed by the same text', () => {
+    install(() => ({ [`asset.${CONNECTION_ID}`]: { ConnectionId: TARGET_CONNECTION_ID, folderKey: FOLDER_KEY } }));
+    expect(resolveConnectionOverride(CONNECTION_ID)).toBeUndefined();
+  });
+
+  it('reports undefined for an unlisted connection, and when no host published a table', () => {
+    expect(resolveConnectionOverride(CONNECTION_ID)).toBeUndefined();
+
+    install(() => ({ [`connection.${CONNECTION_ID_2}`]: { ConnectionId: TARGET_CONNECTION_ID } }));
+    expect(resolveConnectionOverride(CONNECTION_ID)).toBeUndefined();
+  });
+
+  it('degrades to no override when the host source throws', () => {
+    install(() => {
+      throw new Error('host broke');
+    });
+    expect(resolveConnectionOverride(CONNECTION_ID)).toBeUndefined();
   });
 });

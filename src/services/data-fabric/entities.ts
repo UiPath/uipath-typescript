@@ -1,5 +1,6 @@
 import { ValidationError } from '../../core/errors';
 import { BaseService } from '../base';
+import { EntityResource, isEntityResource } from '../../resources';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
@@ -212,8 +213,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id), options?.folderKey);
   }
 
+  getByName(entityName: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse>;
+  getByName(entity: EntityResource, options?: EntityGetByNameOptions): Promise<EntityGetResponse>;
   @track('Entities.GetByName')
-  async getByName(entityName: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse> {
+  async getByName(nameOrHandle: string | EntityResource, options?: EntityGetByNameOptions): Promise<EntityGetResponse> {
+    const entityName = isEntityResource(nameOrHandle) ? nameOrHandle.name : nameOrHandle;
     return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(applyEntityNameOverride(entityName)), options?.folderKey);
   }
 
