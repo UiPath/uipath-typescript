@@ -23,6 +23,9 @@ export enum UiPathMetaTags {
 
   // Debug session (injected by Studio Web when it stages a debug bundle)
   DEBUG_SOURCE = 'uipath:debug-source',
+
+  // Public (anonymous) coded apps: injected at deploy only for public apps; its presence switches the SDK to public mode.
+  APP_KEY = 'uipath:app-key',
 }
 
 /** Query parameter a Studio Web debug page carries with the job key of its debug session. */
