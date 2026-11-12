@@ -75,18 +75,20 @@ describe('AuthService', () => {
       expect(new URL(url).searchParams.get('acr_values')).toBe(`tenant:${TEST_CONSTANTS.GUID_ORG_ID}`);
     });
 
-    it('should ignore enforceSso and warn when orgName is not an org id', () => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      try {
-        for (const orgName of [ TEST_CONSTANTS.ORGANIZATION_ID, TEST_CONSTANTS.INVALID_GUID_ORG_ID ]) {
-          const service = createService(orgName, { enforceSso: true });
-          const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
-          expect(url).not.toContain('acr_values');
-        }
-        expect(warn).toHaveBeenCalledTimes(2);
-      } finally {
-        warn.mockRestore();
+    it('should emit acr_values with the org name when enforceSso is enabled and orgName is not an org id', () => {
+      for (const orgName of [ TEST_CONSTANTS.ORGANIZATION_ID, TEST_CONSTANTS.INVALID_GUID_ORG_ID ]) {
+        const service = createService(orgName, { enforceSso: true });
+        const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+        expect(new URL(url).searchParams.get('acr_values')).toBe(`tenantName:${orgName}`);
       }
+    });
+
+    // The routing layer only rewrites tenantName:<name> to tenant:<guid> when the
+    // authorize path carries no org segment; with one, SSO is silently skipped.
+    it('should keep the org out of the authorize path when enforceSso is enabled', () => {
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID, { enforceSso: true });
+      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+      expect(new URL(url).pathname).not.toContain(TEST_CONSTANTS.ORGANIZATION_ID);
     });
 
     it('should always request the openid scope automatically', () => {
