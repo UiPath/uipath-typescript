@@ -17,16 +17,16 @@ describe('ENV_GLOBAL', () => {
 
 describe('renderEnvScript', () => {
   it('sets the global to the local values when nothing set it', () => {
-    expect(run(renderEnvScript({ UIPATH_PUBLIC_REGION: 'EU' }))).toEqual({ UIPATH_PUBLIC_REGION: 'EU' })
+    expect(run(renderEnvScript({ UIPATH_CLIENT_REGION: 'EU' }))).toEqual({ UIPATH_CLIENT_REGION: 'EU' })
   })
 
   it('leaves values a deployment already set untouched', () => {
-    const deployed = { UIPATH_PUBLIC_REGION: 'US' }
-    expect(run(renderEnvScript({ UIPATH_PUBLIC_REGION: 'EU' }), deployed)).toBe(deployed)
+    const deployed = { UIPATH_CLIENT_REGION: 'US' }
+    expect(run(renderEnvScript({ UIPATH_CLIENT_REGION: 'EU' }), deployed)).toBe(deployed)
   })
 
   it('escapes characters that could close the tag or break the statement', () => {
-    const script = renderEnvScript({ UIPATH_PUBLIC_X: '</script>\u2028' })
+    const script = renderEnvScript({ UIPATH_CLIENT_X: '</script>\u2028' })
     expect(script).not.toContain('</script>')
     expect(script).toContain('\\u003c/script>')
     expect(script).toContain('\\u2028')
@@ -35,10 +35,10 @@ describe('renderEnvScript', () => {
 
 describe('generateEnvScriptForVite', () => {
   it('returns one head-prepend script tag for the values', () => {
-    const [tag, ...rest] = generateEnvScriptForVite({ UIPATH_PUBLIC_REGION: 'EU' })
+    const [tag, ...rest] = generateEnvScriptForVite({ UIPATH_CLIENT_REGION: 'EU' })
     expect(rest).toEqual([])
     expect(tag).toMatchObject({ tag: 'script', injectTo: 'head-prepend' })
-    expect(run(tag.children)).toEqual({ UIPATH_PUBLIC_REGION: 'EU' })
+    expect(run(tag.children)).toEqual({ UIPATH_CLIENT_REGION: 'EU' })
   })
 
   it('returns no tag when there are no values', () => {
@@ -49,9 +49,9 @@ describe('generateEnvScriptForVite', () => {
 describe('injectEnvScriptHtml', () => {
   it('places the script directly after <head>, ahead of module scripts', () => {
     const html = '<html><head><script type="module" src="/main.js"></script></head></html>'
-    const out = injectEnvScriptHtml(html, { UIPATH_PUBLIC_REGION: 'EU' })
+    const out = injectEnvScriptHtml(html, { UIPATH_CLIENT_REGION: 'EU' })
     expect(out.indexOf('__UIPATH_ENV__')).toBeLessThan(out.indexOf('type="module"'))
-    expect(out).toContain('<script>window.__UIPATH_ENV__ = window.__UIPATH_ENV__ || {"UIPATH_PUBLIC_REGION":"EU"};</script>')
+    expect(out).toContain('<script>window.__UIPATH_ENV__ = window.__UIPATH_ENV__ || {"UIPATH_CLIENT_REGION":"EU"};</script>')
   })
 
   it('returns the HTML unchanged when there are no values', () => {
@@ -60,6 +60,6 @@ describe('injectEnvScriptHtml', () => {
   })
 
   it('returns the input unchanged without a <head>', () => {
-    expect(injectEnvScriptHtml('<html></html>', { UIPATH_PUBLIC_REGION: 'EU' })).toBe('<html></html>')
+    expect(injectEnvScriptHtml('<html></html>', { UIPATH_CLIENT_REGION: 'EU' })).toBe('<html></html>')
   })
 })
