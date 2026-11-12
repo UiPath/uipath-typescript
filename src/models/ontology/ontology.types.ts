@@ -4,11 +4,15 @@ import type { PaginationOptions } from '@/utils/pagination/types';
  * Semantic kind of an ontology artifact, independent of its media type.
  */
 export enum OntologyArtifactType {
-  /** OWL schema defining the ontology's classes and properties; one per ontology. */
+  /** Web Ontology Language (OWL) schema defining the ontology's classes and properties; one per ontology. */
   Schema = 'schema',
-  /** SHACL shapes constraining the ontology's data; an ontology can have many. */
+  /** Shapes Constraint Language (SHACL) shapes constraining the ontology's data; an ontology can have many. */
   Constraints = 'constraints',
-  /** Mapping that binds the schema to its data sources (YARRRML or R2RML); one per ontology. */
+  /**
+   * Mapping that binds the schema to its data sources; one per ontology. Written in YARRRML (a YAML
+   * syntax for mapping rules) or R2RML (the W3C language that maps relational databases to the
+   * Resource Description Framework).
+   */
   Mapping = 'mapping',
   /** Business rules over the ontology's data; an ontology can have many. */
   BusinessRules = 'business-rules',
