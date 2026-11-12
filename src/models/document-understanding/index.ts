@@ -13,3 +13,4 @@ export * as DuFramework from './framework';
 
 export * from './validation.types';
 export * from './validation.models';
+export * from './ixp';
