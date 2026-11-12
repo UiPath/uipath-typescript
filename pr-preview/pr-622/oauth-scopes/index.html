@@ -5976,15 +5976,15 @@
 <tbody>
 <tr>
 <td><code>getAll()</code></td>
-<td><code>DataFabric.Schema.Read</code></td>
+<td><code>DataFabric.Schema.Read OR.Folders.Read</code></td>
 </tr>
 <tr>
 <td><code>getById()</code></td>
-<td><code>DataFabric.Schema.Read</code></td>
+<td><code>DataFabric.Schema.Read OR.Folders.Read</code></td>
 </tr>
 <tr>
 <td><code>getByName()</code></td>
-<td><code>DataFabric.Schema.Read</code></td>
+<td><code>DataFabric.Schema.Read OR.Folders.Read</code></td>
 </tr>
 <tr>
 <td><code>validateArtifactContent()</code></td>
@@ -5992,7 +5992,6 @@
 </tr>
 </tbody>
 </table>
-<p>Passing <code>folderPath</code> to <code>getAll()</code>, <code>getById()</code> or <code>getByName()</code> also needs <code>OR.Folders.Read</code>: the service resolves the path through Orchestrator with the caller's token.</p>
 <h2 id="orchestrator-users">Orchestrator Users<a class="headerlink" href="#orchestrator-users" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
