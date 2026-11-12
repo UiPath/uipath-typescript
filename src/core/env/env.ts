@@ -10,8 +10,8 @@ export const UIPATH_ENV_GLOBAL = '__UIPATH_ENV__';
  * ```ts
  * declare module '@uipath/uipath-typescript' {
  *   interface UiPathEnvironment {
- *     UIPATH_CLIENT_API_BASE_URL: string;
- *     UIPATH_CLIENT_REGION?: string;
+ *     UIPATH_APPS_API_BASE_URL: string;
+ *     UIPATH_APPS_REGION?: string;
  *   }
  * }
  * ```
@@ -31,7 +31,7 @@ export type UiPathEnv = Readonly<UiPathEnvironment> &
     /**
      * Reads one variable by name; the same read as property access.
      *
-     * @param name - Variable name including its `UIPATH_CLIENT_` prefix, e.g. `UIPATH_CLIENT_REGION`
+     * @param name - Variable name including its `UIPATH_APPS_` prefix, e.g. `UIPATH_APPS_REGION`
      * @returns The value, or `undefined` when the deployment did not set it
      */
     get(name: string): string | undefined;
@@ -73,7 +73,7 @@ export function resetEnvCache(): void {
 const GET = 'get';
 
 /**
- * The deployment's `UIPATH_CLIENT_*` environment variables, readable synchronously, before sign-in
+ * The deployment's `UIPATH_APPS_*` environment variables, readable synchronously, before sign-in
  * and without creating a `UiPath` instance. Values come from the deployment's `env.js`, or
  * from `.env.local` / `.env.development` under the dev server. They are visible to anyone who can
  * open the app, so never put secrets in them.
@@ -85,8 +85,8 @@ const GET = 'get';
  * ```typescript
  * import { env } from '@uipath/uipath-typescript';
  *
- * const apiBaseUrl = env.UIPATH_CLIENT_API_BASE_URL ?? 'https://api.example.com';
- * const region = env.get('UIPATH_CLIENT_REGION') ?? 'EU';
+ * const apiBaseUrl = env.UIPATH_APPS_API_BASE_URL ?? 'https://api.example.com';
+ * const region = env.get('UIPATH_APPS_REGION') ?? 'EU';
  * ```
  */
 export const env: UiPathEnv = new Proxy({} as UiPathEnv, {

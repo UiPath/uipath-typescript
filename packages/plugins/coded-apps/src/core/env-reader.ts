@@ -5,7 +5,7 @@ import { DEV_ENV_FILES, ENV_MESSAGES, ENV_VARIABLE_PREFIX, PLUGIN_NAME } from '.
 import type { EnvironmentVariables } from '../types'
 
 /**
- * Read the `UIPATH_CLIENT_*` variables for local development.
+ * Read the `UIPATH_APPS_*` variables for local development.
  *
  * Files are read in order and a later file overrides an earlier one, the precedence Vite itself
  * uses. Missing files are skipped; a dev server has to start with none of them present.
@@ -36,7 +36,7 @@ export function readEnvValues(files: readonly string[] = DEV_ENV_FILES, cwd: str
 
 /**
  * Values to expose to the page a dev server is serving, or `undefined` when there is nothing to
- * inject: no dev server, or no `UIPATH_CLIENT_*` value in any env file.
+ * inject: no dev server, or no `UIPATH_APPS_*` value in any env file.
  */
 export function readDevEnvValues(isDevServer: boolean): EnvironmentVariables | undefined {
   if (!isDevServer) return undefined
