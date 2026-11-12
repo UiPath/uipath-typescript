@@ -9,9 +9,12 @@ export enum OntologyArtifactType {
   /** Shapes Constraint Language (SHACL) shapes constraining the ontology's data; an ontology can have many. */
   Constraints = 'constraints',
   /**
-   * Mapping that binds the schema to its data sources; one per ontology. Written in YARRRML (a YAML
-   * syntax for mapping rules) or R2RML (the W3C language that maps relational databases to the
-   * Resource Description Framework).
+   * Mapping that binds the schema to its data sources; one per ontology. Written in one of:
+   * - R2RML: a W3C standard recommendation that uses Resource Description Framework (RDF) graphs,
+   *   written in Turtle syntax, to define customized mappings from relational databases to RDF datasets.
+   * - YARRRML: a YAML layer over R2RML and RML (RDF Mapping Language). Native R2RML or RML graphs in
+   *   RDF/Turtle syntax are verbose and complex; YARRRML gives data engineers a clean, concise YAML
+   *   format to author the same mapping rules.
    */
   Mapping = 'mapping',
   /** Business rules over the ontology's data; an ontology can have many. */
