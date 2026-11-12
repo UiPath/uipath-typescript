@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.8.3",
+  "sdkVersion": "1.8.4",
   "services": [
     {
       "name": "AgentMemory",
@@ -417,6 +417,29 @@
           "name": "updateConnectionSelections",
           "since": "1.6.2",
           "deleted": "1.8.1"
+        }
+      ]
+    },
+    {
+      "name": "Decisions",
+      "subpath": "@uipath/uipath-typescript/traces",
+      "since": "1.8.4",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.8.4"
+        },
+        {
+          "name": "getAll",
+          "since": "1.8.4"
+        },
+        {
+          "name": "getById",
+          "since": "1.8.4"
+        },
+        {
+          "name": "query",
+          "since": "1.8.4"
         }
       ]
     },
@@ -857,6 +880,40 @@
         {
           "name": "getContentPartById",
           "since": null
+        }
+      ]
+    },
+    {
+      "name": "Ontologies",
+      "subpath": "@uipath/uipath-typescript/ontologies",
+      "since": "1.8.4",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.8.4"
+        },
+        {
+          "name": "getById",
+          "since": "1.8.4"
+        },
+        {
+          "name": "getByName",
+          "since": "1.8.4"
+        },
+        {
+          "name": "validateArtifactContent",
+          "since": "1.8.4"
+        }
+      ]
+    },
+    {
+      "name": "OrchestratorUsers",
+      "subpath": "@uipath/uipath-typescript/orchestrator-users",
+      "since": "1.8.4",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.8.4"
         }
       ]
     },
