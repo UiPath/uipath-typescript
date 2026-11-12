@@ -335,6 +335,16 @@
                 "types": "./dist/directory/index.d.ts",
                 "default": "./dist/directory/index.cjs"
             }
+        },
+        "./ontologies": {
+            "import": {
+                "types": "./dist/ontologies/index.d.ts",
+                "default": "./dist/ontologies/index.mjs"
+            },
+            "require": {
+                "types": "./dist/ontologies/index.d.ts",
+                "default": "./dist/ontologies/index.cjs"
+            }
         }
     },
     "files": [

@@ -330,6 +330,15 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## Ontologies
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `DataFabric.Schema.Read OR.Folders.Read` |
+| `getById()` | `DataFabric.Schema.Read OR.Folders.Read` |
+| `getByName()` | `DataFabric.Schema.Read OR.Folders.Read` |
+| `validateArtifactContent()` | `DataFabric.Schema.Read` |
+
 ## Orchestrator Users
 
 | Method | OAuth Scope |
