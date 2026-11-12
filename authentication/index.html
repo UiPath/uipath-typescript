@@ -866,6 +866,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2002,6 +2006,62 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../api/interfaces/OntologyServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ontologies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/interfaces/OrchestratorUserServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestrator Users
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2025,10 +2085,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_15" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_15" id="__nav_2_1_15_label" tabindex="0">
             
   
   
@@ -2046,8 +2106,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_15">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2286,7 +2346,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_16" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_18" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2308,14 +2368,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_16" id="__nav_2_1_16_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_18" id="__nav_2_1_18_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_16">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_18_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_18">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2390,7 +2450,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_17" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_19" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2412,14 +2472,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_17" id="__nav_2_1_17_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_19" id="__nav_2_1_19_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_17_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_17">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_19">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4349,10 +4409,8 @@ straight to the organization's configured identity provider instead.</p>
 provider and will be rejected by it.</p>
 </div>
 <div class="admonition note">
-<p class="admonition-title">Needs the organization id</p>
-<p>This uses the organization id, which the platform and <code>uipath.json</code> supply for you. If
-you instead pass configuration directly to the constructor, set <code>orgName</code> to the
-organization id, otherwise <code>enforceSso</code> is ignored and a warning is logged.</p>
+<p class="admonition-title">Organization name or id</p>
+<p><code>orgName</code> can be either the organization name or the organization id.</p>
 </div>
 <h2 id="secret-based-authentication">Secret-based Authentication<a class="headerlink" href="#secret-based-authentication" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
