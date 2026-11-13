@@ -172,6 +172,8 @@ When deployed, the platform injects these config tags automatically — the plug
 
 ## Pre-deployment Checklist
 
+Coded Apps hosts static builds only. You can use any framework that builds to static HTML, CSS, and JavaScript files, and the build output must include an `index.html` file at its root. Server-side rendering (SSR) frameworks, such as Next.js, Nuxt, or Remix, are not supported.
+
 Coded app will be deployed and served at `https://<orgName>.uipath.host/<appName>`. When deployed, platform injects `<base href="/your-app-name/">` into your `index.html`. Make sure your app handles this correctly by following the best practices below:
 
 ### 1. Configure relative asset paths
