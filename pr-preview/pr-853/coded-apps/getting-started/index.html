@@ -4210,8 +4210,8 @@
 <h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <p><strong>Coded Apps</strong> is a static-site hosting service through which one can build and deploy standard browser-based web application (React, Vue, Angular, etc.) to UiPath. The platform offers uipath-typescript sdk using which one can handle OAuth and integration with UiPath artifacts.</p>
 <div class="admonition warning">
-<p class="admonition-title">Cloud only</p>
-<p>Coded Apps are currently available on <strong>UiPath Automation Cloud</strong> only. Automation Suite and Dedicated deployments are not supported at this time.</p>
+<p class="admonition-title">Static builds only</p>
+<p>Coded Apps hosts static builds only. You can use any framework that builds to static HTML, CSS, and JavaScript files, and the build output must include an <code>index.html</code> file at its root. Server-side rendering (SSR) frameworks are not supported (Next.js, Nuxt, Remix, etc.).</p>
 </div>
 <hr />
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
@@ -4365,7 +4365,6 @@
 </code></pre></div>
 <hr />
 <h2 id="pre-deployment-checklist">Pre-deployment Checklist<a class="headerlink" href="#pre-deployment-checklist" title="Permanent link">&para;</a></h2>
-<p>Coded Apps hosts static builds only. You can use any framework that builds to static HTML, CSS, and JavaScript files, and the build output must include an <code>index.html</code> file at its root. Server-side rendering (SSR) frameworks, such as Next.js, Nuxt, or Remix, are not supported.</p>
 <p>Coded app will be deployed and served at <code>https://&lt;orgName&gt;.uipath.host/&lt;appName&gt;</code>. When deployed, platform injects <code>&lt;base href="/your-app-name/"&gt;</code> into your <code>index.html</code>. Make sure your app handles this correctly by following the best practices below:</p>
 <h3 id="1-configure-relative-asset-paths">1. Configure relative asset paths<a class="headerlink" href="#1-configure-relative-asset-paths" title="Permanent link">&para;</a></h3>
 <p>Your bundler must output relative asset paths so they resolve correctly via the injected <code>&lt;base href&gt;</code>. Without this, assets will fail to load when deployed.</p>
