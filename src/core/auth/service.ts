@@ -147,7 +147,12 @@ export class AuthService {
     if (loadedFromStorage && this.tokenManager.hasValidToken()) {
       return true;
     }
-    
+
+    // An expired stored token is renewed with its refresh token before falling back to a new sign-in
+    if (await this._renewExpiredToken()) {
+      return true;
+    }
+
     // Start new OAuth flow if config has OAuth fields
     if (hasOAuthConfig(config)) {
       return await this._authenticateWithOAuth(config.clientId, config.redirectUri, config.scope);
@@ -495,6 +500,22 @@ export class AuthService {
     } catch (error) {
       console.warn(error);
       return undefined;
+    }
+  }
+
+  /** Renews an expired stored access token with its refresh token; false means a new sign-in is needed. */
+  private async _renewExpiredToken(): Promise<boolean> {
+    const tokenInfo = this.tokenManager.getTokenInfo();
+    if (!tokenInfo?.refreshToken || !this.tokenManager.isTokenExpired(tokenInfo)) {
+      return false;
+    }
+
+    try {
+      await this.tokenManager.refreshAccessToken();
+      return this.tokenManager.hasValidToken();
+    } catch (error) {
+      console.warn('[UiPath SDK] Could not renew the stored session, signing in again', error);
+      return false;
     }
   }
 }
