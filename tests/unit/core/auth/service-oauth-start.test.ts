@@ -217,3 +217,94 @@ describe('AuthService OAuth callback (browser)', () => {
   });
 
 });
+
+describe('AuthService reload with an expired stored token (browser)', () => {
+  const REFRESH_TOKEN = 'refresh-1';
+  const ROTATED_REFRESH_TOKEN = 'refresh-2';
+  const oauthConfig = {
+    baseUrl: TEST_CONSTANTS.BASE_URL,
+    orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+    tenantName: TEST_CONSTANTS.TENANT_ID,
+    clientId: TEST_CONSTANTS.CLIENT_ID,
+    redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+    scope: TEST_CONSTANTS.OAUTH_SCOPE,
+  };
+  const tokenKey = `${AUTH_STORAGE_KEYS.TOKEN_PREFIX}${TEST_CONSTANTS.CLIENT_ID}`;
+
+  let windowStub: { location: { href: string; search: string }; document: object };
+
+  function storeExpiredToken(refreshToken?: string): void {
+    memorySessionStorage.entries.set(tokenKey, JSON.stringify({
+      token: TEST_CONSTANTS.EXPIRED_ACCESS_TOKEN,
+      type: 'oauth',
+      refreshToken,
+      expiresAt: new Date(Date.now() - 1000),
+    }));
+  }
+
+  beforeEach(() => {
+    memorySessionStorage.reset();
+    windowStub = { location: { href: '', search: '' }, document: {} };
+    vi.stubGlobal('window', windowStub);
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('should refresh the token instead of redirecting to sign-in', async () => {
+    storeExpiredToken(REFRESH_TOKEN);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        access_token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN, token_type: 'Bearer', expires_in: 3600, refresh_token: ROTATED_REFRESH_TOKEN
+      }))
+    );
+    const service = new AuthService(oauthConfig, new ExecutionContext());
+
+    expect(service.hasValidToken()).toBe(false);
+    await expect(service.authenticate(oauthConfig)).resolves.toBe(true);
+
+    expect(String(fetchSpy.mock.calls[0][1]?.body)).toContain(`refresh_token=${REFRESH_TOKEN}`);
+    expect(service.getToken()).toBe(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
+    expect(JSON.parse(memorySessionStorage.entries.get(tokenKey) ?? '{}').refreshToken).toBe(ROTATED_REFRESH_TOKEN);
+    expect(windowStub.location.href).toBe('');
+  });
+
+  it('should redirect to sign-in when the refresh token is rejected', async () => {
+    storeExpiredToken(REFRESH_TOKEN);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'invalid_grant' }), { status: 400, headers: { 'content-type': 'application/json' } })
+    );
+    const service = new AuthService(oauthConfig, new ExecutionContext());
+
+    await expect(service.authenticate(oauthConfig)).resolves.toBe(false);
+
+    expect(memorySessionStorage.entries.has(tokenKey)).toBe(false);
+    expect(windowStub.location.href).toContain(TEST_CONSTANTS.CLIENT_ID);
+  });
+
+  it('should redirect to sign-in when the refresh request fails', async () => {
+    storeExpiredToken(REFRESH_TOKEN);
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+    const service = new AuthService(oauthConfig, new ExecutionContext());
+
+    await expect(service.authenticate(oauthConfig)).resolves.toBe(false);
+
+    expect(windowStub.location.href).toContain(TEST_CONSTANTS.CLIENT_ID);
+  });
+
+  it('should redirect to sign-in without a refresh request when there is no refresh token', async () => {
+    storeExpiredToken();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const service = new AuthService(oauthConfig, new ExecutionContext());
+
+    await expect(service.authenticate(oauthConfig)).resolves.toBe(false);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(memorySessionStorage.entries.has(tokenKey)).toBe(false);
+    expect(windowStub.location.href).toContain(TEST_CONSTANTS.CLIENT_ID);
+  });
+});
