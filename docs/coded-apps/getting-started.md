@@ -2,8 +2,8 @@
 
 **Coded Apps** is a static-site hosting service through which one can build and deploy standard browser-based web application (React, Vue, Angular, etc.) to UiPath. The platform offers uipath-typescript sdk using which one can handle OAuth and integration with UiPath artifacts.
 
-!!! warning "Cloud only"
-    Coded Apps are currently available on **UiPath Automation Cloud** only. Automation Suite and Dedicated deployments are not supported at this time.
+!!! warning "Static builds only"
+    Coded Apps hosts static builds only. You can use any framework that builds to static HTML, CSS, and JavaScript files, and the build output must include an `index.html` file at its root. Server-side rendering (SSR) frameworks are not supported (Next.js, Nuxt, Remix, etc.).
 
 ---
 
@@ -171,8 +171,6 @@ When deployed, the platform injects these config tags automatically — the plug
 ---
 
 ## Pre-deployment Checklist
-
-Coded Apps hosts static builds only. You can use any framework that builds to static HTML, CSS, and JavaScript files, and the build output must include an `index.html` file at its root. Server-side rendering (SSR) frameworks, such as Next.js, Nuxt, or Remix, are not supported.
 
 Coded app will be deployed and served at `https://<orgName>.uipath.host/<appName>`. When deployed, platform injects `<base href="/your-app-name/">` into your `index.html`. Make sure your app handles this correctly by following the best practices below:
 
