@@ -19,24 +19,24 @@ afterEach(() => {
 
 describe('env', () => {
   it('reads a variable by property access', () => {
-    setGlobal({ UIPATH_PUBLIC_REGION: 'EU' });
-    expect(env.UIPATH_PUBLIC_REGION).toBe('EU');
+    setGlobal({ UIPATH_APPS_REGION: 'EU' });
+    expect(env.UIPATH_APPS_REGION).toBe('EU');
   });
 
   it('reads the same value through get()', () => {
-    setGlobal({ UIPATH_PUBLIC_REGION: 'EU' });
-    expect(env.get('UIPATH_PUBLIC_REGION')).toBe('EU');
+    setGlobal({ UIPATH_APPS_REGION: 'EU' });
+    expect(env.get('UIPATH_APPS_REGION')).toBe('EU');
   });
 
   it('returns undefined for an unset name, so ?? supplies the fallback', () => {
     setGlobal({});
-    expect(env.UIPATH_PUBLIC_REGION).toBeUndefined();
-    expect(env.UIPATH_PUBLIC_REGION ?? 'EU').toBe('EU');
-    expect(env.get('UIPATH_PUBLIC_REGION')).toBeUndefined();
+    expect(env.UIPATH_APPS_REGION).toBeUndefined();
+    expect(env.UIPATH_APPS_REGION ?? 'EU').toBe('EU');
+    expect(env.get('UIPATH_APPS_REGION')).toBeUndefined();
   });
 
   it('is empty and does not throw when the global is absent', () => {
-    expect(env.UIPATH_PUBLIC_REGION).toBeUndefined();
+    expect(env.UIPATH_APPS_REGION).toBeUndefined();
     expect(Object.keys(env)).toEqual([]);
   });
 
@@ -49,30 +49,30 @@ describe('env', () => {
   });
 
   it('keeps string values only', () => {
-    setGlobal({ UIPATH_PUBLIC_A: 'x', UIPATH_PUBLIC_B: 1, UIPATH_PUBLIC_C: null });
-    expect(Object.keys(env)).toEqual(['UIPATH_PUBLIC_A']);
-    expect(env.UIPATH_PUBLIC_B).toBeUndefined();
+    setGlobal({ UIPATH_APPS_A: 'x', UIPATH_APPS_B: 1, UIPATH_APPS_C: null });
+    expect(Object.keys(env)).toEqual(['UIPATH_APPS_A']);
+    expect(env.UIPATH_APPS_B).toBeUndefined();
   });
 
   it('enumerates every published variable', () => {
-    setGlobal({ UIPATH_PUBLIC_A: 'x', UIPATH_PUBLIC_B: 'y' });
+    setGlobal({ UIPATH_APPS_A: 'x', UIPATH_APPS_B: 'y' });
     expect(Object.entries(env)).toEqual([
-      ['UIPATH_PUBLIC_A', 'x'],
-      ['UIPATH_PUBLIC_B', 'y'],
+      ['UIPATH_APPS_A', 'x'],
+      ['UIPATH_APPS_B', 'y'],
     ]);
-    expect('UIPATH_PUBLIC_A' in env).toBe(true);
-    expect('UIPATH_PUBLIC_Z' in env).toBe(false);
+    expect('UIPATH_APPS_A' in env).toBe(true);
+    expect('UIPATH_APPS_Z' in env).toBe(false);
   });
 
   it('reads the global once and keeps that table', () => {
-    setGlobal({ UIPATH_PUBLIC_A: 'first' });
-    expect(env.UIPATH_PUBLIC_A).toBe('first');
-    setGlobal({ UIPATH_PUBLIC_A: 'second' });
-    expect(env.UIPATH_PUBLIC_A).toBe('first');
+    setGlobal({ UIPATH_APPS_A: 'first' });
+    expect(env.UIPATH_APPS_A).toBe('first');
+    setGlobal({ UIPATH_APPS_A: 'second' });
+    expect(env.UIPATH_APPS_A).toBe('first');
   });
 
   it('does not report inherited object members as variables', () => {
-    setGlobal({ UIPATH_PUBLIC_A: 'x' });
+    setGlobal({ UIPATH_APPS_A: 'x' });
     expect(env.toString).toBeUndefined();
     expect(env.get('constructor')).toBeUndefined();
     expect('hasOwnProperty' in env).toBe(false);
@@ -80,10 +80,10 @@ describe('env', () => {
   });
 
   it('is read-only', () => {
-    setGlobal({ UIPATH_PUBLIC_A: 'x' });
+    setGlobal({ UIPATH_APPS_A: 'x' });
     expect(() => {
-      (env as Record<string, unknown>).UIPATH_PUBLIC_A = 'y';
+      (env as Record<string, unknown>).UIPATH_APPS_A = 'y';
     }).toThrow();
-    expect(env.UIPATH_PUBLIC_A).toBe('x');
+    expect(env.UIPATH_APPS_A).toBe('x');
   });
 });

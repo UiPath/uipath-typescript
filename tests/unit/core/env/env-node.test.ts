@@ -11,8 +11,8 @@ afterEach(() => {
 
 describe('env outside a browser', () => {
   it('ignores the global and stays empty', () => {
-    (globalThis as Record<string, unknown>)[UIPATH_ENV_GLOBAL] = { UIPATH_PUBLIC_A: 'x' };
-    expect(env.UIPATH_PUBLIC_A).toBeUndefined();
+    (globalThis as Record<string, unknown>)[UIPATH_ENV_GLOBAL] = { UIPATH_APPS_A: 'x' };
+    expect(env.UIPATH_APPS_A).toBeUndefined();
     expect(Object.keys(env)).toEqual([]);
   });
 });

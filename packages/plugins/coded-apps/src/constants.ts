@@ -116,7 +116,7 @@ export const MESSAGES = {
  * Prefix an environment variable needs to reach the browser. Everything else in the env files
  * stays on the developer's machine.
  */
-export const ENV_VARIABLE_PREFIX = 'UIPATH_PUBLIC_'
+export const ENV_VARIABLE_PREFIX = 'UIPATH_APPS_'
 
 /**
  * Global the SDK reads environment variables from. A deployment sets it from `env.js`; the dev
