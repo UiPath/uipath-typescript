@@ -110,7 +110,7 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 - Entity operations users should call on a response? → step 4
 
 **Standard field renames** (reuse in `{Entity}Map`):
-- Time: `creationTime`/`createdAt` → `createdTime`, `lastModificationTime` → `lastModifiedTime`, `startedTimeUtc` → `startedTime`, `completedTimeUtc` → `completedTime`, `expiryTimeUtc` → `expiredTime`
+- Time: `creationTime`/`createdAt` → `createdTime`, `createTime` → `createdTime`, `lastModificationTime` → `lastModifiedTime`, `updateTime` → `updatedTime`, `startedTimeUtc` → `startedTime`, `completedTimeUtc` → `completedTime`, `expiryTimeUtc` → `expiredTime`
 - Folder: `organizationUnitId` → `folderId`, `organizationUnitFullyQualifiedName` → `folderName`
 
 **Timestamp field naming**: All timestamp fields exposed in SDK response types must use the `*Time` suffix (e.g., `endedTime`, `createdTime`). **NEVER** introduce `*At` suffixes (e.g., `endedAt`) — this breaks consistency with every other timestamp across the SDK and makes the API surface feel unpolished.
