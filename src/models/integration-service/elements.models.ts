@@ -16,6 +16,7 @@ import {
   ElementEventObjectsGetOptions,
   ElementEventObjectMetadataGetOptions,
 } from './elements.types';
+import type { ConnectionResource } from '@/resources';
 
 /**
  *
@@ -207,6 +208,39 @@ export interface ElementsServiceModel {
   ): Promise<ElementObject[]>;
 
   /**
+   * List objects exposed by a connection declared in `uipath_resources.ts`, targeting
+   * the connection an admin mapped it to at deployment, if any.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
+   * @param elementKey - Connector key
+   * @param options - Filtering options
+   * @returns Promise resolving to an array of {@link ElementObject}
+   * @example
+   * ```typescript
+   * // uipath_resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly slack = resource.connection({ id: '<connectionId>', connector: 'uipath-slack' });
+   * }
+   *
+   * // anywhere in the project
+   * const objects = await elements.getInstanceObjects(ProjectResources.slack, 'uipath-slack');
+   * ```
+   */
+  getInstanceObjects(
+    connection: ConnectionResource,
+    elementKey: string,
+    options?: ElementObjectsGetOptions,
+  ): Promise<ElementObject[]>;
+
+  /**
    * Get instance-scoped metadata for a single object — includes connector
    * custom fields discovered from the live system.
    *
@@ -232,6 +266,45 @@ export interface ElementsServiceModel {
    */
   getInstanceObjectMetadata(
     connectionId: string,
+    elementKey: string,
+    objectName: string,
+    options?: ElementObjectMetadataGetOptions,
+  ): Promise<ElementObjectMetadataResponse>;
+
+  /**
+   * Get instance-scoped metadata for a single object of a connection declared in
+   * `uipath_resources.ts`, targeting the connection an admin mapped it to at deployment, if any.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
+   * @param elementKey - Connector key
+   * @param objectName - Object name
+   * @param options - Optional `version`, `hydrateParameters`, `includeParentArray`
+   * @returns Promise resolving to an {@link ElementObjectMetadataResponse}
+   * @example
+   * ```typescript
+   * // uipath_resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly salesforce = resource.connection({ id: '<connectionId>', connector: 'uipath-salesforce' });
+   * }
+   *
+   * // anywhere in the project
+   * const meta = await elements.getInstanceObjectMetadata(
+   *   ProjectResources.salesforce,
+   *   'uipath-salesforce',
+   *   'Account',
+   * );
+   * ```
+   */
+  getInstanceObjectMetadata(
+    connection: ConnectionResource,
     elementKey: string,
     objectName: string,
     options?: ElementObjectMetadataGetOptions,
@@ -268,6 +341,45 @@ export interface ElementsServiceModel {
   ): Promise<ElementEventObject[]>;
 
   /**
+   * List event objects for a connection declared in `uipath_resources.ts`, targeting
+   * the connection an admin mapped it to at deployment, if any.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
+   * @param elementKey - Connector key
+   * @param operationName - Event operation name
+   * @param options - Optional `version`
+   * @returns Promise resolving to an array of {@link ElementEventObject}
+   * @example
+   * ```typescript
+   * // uipath_resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly slack = resource.connection({ id: '<connectionId>', connector: 'uipath-slack' });
+   * }
+   *
+   * // anywhere in the project
+   * const events = await elements.getInstanceEventObjects(
+   *   ProjectResources.slack,
+   *   'uipath-slack',
+   *   'NEW_MESSAGE',
+   * );
+   * ```
+   */
+  getInstanceEventObjects(
+    connection: ConnectionResource,
+    elementKey: string,
+    operationName: string,
+    options?: ElementEventObjectsGetOptions,
+  ): Promise<ElementEventObject[]>;
+
+  /**
    * Get instance-scoped metadata for a single event object.
    *
    * @experimental
@@ -294,6 +406,48 @@ export interface ElementsServiceModel {
    */
   getInstanceEventObjectMetadata(
     connectionId: string,
+    elementKey: string,
+    operationName: string,
+    objectName: string,
+    options?: ElementEventObjectMetadataGetOptions,
+  ): Promise<ElementEventObjectMetadataResponse>;
+
+  /**
+   * Get instance-scoped metadata for a single event object of a connection declared in
+   * `uipath_resources.ts`, targeting the connection an admin mapped it to at deployment, if any.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
+   * @param elementKey - Connector key
+   * @param operationName - Event operation name
+   * @param objectName - Event object name
+   * @param options - Optional `version`, `allFields`, `includeParentArray`
+   * @returns Promise resolving to an {@link ElementEventObjectMetadataResponse}
+   * @example
+   * ```typescript
+   * // uipath_resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly slack = resource.connection({ id: '<connectionId>', connector: 'uipath-slack' });
+   * }
+   *
+   * // anywhere in the project
+   * const meta = await elements.getInstanceEventObjectMetadata(
+   *   ProjectResources.slack,
+   *   'uipath-slack',
+   *   'NEW_MESSAGE',
+   *   'channels',
+   * );
+   * ```
+   */
+  getInstanceEventObjectMetadata(
+    connection: ConnectionResource,
     elementKey: string,
     operationName: string,
     objectName: string,

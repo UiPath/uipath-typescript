@@ -9,6 +9,7 @@ import { validateName } from '../utils/validation/name-validator';
 import { GUID_REGEX } from '../utils/validation/guid';
 import { resolveFolderHeaders } from '../utils/folder/folder-headers';
 import { resolveOverride } from '../utils/overrides/resolve-override';
+import type { OverrideScope } from '@/utils/overrides/handles';
 import type { EffectiveFolder } from '../utils/validation/resolve-ref';
 
 /** Matches single-quote characters in OData string literals, escaped to `''` by `escapeODataString`. */
@@ -115,6 +116,8 @@ export class FolderScopedService extends BaseService {
    * @param callerLabel - Optional `ServiceName.methodName` label surfaced in `ValidationError`
    *   messages when the folder context is missing. Defaults to `${resourceType}.getByName`;
    *   ref-based mutations pass their own method label so the error blames the actual caller.
+   * @param overrideScope - For a resource handle, the folder it was declared in, which keys its
+   *   override whatever folder the call is scoped to. Omitted for a plain name.
    * @throws ValidationError when inputs are malformed; NotFoundError when no match
    */
   protected async getByNameLookup<TRaw extends object, T>(
@@ -125,8 +128,9 @@ export class FolderScopedService extends BaseService {
     transform: (raw: TRaw) => T,
     responseFieldMap?: FieldMapping,
     callerLabel?: string,
+    overrideScope?: OverrideScope,
   ): Promise<{ result: T; effectiveFolder: EffectiveFolder }> {
-    const lookup = this.resolveNameLookup(resourceType, name, options, responseFieldMap, callerLabel);
+    const lookup = this.resolveNameLookup(resourceType, name, options, responseFieldMap, callerLabel, overrideScope);
 
     const response = await this.get<CollectionResponse<TRaw>>(endpoint, {
       headers: lookup.headers,
@@ -164,6 +168,9 @@ export class FolderScopedService extends BaseService {
    *   names back to API names in `expand` / `select`
    * @param callerLabel - Optional `ServiceName.methodName` label for missing-folder
    *   `ValidationError` messages. Defaults to `${resourceType}.getByName`.
+   * @param overrideScope - For a resource handle, the folder it was declared in, which keys its
+   *   override whatever folder the call is scoped to. Omitted for a plain name, whose override is
+   *   keyed by `options.folderPath`.
    * @throws ValidationError when the name is empty or no folder context is available
    */
   protected resolveNameLookup(
@@ -172,12 +179,13 @@ export class FolderScopedService extends BaseService {
     options: FolderScopedOptions,
     responseFieldMap?: FieldMapping,
     callerLabel?: string,
+    overrideScope?: OverrideScope,
   ): NameLookupContext {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
     // Admin-configured override redirects the design-time identity before header resolution.
-    const override = resolveOverride(resourceType, validatedName, folderPath);
+    const override = resolveOverride(resourceType, validatedName, overrideScope ? overrideScope.folderPath : folderPath);
     const resolvedName = override?.name ?? validatedName;
     // Override's folderPath supersedes; folderId/folderKey ride along — server picks path first.
     const resolvedFolderPath = override?.folderPath ?? folderPath;

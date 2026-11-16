@@ -1,4 +1,6 @@
 import { FolderScopedService } from '../../folder-scoped';
+import type { QueueResource } from '@/resources';
+import { unpackFolderScopedHandle } from '@/utils/overrides/handles';
 import {
   QueueGetResponse,
   QueueGetAllOptions,
@@ -169,19 +171,24 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     return createQueueWithMethods(rawQueue, this, this.boundOperations);
   }
 
+  getByName(name: string, options?: QueueGetByNameOptions): Promise<QueueGetWithMethodsResponse>;
+  getByName(queue: QueueResource, options?: QueueGetByNameOptions): Promise<QueueGetWithMethodsResponse>;
   @track('Queues.GetByName')
-  async getByName(name: string, options: QueueGetByNameOptions = {}): Promise<QueueGetWithMethodsResponse> {
+  async getByName(nameOrHandle: string | QueueResource, options: QueueGetByNameOptions = {}): Promise<QueueGetWithMethodsResponse> {
+    const { name, options: effectiveOptions, overrideScope } = unpackFolderScopedHandle(nameOrHandle, options);
     const { result } = await this.getByNameLookup<Record<string, unknown>, QueueGetWithMethodsResponse>(
       'Queue',
       QUEUE_ENDPOINTS.GET_BY_FOLDER,
       name,
-      options,
+      effectiveOptions,
       (raw) => createQueueWithMethods(
         transformData(pascalToCamelCaseKeys(raw) as QueueGetResponse, QueueMap),
         this,
         this.boundOperations
       ),
       QueueMap,
+      undefined,
+      overrideScope,
     );
     return result;
   }

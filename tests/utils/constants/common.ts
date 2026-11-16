@@ -13,6 +13,9 @@ export const TEST_CONSTANTS = {
   /** Whitespace-only folder key — must be treated as absent folder context. */
   FOLDER_KEY_WHITESPACE: '   ',
   FOLDER_PATH: 'Shared/Finance',
+  /** A folder path with a space, and its encoded header (base64 of UTF-16 LE, as `encodeFolderPathHeader()` writes it). */
+  FOLDER_PATH_WITH_SPACE: 'Shared/My Finance',
+  FOLDER_PATH_WITH_SPACE_ENCODED: 'UwBoAGEAcgBlAGQALwBNAHkAIABGAGkAbgBhAG4AYwBlAA==',
   // Common status values
   RUNNING: 'Running',
   CANCELLED: 'Cancelled',

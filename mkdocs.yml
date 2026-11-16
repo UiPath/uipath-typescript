@@ -193,6 +193,7 @@ nav:
       - OAuth Scopes: oauth-scopes.md
       - Pagination: pagination.md
       - Helper Methods: helpers.md
+      - Resource Declarations: resources.md
       - Error Handling: error-handling.md
   - API Reference:
       - Services:
