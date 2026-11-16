@@ -318,7 +318,7 @@ jobs:
           uip solution deploy config get "$SOLUTION" --package-version "$VERSION" -d deploy-config.json
           uip solution deploy config set deploy-config.json "$APP" routingName "$ROUTING_NAME"
           uip solution deploy config set deploy-config.json "$APP" externalClientId "$APP_CLIENT_ID"
-          uip solution deploy config set deploy-config.json "$APP" environmentVariables "$APP_ENV_VARIABLES"
+          [ -z "$APP_ENV_VARIABLES" ] || uip solution deploy config set deploy-config.json "$APP" environmentVariables "$APP_ENV_VARIABLES"
 
       # Installs on the first run and upgrades in place afterwards; the deployment is matched by --name
       - name: Deploy
@@ -333,7 +333,7 @@ jobs:
             --yes
 ```
 
-`deploy run` also activates the solution. After the job succeeds, the app is live at `https://<org>.uipath.host/<routing-name>`. The `environmentVariables` line sets this deployment's `UIPATH_APPS_*` values, which the app reads with `env`; it replaces the package defaults as a whole, so list every variable the deployment needs, and drop the line to keep the defaults. To deploy a new version, run the workflow again: each run packs `1.0.<run number>` unless you pass `version`, and `deploy run` upgrades the existing deployment in place.
+`deploy run` also activates the solution. After the job succeeds, the app is live at `https://<org>.uipath.host/<routing-name>`. The `environmentVariables` line sets this deployment's `UIPATH_APPS_*` values, which the app reads with `env`; it replaces the package defaults as a whole, so list every variable the deployment needs. Leave the repository variable unset to keep the defaults: the step skips the call when it is empty, because an empty text would clear them. To deploy a new version, run the workflow again: each run packs `1.0.<run number>` unless you pass `version`, and `deploy run` upgrades the existing deployment in place.
 
 !!! tip "Approval gates"
     Gate the `deploy` job, as above, rather than activation. `deploy run --skip-activate` followed by `uip solution deploy activate <name>` holds back only the first install; on an upgrade the new version goes live during `deploy run`.
