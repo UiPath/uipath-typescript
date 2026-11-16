@@ -3,6 +3,7 @@ import { getServices, getTestConfig, describeIntegration, InitMode } from '../..
 import { ConnectionsService } from '../../../../src/services/integration-service/connections/connections';
 import { ConnectionState } from '../../../../src/models/integration-service/connections.types';
 import { NotFoundError } from '../../../../src/core/errors';
+import { resource } from '@/resources';
 
 const modes: InitMode[] = ['v1'];
 
@@ -10,6 +11,7 @@ const modes: InitMode[] = ['v1'];
 describeIntegration('Integration Service Connections - Integration Tests', 'user', modes, () => {
   let connections!: ConnectionsService;
   let connectionId!: string;
+  let connectorKey!: string;
   let folderKey!: string;
 
   beforeAll(async () => {
@@ -33,6 +35,10 @@ describeIntegration('Integration Service Connections - Integration Tests', 'user
       throw new Error(`Connection ${connectionId} has no folder key — cannot scope folder listings.`);
     }
     folderKey = fixture.folder.key;
+    if (!fixture.connector?.key) {
+      throw new Error(`Connection ${connectionId} reports no connector key — cannot declare it as a handle.`);
+    }
+    connectorKey = fixture.connector.key;
   });
 
   describe('getAll', () => {
@@ -69,6 +75,13 @@ describeIntegration('Integration Service Connections - Integration Tests', 'user
       expect(result).not.toHaveProperty('Name');
       expect(result).not.toHaveProperty('State');
       expect(result).not.toHaveProperty('CreateTime');
+    });
+
+    it('should retrieve the same connection from a resource.connection() handle', async () => {
+      const result = await connections.getById(resource.connection({ id: connectionId, connector: connectorKey }));
+
+      expect(result.id).toBe(connectionId);
+      expect(result.connector?.key).toBe(connectorKey);
     });
 
     it('should reject for a connection id that does not exist', async () => {
