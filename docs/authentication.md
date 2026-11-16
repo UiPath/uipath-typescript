@@ -288,7 +288,7 @@ useEffect(() => {
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
-- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). The SDK also asks UiPath to revoke the refresh token, so it can no longer be used to get access tokens; an access token issued earlier stays valid until it expires. The revocation is best effort: `logout()` does not wait for the answer, and a failure is only logged as a warning. By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
 - `sdk.setDebugContext()` - Attach a parent job key to the jobs the app starts so Orchestrator links them to it and, when that parent is a debug run, routes them as debug sub-jobs. Studio Web debug sessions and Action Center debug tasks hand the key to the SDK themselves; call this only when another host runs the app inside a job
 

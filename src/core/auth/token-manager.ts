@@ -3,6 +3,7 @@ import { isInActionCenter } from '../../utils/platform';
 import { SessionStore } from '../../utils/storage/session-store';
 import { NO_OP_STORE } from '../../utils/storage/no-op-store';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
+import { IDENTITY_ENDPOINTS } from '@/utils/constants/endpoints';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { getExpiryMs } from './token-expiry';
@@ -303,6 +304,42 @@ export class TokenManager {
   }
 
   /**
+   * Asks Identity to revoke a refresh token, so it can no longer be used to get access tokens.
+   * Best effort: it never throws, and a failure is only logged.
+   * @param refreshToken The refresh token to revoke
+   */
+  public async revokeRefreshToken(refreshToken: string): Promise<void> {
+    if (!this.config.clientId) {
+      return;
+    }
+
+    const body = new URLSearchParams({
+      token: refreshToken,
+      token_type_hint: 'refresh_token',
+      client_id: this.config.clientId
+    });
+
+    try {
+      // No tracing headers: a custom header would trigger a CORS preflight, which Identity does not
+      // answer. `keepalive` lets the request outlive the page when an end-session redirect follows.
+      const response = await fetch(`${this.config.baseUrl}/${IDENTITY_ENDPOINTS.REVOCATION}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body.toString(),
+        keepalive: true
+      });
+
+      if (!response.ok) {
+        console.warn(`[UiPath SDK] Could not revoke the refresh token (HTTP ${response.status})`);
+      }
+    } catch (error) {
+      console.warn('[UiPath SDK] Could not revoke the refresh token', error);
+    }
+  }
+
+  /**
    * Internal method to perform the actual token refresh
    */
   private async _doRefreshToken(): Promise<AuthToken> {
@@ -344,6 +381,17 @@ export class TokenManager {
     }
 
     const token = await response.json() as AuthToken;
+
+    // The session ended or was replaced while the request was in flight, by a logout or a new sign-in.
+    // The request had already spent the refresh token it sent, so the one it returned is live: revoke
+    // that instead of letting it bring the old session back.
+    if (this.currentToken?.refreshToken !== tokenInfo.refreshToken) {
+      if (token.refresh_token) {
+        void this.revokeRefreshToken(token.refresh_token);
+      }
+      throw new AuthenticationError({ message: 'The session ended while its token was being renewed' });
+    }
+
     this.setToken({
       token: token.access_token,
       type: 'oauth',

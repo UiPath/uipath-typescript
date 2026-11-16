@@ -231,21 +231,23 @@ export class AuthService {
   }
 
   /**
-   * Clears all authentication state. With `endSession: true`, also redirects
-   * the browser to end the UiPath platform session (skipped with a warning
-   * when the session has no OIDC ID token).
+   * Clears all authentication state and asks Identity to revoke the refresh
+   * token. With `endSession: true`, also redirects the browser to end the
+   * UiPath platform session (skipped with a warning when the session has no
+   * OIDC ID token).
    */
   public logout(options?: LogoutOptions): void {
-    // Capture the ID token before clearToken() wipes it.
+    // Capture the tokens before clearToken() wipes them.
     const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
+    const refreshToken = this.tokenManager.getTokenInfo()?.refreshToken;
 
     // End-session is an unauthenticated Identity endpoint — id_token_hint is
     // what proves the request, so without an ID token there is nothing to send.
     if (options?.endSession && isBrowser && !idTokenHint) {
       console.warn(
         'endSession skipped — no OIDC ID token is available for this ' +
-        'session. Sign in again to enable it; only local authentication ' +
-        'state was cleared.'
+        'session. Sign in again to enable it; the user was signed out of ' +
+        'the app only.'
       );
     }
 
@@ -254,6 +256,11 @@ export class AuthService {
     // Clear stored OAuth context — it would be left behind if logout() is
     // called mid-OAuth-flow (before the callback completes the cleanup).
     store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+
+    // Started before the end-session redirect below, which would otherwise leave no page to send it from.
+    if (refreshToken) {
+      void this.tokenManager.revokeRefreshToken(refreshToken);
+    }
 
     if (options?.endSession && isBrowser && idTokenHint) {
       window.location.href = this._buildEndSessionUrl({
