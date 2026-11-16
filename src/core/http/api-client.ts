@@ -36,7 +36,8 @@ export class ApiClient {
    * Used internally for API requests and exposed for services that need manual auth headers.
    *
    * @returns The valid token
-   * @throws AuthenticationError if no token available or refresh fails
+   * @throws AuthenticationError if no token is available or the refresh token is rejected; a refresh that
+   *   fails for a temporary reason throws the matching NetworkError, RateLimitError or ServerError
    */
   public async getValidToken(): Promise<string> {
     return this.tokenManager.getValidToken();

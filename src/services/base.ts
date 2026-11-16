@@ -87,7 +87,8 @@ export class BaseService {
    * Use this when you need to manually add Authorization headers (e.g., direct uploads).
    *
    * @returns Promise resolving to a valid access token string
-   * @throws AuthenticationError if no token is available or refresh fails
+   * @throws AuthenticationError if no token is available or the refresh token is rejected; a refresh that
+   *   fails for a temporary reason throws the matching NetworkError, RateLimitError or ServerError
    */
   protected async getValidAuthToken(): Promise<string> {
     return this.#apiClient.getValidToken();

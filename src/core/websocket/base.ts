@@ -150,7 +150,8 @@ export abstract class BaseWebSocket {
    * This is called on every connection/reconnection attempt to ensure fresh tokens.
    *
    * @returns The valid token
-   * @throws AuthenticationError if no token available or refresh fails
+   * @throws AuthenticationError if no token is available or the refresh token is rejected; a refresh that
+   *   fails for a temporary reason throws the matching NetworkError, RateLimitError or ServerError
    */
   public async getValidToken(): Promise<string> {
     return this._tokenManager.getValidToken();
