@@ -19,6 +19,13 @@ export const TaskMap: { [key: string]: string } = {
   organizationUnitId: 'folderId'
 };
 
+// Field mapping for task schema responses
+export const TaskSchemaMap: { [key: string]: string } = {
+  creationTime: 'createdTime',
+  organizationUnitId: 'folderId',
+  organizationUnitKey: 'folderKey'
+};
+
 /**
  * Default expand parameters
  */

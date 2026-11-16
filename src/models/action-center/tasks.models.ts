@@ -1,7 +1,6 @@
 import type {
   RawTaskCreateResponse,
   RawTaskDataGetResponse,
-  RawTaskSchemaGetResponse,
   RawTaskGetResponse,
   RawTaskCommentGetResponse,
   Tag,
@@ -17,6 +16,7 @@ import type {
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
   TaskSaveDataOptions,
+  TaskSchemaGetResponse,
   UserLoginInfo
 } from './tasks.types';
 import { FolderScopedOptions, OperationResponse } from '../common/types';
@@ -372,30 +372,33 @@ export interface TaskServiceModel {
   getDataByKey(key: string, options?: FolderScopedOptions): Promise<TaskDataGetResponse>;
 
   /**
-   * Gets a task schema by its key.
+   * Gets the schema a QuickForm task was created with.
    *
-   * Use this to retrieve the schema a QuickForm task was created with — the
-   * `taskSchemaKey` surfaced on a task's {@link TaskDataGetResponse} is the key
-   * to pass here.
+   * The key is the `taskSchemaKey` of a QuickForm task, returned by `getAll()`,
+   * `getById()`, `getDataById()` and `getDataByKey()`.
+   * The folder is only used to check task view permission; it does not have to
+   * be the folder the schema was registered in.
    *
-   * @param taskSchemaKey - The schema key (a task's `taskSchemaKey`)
+   * @param key - The schema key (a task's `taskSchemaKey`)
    * @param options - Folder scope (folderId, folderKey, or folderPath)
-   * @returns Promise resolving to a {@link TaskSchemaGetResponse} containing the schema `key`, `name`, and JSON `schema` body, along with folder (`folderId`) and creation metadata (`createdTime`).
+   * @returns Promise resolving to the schema as a {@link TaskSchemaGetResponse}
    * @example
    * ```typescript
-   * const schema = await tasks.getSchema('<taskSchemaKey>', { folderId: <folderId> });
+   * const schema = await tasks.getSchemaByKey('<taskSchemaKey>', { folderId: <folderId> });
    * console.log(schema.name, schema.schema);
    * ```
-   * @example Chaining from getDataById
+   * @example
    * ```typescript
+   * // Get the schema of a QuickForm task
    * const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
    * if (task.taskSchemaKey) {
-   *   const schema = await tasks.getSchema(task.taskSchemaKey, { folderId: <folderId> });
+   *   const schema = await tasks.getSchemaByKey(task.taskSchemaKey, { folderId: <folderId> });
    *   console.log(schema.name, schema.schema);
    * }
    * ```
+   * @experimental
    */
-  getSchema(taskSchemaKey: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse>;
+  getSchemaByKey(key: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse>;
 
   /**
    * Saves a task's data (form/task payload), replacing the existing payload.
@@ -579,11 +582,6 @@ export type TaskCreateResponse = RawTaskCreateResponse & TaskMethods;
  * A task's data payload + core metadata, as returned by `getDataById` / `getDataByKey`.
  */
 export interface TaskDataGetResponse extends RawTaskDataGetResponse {}
-
-/**
- * A task schema returned by `getSchema`.
- */
-export interface TaskSchemaGetResponse extends RawTaskSchemaGetResponse {}
 
 /**
  * A task comment as returned by the service.
