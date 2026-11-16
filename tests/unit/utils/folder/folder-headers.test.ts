@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { resolveFolderHeaders } from '../../../../src/utils/folder/folder-headers';
+import { resolveFolderHeaders, isCurrentFolderPath, hasFolderOption } from '@/utils/folder/folder-headers';
+import { TEST_CONSTANTS } from '@tests/utils/constants/common';
 import { encodeFolderPathHeader } from '../../../../src/utils/encoding/folder-path';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { ValidationError } from '../../../../src/core/errors';
@@ -161,5 +162,34 @@ describe('resolveFolderHeaders', () => {
       expect(() => resolveFolderHeaders({ resourceType: 'Asset.getByName' }))
         .toThrow(/Asset\.getByName/);
     });
+  });
+});
+
+describe('isCurrentFolderPath', () => {
+  it.each([[undefined], [''], ['   '], ['.'], [' . ']])('is true for %j', (path) => {
+    expect(isCurrentFolderPath(path)).toBe(true);
+  });
+
+  it.each([['Shared'], ['./Finance'], ['..']])('is false for %j', (path) => {
+    expect(isCurrentFolderPath(path)).toBe(false);
+  });
+});
+
+describe('hasFolderOption', () => {
+  it.each([
+    ['a folderId', { folderId: TEST_CONSTANTS.FOLDER_ID }],
+    ['a folderKey', { folderKey: TEST_CONSTANTS.FOLDER_KEY }],
+    ['a folderPath', { folderPath: TEST_CONSTANTS.FOLDER_PATH }],
+  ])('is true for %s', (_label, options) => {
+    expect(hasFolderOption(options)).toBe(true);
+  });
+
+  it.each([
+    ['no option', {}],
+    ["an empty folderPath", { folderPath: '' }],
+    ["the current-folder path '.'", { folderPath: '.' }],
+    ['a whitespace-only folderKey', { folderKey: TEST_CONSTANTS.FOLDER_KEY_WHITESPACE }],
+  ])('is false for %s, which resolveFolderHeaders reads as no folder', (_label, options) => {
+    expect(hasFolderOption(options)).toBe(false);
   });
 });

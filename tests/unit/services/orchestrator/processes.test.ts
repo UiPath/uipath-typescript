@@ -1,5 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { resource } from '@/resources';
 import { ProcessService } from '../../../../src/services/orchestrator/processes';
 import { PROCESS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
@@ -477,11 +478,11 @@ describe('ProcessService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
       const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
-      await service.start(request, { folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE });
+      await service.start(request, { folderPath: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE });
 
       const [, , requestSpec] = mockApiClient.post.mock.calls[0];
       expect(requestSpec.headers).toMatchObject({
-        [FOLDER_PATH_ENCODED]: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+        [FOLDER_PATH_ENCODED]: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
       });
       expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
       expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
@@ -856,6 +857,33 @@ describe('ProcessService Unit Tests', () => {
   });
 
   describe('getByName', () => {
+    it('should accept a uipath_resources.ts handle and scope the lookup by its folderPath', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(
+        resource.process({ name: PROCESS_TEST_CONSTANTS.PROCESS_NAME, folderPath: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE }),
+      );
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.params).toMatchObject({ '$filter': `Name eq '${PROCESS_TEST_CONSTANTS.PROCESS_NAME}'` });
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+      });
+    });
+
+    it('should let an explicit folder option take precedence over the handle folderPath', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(
+        resource.process({ name: PROCESS_TEST_CONSTANTS.PROCESS_NAME, folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH }),
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({ [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() });
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
     it('should return a transformed process when the OData response contains one item', async () => {
       const rawProcess = createMockRawOrchestratorProcess();
       mockApiClient.get.mockResolvedValue({ value: [rawProcess] });
@@ -939,12 +967,12 @@ describe('ProcessService Unit Tests', () => {
 
       await service.getByName(
         PROCESS_TEST_CONSTANTS.PROCESS_NAME,
-        { folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE },
+        { folderPath: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE },
       );
 
       const [, requestSpec] = mockApiClient.get.mock.calls[0];
       expect(requestSpec.headers).toMatchObject({
-        [FOLDER_PATH_ENCODED]: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+        [FOLDER_PATH_ENCODED]: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
       });
       expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
       expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();

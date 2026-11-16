@@ -6,6 +6,7 @@ import type {
   ElementEventObject,
 } from '../../../../src/models/integration-service/elements.types';
 import { NotFoundError } from '../../../../src/core/errors';
+import { resource, type ConnectionResource } from '@/resources';
 
 const modes: InitMode[] = ['v1'];
 
@@ -23,6 +24,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
   let instanceObjects!: ElementObject[];
   let eventObjects!: ElementEventObject[];
   let instanceEventObjects!: ElementEventObject[];
+  let connection!: ConnectionResource;
 
   beforeAll(async () => {
     const service = getServices().integrationServiceElements;
@@ -44,6 +46,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
     elementKey = config.integrationServiceTestConnectorKey;
     connectionId = config.integrationServiceTestConnectionId;
     eventOperation = config.integrationServiceTestEventOperation;
+    connection = resource.connection({ id: connectionId, connector: elementKey });
 
     // Use the env object name if set, else the first object listed.
     objects = await elements.getObjects(elementKey);
@@ -126,6 +129,37 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       expect(result).toBeDefined();
       expect(result.name).toBe(instanceObjectName);
       expect(result).not.toHaveProperty('Name');
+    });
+  });
+
+  describe('instance methods given a resource.connection() handle', () => {
+    it('getInstanceObjects should list the same objects as for the connection id', async () => {
+      const result = await elements.getInstanceObjects(connection, elementKey);
+
+      expect(result.map((object) => object.name)).toEqual(instanceObjects.map((object) => object.name));
+    });
+
+    it('getInstanceObjectMetadata should return the object the handle names', async () => {
+      const result = await elements.getInstanceObjectMetadata(connection, elementKey, instanceObjectName);
+
+      expect(result.name).toBe(instanceObjectName);
+    });
+
+    it('getInstanceEventObjects should list the same event objects as for the connection id', async () => {
+      const result = await elements.getInstanceEventObjects(connection, elementKey, eventOperation);
+
+      expect(result.map((object) => object.name)).toEqual(instanceEventObjects.map((object) => object.name));
+    });
+
+    it('getInstanceEventObjectMetadata should return the event object the handle names', async () => {
+      const result = await elements.getInstanceEventObjectMetadata(
+        connection,
+        elementKey,
+        eventOperation,
+        instanceEventObjectName,
+      );
+
+      expect(result.name).toBe(instanceEventObjectName);
     });
   });
 

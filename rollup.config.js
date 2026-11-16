@@ -155,6 +155,11 @@ const serviceEntries = [
     output: 'assets/index'
   },
   {
+    name: 'resources',
+    input: 'src/resources/index.ts',
+    output: 'resources/index'
+  },
+  {
     name: 'jobs',
     input: 'src/services/orchestrator/jobs/index.ts',
     output: 'jobs/index'

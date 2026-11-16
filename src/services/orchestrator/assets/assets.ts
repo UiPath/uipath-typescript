@@ -2,6 +2,8 @@ import { FolderScopedService } from '../../folder-scoped';
 import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByKeyOptions, AssetGetByNameOptions, AssetNewValue, AssetRef, AssetUpdateValueByIdOptions, AssetUpdateValueOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { resolveRefToId } from '../../../utils/validation/resolve-ref';
+import type { AssetResource } from '@/resources';
+import { unpackFolderScopedHandle } from '@/utils/overrides/handles';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
@@ -75,15 +77,20 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
     return transformedAsset;
   }
 
+  getByName(name: string, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
+  getByName(asset: AssetResource, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
   @track('Assets.GetByName')
-  async getByName(name: string, options: AssetGetByNameOptions = {}): Promise<AssetGetResponse> {
+  async getByName(nameOrHandle: string | AssetResource, options: AssetGetByNameOptions = {}): Promise<AssetGetResponse> {
+    const { name, options: effectiveOptions, overrideScope } = unpackFolderScopedHandle(nameOrHandle, options);
     const { result } = await this.getByNameLookup<AssetGetResponse, AssetGetResponse>(
       'Asset',
       ASSET_ENDPOINTS.GET_BY_FOLDER,
       name,
-      options,
+      effectiveOptions,
       (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
       AssetMap,
+      undefined,
+      overrideScope,
     );
     return result;
   }

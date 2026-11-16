@@ -52,11 +52,9 @@ export const BUCKET_TEST_CONSTANTS = {
 
   // getByName
   FOLDER_PATH: 'Shared/Finance',
-  FOLDER_PATH_WITH_SPACE: 'Shared/My Finance',
-  // base64-of-UTF-16-LE encoded values matching encodeFolderPathHeader().
+  // base64-of-UTF-16-LE encoded value matching encodeFolderPathHeader().
   // Reference: Buffer.from(<path>, 'utf16le').toString('base64').
   FOLDER_PATH_ENCODED: 'UwBoAGEAcgBlAGQALwBGAGkAbgBhAG4AYwBlAA==',
-  FOLDER_PATH_WITH_SPACE_ENCODED: 'UwBoAGEAcgBlAGQALwBNAHkAIABGAGkAbgBhAG4AYwBlAA==',
   FOLDER_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
   BUCKET_NAME_WITH_QUOTE: "Joe's Bucket",
   BUCKET_NAME_WITH_QUOTE_ESCAPED: "Joe''s Bucket",
