@@ -83,6 +83,13 @@ export class AuthService {
     return store.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT)?.codeVerifier;
   }
 
+  /** Leaves the callback behind without exchanging its code: forgets the sign-in state and cleans the URL. */
+  private static _discardCallback(): void {
+    const context = store.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+    store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+    window.history.replaceState({}, '', AuthService._postSignInUrl(context?.returnTo));
+  }
+
   /**
    * Merges provided config with stored OAuth context, prioritizing stored values
    */
@@ -126,8 +133,11 @@ export class AuthService {
       if (!code) {
         throw new Error('Authorization code missing in OAuth callback');
       }
-      // Check if token already exists (prevents duplicate processing)
+      // A session is already there: a tab sharing the store signed in first, or this callback was
+      // handled before. The code is not needed then, but the callback still has to be wound up, or
+      // its spent code would be tried again on a later load.
       if (this.tokenManager.hasValidToken()) {
+        AuthService._discardCallback();
         return true;
       }
       

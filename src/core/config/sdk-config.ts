@@ -21,9 +21,19 @@ export interface OAuthFields {
   scope: string;
 }
 
+/** Browser storage the SDK keeps the OAuth session in. */
+export type TokenStorage = 'sessionStorage' | 'localStorage';
+
 // Opt-in login behaviour.
 export interface LoginFields {
   enforceSso?: boolean;
+  /**
+   * Where the browser keeps the OAuth session. `sessionStorage`, the default, keeps it to one tab
+   * and drops it when the tab closes. `localStorage` shares it between the tabs that use the same
+   * client ID on the origin and keeps it across browser restarts; in exchange the tokens stay on
+   * the device, within reach of any script running on that origin, until `logout()` removes them.
+   */
+  tokenStorage?: TokenStorage;
 }
 
 // Configuration type that enforces either secret or complete OAuth fields

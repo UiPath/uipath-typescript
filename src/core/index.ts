@@ -48,6 +48,7 @@ export type {
   PartialUiPathConfig,
   BaseConfig,
   OAuthFields,
+  TokenStorage,
 } from './config/sdk-config';
 export type {
   CodedFunctionContext,

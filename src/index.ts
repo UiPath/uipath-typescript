@@ -6,7 +6,7 @@
 
 // Export core functionality
 export { UiPath } from './uipath';
-export type { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, OAuthFields } from './core/config/sdk-config';
+export type { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, OAuthFields, TokenStorage } from './core/config/sdk-config';
 export { loadFromMetaTags } from './core/config/runtime';
 export { env } from './core/env';
 export type { UiPathEnvironment } from './core/env';
