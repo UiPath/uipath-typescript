@@ -421,6 +421,29 @@
       ]
     },
     {
+      "name": "Decisions",
+      "subpath": "@uipath/uipath-typescript/traces",
+      "since": "1.8.3",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.8.3"
+        },
+        {
+          "name": "getAll",
+          "since": "1.8.3"
+        },
+        {
+          "name": "getById",
+          "since": "1.8.3"
+        },
+        {
+          "name": "query",
+          "since": "1.8.3"
+        }
+      ]
+    },
+    {
       "name": "Directory",
       "subpath": "@uipath/uipath-typescript/directory",
       "since": "1.8.1",
