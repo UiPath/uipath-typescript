@@ -2,6 +2,8 @@ import { UiPathConfig } from './config/config';
 import { DEBUG_CONTEXT_KEY, ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
+import { NO_TOKEN_MESSAGE } from './auth/constants';
+import { AuthenticationError } from './errors';
 import type { DebugContext } from '../models/common/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage } from './config/config-utils';
@@ -422,6 +424,14 @@ export class UiPath implements IUiPath {
    */
   public getToken(): string | undefined {
     return this.#authService?.getToken();
+  }
+
+  public async getValidToken(): Promise<string> {
+    // An instance that never resolved a configuration has no session either.
+    if (!this.#authService) {
+      throw new AuthenticationError({ message: NO_TOKEN_MESSAGE });
+    }
+    return this.#authService.getTokenManager().getValidToken();
   }
 
   /**

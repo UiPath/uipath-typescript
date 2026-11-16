@@ -9,3 +9,6 @@ export const AUTH_STORAGE_KEYS = {
 
 /** How long before expiry an OAuth access token is renewed, so a request cannot expire in flight. */
 export const TOKEN_EXPIRY_BUFFER_MS = 60 * 1000;
+
+/** Message of the error raised when a token is asked for and the SDK holds none. */
+export const NO_TOKEN_MESSAGE = 'No authentication token available. Make sure to initialize the SDK first.';
