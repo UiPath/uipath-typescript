@@ -353,16 +353,10 @@ export class AuthService {
       return authorizeUrl;
     }
 
+    // Routing rewrites tenantName to tenant:<guid> only on the org-less authorize path.
     const orgName = this.config.orgName;
-    if (!GUID_REGEX.test(orgName)) {
-      console.warn(
-        `[UiPath SDK] enforceSso was ignored: orgName "${orgName}" is not an organization id. ` +
-        'Pass the organization id (GUID) as orgName to sign in through the org\'s identity provider.'
-      );
-      return authorizeUrl;
-    }
-
-    return `${authorizeUrl}&acr_values=${encodeURIComponent(`tenant:${orgName}`)}`;
+    const acrKey = GUID_REGEX.test(orgName) ? 'tenant' : 'tenantName';
+    return `${authorizeUrl}&acr_values=${encodeURIComponent(`${acrKey}:${orgName}`)}`;
   }
 
   /**

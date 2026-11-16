@@ -26,6 +26,7 @@ export * from './models/governance';
 export * from './models/platform';
 export * from './models/integration-service';
 export * from './models/observability';
+export * from './models/ontology';
 
 // Export error handling functionality (public API only)
 export * from './core/errors';

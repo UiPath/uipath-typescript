@@ -57,10 +57,8 @@ const sdk = new UiPath({ enforceSso: true });
     Users who sign in with a UiPath account do not exist in the organization's identity
     provider and will be rejected by it.
 
-!!! note "Needs the organization id"
-    This uses the organization id, which the platform and `uipath.json` supply for you. If
-    you instead pass configuration directly to the constructor, set `orgName` to the
-    organization id, otherwise `enforceSso` is ignored and a warning is logged.
+!!! note "Organization name or id"
+    `orgName` can be either the organization name or the organization id.
 
 
 ## Secret-based Authentication

@@ -255,6 +255,11 @@ const serviceEntries = [
     output: 'folders/index'
   },
   {
+    name: 'orchestrator-users',
+    input: 'src/services/orchestrator/users/index.ts',
+    output: 'orchestrator-users/index'
+  },
+  {
     name: 'settings',
     input: 'src/services/platform/settings/index.ts',
     output: 'settings/index'
@@ -289,6 +294,11 @@ const serviceEntries = [
     input: 'src/services/platform/directory/index.ts',
     output: 'directory/index'
   },
+  {
+    name: 'ontologies',
+    input: 'src/services/ontology/index.ts',
+    output: 'ontologies/index'
+  }
 ];
 
 // Generate ESM, CJS, and DTS builds for each service entry

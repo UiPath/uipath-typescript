@@ -30,6 +30,7 @@ import { ConnectionsService } from '../../../src/services/integration-service/co
 import { ElementsService } from '../../../src/services/integration-service/elements/elements';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Folders } from '../../../src/services/orchestrator/folders';
+import { OrchestratorUsers } from '../../../src/services/orchestrator/users';
 import { Settings } from '../../../src/services/platform/settings';
 import { Directory } from '../../../src/services/platform/directory';
 import { Groups } from '../../../src/services/platform/groups';
@@ -41,6 +42,7 @@ import { loadIntegrationConfig, IntegrationConfig, resolveAuthModes, AuthRequire
 } from './test-config';
 export { resolveAuthModes } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
+import { OntologyService } from '@/services/ontology/ontology';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll, describe } from 'vitest';
 
@@ -93,12 +95,14 @@ export interface TestServices {
   integrationServiceElements?: ElementsService;
   functions?: Functions;
   folders?: Folders;
+  orchestratorUsers?: OrchestratorUsers;
   settings?: Settings;
   businessApps?: BusinessApps;
   platformUsers?: Users;
   platformRoles?: Roles;
   platformGroups?: Groups;
   platformDirectory?: Directory;
+  ontologies?: OntologyService;
 }
 
 /**
@@ -222,12 +226,14 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     integrationServiceElements: new ElementsService(sdk),
     functions: new Functions(sdk),
     folders: new Folders(sdk),
+    orchestratorUsers: new OrchestratorUsers(sdk),
     settings: new Settings(sdk),
     businessApps: new BusinessApps(sdk),
     platformUsers: new Users(sdk),
     platformRoles: new Roles(sdk),
     platformGroups: new Groups(sdk),
     platformDirectory: new Directory(sdk),
+    ontologies: new OntologyService(sdk),
   };
 }
 

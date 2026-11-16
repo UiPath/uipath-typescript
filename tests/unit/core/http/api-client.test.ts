@@ -184,6 +184,34 @@ describe('ApiClient Content-Type header', () => {
   });
 });
 
+describe('ApiClient raw text bodies and responses', () => {
+  it('sends a string body verbatim when bodyOptions.stringify is false', async () => {
+    let capturedBody: unknown;
+    global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
+      capturedBody = options.body;
+      return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('{}') });
+    });
+
+    const client = createClient();
+    await client.put('/test', HTTP_TEST_CONSTANTS.TEXT_BODY, { bodyOptions: { stringify: false } });
+
+    expect(capturedBody).toBe(HTTP_TEST_CONSTANTS.TEXT_BODY);
+  });
+
+  it('JSON-stringifies a string body by default', async () => {
+    let capturedBody: unknown;
+    global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
+      capturedBody = options.body;
+      return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('{}') });
+    });
+
+    const client = createClient();
+    await client.put('/test', HTTP_TEST_CONSTANTS.TEXT_BODY);
+
+    expect(capturedBody).toBe(JSON.stringify(HTTP_TEST_CONSTANTS.TEXT_BODY));
+  });
+});
+
 describe('ApiClient error handling', () => {
   it('throws ServerError when server returns a non-JSON body on a successful response', async () => {
     global.fetch = vi.fn().mockResolvedValue({
