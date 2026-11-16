@@ -145,8 +145,8 @@ export interface ConnectionsServiceModel {
    * ///
    *
    * When an admin remapped the connection at deployment, the call targets the
-   * connection it was mapped to, in that connection's folder. A folder option passed
-   * explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence.
+   * connection it was mapped to, in that connection's folder, even when a folder
+   * option is passed: the mapped connection is found only in its own folder.
    *
    * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag

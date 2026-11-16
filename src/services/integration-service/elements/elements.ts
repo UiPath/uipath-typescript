@@ -17,7 +17,7 @@ import {
 } from '../../../models/integration-service/elements.types';
 import { ElementsServiceModel } from '../../../models/integration-service/elements.models';
 import type { ConnectionResource } from '@/resources';
-import { resolveConnectionTarget } from '../connection-target';
+import { resolveConnectionTarget } from '@/services/integration-service/connection-target';
 
 function requireArg(value: string, name: string, method: string): void {
   if (!value) {

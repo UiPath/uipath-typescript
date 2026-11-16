@@ -3,7 +3,7 @@ import { getServices, getTestConfig, describeIntegration, InitMode } from '../..
 import { generateRandomString } from '../../utils/helpers';
 import { QueueItemReviewStatus, QueueItemStatus, QueuePriority, QueueTransactionOutcome } from '../../../../src/models/orchestrator/queues.types';
 import type { QueueGetWithMethodsResponse } from '../../../../src/models/orchestrator/queues.models';
-import { resource } from '../../../../src/resources';
+import { resource } from '@/resources';
 
 const modes: InitMode[] = ['v0', 'v1'];
 

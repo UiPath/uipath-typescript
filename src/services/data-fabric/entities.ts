@@ -1,6 +1,6 @@
 import { ValidationError } from '../../core/errors';
 import { BaseService } from '../base';
-import { EntityResource, isEntityResource } from '../../resources';
+import { type EntityResource, isEntityResource } from '@/resources';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,

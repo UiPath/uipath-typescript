@@ -1,5 +1,6 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { ProcessResource, unpackFolderScopedHandle } from '../../../resources';
+import type { ProcessResource } from '@/resources';
+import { unpackFolderScopedHandle } from '@/utils/overrides/handles';
 import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
@@ -220,7 +221,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
   getByName(process: ProcessResource, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
   @track('Processes.GetByName')
   async getByName(nameOrHandle: string | ProcessResource, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
-    const { name, options: effectiveOptions } = unpackFolderScopedHandle(nameOrHandle, options);
+    const { name, options: effectiveOptions, overrideScope } = unpackFolderScopedHandle(nameOrHandle, options);
     const { result } = await this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(
       'Process',
       PROCESS_ENDPOINTS.GET_ALL,
@@ -228,6 +229,8 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       effectiveOptions,
       (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
       ProcessMap,
+      undefined,
+      overrideScope,
     );
     return result;
   }

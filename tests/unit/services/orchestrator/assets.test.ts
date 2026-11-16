@@ -1,7 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AssetService } from '../../../../src/services/orchestrator/assets';
-import { resource } from '../../../../src/resources';
+import { resource } from '@/resources';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import { 
@@ -279,7 +279,7 @@ describe('AssetService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
 
       await assetService.getByName(
-        resource.asset({ name: ASSET_TEST_CONSTANTS.ASSET_NAME, folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE }),
+        resource.asset({ name: ASSET_TEST_CONSTANTS.ASSET_NAME, folderPath: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE }),
       );
 
       const [, requestSpec] = mockApiClient.get.mock.calls[0];
@@ -288,7 +288,7 @@ describe('AssetService Unit Tests', () => {
         '$top': '1',
       });
       expect(requestSpec.headers).toMatchObject({
-        [FOLDER_PATH_ENCODED]: ASSET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+        [FOLDER_PATH_ENCODED]: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
       });
       expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
     });
@@ -322,6 +322,31 @@ describe('AssetService Unit Tests', () => {
 
         await assetService.getByName(
           resource.asset({ name: ASSET_TEST_CONSTANTS.ASSET_NAME, folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH }),
+        );
+
+        const [, requestSpec] = mockApiClient.get.mock.calls[0];
+        expect(requestSpec.params.$filter).toBe(`Name eq '${OVERRIDE_TEST_CONSTANTS.TARGET_NAME}'`);
+        expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
+    it('should find the override published under the handle folder when the call names another folder', async () => {
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`asset.${ASSET_TEST_CONSTANTS.ASSET_NAME}.${ASSET_TEST_CONSTANTS.FOLDER_PATH}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
+
+        await assetService.getByName(
+          resource.asset({ name: ASSET_TEST_CONSTANTS.ASSET_NAME, folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH }),
+          { folderKey: TEST_CONSTANTS.FOLDER_KEY },
         );
 
         const [, requestSpec] = mockApiClient.get.mock.calls[0];
@@ -414,12 +439,12 @@ describe('AssetService Unit Tests', () => {
 
       await assetService.getByName(
         ASSET_TEST_CONSTANTS.ASSET_NAME,
-        { folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE },
+        { folderPath: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE },
       );
 
       const [, requestSpec] = mockApiClient.get.mock.calls[0];
       expect(requestSpec.headers).toMatchObject({
-        [FOLDER_PATH_ENCODED]: ASSET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+        [FOLDER_PATH_ENCODED]: TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
       });
       expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
       expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();

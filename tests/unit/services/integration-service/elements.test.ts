@@ -5,8 +5,8 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { IS_TEST_CONSTANTS, createMockError, TEST_CONSTANTS } from '../../../utils/mocks';
-import { resource, type ConnectionResource } from '../../../../src/resources';
-import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
+import { resource, type ConnectionResource } from '@/resources';
+import { OVERRIDE_TEST_CONSTANTS } from '@tests/utils/constants/overrides';
 
 vi.mock('../../../../src/core/http/api-client');
 

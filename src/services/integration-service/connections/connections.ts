@@ -10,7 +10,7 @@ import {
 } from '../../../models/integration-service/connections.types';
 import { ConnectionsServiceModel } from '../../../models/integration-service/connections.models';
 import type { ConnectionResource } from '@/resources';
-import { resolveConnectionTarget, withConnectionFolder } from '../connection-target';
+import { resolveConnectionTarget, withConnectionFolder } from '@/services/integration-service/connection-target';
 
 /**
  * Service for managing UiPath Integration Service connections.

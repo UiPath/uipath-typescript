@@ -10,8 +10,8 @@ import {
   createMockConnection,
   createMockError,
 } from '../../../utils/mocks';
-import { resource } from '../../../../src/resources';
-import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
+import { resource } from '@/resources';
+import { OVERRIDE_TEST_CONSTANTS } from '@tests/utils/constants/overrides';
 
 const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
 
@@ -335,7 +335,7 @@ describe('ConnectionsService', () => {
         );
       });
 
-      it("should let an explicit folder option win over the override's folder", async () => {
+      it("should send the override's folder for the mapped connection even when a folder option is passed", async () => {
         publishOverrides(REMAPPED);
         mockApiClient.get.mockResolvedValue(createMockConnection());
 
@@ -343,7 +343,7 @@ describe('ConnectionsService', () => {
 
         expect(mockApiClient.get).toHaveBeenCalledWith(
           CONNECTION_ENDPOINTS.GET_BY_ID(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID),
-          { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
+          { headers: { [FOLDER_KEY]: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY }, params: {} },
         );
       });
 

@@ -47,9 +47,9 @@ const assets = new Assets(sdk);
 const threshold = await assets.getByName(ProjectResources.invoiceThreshold);
 ```
 
-An explicit `folderId`, `folderKey` or `folderPath` option still wins over the handle's folder when you pass one.
+An explicit `folderId`, `folderKey` or `folderPath` option still wins over the handle's folder when you pass one; a `folderPath` of `''` or `'.'` names the folder the code runs in, so it leaves the handle's folder in place. An override published for the handle is still found under the folder the handle declares, whatever folder the call is scoped to.
 
-A connection handle goes wherever a connection id does: `connections.getById()`, `execute()` and the `elements.getInstance*()` methods.
+A connection handle goes wherever a connection id does: `connections.getById()`, `execute()` and the `elements.getInstance*()` methods. When an admin mapped the connection to another one, the call goes to that connection in its own folder, even when you pass a folder option.
 
 ```typescript
 import { Connections, execute } from '@uipath/uipath-typescript/connections';

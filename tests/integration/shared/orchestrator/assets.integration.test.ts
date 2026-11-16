@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
-import { resource } from '../../../../src/resources';
+import { resource } from '@/resources';
 import type { AssetGetResponse } from '../../../../src/models/orchestrator/assets.types';
 
 const modes: InitMode[] = ['v0', 'v1'];

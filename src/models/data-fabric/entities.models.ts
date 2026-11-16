@@ -1,4 +1,4 @@
-import type { EntityResource } from '../../resources';
+import type { EntityResource } from '@/resources';
 import {
   EntityGetRecordsByIdOptions,
   EntityGetRecordByIdOptions,

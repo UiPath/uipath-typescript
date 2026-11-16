@@ -1,5 +1,6 @@
 import { ValidationError } from '@/core/errors';
-import { resolveConnection, type ConnectionResource, type ResolvedConnection } from '@/resources';
+import type { ConnectionResource, ResolvedConnection } from '@/resources';
+import { resolveConnection } from '@/utils/overrides/handles';
 import type { IntegrationServiceFolderContextOptions } from '@/models/integration-service/integration-service.types';
 
 /**
@@ -17,8 +18,10 @@ export function resolveConnectionTarget(connection: string | ConnectionResource,
 }
 
 /**
- * Scopes `options` to the folder an override moved the connection to, since Integration
- * Service rejects a connection outside the folder header. A folder the caller names wins.
+ * Scopes `options` to the folder an override moved the connection to. The override's folder
+ * replaces any folder the caller named, as ref resolution does for folder-scoped resources:
+ * the remapped connection lives there, and Integration Service rejects it under any other
+ * folder header.
  *
  * @internal
  */
@@ -26,8 +29,6 @@ export function withConnectionFolder<T extends IntegrationServiceFolderContextOp
   options: T,
   target: ResolvedConnection,
 ): T {
-  const hasExplicitFolder =
-    options.folderId !== undefined || options.folderKey !== undefined || options.folderPath !== undefined;
-  if (target.folderKey === undefined || hasExplicitFolder) return options;
-  return { ...options, folderKey: target.folderKey };
+  if (target.folderKey === undefined) return options;
+  return { ...options, folderId: undefined, folderPath: undefined, folderKey: target.folderKey };
 }

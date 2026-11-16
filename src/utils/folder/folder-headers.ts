@@ -13,6 +13,14 @@ export function isCurrentFolderPath(folderPath: string | undefined): boolean {
   return !trimmed || trimmed === CURRENT_FOLDER_PATH;
 }
 
+/**
+ * Whether the options name a folder the way {@link resolveFolderHeaders} reads them: a `folderId`, a
+ * non-blank `folderKey`, or a `folderPath` other than the current folder.
+ */
+export function hasFolderOption(options: { folderId?: unknown; folderKey?: string; folderPath?: string }): boolean {
+  return options.folderId !== undefined || Boolean(options.folderKey?.trim()) || !isCurrentFolderPath(options.folderPath);
+}
+
 export interface ResolveFolderHeadersInput {
   /** Numeric folder ID — sent as `X-UIPATH-OrganizationUnitId`. */
   folderId?: number;

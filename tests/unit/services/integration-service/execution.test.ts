@@ -15,8 +15,8 @@ import {
   TRACEPARENT,
   UIPATH_TRACEPARENT_ID,
 } from '../../../../src/utils/constants/headers';
-import { resource } from '../../../../src/resources';
-import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
+import { resource } from '@/resources';
+import { OVERRIDE_TEST_CONSTANTS } from '@tests/utils/constants/overrides';
 
 const OBJECT_NAME = 'tickets';
 const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
@@ -304,7 +304,7 @@ describe('execute', () => {
       expect(init.headers[FOLDER_KEY]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY);
     });
 
-    it("lets an explicit folder option win over the override's folder", async () => {
+    it("sends the override's folder for the mapped connection even when a folder option is passed", async () => {
       const { instance } = createServiceTestDependencies();
       publishRemap({
         ConnectionId: OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_ID,
@@ -316,8 +316,8 @@ describe('execute', () => {
 
       const [url, init] = fetchSpy.mock.calls[0];
       expect(url).toContain(remappedPath);
-      expect(init.headers[FOLDER_ID]).toBe(String(IS_TEST_CONSTANTS.FOLDER_ID));
-      expect(init.headers[FOLDER_KEY]).toBeUndefined();
+      expect(init.headers[FOLDER_KEY]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_CONNECTION_FOLDER_KEY);
+      expect(init.headers[FOLDER_ID]).toBeUndefined();
     });
 
     it('keeps the meta-tag folder fallback when the override names no folder', async () => {

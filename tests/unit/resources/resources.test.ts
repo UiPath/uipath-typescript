@@ -7,14 +7,11 @@ import {
   isProcessResource,
   isEntityResource,
   isConnectionResource,
-  unpackFolderScopedHandle,
-} from '../../../src/resources';
-import { ValidationError } from '../../../src/core/errors';
-import { OVERRIDE_TEST_CONSTANTS } from '../../utils/constants/overrides';
-import { RESOURCE_TEST_CONSTANTS } from '../../utils/constants/resources';
-import { BUCKET_TEST_CONSTANTS } from '../../utils/constants/buckets';
-import { TEST_CONSTANTS } from '../../utils/constants/common';
-import { IS_TEST_CONSTANTS } from '../../utils/constants/integration-service';
+} from '@/resources';
+import { ValidationError } from '@/core/errors';
+import { OVERRIDE_TEST_CONSTANTS } from '@tests/utils/constants/overrides';
+import { RESOURCE_TEST_CONSTANTS } from '@tests/utils/constants/resources';
+import { IS_TEST_CONSTANTS } from '@tests/utils/constants/integration-service';
 
 const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
 const { FOLDER_PATH } = RESOURCE_TEST_CONSTANTS;
@@ -225,40 +222,5 @@ describe('kind guards', () => {
     expect(isConnectionResource({ kind: 'connection' })).toBe(false);
     expect(isConnectionResource(IS_TEST_CONSTANTS.CONNECTION_ID)).toBe(false);
     expect(isConnectionResource(null)).toBe(false);
-  });
-});
-
-describe('unpackFolderScopedHandle', () => {
-  it('passes a plain name and its options through unchanged', () => {
-    const options = { folderId: TEST_CONSTANTS.FOLDER_ID };
-
-    expect(unpackFolderScopedHandle(RESOURCE_TEST_CONSTANTS.PLAIN_NAME, options)).toEqual({
-      name: RESOURCE_TEST_CONSTANTS.PLAIN_NAME,
-      options,
-    });
-  });
-
-  it('takes the folder from the handle when the caller passed none', () => {
-    const handle = resource.bucket({ name: RESOURCE_TEST_CONSTANTS.BUCKET_NAME, folderPath: FOLDER_PATH });
-
-    expect(unpackFolderScopedHandle(handle, { expand: BUCKET_TEST_CONSTANTS.EXPAND_FOLDERS })).toEqual({
-      name: RESOURCE_TEST_CONSTANTS.BUCKET_NAME,
-      options: { expand: BUCKET_TEST_CONSTANTS.EXPAND_FOLDERS, folderPath: FOLDER_PATH },
-    });
-  });
-
-  it('lets an explicit folder option win over the handle folder', () => {
-    const handle = resource.bucket({ name: RESOURCE_TEST_CONSTANTS.BUCKET_NAME, folderPath: FOLDER_PATH });
-
-    expect(unpackFolderScopedHandle(handle, { folderId: TEST_CONSTANTS.FOLDER_ID })).toEqual({
-      name: RESOURCE_TEST_CONSTANTS.BUCKET_NAME,
-      options: { folderId: TEST_CONSTANTS.FOLDER_ID },
-    });
-  });
-
-  it('adds no folder when the handle has none', () => {
-    const handle = resource.queue({ name: RESOURCE_TEST_CONSTANTS.LOCAL_QUEUE_NAME });
-
-    expect(unpackFolderScopedHandle(handle, {})).toEqual({ name: RESOURCE_TEST_CONSTANTS.LOCAL_QUEUE_NAME, options: {} });
   });
 });

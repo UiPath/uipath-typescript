@@ -22,7 +22,7 @@ import {
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints';
 import { isNotFoundError } from '../../../../src/core/errors/guards';
-import { resource } from '../../../../src/resources';
+import { resource } from '@/resources';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();

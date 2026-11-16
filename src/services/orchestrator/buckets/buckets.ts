@@ -1,5 +1,6 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { BucketResource, unpackFolderScopedHandle } from '../../../resources';
+import type { BucketResource } from '@/resources';
+import { unpackFolderScopedHandle } from '@/utils/overrides/handles';
 import { ValidationError, HttpStatus } from '../../../core/errors';
 import {
   BucketGetResponse,
@@ -70,13 +71,16 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   getByName(bucket: BucketResource, options?: BucketGetByNameOptions): Promise<BucketGetResponse>;
   @track('Buckets.GetByName')
   async getByName(nameOrHandle: string | BucketResource, options: BucketGetByNameOptions = {}): Promise<BucketGetResponse> {
-    const { name, options: effectiveOptions } = unpackFolderScopedHandle(nameOrHandle, options);
+    const { name, options: effectiveOptions, overrideScope } = unpackFolderScopedHandle(nameOrHandle, options);
     const { result } = await this.getByNameLookup<BucketGetResponse, BucketGetResponse>(
       'Bucket',
       BUCKET_ENDPOINTS.GET_BY_FOLDER,
       name,
       effectiveOptions,
       (raw) => pascalToCamelCaseKeys(raw) as BucketGetResponse,
+      undefined,
+      undefined,
+      overrideScope,
     );
     return result;
   }

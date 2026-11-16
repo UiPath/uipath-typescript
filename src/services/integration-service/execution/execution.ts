@@ -6,7 +6,7 @@ import { ELEMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../utils/constants/headers';
 import { resolveFolderScope } from '../folder-scope';
 import type { ConnectionResource } from '@/resources';
-import { resolveConnectionTarget, withConnectionFolder } from '../connection-target';
+import { resolveConnectionTarget, withConnectionFolder } from '@/services/integration-service/connection-target';
 import { fetchWithRetry } from '../../../utils/http/fetch-with-retry';
 import { resolveRetryOptions, DEFAULT_API_CLIENT_RETRY } from '../../../utils/http/retry-policy';
 import type { IUiPath } from '../../../core/types';
@@ -235,9 +235,8 @@ export function execute(
  * ///
  *
  * When an admin remapped the connection at deployment, the call targets the
- * connection it was mapped to, in that connection's folder. A folder option passed
- * explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence. Like the
- * id form, this does not throw on non-2xx responses.
+ * connection it was mapped to, in that connection's folder, even when a folder
+ * option is passed. Like the id form, this does not throw on non-2xx responses.
  *
  * @param uipath - UiPath SDK instance providing authentication and configuration
  * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`

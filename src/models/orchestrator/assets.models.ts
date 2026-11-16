@@ -1,6 +1,6 @@
 import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions, AssetGetByKeyOptions, AssetGetByNameOptions, AssetNewValue, AssetRef, AssetUpdateValueByIdOptions, AssetUpdateValueOptions } from './assets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import type { AssetResource } from '../../resources';
+import type { AssetResource } from '@/resources';
 
 /**
  * Service for managing UiPath Assets.

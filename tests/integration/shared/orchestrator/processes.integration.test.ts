@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
-import { resource } from '../../../../src/resources';
-import type { ProcessGetResponse } from '../../../../src/models/orchestrator/processes.types';
+import { resource } from '@/resources';
+import type { ProcessGetResponse } from '@/models/orchestrator/processes.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 

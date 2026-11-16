@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { resolveConnectionOverride, resolveOverride } from '../../../../src/utils/overrides/resolve-override';
+import { resolveConnectionOverride, resolveOverride } from '@/utils/overrides/resolve-override';
 import type { ResourceOverrides } from '../../../../src/utils/overrides/overrides.types';
 import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
-import { IS_TEST_CONSTANTS } from '../../../utils/constants/integration-service';
+import { IS_TEST_CONSTANTS } from '@tests/utils/constants/integration-service';
 
 const KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
 

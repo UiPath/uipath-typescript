@@ -1,4 +1,4 @@
-import type { QueueResource } from '../../resources';
+import type { QueueResource } from '@/resources';
 import {
   QueueGetAllOptions,
   QueueGetByIdOptions,

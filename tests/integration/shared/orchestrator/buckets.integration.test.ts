@@ -9,7 +9,7 @@ import {
 import { registerResource } from '../../utils/cleanup';
 import { createTestFileContent } from '../../utils/helpers';
 import { isNotFoundError } from '../../../../src/core/errors';
-import { resource } from '../../../../src/resources';
+import { resource } from '@/resources';
 
 const modes: InitMode[] = ['v0', 'v1'];
 

@@ -36,10 +36,10 @@
  *
  * @module
  */
-import { ValidationError } from '../core/errors';
-import type { FolderScopedOptions } from '../models/common/types';
-import { resolveConnectionOverride, resolveOverride } from '../utils/overrides/resolve-override';
-import { isCurrentFolderPath } from '../utils/folder/folder-headers';
+import { ValidationError } from '@/core/errors';
+import { resolveConnection } from '@/utils/overrides/handles';
+import { resolveOverride } from '@/utils/overrides/resolve-override';
+import { isCurrentFolderPath } from '@/utils/folder/folder-headers';
 
 /** Kinds a project can declare. Each is the lowercase `resource` string written into `bindings_v2.json`. */
 export type ResourceKind = 'asset' | 'bucket' | 'queue' | 'process' | 'entity' | 'connection';
@@ -183,20 +183,6 @@ function resolve(kind: NamedResourceKind, name: string, folderPath?: string): Re
   };
 }
 
-/**
- * The connection a call targets for `connectionId`: the override published under
- * `connection.<connectionId>`, else the id as given.
- *
- * @internal
- */
-export function resolveConnection(connectionId: string): ResolvedConnection {
-  const override = resolveConnectionOverride(connectionId);
-  return {
-    id: override?.connectionId ?? connectionId,
-    ...(override?.folderKey !== undefined && { folderKey: override.folderKey }),
-  };
-}
-
 function folderScoped<K extends NamedResourceKind, T>(
   kind: K,
   declaration: FolderScopedDeclaration & { type?: T },
@@ -333,25 +319,3 @@ export const isConnectionResource = (value: unknown): value is ConnectionResourc
   value !== null &&
   (value as { kind?: unknown }).kind === 'connection' &&
   typeof (value as { id?: unknown }).id === 'string';
-
-/**
- * Splits a `getByName` input into the name and the options a lookup should use. A
- * handle contributes its `folderPath` only when the caller passed no folder option.
- *
- * @internal
- */
-export function unpackFolderScopedHandle<T extends FolderScopedOptions>(
-  nameOrHandle: string | FolderScopedResource<NamedResourceKind>,
-  options: T,
-): { name: string; options: T } {
-  if (typeof nameOrHandle !== 'object' || nameOrHandle === null) return { name: nameOrHandle, options };
-  const hasExplicitFolder =
-    options.folderId !== undefined || options.folderKey !== undefined || options.folderPath !== undefined;
-  return {
-    name: nameOrHandle.name,
-    options:
-      nameOrHandle.folderPath !== undefined && !hasExplicitFolder
-        ? { ...options, folderPath: nameOrHandle.folderPath }
-        : options,
-  };
-}

@@ -1,7 +1,7 @@
 import { RequestOptions } from '../common/types';
 import { ProcessGetAllOptions, ProcessGetResponse, ProcessRef, ProcessStartRefOptions, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions, ProcessStartOptions } from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import type { ProcessResource } from '../../resources';
+import type { ProcessResource } from '@/resources';
 
 /**
  * Service for managing and executing UiPath Automation Processes.
