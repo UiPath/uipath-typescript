@@ -40,6 +40,17 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+### Returning to the page the user opened
+
+Sign-in always comes back to the redirect URI. When it started from another page of your app, for example a link to `/invoices/42` opened in a new tab, the SDK puts that page back in the address bar once sign-in completes, with its query string and hash. On the redirect URI page itself, the parameters UiPath returned with (`code`, `state`, `scope`, `session_state` and `iss`) are removed.
+
+The page is not reloaded, so this needs a single-page app that serves the redirect URI and the page the user opened from the same build. What it takes for your router to show that page:
+
+- A router created after `await sdk.initialize()` reads the restored URL when it starts. This always works.
+- A router created earlier is told through a `popstate` event, which the SDK dispatches once it is initialized. React Router follows it. Vue Router follows it only after its first navigation has finished, so with Vue Router complete `sdk.initialize()` before `app.use(router)`.
+
+Only pages on your app's own origin are restored. If your app starts sign-in from a dedicated login page, the user returns to that page, so send signed-in users on from it.
+
 ### Token renewal
 
 With OAuth sign-in, the SDK renews the access token about a minute before it expires, on the next request your app makes, so users stay signed in.
