@@ -380,36 +380,39 @@ const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
 console.log(task.data);
 ```
 
-### getSchema()
+### getSchemaByKey()
 
-> **getSchema**(`taskSchemaKey`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
+> **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
 
-Gets a task schema by its key.
+**`Experimental`**
 
-Use this to retrieve the schema a QuickForm task was created with — the `taskSchemaKey` surfaced on a task's [TaskDataGetResponse](../TaskDataGetResponse/) is the key to pass here.
+Gets the schema a QuickForm task was created with.
+
+The key is the `taskSchemaKey` of a QuickForm task, returned by `getAll()`, `getById()`, `getDataById()` and `getDataByKey()`. The folder is only used to check task view permission; it does not have to be the folder the schema was registered in.
 
 #### Parameters
 
-- `taskSchemaKey`: `string` — The schema key (a task's `taskSchemaKey`)
+- `key`: `string` — The schema key (a task's `taskSchemaKey`)
 - `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
 `Promise`\<`TaskSchemaGetResponse`>
 
-Promise resolving to a [TaskSchemaGetResponse](../TaskSchemaGetResponse/) containing the schema `key`, `name`, and JSON `schema` body, along with folder (`folderId`) and creation metadata (`createdTime`).
+Promise resolving to the schema as a [TaskSchemaGetResponse](../TaskSchemaGetResponse/)
 
 #### Examples
 
 ```
-const schema = await tasks.getSchema('<taskSchemaKey>', { folderId: <folderId> });
+const schema = await tasks.getSchemaByKey('<taskSchemaKey>', { folderId: <folderId> });
 console.log(schema.name, schema.schema);
 ```
 
 ```
+// Get the schema of a QuickForm task
 const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
 if (task.taskSchemaKey) {
-  const schema = await tasks.getSchema(task.taskSchemaKey, { folderId: <folderId> });
+  const schema = await tasks.getSchemaByKey(task.taskSchemaKey, { folderId: <folderId> });
   console.log(schema.name, schema.schema);
 }
 ```

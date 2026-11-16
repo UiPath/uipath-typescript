@@ -91,22 +91,26 @@ const process = await processes.getById(<processId>, <folderId>);
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
 
 Retrieves a single process by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Process name to search for
-- `options?`: `ProcessGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                      | Description                                                                                                 |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                  | Process name to search for                                                                                  |
+| `options?` | `ProcessGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`ProcessGetResponse`>
 
 Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -122,68 +126,80 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
 await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: 'entryPoints' });
 ```
 
-### start()
-
 #### Call Signature
 
-> **start**(`request`: `ProcessStartRequest`, `options?`: `ProcessStartOptions`): `Promise`\<`ProcessStartResponse`[]>
+> **getByName**(`process`: `ProcessResource`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
 
-Starts a process with the specified configuration.
+Retrieves a single process declared in `uipath_resources.ts`.
 
-Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` inside the options.
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
 
 ##### Parameters
 
-| Parameter  | Type                  | Description                                                                                                                      |
-| ---------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `request`  | `ProcessStartRequest` | Process start configuration                                                                                                      |
-| `options?` | `ProcessStartOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`, `filter`, `orderby`) |
+| Parameter  | Type                      | Description                                                                         |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| `process`  | `ProcessResource`         | Handle created with `resource.process()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `ProcessGetByNameOptions` | Optional folder override and query parameters                                       |
 
 ##### Returns
 
-`Promise`\<`ProcessStartResponse`[]>
+`Promise`\<`ProcessGetResponse`>
 
-Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
+Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
 
 ##### Example
 
 ```
-// By folder ID
-await processes.start({ processKey: '<processKey>' }, { folderId: <folderId> });
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
 
-// By folder key (GUID)
-await processes.start({ processKey: '<processKey>' }, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+export class ProjectResources {
+  static readonly nightly = resource.process({ name: 'Nightly Sync', folderPath: 'Finance/Shared' });
+}
 
-// By folder path
-await processes.start({ processKey: '<processKey>' }, { folderPath: 'Shared/Finance' });
-
-// Start by process name (instead of processKey)
-await processes.start({ processName: 'MyProcess' }, { folderId: <folderId> });
-
-// With additional options
-await processes.start({ processKey: '<processKey>' }, { folderId: <folderId>, expand: 'Robot' });
+// anywhere in the project
+await processes.getByName(ProjectResources.nightly);
 ```
 
-#### Call Signature
+### start()
 
-> **start**(`request`: `ProcessStartRequest`, `folderId`: `number`, `options?`: `RequestOptions`): `Promise`\<`ProcessStartResponse`[]>
+> **start**(`processRef`: `ProcessRef`, `options?`: `ProcessStartRefOptions`): `Promise`\<`ProcessStartResponse`[]>
 
-Starts a process — positional `folderId` form.
+Starts a process. First fetch the process via `processes.getAll()` or `processes.getByName()` to obtain a name or key to pass in `processRef`.
 
-##### Parameters
+Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`, `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on both `{ name }` and `{ key }` — a cross-folder redirect steers both the identity and the folder scoping to the override target.
 
-| Parameter  | Type                  | Description                  |
-| ---------- | --------------------- | ---------------------------- |
-| `request`  | `ProcessStartRequest` | Process start configuration  |
-| `folderId` | `number`              | Required folder ID (numeric) |
-| `options?` | `RequestOptions`      | Optional request options     |
+#### Parameters
 
-##### Returns
+- `processRef`: `ProcessRef` — Process identifier — see the variants for their folder-scope requirements
+- `options?`: `ProcessStartRefOptions` — Folder scoping + startInfo fields + optional `expand` / `select` / `filter` / `orderby`
+
+#### Returns
 
 `Promise`\<`ProcessStartResponse`[]>
 
-Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
+Promise resolving to an array of started process instances of [ProcessStartResponse](../ProcessStartResponse/)
 
-##### Deprecated
+#### Example
 
-Use the options-object form: `start(request, { folderId })`. See [ProcessStartOptions](../ProcessStartOptions/) for the supported options.
+```
+import { JobPriority } from '@uipath/uipath-typescript/processes';
+
+// By process name + folder path
+await processes.start({ name: 'InvoiceReview' }, { folderPath: 'Shared/Live' });
+
+// By process key (GUID)
+await processes.start({ key: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' }, { folderKey: '<folderKey>' });
+
+// With startInfo options
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', jobPriority: JobPriority.High, jobsCount: 3 },
+);
+
+// With expand to include related entities
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', expand: 'Robot,Machine' },
+);
+```

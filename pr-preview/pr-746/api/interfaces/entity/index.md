@@ -13,6 +13,54 @@ const allEntities = await entities.getAll();
 
 ## Methods
 
+### clone()
+
+> **clone**(`request`: `EntityCloneRequest`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneJob](#getclonejob).
+
+Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+
+`DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes are required only for `SchemaAndData` mode (which creates the target schema).
+
+#### Parameters
+
+- `request`: `EntityCloneRequest` — Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the [EntityCloneJob](../EntityCloneJob/) descriptor (initial state `Queued`).
+
+#### Example
+
+```
+import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const job = await entities.clone({
+  source: { scopeType: EntityCloneScopeType.Tenant },
+  target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
+  entityIds: ["<rootEntityId>", "<choiceSetId>"],
+  options: { mode: EntityCloneMode.SchemaAndData },
+});
+
+// Poll to a terminal state.
+const terminal = [
+  EntityCloneJobState.Done, EntityCloneJobState.Failed,
+  EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+];
+let status = await entities.getCloneJob(job.jobId);
+while (!terminal.includes(status.state)) {
+  await new Promise((r) => setTimeout(r, 3000));
+  status = await entities.getCloneJob(job.jobId);
+}
+```
+
 ### create()
 
 > **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
@@ -20,6 +68,8 @@ const allEntities = await entities.getAll();
 **`Experimental`**
 
 Creates a new Data Fabric entity with the given schema
+
+To create a **Federated** entity — a read-only view over one or more external (Integration Service) or native sources — set `entityClass` to `Federated`, describe each source in `externalFields`, and pass `[]` for `fields`. A Federated entity with N sources needs N-1 `sourceJoinConditionDetails`, all starting from one source, which becomes the primary source.
 
 #### Parameters
 
@@ -36,7 +86,7 @@ Promise resolving to the ID of the created entity
 #### Example
 
 ```
-import { Entities } from '@uipath/uipath-typescript/entities';
+import { Entities, EntityClass, DataDirectionType, EntityFieldDataType, JoinType } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
@@ -69,6 +119,29 @@ await entities.create("orderLine", [
     // referenceFolderKey omitted → SDK looks up the target at tenant scope
   },
 ], { folderKey: "<sourceFolderKey>" });
+
+// Federated entity — a read-only view over external and/or native sources.
+// Native columns stay empty ([]); the schema comes from `externalFields`.
+await entities.create("<entityName>", [], {
+  entityClass: EntityClass.Federated,
+  externalFields: [{
+    externalConnectionDetail: {
+      connectionId: "<connectionId>", connectorKey: "<connectorKey>", connectorName: "<connectorName>",
+      elementInstanceId: 0, folderKey: "<folderKey>",
+    },
+    externalObjectDetail: { externalObjectName: "<objectName>", primaryKey: "<primaryKeyField>", isPrimarySource: true, method: "<operationsCatalogJson>" },
+    fields: [{
+      field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING },
+      externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly },
+    }],
+  }],
+  // Multi-source: add more entries to `externalFields` and join them:
+  // sourceJoinConditionDetails: [{
+  //   sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>",
+  //   joinType: JoinType.LeftJoin,
+  //   relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>",
+  // }],
+});
 ```
 
 ### deleteAttachment()
@@ -496,24 +569,28 @@ const batchResult = await entity.insertRecords([
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
 Gets entity metadata by entity name with attached operation methods.
 
 Sibling of [getById](#getbyid) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides that resolve resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
 
-#### Parameters
+##### Parameters
 
-- `entityName`: `string` — Name of the entity
-- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+| Parameter    | Type                     | Description                                                                                                           |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `entityName` | `string`                 | Name of the entity                                                                                                    |
+| `options?`   | `EntityGetByNameOptions` | Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**. |
 
-#### Returns
+##### Returns
 
 `Promise`\<`EntityGetResponse`>
 
 Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
-#### Example
+##### Example
 
 ```
 // Get entity metadata by name
@@ -524,6 +601,68 @@ const folderEntity = await entities.getByName("Customer", { folderKey: "<folderK
 
 // Call operations directly on the entity
 const records = await entity.getAllRecords();
+```
+
+#### Call Signature
+
+> **getByName**(`entity`: `EntityResource`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+
+Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`   | `EntityResource`         | Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`                                                     |
+| `options?` | `EntityGetByNameOptions` | Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**. |
+
+##### Returns
+
+`Promise`\<`EntityGetResponse`>
+
+Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetResponse/) entity metadata with operation methods
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly customers = resource.entity({ name: 'Customers' });
+}
+
+// anywhere in the project
+const customers = await entities.getByName(ProjectResources.customers);
+```
+
+### getCloneJob()
+
+> **getCloneJob**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Gets the current status of a clone job started by [EntityServiceModel.clone](#clone); poll until `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done` terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+
+#### Parameters
+
+- `jobId`: `string` — The `jobId` returned when the clone job was started.
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
+
+#### Example
+
+```
+import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const status = await entities.getCloneJob("<jobId>");
+if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
 ```
 
 ### getRecordById()
@@ -1022,10 +1161,17 @@ Updates an existing Data Fabric entity — schema and/or metadata.
 
 Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
 
+For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, and `updateExternalConnection`.
+
+- **Identifying things.** A delta that targets an existing source identifies it by **both** `sourceObjectName` and `sourceConnectionId` (a connector `connectionId`, or the `entityId` for a native source), because an entity may have two sources with the same object name on different connections.
+- **Joins.** A Federated entity with N sources has exactly N-1 joins, all starting from one source, the *primary source*. The primary source is not stored: it is the source on the left of every join. A join cannot be removed on its own, since every other source must stay joined. To change the primary source, pass the complete new join set to `replaceSourceJoins`. To add a source, pass it in `addExternalSources` together with its join in `addSourceJoins`. `updateSourceJoin` only changes the join fields of an existing join.
+- **Fields.** `addExternalFields` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field. A source must keep at least one field, and a field name must be unique across all sources. Mapping settings (direction, searchable, sortable) cannot be changed after a source is added.
+- **Sources.** A Federated entity always has at least one source: to replace its only source, remove it and add the new one in the same call. The saved result is validated by the backend (join graph, duplicate sources, duplicate field names, empty sources).
+
 #### Parameters
 
 - `id`: `string` — UUID of the entity to update
-- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, `updateExternalConnection`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -1036,6 +1182,8 @@ Promise resolving when the update is complete
 #### Example
 
 ```
+import { Entities, EntityFieldDataType, DataDirectionType, JoinType } from '@uipath/uipath-typescript/entities';
+
 // Schema-only: add a field and remove another
 await entities.updateById(<id>, {
   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
@@ -1070,6 +1218,43 @@ await entities.updateById(<id>, {
   folderKey: "<folderKey>",
   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
 });
+
+// Federated: add a source joined to the existing graph. Every source is identified by
+// (sourceObjectName, sourceConnectionId) — a connector connectionId, or a native entityId.
+await entities.updateById(<id>, {
+  addExternalSources: [{
+    externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
+    externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
+    fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
+  }],
+  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+});
+
+// Federated: add a field to an existing source (maps a field that already exists on it)
+await entities.updateById(<id>, {
+  addExternalFields: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+});
+
+// Federated: change the join fields of an existing join (its sources and direction stay the same)
+await entities.updateById(<id>, {
+  updateSourceJoin: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceConnectionId: "<relatedConnectionId>", sourceJoinField: "<externalFieldName>" }],
+});
+
+// Federated: change the primary source. Pass the complete new join set, rooted at the new
+// primary source (here "<newPrimaryObject>"); every other source is the related side of one join.
+await entities.updateById(<id>, {
+  replaceSourceJoins: [
+    { sourceObjectName: "<newPrimaryObject>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<otherObject>", relatedSourceObjectConnectionId: "<otherConnectionId>", relatedSourceJoinField: "<otherExternalFieldName>", joinType: JoinType.LeftJoin },
+  ],
+});
+
+// Federated: swap a connector source's connection id
+await entities.updateById(<id>, {
+  updateExternalConnection: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<currentConnectionId>", newConnectionId: "<newConnectionId>" }],
+});
+
+// Federated: remove a non-primary source (its join is removed with it)
+await entities.updateById(<id>, { removeExternalSources: [{ sourceObjectName: "<relatedObjectName>", sourceConnectionId: "<relatedConnectionId>" }] });
 ```
 
 ### updateRecord()
@@ -1289,3 +1474,53 @@ const fileBuffer = fs.readFileSync('document.pdf');
 const blob = new Blob([fileBuffer], { type: 'application/pdf' });
 const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', blob);
 ```
+
+### upsert()
+
+> **upsert**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpsertOptions`): `Promise`\<`EntityUpsertResponse`>
+
+**`Experimental`**
+
+Upserts a record into an entity, and to its related child records. Two payload types:
+
+- One record: Only case and templated entities have one; a native entity rejects this type.
+- A tree of records: child records nested under a root entity, written as one transaction. A nested record with an `Id` field updates that row, one without it creates a row.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `data`: `Record`\<`string`, `any`> — Record fields, with child records nested under their entity name
+- `options?`: `EntityUpsertOptions` — Upsert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpsertResponse`>
+
+Promise resolving to the written root record's `Id`, plus the per-record results of a tree write ([EntityUpsertResponse](../EntityUpsertResponse/))
+
+#### Examples
+
+```
+// Single record, matched on the entity's business key
+const result = await entities.upsert({ name: "Case" }, {
+  caseId: "CASE-001",
+  caseStatus: "Open"
+});
+```
+
+```
+// A report with two expenses, one of which has a line item — applied as one transaction
+const result = await entities.upsert({ name: "Report" }, {
+  assignee: "assignee1",
+  totalReportAmount: 25,
+  Expense: [
+    { vendor: "Vendor 1", totalExpense: 20, ExpenseLineItem: [{ expenseAmount: 5 }] },
+    { vendor: "Vendor 2", totalExpense: 5 }
+  ]
+}, { folderKey: "<folderKey>" });
+
+console.log(result.transaction!.totalRecordsAffected); // 4
+console.log(result.transaction!.members[0].id);        // generated expense record ID
+```
+
+Writing across related entities requires the multi-entity write feature to be enabled for your tenant.
