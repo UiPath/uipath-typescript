@@ -120,7 +120,7 @@ uip tools install --package-name @uipath/functions-tool
 ## 1. Create a project
 
 ```
-uip functions new my-functions -l ts
+uip functions new my-functions -l ts --kind http
 cd my-functions
 ```
 
@@ -136,6 +136,7 @@ Options:
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `-l, --language <lang>` | `ts` (default) or `js` for this guide; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
 | `--empty`               | Skip the hello world function (JS/TS only)                                                                           |
+| `--kind <job\|http>`    | `job` (default) scaffolds `hello` as a job function, `http` as an HTTP endpoint                                      |
 
 The generated project structure:
 
@@ -257,7 +258,7 @@ Diffs local files against the Studio Web project and uploads only what changed. 
 ## Full workflow
 
 ```
-uip functions new my-functions -l ts && cd my-functions
+uip functions new my-functions -l ts --kind http && cd my-functions
 uip functions serve                    # develop
 uip functions pack
 uip login
@@ -1189,12 +1190,13 @@ Scaffold a new JS/TS Functions project.
 uip functions new [name] [options]
 ```
 
-| Option                  | Default        | Description                                                                                                     |
-| ----------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| `[name]`                | `my-functions` | Project name and directory                                                                                      |
-| `--name <name>`         |                | Alias for positional name                                                                                       |
-| `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
-| `--empty`               |                | Skip the hello world function (JS/TS only)                                                                      |
+| Option                  | Default        | Description                                                                                                           |
+| ----------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `[name]`                | `my-functions` | Project name and directory                                                                                            |
+| `--name <name>`         |                | Alias for positional name                                                                                             |
+| `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/)       |
+| `--empty`               |                | Skip the hello world function (JS/TS only)                                                                            |
+| `--kind <job\|http>`    | `job`          | Hello world function kind. `job` sets `targetRuntime` to `javascript` in `uipath.json`, `http` to `javascript-server` |
 
 Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with npm, which writes the project's `package-lock.json`.
 
@@ -1229,7 +1231,7 @@ uip functions run [options]
 | Option                   | Default | Description                                                             |
 | ------------------------ | ------- | ----------------------------------------------------------------------- |
 | `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                      |
-| `--entrypoint <path>`    |         | Path to the function file                                               |
+| `--entrypoint <path>`    |         | Path to a function file directly in `functions/`                        |
 | `--function <name>`      |         | Function name resolved via `uipath.json`                                |
 | `--input <json>`         | `{}`    | JSON input payload                                                      |
 | `--input-file <path>`    |         | Path to a JSON input file (takes priority over `--input`)               |

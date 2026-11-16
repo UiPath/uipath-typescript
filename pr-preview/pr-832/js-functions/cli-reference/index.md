@@ -18,12 +18,13 @@ Scaffold a new JS/TS Functions project.
 uip functions new [name] [options]
 ```
 
-| Option                  | Default        | Description                                                                                                     |
-| ----------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| `[name]`                | `my-functions` | Project name and directory                                                                                      |
-| `--name <name>`         |                | Alias for positional name                                                                                       |
-| `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
-| `--empty`               |                | Skip the hello world function (JS/TS only)                                                                      |
+| Option                  | Default        | Description                                                                                                           |
+| ----------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `[name]`                | `my-functions` | Project name and directory                                                                                            |
+| `--name <name>`         |                | Alias for positional name                                                                                             |
+| `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/)       |
+| `--empty`               |                | Skip the hello world function (JS/TS only)                                                                            |
+| `--kind <job\|http>`    | `job`          | Hello world function kind. `job` sets `targetRuntime` to `javascript` in `uipath.json`, `http` to `javascript-server` |
 
 Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with npm, which writes the project's `package-lock.json`.
 
@@ -58,7 +59,7 @@ uip functions run [options]
 | Option                   | Default | Description                                                             |
 | ------------------------ | ------- | ----------------------------------------------------------------------- |
 | `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                      |
-| `--entrypoint <path>`    |         | Path to the function file                                               |
+| `--entrypoint <path>`    |         | Path to a function file directly in `functions/`                        |
 | `--function <name>`      |         | Function name resolved via `uipath.json`                                |
 | `--input <json>`         | `{}`    | JSON input payload                                                      |
 | `--input-file <path>`    |         | Path to a JSON input file (takes priority over `--input`)               |
