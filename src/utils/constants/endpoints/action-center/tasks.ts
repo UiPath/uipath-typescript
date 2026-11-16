@@ -26,6 +26,7 @@ export const TASK_ENDPOINTS = {
   GET_GENERIC_TASK_BY_KEY: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/GetTaskDataByKey`,
   GET_TASK_SCHEMA_BY_KEY: `${ORCHESTRATOR_BASE}/tasks/TaskSchemas/GetByKey`,
   GET_APP_TASK_BY_ID: `${ORCHESTRATOR_BASE}/tasks/AppTasks/GetAppTaskById`,
+  GET_APP_TASK_BY_KEY: `${ORCHESTRATOR_BASE}/tasks/AppTasks/GetAppTaskByKey`,
   SAVE_TASK_TAGS: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/SaveTaskTags`,
   SAVE_TASK_DATA: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/SaveTaskData`,
   SAVE_FORM_TASK_DATA: `${ORCHESTRATOR_BASE}/forms/TaskForms/SaveTaskData`,

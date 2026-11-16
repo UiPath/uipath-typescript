@@ -23,6 +23,7 @@ describe('Task Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getUsers: vi.fn(),
+      getSchema: vi.fn(),
       saveData: vi.fn(),
       saveTags: vi.fn(),
       editMetadata: vi.fn(),
@@ -371,6 +372,58 @@ describe('Task Models', () => {
       });
     });
 
+    describe('task.getSchema()', () => {
+      it('should call service.getSchema with the task id, default folder and the task\'s own type and key', async () => {
+        const task = createTaskWithMethods(
+          createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID, type: TaskType.App, key: TASK_TEST_CONSTANTS.TASK_GUID_KEY }),
+          mockService,
+        );
+        const schema = { type: TaskType.App, schema: TASK_TEST_CONSTANTS.APP_TASK_SCHEMA };
+        mockService.getSchema = vi.fn().mockResolvedValue(schema);
+
+        const result = await task.getSchema();
+
+        expect(mockService.getSchema).toHaveBeenCalledWith(TASK_TEST_CONSTANTS.TASK_ID, {
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+          type: TaskType.App,
+          taskKey: TASK_TEST_CONSTANTS.TASK_GUID_KEY,
+          taskSchemaKey: undefined,
+        });
+        expect(result).toEqual(schema);
+      });
+
+      it('should pass the schema key of a QuickForm task', async () => {
+        const task = createTaskWithMethods(
+          createBasicTask({ type: TaskType.QuickForm, taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY }),
+          mockService,
+        );
+        mockService.getSchema = vi.fn().mockResolvedValue(null);
+
+        await task.getSchema();
+
+        expect(mockService.getSchema).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          expect.objectContaining({ type: TaskType.QuickForm, taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY }),
+        );
+      });
+
+      it('should keep a folder scope passed by the caller', async () => {
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
+        mockService.getSchema = vi.fn().mockResolvedValue(null);
+
+        await task.getSchema({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
+
+        const options = vi.mocked(mockService.getSchema).mock.calls[0][1];
+        expect(options?.folderKey).toBe(TEST_CONSTANTS.FOLDER_KEY);
+        expect(options?.folderId).toBeUndefined();
+      });
+
+      it('should throw error if taskId is undefined', async () => {
+        const task = createTaskWithMethods(createBasicTask({ id: undefined }), mockService);
+        await expect(task.getSchema()).rejects.toThrow('Task ID is undefined');
+      });
+    });
+
     describe('task.saveData()', () => {
       it('should call service.saveData with the task id and default folder', async () => {
         const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
@@ -524,6 +577,7 @@ describe('Task Models', () => {
       expect(typeof task.reassign).toBe('function');
       expect(typeof task.unassign).toBe('function');
       expect(typeof task.complete).toBe('function');
+      expect(typeof task.getSchema).toBe('function');
       expect(typeof task.saveData).toBe('function');
       expect(typeof task.saveTags).toBe('function');
       expect(typeof task.editMetadata).toBe('function');

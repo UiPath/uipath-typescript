@@ -425,6 +425,80 @@ export interface TaskSchemaGetResponse {
 }
 
 /**
+ * Options for getting a task's schema.
+ */
+export interface TaskGetSchemaOptions extends FolderScopedOptions {
+  /** Task type. Looked up automatically when omitted. */
+  type?: TaskType;
+  /** The task's key, used to read the schema of an App task. Looked up automatically when omitted. */
+  taskKey?: string;
+  /** The task's schema key, used to read the schema of a QuickForm task. Looked up automatically when omitted. */
+  taskSchemaKey?: string;
+}
+
+/**
+ * A field or an outcome in the schema of an App task.
+ */
+export interface TaskAppSchemaProperty {
+  /** Unique identifier of the property. */
+  key: string;
+  /** Property name. The property's value is stored under this name in the task's `data`; for an outcome, this is the `action` to complete the task with. */
+  name: string;
+  /** Data type name, for example `String`, `Int64`, `Boolean`, `Decimal`, `DateOnly`, `Guid` or `Object`. */
+  type: string;
+  /** Namespace of the data type, for example `System`. */
+  typeNamespace: string;
+  /** Whether the value is a list of `type` items. */
+  isList: boolean;
+  /** Collection kind when `isList` is true, for example `Array`. Null for a single value. */
+  collectionDataType: string | null;
+  /** Whether a value is required to complete the task. */
+  required: boolean;
+  /** Version of the property within the schema. */
+  version: number;
+  /** Nested properties of an `Object` property. Empty for simple types. */
+  properties: TaskAppSchemaProperty[];
+}
+
+/**
+ * Schema of an App task, as defined by the action app the task was created for.
+ */
+export interface TaskAppSchema {
+  /** Values passed to the task, shown read-only. */
+  inputs: TaskAppSchemaProperty[];
+  /** Values the user fills in. */
+  outputs: TaskAppSchemaProperty[];
+  /** Values passed to the task that the user can edit. */
+  inOuts: TaskAppSchemaProperty[];
+  /** Actions the task can be completed with. */
+  outcomes: TaskAppSchemaProperty[];
+}
+
+/**
+ * Schema of an App task, as returned by `getSchema`.
+ */
+export interface TaskAppSchemaGetResponse {
+  /** Task type the schema belongs to. */
+  type: TaskType.App;
+  /** The schema of the task's action app. */
+  schema: TaskAppSchema;
+}
+
+/**
+ * Schema of a QuickForm task, as returned by `getSchema`: the schema the task
+ * was created with, same as `getSchemaByKey` returns for the task's `taskSchemaKey`.
+ */
+export interface TaskQuickFormSchemaGetResponse extends TaskSchemaGetResponse {
+  /** Task type the schema belongs to. */
+  type: TaskType.QuickForm;
+}
+
+/**
+ * A task's schema, as returned by `getSchema`. Check `type` to tell the two shapes apart.
+ */
+export type TaskGetSchemaResponse = TaskAppSchemaGetResponse | TaskQuickFormSchemaGetResponse;
+
+/**
  * Raw task comment shape returned by the API, before any method attachment.
  */
 export interface RawTaskCommentGetResponse {

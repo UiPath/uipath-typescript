@@ -12,6 +12,8 @@ import type {
   TaskEditMetadataOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
+  TaskGetSchemaOptions,
+  TaskGetSchemaResponse,
   TaskCreateOptions,
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
@@ -401,6 +403,63 @@ export interface TaskServiceModel {
   getSchemaByKey(key: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse>;
 
   /**
+   * Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.
+   *
+   * Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape it has:
+   * - `TaskType.App`: `schema` has `inputs` (read-only), `outputs` (filled in by the user), `inOuts` (pre-filled, editable) and `outcomes`. A property's `name` is its key in the task's `data`, and an outcome's `name` is the `action` to pass to `complete()`.
+   * - `TaskType.QuickForm`: the schema the task was created with, same as `getSchemaByKey()` returns for the task's `taskSchemaKey`. Its `schema` body is returned as it was registered.
+   *
+   * An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the `Apps` or `Apps.Read` scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.
+   *
+   * The task's type and keys are looked up automatically (one extra read). When called on a task object returned by the SDK, they are already known, so no lookup happens.
+   *
+   * @param taskId - The task to get the schema for
+   * @param options - Folder scope (folderId, folderKey, or folderPath), plus optional task details that skip the lookup
+   * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm).
+   * @example
+   * ```typescript
+   * const result = await tasks.getSchema(<taskId>, { folderId: <folderId> });
+   *
+   * // Or using instance method
+   * const task = await tasks.getById(<taskId>, {}, <folderId>);
+   * const result = await task.getSchema();
+   * ```
+   *
+   * @example Rendering and completing a task from its schema
+   * ```typescript
+   * import { TaskType } from '@uipath/uipath-typescript/tasks';
+   *
+   * const task = await tasks.getById(<taskId>, {}, <folderId>);
+   * const result = await task.getSchema();
+   *
+   * if (result?.type === TaskType.App) {
+   *   // Editable fields of an App task, with their current values
+   *   const { outputs, inOuts, outcomes } = result.schema;
+   *   const editable = [...inOuts, ...outputs].map((property) => ({
+   *     name: property.name,
+   *     type: property.type,
+   *     required: property.required,
+   *     value: task.data?.[property.name],
+   *   }));
+   *
+   *   // Complete with one of the schema's outcomes
+   *   await task.complete({
+   *     type: TaskType.App,
+   *     data: { ...task.data, comment: "Looks good" },
+   *     action: outcomes[0].name,
+   *   });
+   * }
+   *
+   * if (result?.type === TaskType.QuickForm) {
+   *   // The schema body, as registered when the task was created
+   *   console.log(result.name, result.schema);
+   * }
+   * ```
+   * @experimental
+   */
+  getSchema(taskId: number, options?: TaskGetSchemaOptions): Promise<TaskGetSchemaResponse | null>;
+
+  /**
    * Saves a task's data (form/task payload), replacing the existing payload.
    *
    * Routes to the correct save endpoint by task type: Form and App tasks use their own endpoints, everything else uses the generic one. If `type` is not passed, it is looked up automatically (one extra read). When called on a task object returned by the SDK, the type is already known, so no lookup happens.
@@ -525,6 +584,18 @@ export interface TaskMethods {
   complete(options: TaskCompleteOptions): Promise<OperationResponse<TaskCompletionOptions>>;
 
   /**
+   * Gets this task's schema: the fields it holds and the outcomes it can be completed with.
+   *
+   * Supported for App tasks and QuickForm tasks; the `type` of the response tells which shape `schema` has.
+   * An App task's schema has no fields and no outcomes when the caller cannot view apps in the task's folder, when the token lacks the `Apps` or `Apps.Read` scope, or when the task's app is no longer deployed there.
+   *
+   * @param options - Optional folder scope override (defaults to this task's folder)
+   * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm).
+   * @experimental
+   */
+  getSchema(options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null>;
+
+  /**
    * Saves this task's data (form/task payload), replacing the existing payload.
    *
    * @param data - The task data to save
@@ -639,6 +710,13 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
         } as TaskCompletionOptions,
         folderId
       );
+    },
+
+    async getSchema(options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
+      if (!taskData.id) throw new Error('Task ID is undefined');
+      // The task already knows its type and keys, so the service skips its lookup.
+      const known: TaskGetSchemaOptions = { type: taskData.type, taskKey: taskData.key, taskSchemaKey: taskData.taskSchemaKey ?? undefined };
+      return service.getSchema(taskData.id, resolveTaskFolder({ ...options, ...known }, taskData.folderId));
     },
 
     async saveData(data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void> {

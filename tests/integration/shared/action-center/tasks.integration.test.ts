@@ -172,6 +172,21 @@ describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (m
       });
     });
 
+    it('should return the schema of a QuickForm task from getSchema, by id and from the task object', async () => {
+      const { tasks } = getServices();
+
+      const byId = await tasks.getSchema(created.id, { folderId });
+      if (byId?.type !== TaskType.QuickForm) {
+        throw new Error(`Expected a QuickForm schema, got ${JSON.stringify(byId)}`);
+      }
+      expect(byId.key).toBe(taskSchemaKey);
+      expect(byId.schema).toMatchObject({ id: taskSchemaKey });
+      expect(byId.folderId).toBe(folderId);
+
+      const fromTask = await created.getSchema();
+      expect(fromTask).toEqual(byId);
+    });
+
     it('should return the taskSchemaKey of a QuickForm task from getDataById', async () => {
       const { tasks } = getServices();
 
@@ -179,6 +194,38 @@ describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (m
 
       expect(taskData.taskSchemaKey).toBe(taskSchemaKey);
       expect(taskData.data).toMatchObject({ note: NOTE });
+    });
+  });
+
+  describe('getSchema', () => {
+    it('should return the schema of an App task', async () => {
+      const { tasks } = getServices();
+
+      const allTasks = await tasks.getAll({ filter: "Type eq 'AppTask' and IsDeleted eq false", pageSize: 5 });
+      if (allTasks.items.length === 0) {
+        throw new Error('No App task available in the test environment');
+      }
+
+      const result = await allTasks.items[0].getSchema();
+      if (result?.type !== TaskType.App) {
+        throw new Error(`Expected an App task schema, got ${JSON.stringify(result)}`);
+      }
+      expect(Array.isArray(result.schema.inputs)).toBe(true);
+      expect(Array.isArray(result.schema.outputs)).toBe(true);
+      expect(Array.isArray(result.schema.inOuts)).toBe(true);
+      expect(Array.isArray(result.schema.outcomes)).toBe(true);
+    });
+
+    it('should return null for a task type without a schema', async () => {
+      if (!createdTaskId) {
+        throw new Error('No task ID available for testing');
+      }
+      const { tasks } = getServices();
+      const folderId = Number(getTestConfig().folderId);
+
+      const result = await tasks.getSchema(createdTaskId, { folderId });
+
+      expect(result).toBeNull();
     });
   });
 

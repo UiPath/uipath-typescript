@@ -1,5 +1,5 @@
 import { BaseOptions, CollectionResponse } from "../common/types";
-import { TaskAssignmentOptions, TaskAssignmentResponse, TaskType } from "./tasks.types";
+import { TaskAppSchema, TaskAssignmentOptions, TaskAssignmentResponse, TaskType } from "./tasks.types";
 import { TASK_ENDPOINTS } from "../../utils/constants/endpoints";
 
 export const TASK_TYPE_ENDPOINTS: Record<TaskType, string> = {
@@ -44,4 +44,11 @@ export type TaskAssignmentResponseCollection = CollectionResponse<TaskAssignment
  */
 export interface TaskGetFormOptions extends BaseOptions {
   expandOnFormLayout?: boolean;
+}
+
+/**
+ * The part of an App task read by key that getSchema uses
+ */
+export interface RawAppTaskSchemaFields {
+  taskSchema?: TaskAppSchema | null;
 }
