@@ -356,7 +356,7 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
 
     switch (type) {
       case TaskType.App:
-        return this.fetchAppTaskSchema(taskKey, headers);
+        return taskKey ? this.fetchAppTaskSchema(taskKey, headers) : null;
       case TaskType.QuickForm: {
         if (!taskSchemaKey) {
           return null;
@@ -499,7 +499,7 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
   /**
    * Reads the schema of an App task. Null when the task carries no schema.
    */
-  private async fetchAppTaskSchema(taskKey: string | undefined, headers: Record<string, string>): Promise<TaskGetSchemaResponse | null> {
+  private async fetchAppTaskSchema(taskKey: string, headers: Record<string, string>): Promise<TaskGetSchemaResponse | null> {
     const response = await this.get<RawAppTaskSchemaFields>(TASK_ENDPOINTS.GET_APP_TASK_BY_KEY, { params: { taskKey }, headers });
     const schema = response.data.taskSchema;
     return schema ? { type: TaskType.App, schema } : null;

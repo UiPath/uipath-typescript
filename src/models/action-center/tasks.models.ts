@@ -419,8 +419,10 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * const result = await tasks.getSchema(<taskId>, { folderId: <folderId> });
+   * ```
    *
-   * // Or using instance method
+   * @example Using the instance method
+   * ```typescript
    * const task = await tasks.getById(<taskId>, {}, <folderId>);
    * const result = await task.getSchema();
    * ```

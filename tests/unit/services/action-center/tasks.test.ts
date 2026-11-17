@@ -1761,6 +1761,15 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(result).toBeNull();
     });
 
+    it('should return null when an App task has no key', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.App, key: undefined }));
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      expect(result).toBeNull();
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1); // the lookup only
+    });
+
     it('should read a QuickForm schema by schema key without a lookup when type and taskSchemaKey are passed', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawTaskSchema());
 
