@@ -156,6 +156,8 @@ export class ProcessService extends FolderScopedService implements ProcessServic
 
     // Orchestrator reads the parent job key on StartJobs alone, and not every backend's CORS allows
     // the header, so it travels only on this request (JIT debug sub-jobs of the parent run).
+    // Action Center delivers the key with a token, so an app's first call must fetch one before the read.
+    await this.getValidAuthToken();
     const debugContext = this.executionContext.get<DebugContext>(DEBUG_CONTEXT_KEY);
     if (debugContext?.jobKey) {
       headers[JOB_KEY] = debugContext.jobKey;
