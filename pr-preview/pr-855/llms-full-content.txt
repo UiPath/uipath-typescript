@@ -2974,7 +2974,7 @@ The task's type and keys are looked up automatically (one extra read). When call
 
 `Promise`\<`null` | `TaskGetSchemaResponse`>
 
-Promise resolving to a [TaskGetSchemaResponse](../../type-aliases/TaskGetSchemaResponse/), or null when the task has no schema (task types other than App and QuickForm).
+Promise resolving to a [TaskGetSchemaResponse](../../type-aliases/TaskGetSchemaResponse/), or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
 
 #### Examples
 

@@ -4688,7 +4688,7 @@ created in the same call. Schema keys are unique per tenant.</p>
 </table>
 <h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
-<p>Promise resolving to a <a href="../../type-aliases/TaskGetSchemaResponse/">TaskGetSchemaResponse</a>, or null when the task has no schema (task types other than App and QuickForm).</p>
+<p>Promise resolving to a <a href="../../type-aliases/TaskGetSchemaResponse/">TaskGetSchemaResponse</a>, or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).</p>
 <h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getSchema</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
