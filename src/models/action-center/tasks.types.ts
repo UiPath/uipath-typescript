@@ -162,6 +162,8 @@ export interface TaskBaseResponse {
   deleterUserId: number | null;
   deletedTime: string | null;
   lastModifiedTime: string | null;
+  /** Key of the schema a QuickForm task was created with; `null` for other task types. */
+  taskSchemaKey?: string | null;
 }
 
 /**
@@ -390,7 +392,36 @@ export interface RawTaskDataGetResponse {
   action: string | null;
   createdTime: string;
   lastModifiedTime: string | null;
+  /**
+   * Key of the schema a QuickForm task was created with; `null` for other
+   * task types. Pass it to `getSchemaByKey` to fetch the schema.
+   */
+  taskSchemaKey?: string | null;
   tags?: Tag[];
+}
+
+/**
+ * A task schema (the QuickForm form definition), as returned by `getSchemaByKey`.
+ */
+export interface TaskSchemaGetResponse {
+  /** Unique key the schema is registered under (a task's `taskSchemaKey`). */
+  key: string;
+  /** Human-readable schema name, if one was given. */
+  name: string | null;
+  /** The schema body (fields, outcomes, etc.). */
+  schema: Record<string, unknown>;
+  /** Key of the job that registered the schema, if any. */
+  creatorJobKey: string | null;
+  /** Key of the Maestro process the schema was registered from; `null` for debug runs. */
+  processKey: string | null;
+  /** Name of the process run by the job that registered the schema. Not returned for every tenant. */
+  jobProcessName?: string | null;
+  /** Id of the folder the schema was registered in. */
+  folderId: number;
+  /** Key of the folder the schema was registered in. Not returned for every tenant. */
+  folderKey?: string;
+  /** Creation timestamp. */
+  createdTime: string;
 }
 
 /**

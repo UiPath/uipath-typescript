@@ -16,6 +16,7 @@ import type {
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
   TaskSaveDataOptions,
+  TaskSchemaGetResponse,
   UserLoginInfo
 } from './tasks.types';
 import { FolderScopedOptions, OperationResponse } from '../common/types';
@@ -369,6 +370,35 @@ export interface TaskServiceModel {
    * ```
    */
   getDataByKey(key: string, options?: FolderScopedOptions): Promise<TaskDataGetResponse>;
+
+  /**
+   * Gets the schema a QuickForm task was created with.
+   *
+   * The key is the `taskSchemaKey` of a QuickForm task, returned by `getAll()`,
+   * `getById()`, `getDataById()` and `getDataByKey()`.
+   * The folder is only used to check task view permission; it does not have to
+   * be the folder the schema was registered in.
+   *
+   * @param key - The schema key (a task's `taskSchemaKey`)
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving to the schema as a {@link TaskSchemaGetResponse}
+   * @example
+   * ```typescript
+   * const schema = await tasks.getSchemaByKey('<taskSchemaKey>', { folderId: <folderId> });
+   * console.log(schema.name, schema.schema);
+   * ```
+   * @example
+   * ```typescript
+   * // Get the schema of a QuickForm task
+   * const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+   * if (task.taskSchemaKey) {
+   *   const schema = await tasks.getSchemaByKey(task.taskSchemaKey, { folderId: <folderId> });
+   *   console.log(schema.name, schema.schema);
+   * }
+   * ```
+   * @experimental
+   */
+  getSchemaByKey(key: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse>;
 
   /**
    * Saves a task's data (form/task payload), replacing the existing payload.

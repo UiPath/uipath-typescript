@@ -1,6 +1,6 @@
 import { ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
-import { DEFAULT_TASK_EXPAND, TaskMap, TaskStatusMap } from '../../models/action-center/tasks.constants';
+import { DEFAULT_TASK_EXPAND, TaskMap, TaskSchemaMap, TaskStatusMap } from '../../models/action-center/tasks.constants';
 import { TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
 import {
   TaskCreateResponse,
@@ -22,6 +22,7 @@ import {
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
   TaskSaveDataOptions,
+  TaskSchemaGetResponse,
   TaskType,
   TasksUnassignOptions,
   UserLoginInfo,
@@ -308,6 +309,22 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
 
     const headers = this.resolveFolder(options, 'Tasks.getDataByKey');
     return this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_KEY, { taskKey: key }, headers);
+  }
+
+  @track('Tasks.GetSchemaByKey')
+  async getSchemaByKey(key: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse> {
+    if (!key) {
+      throw new ValidationError({ message: 'key is required for getSchemaByKey' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.getSchemaByKey');
+    const response = await this.get<Record<string, unknown>>(
+      TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
+      { params: { key }, headers }
+    );
+    // The schema body is user-defined: keep its keys verbatim, transform only the envelope.
+    const { schema, ...envelope } = response.data;
+    return { ...transformData(envelope, TaskSchemaMap), schema } as unknown as TaskSchemaGetResponse;
   }
 
   private async fetchTaskData(endpoint: string, params: Record<string, string | number>, headers: Record<string, string>): Promise<TaskDataGetResponse> {

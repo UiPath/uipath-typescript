@@ -161,7 +161,7 @@ describe('TaskService Unit Tests', () => {
   });
 
   describe('create (QuickForm)', () => {
-    const QF_SCHEMA_KEY = '8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91';
+    const QF_SCHEMA_KEY = TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY;
     const QF_SCHEMA: Record<string, unknown> = {
       id: QF_SCHEMA_KEY,
       fields: [
@@ -697,6 +697,17 @@ describe('TaskService Unit Tests', () => {
         expect.stringContaining(taskId.toString()),
         expect.any(Object)
       );
+    });
+
+    it('should return the taskSchemaKey of a QuickForm task', async () => {
+      mockApiClient.get.mockResolvedValue(createMockTaskGetResponse({
+        type: TaskType.QuickForm,
+        taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY
+      }));
+
+      const result = await taskService.getById(TASK_TEST_CONSTANTS.TASK_ID, { taskType: TaskType.QuickForm }, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(result.taskSchemaKey).toBe(TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY);
     });
 
     it('should include folderId in headers', async () => {
@@ -1526,6 +1537,16 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(result.data).toBeNull();
     });
 
+    it('should return taskSchemaKey for a QuickForm task and null for other task types', async () => {
+      mockApiClient.get.mockResolvedValueOnce(createMockRawTaskData({ taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY }));
+      const quickForm = await service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER });
+      expect(quickForm.taskSchemaKey).toBe(TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY);
+
+      mockApiClient.get.mockResolvedValueOnce(createMockRawTaskData({ taskSchemaKey: null }));
+      const external = await service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER });
+      expect(external.taskSchemaKey).toBeNull();
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
       await expect(service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
@@ -1562,9 +1583,93 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(result.data).toEqual({ amount: 1200 });
     });
 
+    it('should return taskSchemaKey for a QuickForm task', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY }));
+
+      const result = await service.getDataByKey(TASK_KEY, { folderId: EXT_TASK.FOLDER });
+
+      expect(result.taskSchemaKey).toBe(TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY);
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
       await expect(service.getDataByKey(TASK_KEY, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getSchemaByKey', () => {
+    const SCHEMA_KEY = TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY;
+    // Wire shape of TaskSchemas/GetByKey: camelCase, nullable fields sent as null.
+    // jobProcessName and organizationUnitKey are only sent by some tenants' backend.
+    const createMockRawSchema = (overrides: Record<string, unknown> = {}) =>
+      createMockBaseResponse({
+        key: SCHEMA_KEY,
+        name: TASK_TEST_CONSTANTS.TASK_SCHEMA_NAME,
+        schema: TASK_TEST_CONSTANTS.TASK_SCHEMA_BODY,
+        creatorJobKey: null,
+        processKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_PROCESS_KEY,
+        jobProcessName: TASK_TEST_CONSTANTS.TASK_SCHEMA_JOB_PROCESS_NAME,
+        organizationUnitId: EXT_TASK.FOLDER,
+        organizationUnitKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_FOLDER_KEY,
+        creationTime: EXT_TASK.CREATED,
+        ...overrides,
+      });
+
+    it('should throw ValidationError when the key or folder is missing', async () => {
+      await expect(service.getSchemaByKey('', { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.getSchemaByKey(SCHEMA_KEY)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should GET the schema by key with the folder header and transform system fields', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawSchema());
+
+      const result = await service.getSchemaByKey(SCHEMA_KEY, { folderId: EXT_TASK.FOLDER });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
+        expect.objectContaining({
+          params: expect.objectContaining({ key: SCHEMA_KEY }),
+          headers: expect.objectContaining({ [FOLDER_ID]: EXT_TASK.FOLDER.toString() }),
+        }),
+      );
+
+      expect(result.key).toBe(SCHEMA_KEY);
+      expect(result.name).toBe(TASK_TEST_CONSTANTS.TASK_SCHEMA_NAME);
+      expect(result.schema).toEqual(TASK_TEST_CONSTANTS.TASK_SCHEMA_BODY);
+      expect(result.processKey).toBe(TASK_TEST_CONSTANTS.TASK_SCHEMA_PROCESS_KEY);
+      expect(result.jobProcessName).toBe(TASK_TEST_CONSTANTS.TASK_SCHEMA_JOB_PROCESS_NAME);
+      expect(result.folderKey).toBe(TASK_TEST_CONSTANTS.TASK_SCHEMA_FOLDER_KEY);
+      expect((result as any).organizationUnitKey).toBeUndefined(); // renamed to folderKey
+      expect(result.creatorJobKey).toBeNull();
+      expect(result.folderId).toBe(EXT_TASK.FOLDER);
+      expect((result as any).organizationUnitId).toBeUndefined(); // renamed to folderId
+      expect(result.createdTime).toBe(EXT_TASK.CREATED);
+      expect((result as any).creationTime).toBeUndefined(); // renamed to createdTime
+    });
+
+    it('should leave folderKey and jobProcessName undefined when the backend does not send them', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawSchema({ jobProcessName: undefined, organizationUnitKey: undefined }));
+
+      const result = await service.getSchemaByKey(SCHEMA_KEY, { folderId: EXT_TASK.FOLDER });
+
+      expect(result.folderKey).toBeUndefined();
+      expect(result.jobProcessName).toBeUndefined();
+      expect(result.folderId).toBe(EXT_TASK.FOLDER);
+    });
+
+    it('should leave the keys inside the schema body untouched', async () => {
+      const body = { creationTime: 'user-defined', organizationUnitId: 'user-defined' };
+      mockApiClient.get.mockResolvedValue(createMockRawSchema({ schema: body }));
+
+      const result = await service.getSchemaByKey(SCHEMA_KEY, { folderId: EXT_TASK.FOLDER });
+
+      expect(result.schema).toEqual(body);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TASK_TEST_CONSTANTS.ERROR_TASK_SCHEMA_NOT_FOUND));
+      await expect(service.getSchemaByKey(SCHEMA_KEY, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TASK_TEST_CONSTANTS.ERROR_TASK_SCHEMA_NOT_FOUND);
     });
   });
 
