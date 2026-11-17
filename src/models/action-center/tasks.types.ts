@@ -452,6 +452,8 @@ export interface TaskAppSchemaProperty {
   isList: boolean;
   /** Collection kind when `isList` is true, for example `Array`. Null for a single value. */
   collectionDataType: string | null;
+  /** Name of the property's custom type, when it has one. Null for the built-in types. */
+  customType: string | null;
   /** Whether a value is required to complete the task. */
   required: boolean;
   /** Version of the property within the schema. */

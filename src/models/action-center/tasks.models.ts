@@ -415,7 +415,7 @@ export interface TaskServiceModel {
    *
    * @param taskId - The task to get the schema for
    * @param options - Folder scope (folderId, folderKey, or folderPath), plus optional task details that skip the lookup
-   * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm).
+   * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
    * @example
    * ```typescript
    * const result = await tasks.getSchema(<taskId>, { folderId: <folderId> });
@@ -592,7 +592,7 @@ export interface TaskMethods {
    * An App task's schema has no fields and no outcomes when the caller cannot view apps in the task's folder, when the token lacks the `Apps` or `Apps.Read` scope, or when the task's app is no longer deployed there.
    *
    * @param options - Optional folder scope override (defaults to this task's folder)
-   * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm).
+   * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
    * @experimental
    */
   getSchema(options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null>;
