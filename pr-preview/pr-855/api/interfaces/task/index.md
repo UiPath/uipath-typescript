@@ -412,8 +412,9 @@ Promise resolving to a [TaskGetSchemaResponse](../../type-aliases/TaskGetSchemaR
 
 ```
 const result = await tasks.getSchema(<taskId>, { folderId: <folderId> });
+```
 
-// Or using instance method
+```
 const task = await tasks.getById(<taskId>, {}, <folderId>);
 const result = await task.getSchema();
 ```
