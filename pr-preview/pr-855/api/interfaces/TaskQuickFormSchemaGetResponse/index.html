@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -281,6 +281,8 @@
       
         
       
+        
+      
     
     
     
@@ -453,6 +455,34 @@
     
   
     Helper Methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Declarations
   
 
     
@@ -3865,6 +3895,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extends
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3897,7 +3938,12 @@
 
   <h1>TaskQuickFormSchemaGetResponse</h1>
 
-<p>Schema of a QuickForm task, as returned by <code>getSchema</code>.</p>
+<p>Schema of a QuickForm task, as returned by <code>getSchema</code>: the schema the task
+was created with, same as <code>getSchemaByKey</code> returns for the task's <code>taskSchemaKey</code>.</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../TaskSchemaGetResponse/"><code>TaskSchemaGetResponse</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3909,19 +3955,49 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="name"></a> <code>name</code></td>
+<td><a id="createdtime"></a> <code>createdTime</code></td>
 <td><code>string</code></td>
-<td>Name of the schema.</td>
+<td>Creation timestamp.</td>
+</tr>
+<tr>
+<td><a id="creatorjobkey"></a> <code>creatorJobKey</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Key of the job that registered the schema, if any.</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId</code></td>
+<td><code>number</code></td>
+<td>Id of the folder the schema was registered in.</td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Key of the folder the schema was registered in. Not returned for every tenant.</td>
+</tr>
+<tr>
+<td><a id="jobprocessname"></a> <code>jobProcessName?</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Name of the process run by the job that registered the schema. Not returned for every tenant.</td>
+</tr>
+<tr>
+<td><a id="key"></a> <code>key</code></td>
+<td><code>string</code></td>
+<td>Unique key the schema is registered under (a task's <code>taskSchemaKey</code>).</td>
+</tr>
+<tr>
+<td><a id="name"></a> <code>name</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Human-readable schema name, if one was given.</td>
+</tr>
+<tr>
+<td><a id="processkey"></a> <code>processKey</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Key of the Maestro process the schema was registered from; <code>null</code> for debug runs.</td>
 </tr>
 <tr>
 <td><a id="schema"></a> <code>schema</code></td>
-<td><a href="../TaskQuickFormSchema/"><code>TaskQuickFormSchema</code></a></td>
-<td>The schema the task was created with.</td>
-</tr>
-<tr>
-<td><a id="taskschemakey"></a> <code>taskSchemaKey</code></td>
-<td><code>string</code></td>
-<td>Key the schema is registered under.</td>
+<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td>The schema body (fields, outcomes, etc.).</td>
 </tr>
 <tr>
 <td><a id="type"></a> <code>type</code></td>

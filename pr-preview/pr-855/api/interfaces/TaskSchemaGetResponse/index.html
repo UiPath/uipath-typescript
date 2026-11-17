@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskQuickFormSchemaOutcome/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskSchemaGetResponse/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>TaskQuickFormSchemaOutcome - UiPath TypeScript SDK</title>
+        <title>TaskSchemaGetResponse - UiPath TypeScript SDK</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extended-by" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              TaskQuickFormSchemaOutcome
+              TaskSchemaGetResponse
             
           </span>
         </div>
@@ -268,6 +268,8 @@
   
     
     
+      
+        
       
         
       
@@ -453,6 +455,34 @@
     
   
     Helper Methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Declarations
   
 
     
@@ -3865,6 +3895,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extended-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended by
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3895,9 +3936,13 @@
   
 
 
-  <h1>TaskQuickFormSchemaOutcome</h1>
+  <h1>TaskSchemaGetResponse</h1>
 
-<p>An outcome in the schema of a QuickForm task.</p>
+<p>A task schema (the QuickForm form definition), as returned by <code>getSchemaByKey</code>.</p>
+<h2 id="extended-by">Extended by<a class="headerlink" href="#extended-by" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../TaskQuickFormSchemaGetResponse/"><code>TaskQuickFormSchemaGetResponse</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3909,19 +3954,49 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="id"></a> <code>id</code></td>
+<td><a id="createdtime"></a> <code>createdTime</code></td>
 <td><code>string</code></td>
-<td>Outcome identifier.</td>
+<td>Creation timestamp.</td>
 </tr>
 <tr>
-<td><a id="isprimary"></a> <code>isPrimary?</code></td>
-<td><code>boolean</code></td>
-<td>Whether this is the primary outcome of the form.</td>
+<td><a id="creatorjobkey"></a> <code>creatorJobKey</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Key of the job that registered the schema, if any.</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId</code></td>
+<td><code>number</code></td>
+<td>Id of the folder the schema was registered in.</td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Key of the folder the schema was registered in. Not returned for every tenant.</td>
+</tr>
+<tr>
+<td><a id="jobprocessname"></a> <code>jobProcessName?</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Name of the process run by the job that registered the schema. Not returned for every tenant.</td>
+</tr>
+<tr>
+<td><a id="key"></a> <code>key</code></td>
+<td><code>string</code></td>
+<td>Unique key the schema is registered under (a task's <code>taskSchemaKey</code>).</td>
 </tr>
 <tr>
 <td><a id="name"></a> <code>name</code></td>
-<td><code>string</code></td>
-<td>Outcome name. This is the <code>action</code> to complete the task with.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>Human-readable schema name, if one was given.</td>
+</tr>
+<tr>
+<td><a id="processkey"></a> <code>processKey</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Key of the Maestro process the schema was registered from; <code>null</code> for debug runs.</td>
+</tr>
+<tr>
+<td><a id="schema"></a> <code>schema</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td>The schema body (fields, outcomes, etc.).</td>
 </tr>
 </tbody>
 </table>

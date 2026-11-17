@@ -382,16 +382,16 @@ console.log(task.data);
 
 ### getSchema()
 
-> **getSchema**(`taskId`: `number`, `options?`: `TaskGetSchemaOptions`): `Promise`\<`null` | `TaskSchemaGetResponse`>
+> **getSchema**(`taskId`: `number`, `options?`: `TaskGetSchemaOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
+
+**`Experimental`**
 
 Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.
 
-Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape `schema` has:
+Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape it has:
 
-- `TaskType.App`: `inputs` (read-only), `outputs` (filled in by the user), `inOuts` (pre-filled, editable) and `outcomes`. A property's `name` is its key in the task's `data`.
-- `TaskType.QuickForm`: `fields`, each with a `direction` (input, output or inOut), and `outcomes`. A field's `id` is its key in the task's `data`.
-
-In both shapes, an outcome's `name` is the `action` to pass to `complete()`.
+- `TaskType.App`: `schema` has `inputs` (read-only), `outputs` (filled in by the user), `inOuts` (pre-filled, editable) and `outcomes`. A property's `name` is its key in the task's `data`, and an outcome's `name` is the `action` to pass to `complete()`.
+- `TaskType.QuickForm`: the schema the task was created with, same as `getSchemaByKey()` returns for the task's `taskSchemaKey`. Its `schema` body is returned as it was registered.
 
 An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the `Apps` or `Apps.Read` scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.
 
@@ -404,9 +404,9 @@ The task's type and keys are looked up automatically (one extra read). When call
 
 #### Returns
 
-`Promise`\<`null` | `TaskSchemaGetResponse`>
+`Promise`\<`null` | `TaskGetSchemaResponse`>
 
-Promise resolving to a [TaskSchemaGetResponse](../../type-aliases/TaskSchemaGetResponse/), or null when the task has no schema (task types other than App and QuickForm).
+Promise resolving to a [TaskGetSchemaResponse](../../type-aliases/TaskGetSchemaResponse/), or null when the task has no schema (task types other than App and QuickForm).
 
 #### Examples
 
@@ -419,7 +419,7 @@ const result = await task.getSchema();
 ```
 
 ```
-import { TaskType, TaskQuickFormFieldDirection } from '@uipath/uipath-typescript/tasks';
+import { TaskType } from '@uipath/uipath-typescript/tasks';
 
 const task = await tasks.getById(<taskId>, {}, <folderId>);
 const result = await task.getSchema();
@@ -443,10 +443,45 @@ if (result?.type === TaskType.App) {
 }
 
 if (result?.type === TaskType.QuickForm) {
-  // Editable fields of a QuickForm task
-  const editable = result.schema.fields.filter(
-    (field) => field.direction !== TaskQuickFormFieldDirection.Input
-  );
+  // The schema body, as registered when the task was created
+  console.log(result.name, result.schema);
+}
+```
+
+### getSchemaByKey()
+
+> **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
+
+**`Experimental`**
+
+Gets the schema a QuickForm task was created with.
+
+The key is the `taskSchemaKey` of a QuickForm task, returned by `getAll()`, `getById()`, `getDataById()` and `getDataByKey()`. The folder is only used to check task view permission; it does not have to be the folder the schema was registered in.
+
+#### Parameters
+
+- `key`: `string` — The schema key (a task's `taskSchemaKey`)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskSchemaGetResponse`>
+
+Promise resolving to the schema as a [TaskSchemaGetResponse](../TaskSchemaGetResponse/)
+
+#### Examples
+
+```
+const schema = await tasks.getSchemaByKey('<taskSchemaKey>', { folderId: <folderId> });
+console.log(schema.name, schema.schema);
+```
+
+```
+// Get the schema of a QuickForm task
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+if (task.taskSchemaKey) {
+  const schema = await tasks.getSchemaByKey(task.taskSchemaKey, { folderId: <folderId> });
+  console.log(schema.name, schema.schema);
 }
 ```
 

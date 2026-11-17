@@ -896,22 +896,26 @@ await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Sha
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
 
 Retrieves a single asset by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Asset name to search for
-- `options?`: `AssetGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                    | Description                                                                                                 |
+| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                | Asset name to search for                                                                                    |
+| `options?` | `AssetGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`AssetGetResponse`>
 
 Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -925,6 +929,41 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
 
 // With expand
 await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
+```
+
+#### Call Signature
+
+> **getByName**(`asset`: `AssetResource`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
+
+Retrieves a single asset declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                    | Description                                                                       |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `asset`    | `AssetResource`         | Handle created with `resource.asset()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `AssetGetByNameOptions` | Optional folder override and query parameters (`expand`, `select`)                |
+
+##### Returns
+
+`Promise`\<`AssetGetResponse`>
+
+Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly apiKey = resource.asset({ name: 'ApiKey', folderPath: 'Shared/Finance', type: 'text' });
+}
+
+// anywhere in the project
+await assets.getByName(ProjectResources.apiKey);
 ```
 
 ### updateValue()
@@ -1402,22 +1441,26 @@ const process = await processes.getById(<processId>, <folderId>);
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
 
 Retrieves a single process by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Process name to search for
-- `options?`: `ProcessGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                      | Description                                                                                                 |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                  | Process name to search for                                                                                  |
+| `options?` | `ProcessGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`ProcessGetResponse`>
 
 Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -1431,6 +1474,41 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
 
 // With expand
 await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: 'entryPoints' });
+```
+
+#### Call Signature
+
+> **getByName**(`process`: `ProcessResource`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
+
+Retrieves a single process declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                      | Description                                                                         |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| `process`  | `ProcessResource`         | Handle created with `resource.process()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `ProcessGetByNameOptions` | Optional folder override and query parameters                                       |
+
+##### Returns
+
+`Promise`\<`ProcessGetResponse`>
+
+Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly nightly = resource.process({ name: 'Nightly Sync', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await processes.getByName(ProjectResources.nightly);
 ```
 
 ### start()
@@ -1722,28 +1800,67 @@ const queue = await queues.getByKey('<queueKey>', { folderId: <folderId> });
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
 
 Gets a single queue by name
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Queue name (exact match)
-- `options?`: `QueueGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+| Parameter  | Type                    | Description                                                                |
+| ---------- | ----------------------- | -------------------------------------------------------------------------- |
+| `name`     | `string`                | Queue name (exact match)                                                   |
+| `options?` | `QueueGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options |
 
-#### Returns
+##### Returns
 
 `Promise`\<`QueueGetWithMethodsResponse`>
 
 Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
 
-#### Example
+##### Example
 
 ```
 const queue = await queues.getByName('<queueName>', { folderId: <folderId> });
 
 // Folder scoping also accepts a folder key or path
 const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' });
+```
+
+#### Call Signature
+
+> **getByName**(`queue`: `QueueResource`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Retrieves a single queue declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                    | Description                                                                       |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `queue`    | `QueueResource`         | Handle created with `resource.queue()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `QueueGetByNameOptions` | Optional folder override and query parameters                                     |
+
+##### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly queue = resource.queue({ name: 'InvoiceReview', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await queues.getByName(ProjectResources.queue);
 ```
 
 ### insertItemByName()
@@ -2007,22 +2124,26 @@ const bucket = await buckets.getById(<bucketId>, <folderId>);
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
 
 Retrieves a single orchestrator storage bucket by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Bucket name to search for
-- `options?`: `BucketGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                     | Description                                                                                                 |
+| ---------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                 | Bucket name to search for                                                                                   |
+| `options?` | `BucketGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`BucketGetResponse`>
 
 Promise resolving to a single bucket [BucketGetResponse](../BucketGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -2033,6 +2154,41 @@ await buckets.getByName('MyBucket', { folderKey: '<folderKey>' });
 
 // By folder path
 await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
+```
+
+#### Call Signature
+
+> **getByName**(`bucket`: `BucketResource`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
+
+Retrieves a single storage bucket declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                        |
+| ---------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| `bucket`   | `BucketResource`         | Handle created with `resource.bucket()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `BucketGetByNameOptions` | Optional folder override and query parameters                                      |
+
+##### Returns
+
+`Promise`\<`BucketGetResponse`>
+
+Promise resolving to a single [BucketGetResponse](../BucketGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly bucket = resource.bucket({ name: 'Invoices', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await buckets.getByName(ProjectResources.bucket);
 ```
 
 ### getFileMetaData()
@@ -2794,16 +2950,16 @@ console.log(task.data);
 
 ### getSchema()
 
-> **getSchema**(`taskId`: `number`, `options?`: `TaskGetSchemaOptions`): `Promise`\<`null` | `TaskSchemaGetResponse`>
+> **getSchema**(`taskId`: `number`, `options?`: `TaskGetSchemaOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
+
+**`Experimental`**
 
 Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.
 
-Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape `schema` has:
+Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape it has:
 
-- `TaskType.App`: `inputs` (read-only), `outputs` (filled in by the user), `inOuts` (pre-filled, editable) and `outcomes`. A property's `name` is its key in the task's `data`.
-- `TaskType.QuickForm`: `fields`, each with a `direction` (input, output or inOut), and `outcomes`. A field's `id` is its key in the task's `data`.
-
-In both shapes, an outcome's `name` is the `action` to pass to `complete()`.
+- `TaskType.App`: `schema` has `inputs` (read-only), `outputs` (filled in by the user), `inOuts` (pre-filled, editable) and `outcomes`. A property's `name` is its key in the task's `data`, and an outcome's `name` is the `action` to pass to `complete()`.
+- `TaskType.QuickForm`: the schema the task was created with, same as `getSchemaByKey()` returns for the task's `taskSchemaKey`. Its `schema` body is returned as it was registered.
 
 An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the `Apps` or `Apps.Read` scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.
 
@@ -2816,9 +2972,9 @@ The task's type and keys are looked up automatically (one extra read). When call
 
 #### Returns
 
-`Promise`\<`null` | `TaskSchemaGetResponse`>
+`Promise`\<`null` | `TaskGetSchemaResponse`>
 
-Promise resolving to a [TaskSchemaGetResponse](../../type-aliases/TaskSchemaGetResponse/), or null when the task has no schema (task types other than App and QuickForm).
+Promise resolving to a [TaskGetSchemaResponse](../../type-aliases/TaskGetSchemaResponse/), or null when the task has no schema (task types other than App and QuickForm).
 
 #### Examples
 
@@ -2831,7 +2987,7 @@ const result = await task.getSchema();
 ```
 
 ```
-import { TaskType, TaskQuickFormFieldDirection } from '@uipath/uipath-typescript/tasks';
+import { TaskType } from '@uipath/uipath-typescript/tasks';
 
 const task = await tasks.getById(<taskId>, {}, <folderId>);
 const result = await task.getSchema();
@@ -2855,10 +3011,45 @@ if (result?.type === TaskType.App) {
 }
 
 if (result?.type === TaskType.QuickForm) {
-  // Editable fields of a QuickForm task
-  const editable = result.schema.fields.filter(
-    (field) => field.direction !== TaskQuickFormFieldDirection.Input
-  );
+  // The schema body, as registered when the task was created
+  console.log(result.name, result.schema);
+}
+```
+
+### getSchemaByKey()
+
+> **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
+
+**`Experimental`**
+
+Gets the schema a QuickForm task was created with.
+
+The key is the `taskSchemaKey` of a QuickForm task, returned by `getAll()`, `getById()`, `getDataById()` and `getDataByKey()`. The folder is only used to check task view permission; it does not have to be the folder the schema was registered in.
+
+#### Parameters
+
+- `key`: `string` — The schema key (a task's `taskSchemaKey`)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskSchemaGetResponse`>
+
+Promise resolving to the schema as a [TaskSchemaGetResponse](../TaskSchemaGetResponse/)
+
+#### Examples
+
+```
+const schema = await tasks.getSchemaByKey('<taskSchemaKey>', { folderId: <folderId> });
+console.log(schema.name, schema.schema);
+```
+
+```
+// Get the schema of a QuickForm task
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+if (task.taskSchemaKey) {
+  const schema = await tasks.getSchemaByKey(task.taskSchemaKey, { folderId: <folderId> });
+  console.log(schema.name, schema.schema);
 }
 ```
 
@@ -3865,24 +4056,28 @@ const batchResult = await entity.insertRecords([
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
 Gets entity metadata by entity name with attached operation methods.
 
 Sibling of [getById](#getbyid) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides that resolve resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
 
-#### Parameters
+##### Parameters
 
-- `entityName`: `string` — Name of the entity
-- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+| Parameter    | Type                     | Description                                                                                                           |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `entityName` | `string`                 | Name of the entity                                                                                                    |
+| `options?`   | `EntityGetByNameOptions` | Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**. |
 
-#### Returns
+##### Returns
 
 `Promise`\<`EntityGetResponse`>
 
 Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
-#### Example
+##### Example
 
 ```
 // Get entity metadata by name
@@ -3893,6 +4088,39 @@ const folderEntity = await entities.getByName("Customer", { folderKey: "<folderK
 
 // Call operations directly on the entity
 const records = await entity.getAllRecords();
+```
+
+#### Call Signature
+
+> **getByName**(`entity`: `EntityResource`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+
+Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`   | `EntityResource`         | Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`                                                     |
+| `options?` | `EntityGetByNameOptions` | Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**. |
+
+##### Returns
+
+`Promise`\<`EntityGetResponse`>
+
+Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetResponse/) entity metadata with operation methods
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly customers = resource.entity({ name: 'Customers' });
+}
+
+// anywhere in the project
+const customers = await entities.getByName(ProjectResources.customers);
 ```
 
 ### getCloneJob()

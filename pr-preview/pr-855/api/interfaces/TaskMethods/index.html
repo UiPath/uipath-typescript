@@ -281,6 +281,8 @@
       
         
       
+        
+      
     
     
     
@@ -453,6 +455,34 @@
     
   
     Helper Methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Declarations
   
 
     
@@ -4166,8 +4196,9 @@
 <hr />
 <h3 id="getschema">getSchema()<a class="headerlink" href="#getschema" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getSchema</strong>(<code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskSchemaGetResponse/"><code>TaskSchemaGetResponse</code></a>&gt;</p>
+<p><strong>getSchema</strong>(<code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
 </blockquote>
+<p><strong><code>Experimental</code></strong></p>
 <p>Gets this task's schema: the fields it holds and the outcomes it can be completed with.</p>
 <p>Supported for App tasks and QuickForm tasks; the <code>type</code> of the response tells which shape <code>schema</code> has.
 An App task's schema has no fields and no outcomes when the caller cannot view apps in the task's folder, when the token lacks the <code>Apps</code> or <code>Apps.Read</code> scope, or when the task's app is no longer deployed there.</p>
@@ -4189,8 +4220,8 @@ An App task's schema has no fields and no outcomes when the caller cannot view a
 </tbody>
 </table>
 <h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskSchemaGetResponse/"><code>TaskSchemaGetResponse</code></a>&gt;</p>
-<p>Promise resolving to a <a href="../../type-aliases/TaskSchemaGetResponse/">TaskSchemaGetResponse</a>, or null when the task has no schema (task types other than App and QuickForm).</p>
+<p><code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
+<p>Promise resolving to a <a href="../../type-aliases/TaskGetSchemaResponse/">TaskGetSchemaResponse</a>, or null when the task has no schema (task types other than App and QuickForm).</p>
 <hr />
 <h3 id="reassign">reassign()<a class="headerlink" href="#reassign" title="Permanent link">&para;</a></h3>
 <blockquote>

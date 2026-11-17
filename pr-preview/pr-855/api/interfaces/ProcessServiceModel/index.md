@@ -91,22 +91,26 @@ const process = await processes.getById(<processId>, <folderId>);
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
 
 Retrieves a single process by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Process name to search for
-- `options?`: `ProcessGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                      | Description                                                                                                 |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                  | Process name to search for                                                                                  |
+| `options?` | `ProcessGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`ProcessGetResponse`>
 
 Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -120,6 +124,41 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
 
 // With expand
 await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: 'entryPoints' });
+```
+
+#### Call Signature
+
+> **getByName**(`process`: `ProcessResource`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
+
+Retrieves a single process declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                      | Description                                                                         |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| `process`  | `ProcessResource`         | Handle created with `resource.process()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `ProcessGetByNameOptions` | Optional folder override and query parameters                                       |
+
+##### Returns
+
+`Promise`\<`ProcessGetResponse`>
+
+Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly nightly = resource.process({ name: 'Nightly Sync', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await processes.getByName(ProjectResources.nightly);
 ```
 
 ### start()
