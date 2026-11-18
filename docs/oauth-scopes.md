@@ -234,12 +234,12 @@ Creating a validation action and polling its result both go through the [Documen
 
 ## Functions
 
-Finding a function reads the folder's HTTP triggers, which needs `OR.Jobs` or `OR.Jobs.Read`. Calling the function's HTTP endpoint needs `OR.Jobs` or `OR.Jobs.Write`. Request these scopes explicitly.
+Finding a function reads the folder's HTTP triggers, which needs `OR.Jobs.Read`. Calling the function's HTTP endpoint needs `OR.Jobs.Write`. Request these scopes explicitly.
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
-| `invoke()` | `OR.Jobs` or `OR.Jobs.Read`, `OR.Jobs` or `OR.Jobs.Write`, `OR.Folders` or `OR.Folders.Read` |
+| `getAll()` | `OR.Jobs.Read` |
+| `invoke()` | `OR.Jobs.Read`, `OR.Jobs.Write`, `OR.Folders.Read` |
 
 ## Governance
 
