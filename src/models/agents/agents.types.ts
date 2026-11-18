@@ -555,3 +555,148 @@ export interface AgentGetUnitConsumptionSummaryResponse {
  * future per-method filters can be added without a breaking change.
  */
 export interface AgentGetUnitConsumptionSummaryOptions extends AgentGetSummaryOptions {}
+
+/**
+ * Time unit for the buckets of {@link AgentGetRunsTimelineResponse}.
+ */
+export enum AgentRunsTimelineBucket {
+  /** One bucket per hour. The window can cover at most 7 days. */
+  Hour = 'Hour',
+  /** One bucket per day. The window can cover at most 8 weeks. */
+  Day = 'Day',
+}
+
+/**
+ * Named subsets of jobs reported next to the totals of {@link AgentGetRunsTimelineResponse}.
+ */
+export enum AgentRunsSegment {
+  /** Chat turns of conversational agents */
+  Conversational = 'conversational',
+}
+
+/**
+ * Job counts by outcome. `total` always equals `successful + faulted + stopped + unfinished`.
+ */
+export interface AgentRunsJobCounts {
+  /** All jobs in scope */
+  total: number;
+  /** Jobs that ended successfully */
+  successful: number;
+  /** Jobs that ended faulted */
+  faulted: number;
+  /** Jobs cancelled by a user */
+  stopped: number;
+  /** Jobs still pending, running, stopping, terminating, suspended or resumed at read time */
+  unfinished: number;
+}
+
+/**
+ * Job duration percentiles in seconds, from job start to job end. Only finished jobs count; each percentile is
+ * `undefined` when no job finished.
+ */
+export interface AgentRunsDurations {
+  /** Median duration in seconds */
+  p50?: number;
+  /** 95th percentile duration in seconds */
+  p95?: number;
+}
+
+/**
+ * Job statistics over a set of agent jobs.
+ */
+export interface AgentRunsStats {
+  /** Job counts by outcome */
+  jobs: AgentRunsJobCounts;
+  /**
+   * Faulted jobs as a percentage (0-100) of successful plus faulted jobs. On the totals and buckets, conversational
+   * jobs are left out, so it does not follow from `jobs`; within a segment it rates that segment's own jobs.
+   */
+  errorRate: number;
+  /** Number of distinct agents with at least one job */
+  activeAgents: number;
+  /** Job duration percentiles */
+  durationSeconds: AgentRunsDurations;
+}
+
+/**
+ * Job statistics for all agent jobs, with optional per-segment statistics.
+ */
+export interface AgentRunsSummary extends AgentRunsStats {
+  /** Statistics per requested segment, keyed by segment name. `undefined` when no segment was requested. */
+  segments?: Partial<Record<AgentRunsSegment, AgentRunsStats>>;
+}
+
+/**
+ * Job statistics for one time bucket.
+ */
+export interface AgentRunsBucket extends AgentRunsSummary {
+  /** Bucket start (ISO 8601), with the offset of the requested time zone */
+  startTime: string;
+}
+
+/**
+ * One of the agents with the most jobs in the window.
+ */
+export interface AgentRunsTopAgent {
+  /** Process key (GUID). The same agent deployed in two folders has two process keys. */
+  processKey: string;
+  /** Agent display name, taken from its most recent job */
+  name: string;
+  /** Job counts by outcome */
+  jobs: AgentRunsJobCounts;
+  /**
+   * Faulted jobs as a percentage (0-100) of successful plus faulted jobs, leaving out conversational jobs.
+   * `undefined` when the agent has no finished non-conversational job.
+   */
+  errorRate?: number;
+  /** Job duration percentiles */
+  durationSeconds: AgentRunsDurations;
+}
+
+/**
+ * Options for requesting the top agents in {@link AgentGetRunsTimelineOptions}.
+ */
+export interface AgentRunsTopAgentsOptions {
+  /**
+   * Number of agents to return, ranked by job count (1-50).
+   * @default 5
+   */
+  limit?: number;
+}
+
+/**
+ * Options for getting the agent runs timeline.
+ */
+export interface AgentGetRunsTimelineOptions extends Pick<AgentFilterOptions, 'folderKeys'> {
+  /** Bucket the window by hour or day. Omit to get only the window totals. */
+  bucket?: AgentRunsTimelineBucket;
+  /**
+   * IANA time zone (e.g. `Asia/Kolkata`) the buckets are aligned to and reported in.
+   * @default 'UTC'
+   */
+  timeZone?: string;
+  /** Segments to report next to the totals and in every bucket. */
+  segments?: AgentRunsSegment[];
+  /** Include the agents with the most jobs in the window. Omit to leave them out. */
+  topAgents?: AgentRunsTopAgentsOptions;
+}
+
+/**
+ * Response from getting the agent runs timeline.
+ */
+export interface AgentGetRunsTimelineResponse {
+  /** Window start (ISO 8601, UTC) */
+  startTime: string;
+  /** Window end (ISO 8601, UTC) */
+  endTime: string;
+  /** Bucket unit. `undefined` when no bucket was requested. */
+  bucket?: AgentRunsTimelineBucket;
+  /** IANA time zone the buckets are reported in */
+  timeZone: string;
+  /** Job statistics over the whole window */
+  summary: AgentRunsSummary;
+  /** Job statistics per time bucket, oldest first. Buckets with no jobs are omitted. `undefined` when no bucket was requested. */
+  buckets?: AgentRunsBucket[];
+  /** Agents with the most jobs, most first. `undefined` when top agents were not requested. */
+  topAgents?: AgentRunsTopAgent[];
+}

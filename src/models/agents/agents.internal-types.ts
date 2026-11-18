@@ -1,3 +1,13 @@
+import type {
+  AgentRunsDurations,
+  AgentRunsJobCounts,
+  AgentRunsSegment,
+  AgentRunsStats,
+  AgentRunsSummary,
+  AgentRunsTimelineBucket,
+  AgentRunsTopAgent,
+} from './agents.types';
+
 /**
  * Raw per-agent summary entry exactly as the agent-summary API returns it.
  */
@@ -37,4 +47,33 @@ export interface RawAgentSummaryPeriod {
 export interface RawAgentGetSummaryResponse {
   currentPeriodSummary: RawAgentSummaryPeriod;
   lookbackPeriodSummary?: RawAgentSummaryPeriod;
+}
+
+/**
+ * Raw runs-timeline bucket exactly as the API returns it, with its start under `bucket`.
+ */
+export interface RawAgentRunsBucket {
+  bucket: string;
+  jobs: AgentRunsJobCounts;
+  errorRate: number;
+  activeAgents: number;
+  durationSeconds: AgentRunsDurations;
+  segments?: Partial<Record<AgentRunsSegment, AgentRunsStats>>;
+}
+
+/**
+ * Raw runs-timeline response envelope exactly as the API returns it.
+ */
+export interface RawAgentGetRunsTimelineResponse {
+  data: {
+    startTime: string;
+    endTime: string;
+    bucket?: AgentRunsTimelineBucket;
+    timeZone: string;
+    summary: AgentRunsSummary;
+    buckets?: RawAgentRunsBucket[];
+    topAgents?: AgentRunsTopAgent[];
+  };
+  hasError: boolean;
+  errorMessage?: string;
 }

@@ -19,6 +19,8 @@ import type {
   AgentGetUnitConsumptionSummaryResponse,
   AgentListItem,
   AgentGetAllOptions,
+  AgentGetRunsTimelineOptions,
+  AgentGetRunsTimelineResponse,
 } from './agents.types';
 import type {
   HasPaginationOptions,
@@ -505,4 +507,62 @@ export interface AgentServiceModel {
     endTime: Date,
     options?: AgentGetUnitConsumptionSummaryOptions,
   ): Promise<AgentGetUnitConsumptionSummaryResponse>;
+
+  /**
+   * Retrieves agent job statistics over the requested window: job counts by outcome, error rate, active agents,
+   * and median (P50) and 95th-percentile (P95) job duration. Optionally breaks the window into hourly or daily
+   * buckets in a given time zone, reports conversational jobs as a separate segment, and ranks the agents with the
+   * most jobs.
+   *
+   * Only folders where you can view traces are counted; `folderKeys` outside them are ignored.
+   *
+   * @param startTime - Inclusive lower bound for the query window, at most 90 days ago
+   * @param endTime - Exclusive upper bound for the query window. The window covers at most 7 days with hourly
+   * buckets and at most 8 weeks otherwise.
+   * @param options - Optional bucketing, segments, top agents and folder scope
+   * @returns Promise resolving to {@link AgentGetRunsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Totals for the first week of May 2025
+   * const result = await agents.getRunsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-05-08T00:00:00Z'),
+   * );
+   * console.log(`Jobs: ${result.summary.jobs.total}, error rate: ${result.summary.errorRate}%`);
+   * ```
+   * @example
+   * ```typescript
+   * import { Agents, AgentRunsSegment, AgentRunsTimelineBucket } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Daily buckets in local time, with conversational jobs split out and the top 10 agents
+   * const result = await agents.getRunsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-05-08T00:00:00Z'),
+   *   {
+   *     bucket: AgentRunsTimelineBucket.Day,
+   *     timeZone: 'Europe/Bucharest',
+   *     segments: [AgentRunsSegment.Conversational],
+   *     topAgents: { limit: 10 },
+   *     folderKeys: ['<folderKey1>'],
+   *   },
+   * );
+   * for (const bucket of result.buckets ?? []) {
+   *   console.log(`${bucket.startTime}: ${bucket.jobs.total} jobs, ${bucket.jobs.faulted} faulted`);
+   * }
+   * for (const agent of result.topAgents ?? []) {
+   *   console.log(`${agent.name}: ${agent.jobs.total} jobs, median ${agent.durationSeconds.p50}s`);
+   * }
+   * ```
+   */
+  getRunsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetRunsTimelineOptions,
+  ): Promise<AgentGetRunsTimelineResponse>;
 }
