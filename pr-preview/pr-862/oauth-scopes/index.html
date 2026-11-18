@@ -5674,7 +5674,7 @@
 </tbody>
 </table>
 <h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h2>
-<p>Finding a function reads the folder's HTTP triggers, which needs <code>OR.Jobs</code> or <code>OR.Jobs.Read</code>. Calling the function's HTTP endpoint needs <code>OR.Jobs</code> or <code>OR.Jobs.Write</code>. Request these scopes explicitly.</p>
+<p>Finding a function reads the folder's HTTP triggers, which needs <code>OR.Jobs.Read</code>. Calling the function's HTTP endpoint needs <code>OR.Jobs.Write</code>. Request these scopes explicitly.</p>
 <table>
 <thead>
 <tr>
@@ -5685,11 +5685,11 @@
 <tbody>
 <tr>
 <td><code>getAll()</code></td>
-<td><code>OR.Jobs</code> or <code>OR.Jobs.Read</code></td>
+<td><code>OR.Jobs.Read</code></td>
 </tr>
 <tr>
 <td><code>invoke()</code></td>
-<td><code>OR.Jobs</code> or <code>OR.Jobs.Read</code>, <code>OR.Jobs</code> or <code>OR.Jobs.Write</code>, <code>OR.Folders</code> or <code>OR.Folders.Read</code></td>
+<td><code>OR.Jobs.Read</code>, <code>OR.Jobs.Write</code>, <code>OR.Folders.Read</code></td>
 </tr>
 </tbody>
 </table>
