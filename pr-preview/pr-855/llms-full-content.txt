@@ -3003,12 +3003,14 @@ if (result?.type === TaskType.App) {
     value: task.data?.[property.name],
   }));
 
-  // Complete with one of the schema's outcomes
-  await task.complete({
-    type: TaskType.App,
-    data: { ...task.data, comment: "Looks good" },
-    action: outcomes[0].name,
-  });
+  // Complete with one of the schema's outcomes (the schema has none when the caller cannot read it)
+  if (outcomes.length > 0) {
+    await task.complete({
+      type: TaskType.App,
+      data: { ...task.data, comment: "Looks good" },
+      action: outcomes[0].name,
+    });
+  }
 }
 
 if (result?.type === TaskType.QuickForm) {
