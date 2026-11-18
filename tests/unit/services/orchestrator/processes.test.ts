@@ -26,7 +26,7 @@ import { DEBUG_CONTEXT_KEY } from '../../../../src/core/context/execution';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 import { RequestOptions } from '../../../../src/models/common';
-import { NotFoundError, ValidationError } from '../../../../src/core/errors';
+import { AuthenticationError, NotFoundError, ValidationError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -306,6 +306,27 @@ describe('ProcessService Unit Tests', () => {
 
       const [, , options] = mockApiClient.post.mock.calls[0];
       expect(options.headers).not.toHaveProperty(JOB_KEY);
+    });
+
+    it('carries the job key Action Center delivers with the first token of the session', async () => {
+      const { instance, executionContext } = createServiceTestDependencies();
+      mockApiClient.getValidToken.mockImplementation(async () => {
+        executionContext.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+        return TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN;
+      });
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      await new ProcessService(instance).start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      const [, , options] = mockApiClient.post.mock.calls[0];
+      expect(options.headers[JOB_KEY]).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+    });
+
+    it('rejects without calling StartJobs when no token can be obtained', async () => {
+      mockApiClient.getValidToken.mockRejectedValue(new AuthenticationError({ message: TEST_CONSTANTS.ERROR_MESSAGE }));
+
+      await expect(service.start(startRequest, TEST_CONSTANTS.FOLDER_ID)).rejects.toBeInstanceOf(AuthenticationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
   });
 
