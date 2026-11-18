@@ -201,7 +201,7 @@ describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (m
     it('should return the schema of an App task', async () => {
       const { tasks } = getServices();
 
-      const allTasks = await tasks.getAll({ filter: "Type eq 'AppTask' and IsDeleted eq false", pageSize: 5 });
+      const allTasks = await tasks.getAll({ filter: "type eq 'AppTask' and isDeleted eq false", pageSize: 5 });
       if (allTasks.items.length === 0) {
         throw new Error('No App task available in the test environment');
       }
