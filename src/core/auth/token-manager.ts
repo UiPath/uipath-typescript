@@ -383,8 +383,8 @@ export class TokenManager {
     const token = await response.json() as AuthToken;
 
     // The session ended or was replaced while the request was in flight, by a logout or a new sign-in.
-    // The request had already spent the refresh token it sent, so the one it returned is live: revoke
-    // that instead of letting it bring the old session back.
+    // The answer must not bring the old session back, and the refresh token in it is revoked: where
+    // Identity issues a new one on every refresh, logout revoked only the one before it.
     if (this.currentToken?.refreshToken !== tokenInfo.refreshToken) {
       if (token.refresh_token) {
         void this.revokeRefreshToken(token.refresh_token);

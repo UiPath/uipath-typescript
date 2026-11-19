@@ -192,7 +192,7 @@ describe('AuthService logout refresh token revocation (browser)', () => {
       return new Promise<Response>((resolve) => { finishRenewal = resolve; });
     });
     const service = createSignedInService(oauthConfig, { expiresAt: new Date(Date.now() - 1000) });
-    // The renewal redeems the session's refresh token, which is spent from that moment on.
+    // A renewal is under way when the user logs out, and Identity answers it with a new refresh token.
     const renewal = service.getTokenManager().getValidToken();
 
     service.logout();
@@ -203,7 +203,7 @@ describe('AuthService logout refresh token revocation (browser)', () => {
     await expect(renewal).rejects.toBeInstanceOf(AuthenticationError);
     expect(service.hasValidToken()).toBe(false);
     expect(memorySessionStorage.entries.has(TOKEN_STORAGE_KEY)).toBe(false);
-    // The token the renewal returned is the live one, so it is revoked too.
+    // Logout revoked the refresh token it knew; the one the renewal returned is revoked as well.
     expect(revokedTokens(fetchSpy)).toEqual([REFRESH_TOKEN, RENEWED_REFRESH_TOKEN]);
   });
 
