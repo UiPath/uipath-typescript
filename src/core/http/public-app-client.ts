@@ -71,7 +71,7 @@ export class PublicAppClient {
 
   /**
    * Reads a job, returning Orchestrator's response as sent. 404 (→ error) when this session did not start the job
-   * and the job's process is not one the app declared as shared.
+   * and the job's process is not open to all.
    */
   async getJob(jobKey: string): Promise<unknown> {
     return this.request('GET', `/orchestrator/jobs/${encodeURIComponent(jobKey)}/output`);
@@ -82,12 +82,12 @@ export class PublicAppClient {
     return this.request('POST', `${this.entityRecords(entityKey)}`, data);
   }
 
-  /** Reads one record; 404 unless this session created it or the entity is shared. */
+  /** Reads one record; 404 unless this session created it or the entity is open to all. */
   async getRecord(entityKey: string, recordId: string): Promise<unknown> {
     return this.request('GET', `${this.entityRecords(entityKey)}/${encodeURIComponent(recordId)}`);
   }
 
-  /** Lists records of a shared entity; 403 for an entity that isn't shared. */
+  /** Lists records of an entity open to all; 403 otherwise. */
   async listRecords(entityKey: string, page: { start?: number; limit?: number } = {}): Promise<unknown> {
     const query = new URLSearchParams();
     if (page.start !== undefined) query.set('start', String(page.start));

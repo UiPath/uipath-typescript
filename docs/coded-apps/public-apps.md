@@ -3,7 +3,7 @@
 A **public** coded app opens without a sign-in. The visitor has no UiPath account and no token: the Apps service holds the app's identity (its confidential external application) and makes each call on the app's behalf, limited to the resources the app declares in its bindings.
 
 !!! warning "Preview"
-    Public coded apps are in preview and need the feature turned on for your organization.
+    Public coded apps are in preview. They are built and deployed through Solutions only.
 
 ---
 
@@ -25,10 +25,10 @@ The visitor's session is created on the first call and renewed automatically whe
 | Call | Notes |
 |---|---|
 | `processes.start(...)` | Starts one job as the app. |
-| `jobs.getOutput(jobKey)` | Only for jobs this session started, or of a process declared shared. |
+| `jobs.getOutput(jobKey)` | Only for jobs this session started, or of a process open to all. |
 | `entities.insertRecord({ name }, data)` | The record belongs to this session. |
-| `entities.getRecordByName(name, recordId)` | Only for records this session created, or of a shared entity. |
-| `entities.getRecordsByName(name, options?)` | Only for a shared entity. Supports `pageSize`, `jumpToPage` and `cursor`. |
+| `entities.getRecordByName(name, recordId)` | Only for records this session created, or of an entity open to all. |
+| `entities.getRecordsByName(name, options?)` | Only for an entity open to all. Supports `pageSize`, `jumpToPage` and `cursor`. |
 | `buckets.uploadFile({ name }, fileName, content, options?)` | The service picks the stored path and returns it as `path`, so an upload never overwrites another file. |
 
 Any other call throws a `ValidationError` before it reaches the network.
@@ -50,16 +50,43 @@ const { path } = await sdk.buckets.uploadFile({ name: 'Uploads' }, 'report.pdf',
 
 Pass the same `name` and `folderPath` the binding was declared with. Solution overrides are applied by the service, so the code does not change when an admin points a binding at another resource.
 
-## Sharing reads across visitors
+## Who can read what
 
-By default each visitor only sees what their own session created. To let every visitor read a resource, declare it in `uipath.json`:
+Set per resource in `uipath.json` who may read it, using the binding key:
 
 ```json
 {
-  "publicApp": {
-    "shared": [{ "type": "entity", "key": "Orders" }]
-  }
+  "scope": "OR.Execution OR.Jobs DataFabric.Data.Read DataFabric.Data.Write",
+  "access": [
+    { "resource": "entity", "key": "Orders.Shared", "mode": "session" },
+    { "resource": "process", "key": "Invoices.Shared", "mode": "all" }
+  ]
 }
 ```
 
-Writes are never shared.
+- `session`: only the visitor who created the record or started the job can read it.
+- `all`: every visitor can read it.
+
+List every resource the app reads, so who can read it doesn't depend on the platform default. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.
+
+`scope` must list what the app calls and include `OR.Execution`.
+
+## Deploying
+
+A public app lives in a solution and is deployed with it, in a folder on the tenant feed such as **Shared**. At deploy, set the app's runtime auth mode to **Application**, pick a **confidential** external application with application scopes for everything the app calls, and enter its client secret. The same package deploys as a sign-in app with the auth mode set to **User**.
+
+From the CLI:
+
+```bash
+uip solution deploy config get "<Solution>" -d config.json
+uip solution deploy config set config.json <app> routingName <routing-name>
+uip solution deploy config set config.json <app> externalClientId "<external app id>"
+uip solution deploy config set config.json <app> runtimeAuthMode application
+uip solution deploy config set config.json <app> clientSecret "$APP_CLIENT_SECRET"
+uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-version 1.0.0 \
+  --folder-name "<Solution>" --parent-folder-path "Shared" --config-file config.json
+```
+
+Keep `config.json` out of source control: it holds the secret. See [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution) for building, packing and publishing the solution.
+
+For Data Fabric entities, give the external app a role in the deployment folder with Entity Records View and Create, for example **Automation User**.

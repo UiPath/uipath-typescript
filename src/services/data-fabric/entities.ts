@@ -1247,7 +1247,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, downstreamOptions);
   }
 
-  // Public apps can only list a shared entity. Offset paging maps onto the Apps service's start/limit.
+  // Public apps can only list an entity open to all. Offset paging maps onto the Apps service's start/limit.
   private async getPublicAppRecords(
     entityName: string,
     options?: EntityGetAllRecordsOptions,
