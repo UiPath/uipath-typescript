@@ -222,7 +222,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       : (firstArg as ProcessStartRequest).inputArguments;
 
     const started = (await this.publicApp!.startProcess(
-      publicBindingKey(name, options?.folderPath),
+      publicBindingKey(name, (firstArg as { folderPath?: string }).folderPath ?? options?.folderPath),
       inputArguments,
     )) as CollectionResponse<ProcessStartResponse> | undefined;
     return (started?.value ?? []).map(process =>

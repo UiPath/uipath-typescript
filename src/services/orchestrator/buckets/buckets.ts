@@ -275,7 +275,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       if (!name) {
         throw new ValidationError({ message: 'Buckets.uploadFile: a public app uploads to a bucket by its binding name (`{ name }`), not by id.' });
       }
-      const { path: storedPath } = await this.publicApp.uploadFile(publicBindingKey(name, folderPath), resolvedPath, resolvedContent);
+      const { path: storedPath } = await this.publicApp.uploadFile(publicBindingKey(name, (bucketIdOrRef as { folderPath?: string }).folderPath ?? folderPath), resolvedPath, resolvedContent);
       return { success: true, statusCode: 200, path: storedPath };
     }
 

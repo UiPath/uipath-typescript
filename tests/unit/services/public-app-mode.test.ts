@@ -6,6 +6,7 @@ import { EntityService } from '../../../src/services/data-fabric/entities';
 import { AssetService } from '../../../src/services/orchestrator/assets';
 import { ValidationError } from '../../../src/core/errors';
 import { PUBLIC_APP_UNSUPPORTED_CALL } from '../../../src/core/http/api-client';
+import { resource } from '../../../src/resources';
 
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
@@ -116,6 +117,20 @@ describe('public coded app mode', () => {
 
     expect(result).toEqual({ success: true, statusCode: 200, path: 'report_abc.pdf' });
     expect(fetchMock.mock.calls[0][0]).toBe(`${routes}/orchestrator/buckets/Uploads.Shared/files?fileName=report.pdf`);
+  });
+
+  it('takes the folder from a declared resource handle for processes and buckets', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json({ value: [{ Key: 'J-1' }] }))
+      .mockResolvedValueOnce(json({ path: 'report_abc.pdf' }));
+
+    await new ProcessService(sdk).start(resource.process({ name: 'Invoices', folderPath: 'Shared' }), { inputArguments: '{}' });
+    await new BucketService(sdk).uploadFile(resource.bucket({ name: 'Uploads', folderPath: 'Shared' }), 'report.pdf', new Blob(['x']));
+
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      `${routes}/orchestrator/processes/Invoices.Shared/jobs`,
+      `${routes}/orchestrator/buckets/Uploads.Shared/files?fileName=report.pdf`,
+    ]);
   });
 
   it('rejects a bucket by id', async () => {
