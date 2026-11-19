@@ -205,14 +205,6 @@ function toEntityCloneJob(raw: RawEntityCloneJob): EntityCloneJob {
   };
 }
 
-function publicEntityName(entityRef: EntityRef, callerLabel: string): string {
-  const { name } = (entityRef ?? {}) as { name?: string };
-  if (!name) {
-    throw new ValidationError({ message: `${callerLabel}: a public app reaches an entity by its binding name (\`{ name }\`), not by id.` });
-  }
-  return name;
-}
-
 /**
  * Service for interacting with the Data Fabric Entity API
  */
@@ -281,7 +273,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.InsertRecord')
   async insertRecord(entityRef: EntityRef, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
     if (this.publicApp) {
-      return (await this.publicApp.insertRecord(publicEntityName(entityRef, 'Entities.insertRecord'), data)) as EntityInsertResponse;
+      const { name } = (entityRef ?? {}) as { name?: string };
+      if (!name) {
+        throw new ValidationError({ message: 'Entities.insertRecord: a public app reaches an entity by its binding name (`{ name }`), not by id.' });
+      }
+      return (await this.publicApp.insertRecord(name, data)) as EntityInsertResponse;
     }
     const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.insertRecord');
     return this.insertRecordImpl(byId, identifier, data, options);
