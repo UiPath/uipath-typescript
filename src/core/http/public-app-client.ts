@@ -8,6 +8,7 @@ const PUBLIC_ROUTE_PREFIX = 'integrations/codedapp/';
 
 export const PUBLIC_APP_ENDPOINTS = {
   ENTITY_RECORDS: (entityName: string) => `${PUBLIC_ROUTE_PREFIX}datafabric/entities/${encodeURIComponent(entityName)}/records`,
+  START_JOB: (bindingKey: string) => `${PUBLIC_ROUTE_PREFIX}orchestrator/processes/${encodeURIComponent(bindingKey)}/jobs`,
   JOB_OUTPUT: (jobKey: string) => `${PUBLIC_ROUTE_PREFIX}orchestrator/jobs/${encodeURIComponent(jobKey)}/output`,
   ENTITY_RECORD: (entityName: string, recordId: string) =>
     `${PUBLIC_ROUTE_PREFIX}datafabric/entities/${encodeURIComponent(entityName)}/records/${encodeURIComponent(recordId)}`,
@@ -31,10 +32,6 @@ export class PublicAppClient {
 
   serves(path: string): boolean {
     return path.startsWith(PUBLIC_ROUTE_PREFIX);
-  }
-
-  async startProcess(bindingKey: string, inputArguments?: unknown): Promise<unknown> {
-    return this.request('POST', `${PUBLIC_ROUTE_PREFIX}orchestrator/processes/${encodeURIComponent(bindingKey)}/jobs`, { body: { inputArguments } });
   }
 
   async uploadFile(bucketKey: string, fileName: string, content: Blob | Uint8Array<ArrayBuffer> | File): Promise<{ path: string }> {

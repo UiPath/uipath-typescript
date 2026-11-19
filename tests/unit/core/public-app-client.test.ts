@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PublicAppClient, publicBindingKey } from '@/core/http/public-app-client';
+import { PUBLIC_APP_ENDPOINTS, PublicAppClient, publicBindingKey } from '@/core/http/public-app-client';
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -17,10 +17,10 @@ describe('PublicAppClient', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
-  it('startProcess POSTs to the Apps origin with the app key and credentials', async () => {
+  it('POSTs to the Apps route with the app key and credentials', async () => {
     fetchMock.mockResolvedValueOnce(json(200, { value: [{ Key: 'J-1', State: 'Pending' }] }));
 
-    const started = await client.startProcess('Invoices.Shared', '{"a":1}');
+    const started = await client.request('POST', PUBLIC_APP_ENDPOINTS.START_JOB('Invoices.Shared'), { body: { inputArguments: '{"a":1}' } });
 
     expect(started).toEqual({ value: [{ Key: 'J-1', State: 'Pending' }] });
     const [url, init] = fetchMock.mock.calls[0];
@@ -84,7 +84,7 @@ describe('PublicAppClient', () => {
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
       .mockResolvedValueOnce(json(200, { value: [{ Key: 'J-2' }] }));
 
-    const started = await client.startProcess('Invoices.Shared');
+    const started = await client.request('POST', PUBLIC_APP_ENDPOINTS.START_JOB('Invoices.Shared'));
 
     expect(started).toEqual({ value: [{ Key: 'J-2' }] });
     expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -98,7 +98,7 @@ describe('PublicAppClient', () => {
       .mockResolvedValueOnce(new Response(null, { status: 401 }))
       .mockResolvedValueOnce(new Response(null, { status: 404 }));
 
-    await expect(client.startProcess('Invoices.Shared')).rejects.toBeDefined();
+    await expect(client.request('POST', PUBLIC_APP_ENDPOINTS.START_JOB('Invoices.Shared'))).rejects.toBeDefined();
   });
 
   it('surfaces a 404 when the session cannot read the job', async () => {
