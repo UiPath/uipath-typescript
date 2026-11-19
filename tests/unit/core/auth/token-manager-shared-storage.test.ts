@@ -524,7 +524,7 @@ describe('TokenManager — token storage', () => {
     });
 
     it('uses the session another tab renewed first instead of ending it, without the Web Locks API', async () => {
-      // No lock, so both tabs redeem the same refresh token: Identity accepts the first and rejects the second.
+      // No lock, so both tabs redeem the same refresh token. An Identity that accepts each one once takes the first and rejects the second.
       vi.stubGlobal('navigator', {});
       const fetchSpy = vi.spyOn(globalThis, 'fetch')
         .mockImplementationOnce(async () => renewedResponse())

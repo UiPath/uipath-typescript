@@ -414,9 +414,10 @@ export class TokenManager {
   }
 
   /**
-   * Runs a refresh while holding a lock all tabs of the app share, so that two tabs never redeem the
-   * same refresh token: Identity accepts each one only once. With the per-tab store, or in a browser
-   * without the Web Locks API, the refresh just runs.
+   * Runs a refresh while holding a lock all tabs of the app share, so that tabs renew one at a time
+   * and the next one finds the renewed session instead of asking again. Where Identity issues a new
+   * refresh token on every refresh, it also keeps two tabs from redeeming the same one. With the
+   * per-tab store, or in a browser without the Web Locks API, the refresh just runs.
    */
   private async _withRefreshLock(refresh: () => Promise<AuthToken>): Promise<AuthToken> {
     const locks = this.sharedAcrossTabs ? globalThis.navigator?.locks : undefined;
