@@ -44,7 +44,7 @@ import {
   taskTypeLabel,
   extractServerMessage,
 } from '../taskUtils'
-import { buildCompletion, loadTaskForm, saveTaskDraft } from '../taskSchema'
+import { buildCompletion, loadTaskForm } from '../taskSchema'
 import type { TaskFormBundle, TaskFormOutcome } from '../taskSchema'
 import { buildEmbedTaskUrl, buildTaskUrl } from '../taskUrl'
 import { TaskForm, ValueView } from './TaskForm'
@@ -71,7 +71,6 @@ type Sub = 'assign' | 'reassign' | 'complete' | null
  * Re-runs whenever the task object changes, i.e. after every `useTask` reload.
  */
 function useTaskForm(task: TaskGetResponse | null) {
-  const { sdk } = useAuth()
   const [bundle, setBundle] = useState<TaskFormBundle | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -82,7 +81,7 @@ function useTaskForm(task: TaskGetResponse | null) {
     }
     let alive = true
     setLoading(true)
-    loadTaskForm(sdk, task)
+    loadTaskForm(task)
       .then((b) => {
         if (alive) setBundle(b)
       })
@@ -92,7 +91,7 @@ function useTaskForm(task: TaskGetResponse | null) {
     return () => {
       alive = false
     }
-  }, [sdk, task])
+  }, [task])
 
   return { bundle, loading }
 }
@@ -100,10 +99,10 @@ function useTaskForm(task: TaskGetResponse | null) {
 /**
  * Task detail sheet. Three tabs:
  *
- *  - **Form** (default) — a native form built from the task's schema. App tasks
- *    (coded and low-code action apps) get theirs from `GetAppTaskByKey`, Quick
- *    Form tasks from `TaskSchemas/GetByKey`. Outcomes complete the task via the
- *    task-attached `complete()`; **Save draft** uses `Tasks.saveData`. Tasks
+ *  - **Form** (default) — a native form built from the task's schema, which
+ *    `task.getSchema()` returns for App tasks (coded and low-code action apps)
+ *    and Quick Form tasks. Outcomes complete the task via the task-attached
+ *    `complete()`; **Save draft** uses the task-attached `saveData()`. Tasks
  *    without a schema fall back to a key/value view and the free-text Complete.
  *  - **Details** — Action Center's task summary (ids, folder, assignee, labels).
  *  - **Action Center** — the task embedded from Action Center itself.
@@ -168,7 +167,7 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
   const saveDraft = (data: Record<string, unknown>) =>
     run(async () => {
       if (!task) return
-      await saveTaskDraft(sdk, task, data)
+      await task.saveData(data)
       toast.success('Draft saved')
       afterChange()
     }, 'Saving the draft failed')
@@ -198,11 +197,6 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
                   {priorityBadge(task.priority).label}
                 </Badge>
                 <Badge variant="secondary">{taskTypeLabel(task.type)}</Badge>
-                {bundle?.model?.appType && (
-                  <Badge variant="outline">
-                    {bundle.model.appType === 'Coded' ? 'Coded app' : 'Low-code app'}
-                  </Badge>
-                )}
                 {(() => {
                   const sla = slaBadge(task.taskSlaDetail?.status)
                   return sla && <Badge variant={sla.variant}>SLA: {sla.label}</Badge>
@@ -290,14 +284,15 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
                     )}
                     {bundle.reason === 'no-schema' && (
                       <p className="text-xs text-muted-foreground">
-                        Action Center returned no schema for this task, so its values are shown as stored. For app
-                        tasks this usually means the token lacks the <span className="font-medium">Apps.Read</span> scope.
+                        Action Center has no schema for this task, so its values are shown as stored.
                       </p>
                     )}
                     {bundle.reason === 'empty-schema' && (
                       <p className="text-xs text-muted-foreground">
-                        Action Center returned an empty schema for this task — the app version it points at declares
-                        no fields or outcomes — so its values are shown as stored.
+                        The schema for this task came back with no fields and no outcomes, so its values are shown as
+                        stored. This happens when the sign-in lacks the <span className="font-medium">Apps.Read</span>{' '}
+                        scope, when you cannot view apps in the task's folder, or when the task's app is no longer
+                        deployed there.
                       </p>
                     )}
                     {bundle.reason === 'unsupported-type' && (

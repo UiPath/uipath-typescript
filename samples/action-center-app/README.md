@@ -110,33 +110,30 @@ uip codedapp deploy -n action-center-app --folder-key <FOLDER_KEY>
   `components/TaskForm.tsx`: inputs read-only, inOuts/outputs editable with a
   widget per type, and one button per outcome; submitting calls
   `task.complete({ type, action: <outcome>, data })`, **Save draft** calls
-  `Tasks.saveData`. **Details** is Action Center's task summary. **Action
+  `task.saveData(data)`. **Details** is Action Center's task summary. **Action
   Center** embeds the task itself (`/embed_/{org}/{tenant}/actions_/current-task/tasks/{id}`,
   built by `taskUrl.ts`) for the exact experience the app designer built.
 
-  Where the schema comes from (`taskSchema.ts`):
+  Where the schema comes from (`taskSchema.ts`): `task.getSchema()` (or
+  `tasks.getSchema(taskId, { folderId })`) returns it, and its `type` says
+  which shape it has.
 
   | Task type | Schema | Values |
   |-----------|--------|--------|
-  | **App task** — coded or low-code action app | `GET tasks/AppTasks/GetAppTaskByKey` → `taskSchema`: the app's `action-schema.json` parsed by Action Center into .NET-typed properties (`String`, `Int32`, `Decimal`, `DateTime`, `DataTable`, `File`, …) | same response, `data` |
-  | **Quick Form** (`QuickFormTask`, Maestro/Flow HITL node) | `GET tasks/TaskSchemas/GetByKey?key={task.taskSchemaKey}` → `fields[]` + `outcomes[]` | `Tasks.getDataById` |
-  | External / legacy Form / Document Validation | none — the Form tab shows `data` as stored and **Complete** takes a free-text action | `Tasks.getById` |
-
-  Neither `GET` is wrapped by the SDK yet, so `taskSchema.ts` calls them with the
-  SDK's access token (`sdk.getToken()`) — the same pattern as the folder
-  dropdown. `Tasks.getById` does *not* substitute for the first one: for an app
-  task it routes to `GetAppTaskById`, which returns `taskSchema: null`; only the
-  `ByKey` variant carries the parsed schema.
+  | **App task** (coded or low-code action app) | `inputs`, `outputs`, `inOuts` and `outcomes`, each property typed with a .NET name (`String`, `Int32`, `Decimal`, `DateTime`, `DataTable`, `File`, …) | `task.data` |
+  | **Quick Form** (Maestro/Flow HITL node) | the body the form was registered with: `fields[]` + `outcomes[]` | `task.data` |
+  | External / legacy Form / Document Validation | none, `getSchema()` resolves to `null`. The Form tab shows `data` as stored and **Complete** takes a free-text action | `task.data` |
 
   Two things to know about the app-task schema:
 
-  - **`Apps.Read` is required.** Action Center fetches the schema from the Apps
-    service **with the caller's token**. Without an Apps scope the call still
-    returns `200` but the schema is empty, and the sheet says so before falling
-    back to the raw values.
-  - **A property's `name` is its data key.** The parsed schema also carries a
-    `key`, but that is a UUID the Apps designer generates per property — it
-    never appears in the task's `data`. Outcomes work the same way: the `name`
+  - **`Apps.Read` is required.** An App task's schema is returned only when
+    the token has the `Apps` or `Apps.Read` scope and the signed-in user can
+    view apps in the task's folder. Without them the call still succeeds but
+    the schema has no fields and no outcomes, and the sheet says so before
+    falling back to the raw values.
+  - **A property's `name` is its data key.** The schema also carries a `key`,
+    but that is a UUID the Apps designer generates per property and it never
+    appears in the task's `data`. Outcomes work the same way: the `name`
     (e.g. `Approve`) is the action string you complete the task with.
 - **Document Validation:** selecting a task of type `DocumentValidationTask`
   (from a My Tasks row, or via **Validate document** in the detail sheet) opens
