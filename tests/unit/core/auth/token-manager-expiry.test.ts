@@ -229,7 +229,20 @@ describe('TokenManager — expiry buffer', () => {
       expect(manager.getTokenInfo()?.refreshToken).toBe('refresh-1');
     });
 
-    it('discards a stored token that is past its actual expiry', () => {
+    it('discards a stored token that is past its actual expiry and has no refresh token', () => {
+      memorySessionStorage.setItem(storageKey, JSON.stringify({
+        token: TEST_CONSTANTS.EXPIRED_ACCESS_TOKEN, type: 'oauth', expiresAt: PAST_EXPIRY
+      }));
+
+      const manager = makeOAuthManager();
+
+      expect(manager.loadFromStorage()).toBe(false);
+      expect(manager.hasValidToken()).toBe(false);
+      expect(manager.getTokenInfo()).toBeUndefined();
+      expect(memorySessionStorage.removeItem).toHaveBeenCalledWith(storageKey);
+    });
+
+    it('keeps an expired stored token that has a refresh token, without reporting it as valid', () => {
       memorySessionStorage.setItem(storageKey, JSON.stringify({
         token: TEST_CONSTANTS.EXPIRED_ACCESS_TOKEN, type: 'oauth', refreshToken: 'refresh-1', expiresAt: PAST_EXPIRY
       }));
@@ -238,7 +251,22 @@ describe('TokenManager — expiry buffer', () => {
 
       expect(manager.loadFromStorage()).toBe(false);
       expect(manager.hasValidToken()).toBe(false);
-      expect(memorySessionStorage.removeItem).toHaveBeenCalledWith(storageKey);
+      expect(manager.getTokenInfo()?.refreshToken).toBe('refresh-1');
+      expect(memorySessionStorage.removeItem).not.toHaveBeenCalledWith(storageKey);
+    });
+
+    it('refreshes an expired stored token on the first request after a reload', async () => {
+      memorySessionStorage.setItem(storageKey, JSON.stringify({
+        token: TEST_CONSTANTS.EXPIRED_ACCESS_TOKEN, type: 'oauth', refreshToken: 'refresh-1', expiresAt: PAST_EXPIRY
+      }));
+      const fetchSpy = mockRefreshResponse(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
+      const manager = makeOAuthManager();
+      manager.loadFromStorage();
+
+      await expect(manager.getValidToken()).resolves.toBe(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
+
+      expect(String(fetchSpy.mock.calls[0][1]?.body)).toContain('refresh_token=refresh-1');
+      expect(manager.hasValidToken()).toBe(true);
     });
   });
 });

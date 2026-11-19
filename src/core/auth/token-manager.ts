@@ -129,26 +129,28 @@ export class TokenManager {
   }
   
   /**
-   * Loads token from session storage if available
-   * @returns true if a valid token was loaded, false otherwise
+   * Loads token from session storage if available.
+   * An expired access token is still loaded while it has a refresh token, so it can be renewed instead of signing in again.
+   * @returns true if a token that has not expired was loaded, false otherwise
    */
   public loadFromStorage(): boolean {
     // Only OAuth tokens are stored in session storage
     if (!this.isOAuth) {
       return false;
     }
-    
+
     const tokenInfo = this._parseTokenInfo(this.store.read(this._getStorageKey()));
-    if (!tokenInfo || this.isTokenExpired(tokenInfo)) {
+    const isExpired = this.isTokenExpired(tokenInfo);
+    if (!tokenInfo || (isExpired && !tokenInfo.refreshToken)) {
       this.store.remove(this._getStorageKey());
       return false;
     }
-    
+
     this.currentToken = tokenInfo;
     this._updateExecutionContext(tokenInfo);
-    return true;
+    return !isExpired;
   }
-  
+
   /**
    * Parse and validate token info from storage
    * @param stored Value read from storage
