@@ -2948,6 +2948,79 @@ const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
 console.log(task.data);
 ```
 
+### getSchema()
+
+> **getSchema**(`taskId`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
+
+**`Experimental`**
+
+Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.
+
+Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape it has:
+
+- `TaskType.App`: `schema` has `inputs` (read-only), `outputs` (filled in by the user), `inOuts` (pre-filled, editable) and `outcomes`. A property's `name` is its key in the task's `data`, and an outcome's `name` is the `action` to pass to `complete()`.
+- `TaskType.QuickForm`: the schema the task was created with, same as `getSchemaByKey()` returns for the task's `taskSchemaKey`. Its `schema` body is returned as it was registered.
+
+An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the `Apps` or `Apps.Read` scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.
+
+Other task types have no schema here and return null. A Form task's form definition is the `formLayout` returned by `getById()`.
+
+The task's type and keys are looked up automatically (one extra read). When called on a task object returned by the SDK, they are already known, so no lookup happens.
+
+#### Parameters
+
+- `taskId`: `number` — The task to get the schema for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`null` | `TaskGetSchemaResponse`>
+
+Promise resolving to a [TaskGetSchemaResponse](../../type-aliases/TaskGetSchemaResponse/), or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
+
+#### Examples
+
+```
+const result = await tasks.getSchema(<taskId>, { folderId: <folderId> });
+```
+
+```
+const task = await tasks.getById(<taskId>, {}, <folderId>);
+const result = await task.getSchema();
+```
+
+```
+import { TaskType } from '@uipath/uipath-typescript/tasks';
+
+const task = await tasks.getById(<taskId>, {}, <folderId>);
+const result = await task.getSchema();
+
+if (result?.type === TaskType.App) {
+  // Editable fields of an App task, with their current values
+  const { outputs, inOuts, outcomes } = result.schema;
+  const editable = [...inOuts, ...outputs].map((property) => ({
+    name: property.name,
+    type: property.type,
+    required: property.required,
+    value: task.data?.[property.name],
+  }));
+
+  // Complete with one of the schema's outcomes (the schema has none when the caller cannot read it)
+  if (outcomes.length > 0) {
+    await task.complete({
+      type: TaskType.App,
+      data: { ...task.data, comment: "Looks good" },
+      action: outcomes[0].name,
+    });
+  }
+}
+
+if (result?.type === TaskType.QuickForm) {
+  // The schema body, as registered when the task was created
+  console.log(result.name, result.schema);
+}
+```
+
 ### getSchemaByKey()
 
 > **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
@@ -8655,7 +8728,7 @@ for (const bucket of result.buckets ?? []) {
   console.log(`${bucket.startTime}: ${bucket.jobs.total} jobs, ${bucket.jobs.faulted} faulted`);
 }
 for (const agent of result.topAgents ?? []) {
-  console.log(`${agent.name}: ${agent.jobs.total} jobs, median ${agent.durationSeconds.p50}s`);
+  console.log(`${agent.name}: ${agent.jobs.total} jobs, median ${agent.durationSeconds.p50 ?? 'N/A'}s`);
 }
 ```
 

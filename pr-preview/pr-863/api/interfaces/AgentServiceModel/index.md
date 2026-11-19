@@ -379,7 +379,7 @@ for (const bucket of result.buckets ?? []) {
   console.log(`${bucket.startTime}: ${bucket.jobs.total} jobs, ${bucket.jobs.faulted} faulted`);
 }
 for (const agent of result.topAgents ?? []) {
-  console.log(`${agent.name}: ${agent.jobs.total} jobs, median ${agent.durationSeconds.p50}s`);
+  console.log(`${agent.name}: ${agent.jobs.total} jobs, median ${agent.durationSeconds.p50 ?? 'N/A'}s`);
 }
 ```
 
