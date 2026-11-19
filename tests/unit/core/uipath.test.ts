@@ -163,11 +163,28 @@ describe('UiPath Core', () => {
         };
       } as any);
 
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+      vi.stubGlobal('fetch', fetchMock);
+
       const sdk = new UiPath(publicPage);
       await sdk.initialize();
 
       expect(authenticate).not.toHaveBeenCalled();
       expect(sdk.isInitialized()).toBe(true);
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(fetchMock.mock.calls[0][0]).toMatch(/\/integrations\/codedapp\/session$/);
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST', credentials: 'include' });
+      vi.unstubAllGlobals();
+    });
+
+    it('still initializes when opening the session fails, leaving it to the first call', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 503 })));
+
+      const sdk = new UiPath(publicPage);
+      await expect(sdk.initialize()).resolves.toBeUndefined();
+
+      expect(sdk.isInitialized()).toBe(true);
+      vi.unstubAllGlobals();
     });
   });
 

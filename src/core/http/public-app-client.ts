@@ -116,7 +116,7 @@ export class PublicAppClient {
    * responds 204 with a `Set-Cookie`. A non-2xx here is terminal (the app is not
    * public, or the feature is off) and surfaces as an error.
    */
-  private async ensureSession(): Promise<void> {
+  async ensureSession(): Promise<void> {
     if (!this.sessionBootstrap) {
       this.sessionBootstrap = (async () => {
         const response = await fetch(`${this.integrationBase}/session`, {

@@ -18,7 +18,7 @@ const sdk = new UiPath(); // reads the meta tags, including uipath:app-key
 await sdk.initialize();   // no sign-in in public mode
 ```
 
-The visitor's session is created on the first call and renewed automatically when it expires.
+`initialize()` opens the visitor's session, and the SDK opens a new one when it expires.
 
 ## What a public app can call
 

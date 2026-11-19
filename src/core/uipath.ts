@@ -359,6 +359,7 @@ export class UiPath implements IUiPath {
 
     // Public mode has no user to sign in: the Apps service holds the app's identity.
     if (isPublicMode(this.#config!)) {
+      await SDKInternalsRegistry.get(this).publicAppClient?.ensureSession().catch(() => undefined);
       this.#initialized = true;
       return;
     }
