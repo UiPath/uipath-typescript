@@ -1,12 +1,9 @@
 // App types for the case-management sample.
 //
 // Where the SDK already exports a response type, we alias it (no re-declaration)
-// so the sample stays in lockstep with the SDK's real shapes. The only locally
-// defined data shape is ElementExecution: the SDK's execution-history element
-// type is internal (not exported) AND narrower than the runtime payload — it
-// omits `elementType`/`elementExtensionType`, which the history actor
-// classification needs. Everything else is either an SDK alias or an app-level
-// derived/normalized type (enrichment, SLA buckets, history grouping).
+// so the sample stays in lockstep with the SDK's real shapes. Everything else
+// is an app-level derived/normalized type (enrichment, SLA buckets, history
+// grouping).
 
 import type {
   CaseInstanceGetResponse,
@@ -18,6 +15,8 @@ import type {
   CaseGetTopFaultedCountResponse,
   CaseGetTopDurationResponse,
   InstanceStatusTimelineResponse,
+  CaseInstanceExecutionHistoryResponse,
+  ElementExecutionMetadata,
 } from '@uipath/uipath-typescript/cases';
 import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks';
 
@@ -33,32 +32,12 @@ export type TopFaultedCount = CaseGetTopFaultedCountResponse;
 export type TopDuration = CaseGetTopDurationResponse;
 export type StatusTimelinePoint = InstanceStatusTimelineResponse;
 
-// ---- Execution history (SDK type gap — see file header) ----
-export interface ElementExecution {
-  elementId: string;
-  elementName: string;
-  /** BPMN type: Task, ServiceTask, UserTask, *Gateway, *Event, CallActivity… */
-  elementType?: string;
-  /** UiPath semantics: Orchestrator.StartAgentJob, Actions.HITL, Maestro.*… */
-  elementExtensionType?: string;
-  parentElementId?: string | null;
-  caseStageElementId?: string | null;
-  startedTime: string;
-  completedTime?: string | null;
-  status: string;
-  processKey: string;
-  externalLink?: string;
-  maestroLink?: string;
-}
-
-export interface ExecutionHistory {
-  instanceId: string;
-  instanceDisplayName: string;
-  status: string;
-  startedTime: string;
-  completedTime?: string | null;
-  elementExecutions: ElementExecution[];
-}
+// ---- Execution history ----
+// `elementType` is the BPMN type (Task, ServiceTask, UserTask, *Gateway, *Event,
+// CallActivity…); `elementExtensionType` is what the element does
+// (Orchestrator.StartAgentJob, Actions.HITL, Maestro.*…).
+export type ElementExecution = ElementExecutionMetadata;
+export type ExecutionHistory = CaseInstanceExecutionHistoryResponse;
 
 // ---- Enrichment derived from getStages + getActionTasks for one instance ----
 export interface CaseEnrichment {

@@ -62,9 +62,9 @@ function RawToggle({ label, value }: { label: string; value: unknown }) {
 /**
  * Action Center task, rendered two ways behind tabs:
  *
- *  - **Form** (default) — a native form built from the task's schema. App tasks
- *    (coded and low-code action apps) get theirs from `GetAppTaskByKey`; Quick
- *    Form tasks from `TaskSchemas/GetByKey` (see lib/taskSchema.ts). Outcomes
+ *  - **Form** (default) — a native form built from the task's schema, which
+ *    `Tasks.getSchema` returns for App tasks (coded and low-code action apps)
+ *    and Quick Form tasks (see lib/taskSchema.ts). Outcomes
  *    complete the task through `Tasks.complete`, and drafts persist through
  *    `Tasks.saveData`. Tasks without a schema (External, legacy Form) fall back
  *    to a key/value view of `data` with a free-text action.
@@ -154,9 +154,6 @@ export function TaskDetail({
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
             <Badge tone="gray">{describeTaskType(String(t.type))}</Badge>
-            {form.data?.model?.appType && (
-              <Badge tone="violet">{form.data.model.appType === 'Coded' ? 'Coded app' : 'Low-code app'}</Badge>
-            )}
             <Badge tone={priorityTone(String(t.priority))}>{String(t.priority)}</Badge>
             <Badge tone={statusTone(String(t.status))}>{humanize(String(t.status))}</Badge>
           </div>
@@ -244,14 +241,14 @@ export function TaskDetail({
               )}
               {form.data?.reason === 'no-schema' && (
                 <p className="mb-4 text-xs text-muted-foreground">
-                  Action Center returned no schema for this task, so its values are shown as stored. For app tasks this
-                  usually means the token lacks the <span className="font-medium">Apps.Read</span> scope.
+                  Action Center has no schema for this task, so its values are shown as stored.
                 </p>
               )}
               {form.data?.reason === 'empty-schema' && (
                 <p className="mb-4 text-xs text-muted-foreground">
-                  Action Center returned an empty schema for this task — the app version it points at declares no fields or
-                  outcomes — so its values are shown as stored.
+                  The schema for this task came back with no fields and no outcomes, so its values are shown as stored.
+                  This happens when the sign-in lacks the <span className="font-medium">Apps.Read</span> scope, when you
+                  cannot view apps in the task's folder, or when the task's app is no longer deployed there.
                 </p>
               )}
               {fallbackFields.length > 0 ? (

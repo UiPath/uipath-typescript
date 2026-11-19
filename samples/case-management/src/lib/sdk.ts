@@ -2,7 +2,7 @@ import type { UiPath, PaginationCursor } from '@uipath/uipath-typescript/core';
 import { Cases, CaseInstances, TimeInterval } from '@uipath/uipath-typescript/cases';
 import { ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
 import { Tasks } from '@uipath/uipath-typescript/tasks';
-import type { TaskCompleteOptions, TaskDataGetResponse } from '@uipath/uipath-typescript/tasks';
+import type { TaskCompleteOptions, TaskDataGetResponse, TaskGetSchemaResponse } from '@uipath/uipath-typescript/tasks';
 import { hoursUntil } from '@/lib/format';
 import type {
   CaseInstance,
@@ -80,15 +80,21 @@ export async function getTaskById(
 
 /**
  * Task data + values for a task the list endpoints only summarize
- * (`Tasks.getDataById`). Quick Form tasks also carry their `taskSchemaKey` here.
+ * (`Tasks.getDataById`).
  */
-export async function getTaskData(
-  sdk: UiPath,
-  id: number,
-  folderId: number,
-): Promise<TaskDataGetResponse & { taskSchemaKey?: string | null }> {
+export async function getTaskData(sdk: UiPath, id: number, folderId: number): Promise<TaskDataGetResponse> {
   const tasks = new Tasks(sdk);
   return tasks.getDataById(id, { folderId });
+}
+
+/**
+ * A task's schema: its fields and the outcomes it can be completed with
+ * (`Tasks.getSchema`). App tasks and Quick Form tasks have one; for other
+ * task types this resolves to null.
+ */
+export async function getTaskSchema(sdk: UiPath, id: number, folderId: number): Promise<TaskGetSchemaResponse | null> {
+  const tasks = new Tasks(sdk);
+  return tasks.getSchema(id, { folderId });
 }
 
 /** Persist a task's field values without completing it (`Tasks.saveData`). */
@@ -122,9 +128,6 @@ export async function getCaseHistory(
   folderKey: string,
 ): Promise<ExecutionHistory> {
   const ci = new CaseInstances(sdk);
-  // The SDK's element-execution type is narrower than the runtime payload (it
-  // omits elementType/elementExtensionType); ExecutionHistory widens it. The
-  // SDK response is structurally assignable, so no cast is needed.
   return ci.getExecutionHistory(instanceId, folderKey);
 }
 

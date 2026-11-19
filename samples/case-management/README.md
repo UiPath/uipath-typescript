@@ -46,7 +46,7 @@ configure for case selection.
 
 **Required OAuth scopes:** `PIMS OR.Execution.Read OR.Tasks Apps.Read Insights.RealTimeData Insights OR.Folders.Read`
 (Analytics + SLA views need Insights RTM provisioned on the tenant; they degrade gracefully if it isn't.)
-`Apps.Read` is what lets Action Center hand back an action app's schema — see below. The scope must
+`Apps.Read` is needed to read an action app's schema, see below. The scope must
 be granted on the External Application in Admin as well as listed here.
 
 ## Rendering Action Center tasks
@@ -58,27 +58,24 @@ Every task is shown two ways, behind tabs on the task card ([`TaskDetail`](src/c
 | **Form** (default) | A native form built from the task's schema: inputs read-only, inOuts/outputs editable, one button per outcome. Submitting calls `Tasks.complete`; **Save draft** calls `Tasks.saveData`. | see table below |
 | **Action Center** | The task embedded from Action Center (`/embed_/…/actions_/current-task/tasks/{id}`) — the exact experience the app designer built. | Action Center |
 
-Where the schema comes from, by task type ([`src/lib/taskSchema.ts`](src/lib/taskSchema.ts)):
+Where the schema comes from ([`src/lib/taskSchema.ts`](src/lib/taskSchema.ts)):
+`Tasks.getSchema(taskId, { folderId })` returns it, and its `type` says which shape it has.
 
 | Task type | Schema | Values |
 |-----------|--------|--------|
-| **App task** — coded action app | `GET tasks/AppTasks/GetAppTaskByKey` → `taskSchema` (the app's `action-schema.json`, parsed by Action Center into .NET-typed properties) | same response, `data` |
-| **App task** — low-code action app | same endpoint; the same .NET types (`String`, `Int32`, `Decimal`, `DateTime`, `DataTable`, `File`, …) describe the app's fields | same response, `data` |
-| **Quick Form** (`QuickFormTask`, Maestro/Flow HITL node) | `GET tasks/TaskSchemas/GetByKey?key={task.taskSchemaKey}` → `fields[]` + `outcomes[]` | `Tasks.getDataById` |
-| External / legacy Form | none — falls back to a key/value view of `data` with a free-text action | `Tasks.getById` |
+| **App task** (coded or low-code action app) | `inputs`, `outputs`, `inOuts` and `outcomes`, each property typed with a .NET name (`String`, `Int32`, `Decimal`, `DateTime`, `DataTable`, `File`, …) | `Tasks.getDataById` |
+| **Quick Form** (Maestro/Flow HITL node) | the body the form was registered with: `fields[]` + `outcomes[]` | `Tasks.getDataById` |
+| External / legacy Form | none, `getSchema` resolves to `null`. Falls back to a key/value view of `data` with a free-text action | `Tasks.getById` |
 
-Neither schema `GET` above is wrapped by the SDK yet, so the sample calls them with the SDK's access
-token (`sdk.getToken()`); swap them for the SDK methods once they ship. `Tasks.getById` is not a
-substitute for the first: for an app task it routes to `GetAppTaskById`, which returns
-`taskSchema: null` — only the `ByKey` variant carries the parsed schema. Every other call goes
-through the wrappers in [`src/lib/sdk.ts`](src/lib/sdk.ts).
+Every SDK call goes through the wrappers in [`src/lib/sdk.ts`](src/lib/sdk.ts).
 
 Two things to know about the app-task schema:
 
-- **`Apps.Read` is required.** Action Center fetches the schema from the Apps service **with the
-  caller's token**. Without an Apps scope the call still returns `200` with an empty schema; the card
-  says so and falls back to the raw values.
-- **A property's `name` is its data key.** The parsed schema also carries a `key`, but that is a UUID
+- **`Apps.Read` is required.** An App task's schema is returned only when the token has the `Apps`
+  or `Apps.Read` scope and the signed-in user can view apps in the task's folder. Without them the
+  call still succeeds but the schema has no fields and no outcomes; the card says so and falls back
+  to the raw values.
+- **A property's `name` is its data key.** The schema also carries a `key`, but that is a UUID
   the Apps designer generates per property and it never appears in the task's `data`. Outcomes work
   the same way: the `name` (e.g. `Approve`) is the action string used to complete the task.
 
@@ -86,8 +83,8 @@ Two things to know about the app-task schema:
 
 ```bash
 npm install
-uip login --authority https://alpha.uipath.com   # populates .uipath/ (org/tenant/base URL)
-npm run dev                                        # http://localhost:5173
+uip login      # populates .uipath/ (org/tenant/base URL)
+npm run dev    # http://localhost:5173
 ```
 
 ## Deploy
