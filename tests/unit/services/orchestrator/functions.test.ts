@@ -21,6 +21,8 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { FUNCTION_TEST_CONSTANTS } from '../../../utils/constants/functions';
 import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID, FOLDER_KEY, JOB_KEY } from '../../../../src/utils/constants/headers';
+import { DEBUG_CONTEXT_KEY } from '@/core/context/execution';
+import { JOB_TEST_CONSTANTS } from '@tests/utils/constants/jobs';
 import { ValidationError, NotFoundError, ServerError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
@@ -409,6 +411,77 @@ describe('FunctionService Unit Tests', () => {
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         expect.objectContaining({
           headers: expect.not.objectContaining({ [JOB_KEY]: expect.anything() }),
+        })
+      );
+    });
+
+    it('should default the X-UIPATH-JobKey header to the debug context job key', async () => {
+      const { instance, executionContext } = createServiceTestDependencies();
+      executionContext.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      await new FunctionService(instance).invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FUNCTION_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          headers: expect.not.objectContaining({ [JOB_KEY]: expect.anything() }),
+        })
+      );
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FUNCTION_ENDPOINTS.INVOKE(FUNCTION_TEST_CONSTANTS.FOLDER_KEY, FUNCTION_TEST_CONSTANTS.ROUTE),
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        expect.objectContaining({
+          headers: expect.objectContaining({ [JOB_KEY]: JOB_TEST_CONSTANTS.JOB_KEY }),
+        })
+      );
+    });
+
+    it('should prefer the jobKey option over the debug context job key', async () => {
+      const { instance, executionContext } = createServiceTestDependencies();
+      executionContext.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      await new FunctionService(instance).invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, jobKey: FUNCTION_TEST_CONSTANTS.JOB_KEY }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        expect.objectContaining({
+          headers: expect.objectContaining({ [JOB_KEY]: FUNCTION_TEST_CONSTANTS.JOB_KEY }),
+        })
+      );
+    });
+
+    it('should carry a debug job key that arrives with the token fetched by the name lookup', async () => {
+      const { instance, executionContext } = createServiceTestDependencies();
+      mockApiClient.get.mockImplementationOnce(async () => {
+        executionContext.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+        return { value: [createMockRawFunctionTrigger()] };
+      });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      await new FunctionService(instance).invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        expect.objectContaining({
+          headers: expect.objectContaining({ [JOB_KEY]: JOB_TEST_CONSTANTS.JOB_KEY }),
         })
       );
     });

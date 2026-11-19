@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../../src/core/context/execution';
 import { ServerError } from '../../../../src/core/errors/server';
@@ -7,6 +7,8 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { HTTP_TEST_CONSTANTS } from '../../../utils/constants/http';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_KEY } from '../../../../src/utils/constants/headers';
+import { TRACE_CONTEXT_KEY } from '@/core/context/trace';
+import { TRACE_CONTEXT_TEST_CONSTANTS } from '@tests/utils/constants/tracing';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
 
@@ -96,6 +98,61 @@ describe('ApiClient traceparent', () => {
     await client.get('/test', { headers: { traceparent: custom } });
 
     expect(capturedHeaders['traceparent']).toBe(custom);
+  });
+});
+
+describe('ApiClient session trace context', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function tracedContext(spanId?: string): ExecutionContext {
+    const context = new ExecutionContext();
+    context.set(TRACE_CONTEXT_KEY, () => ({ traceId: TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID, spanId }));
+    return context;
+  }
+
+  it('carries the session trace id and active span id on both trace headers', async () => {
+    await createClient({}, tracedContext(TRACE_CONTEXT_TEST_CONSTANTS.SPAN_ID)).get('/test');
+
+    const expected = `00-${TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID}-${TRACE_CONTEXT_TEST_CONSTANTS.SPAN_ID}-01`;
+    expect(capturedHeaders['x-uipath-traceparent-id']).toBe(expected);
+    expect(capturedHeaders['traceparent']).toBe(expected);
+  });
+
+  it('keeps the session trace id across requests when no span is active', async () => {
+    const client = createClient({}, tracedContext());
+
+    await client.get('/test1');
+    const first = capturedHeaders['x-uipath-traceparent-id'];
+    await client.get('/test2');
+    const second = capturedHeaders['x-uipath-traceparent-id'];
+
+    expect(first).toMatch(TRACEPARENT_REGEX);
+    expect(first.split('-')[1]).toBe(TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID);
+    expect(second.split('-')[1]).toBe(TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID);
+  });
+
+  it('falls back to a one-off trace id when the provider reports no trace', async () => {
+    const context = new ExecutionContext();
+    context.set(TRACE_CONTEXT_KEY, () => undefined);
+
+    await createClient({}, context).get('/test');
+
+    expect(capturedHeaders['x-uipath-traceparent-id']).toMatch(TRACEPARENT_REGEX);
+    expect(capturedHeaders['x-uipath-traceparent-id'].split('-')[1]).not.toBe(TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID);
+  });
+
+  it('still sends the request when the provider throws', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const context = new ExecutionContext();
+    context.set(TRACE_CONTEXT_KEY, () => {
+      throw new Error(TRACE_CONTEXT_TEST_CONSTANTS.PROVIDER_ERROR_MESSAGE);
+    });
+
+    await createClient({}, context).get('/test');
+
+    expect(capturedHeaders['x-uipath-traceparent-id']).toMatch(TRACEPARENT_REGEX);
   });
 });
 

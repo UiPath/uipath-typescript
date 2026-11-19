@@ -1,5 +1,6 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
+import { createTraceparent, currentTraceContext } from '@/core/context/trace';
 import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
 import { errorResponseParser } from '../errors/parser';
@@ -75,9 +76,8 @@ export class ApiClient {
     const isBodyless = isFormData || method === 'GET' || method === 'HEAD';
     const defaultHeaders = await this.getDefaultHeaders(!isBodyless);
 
-    const traceId = crypto.randomUUID().replace(/-/g, '');
-    const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
-    const traceparentValue = `00-${traceId}-${spanId}-01`;
+    // Inside a traced session every call joins the session's trace; otherwise each call gets its own.
+    const traceparentValue = createTraceparent(currentTraceContext(this.executionContext));
 
     const headers: Record<string, string> = {
       ...defaultHeaders,
