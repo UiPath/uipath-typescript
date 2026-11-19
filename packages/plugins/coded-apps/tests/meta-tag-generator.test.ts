@@ -12,6 +12,11 @@ const fullConfig: UiPathConfig = {
 }
 
 describe('generateMetaTagsForVite', () => {
+  it('skips list values such as access', () => {
+    const tags = generateMetaTagsForVite({ scope: 'OR.Execution', access: [{ resource: 'entity', key: 'A', mode: 'all' }] } as never)
+    expect(tags.map(t => t.attrs.name)).toEqual(['uipath:scope'])
+  })
+
   it('generates correct Vite meta tags for all known SDK keys', () => {
     const tags = generateMetaTagsForVite(fullConfig)
     expect(tags).toHaveLength(6)
