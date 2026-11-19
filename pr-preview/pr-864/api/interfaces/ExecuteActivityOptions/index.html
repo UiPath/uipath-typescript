@@ -3967,6 +3967,16 @@ item of an array (<code>items[*].name</code>).</p>
 <td>Name of the form part that carries <code>body</code> when <code>files</code> is set. Defaults to <code>body</code>.</td>
 </tr>
 <tr>
+<td><a id="connectorkey"></a> <code>connectorKey?</code></td>
+<td><code>string</code></td>
+<td>Key of the connector behind the connection, e.g. <code>uipath-salesforce-slack</code>. Required on the version 4 engine. Taken from the handle when the connection is a <code>resource.connection()</code> handle.</td>
+</tr>
+<tr>
+<td><a id="connectorversion"></a> <code>connectorVersion?</code></td>
+<td><code>string</code></td>
+<td>Version of the connector behind the connection, e.g. <code>4.0.0</code>. A connector of version 4 or later runs its activities on the version 4 engine, and the call is sent there; without a version, or with an earlier one, the call uses the version 3 engine. On the version 4 engine <code>objectName</code> names the activity's script, and <code>files</code>, <code>fileResponse</code>, <code>urlInputFields</code> and <code>maxRecords</code> do not apply.</td>
+</tr>
+<tr>
 <td><a id="fileresponse"></a> <code>fileResponse?</code></td>
 <td><code>boolean</code></td>
 <td>Read a successful response as a file: <code>body</code> is a <code>Uint8Array</code> whatever content type the connector reports. Without it a file is still detected from the response headers.</td>
@@ -3992,6 +4002,11 @@ item of an array (<code>items[*].name</code>).</p>
 <td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
 </tr>
 <tr>
+<td><a id="headers"></a> <code>headers?</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>string</code>&gt;</td>
+<td>Headers the activity's script reads from the call. Version 4 engine only.</td>
+</tr>
+<tr>
 <td><a id="maxrecords"></a> <code>maxRecords?</code></td>
 <td><code>number</code></td>
 <td>How many records a <code>GET</code> list call should return in total. The call follows the connector's pages until it has this many records or the list ends, then returns them as one array. Pass <code>-1</code> to fetch every record. Without it a single page is returned, with <code>page</code> on the result when more records exist. Ignored for methods other than <code>GET</code>.</td>
@@ -4005,6 +4020,11 @@ item of an array (<code>items[*].name</code>).</p>
 <td><a id="retry"></a> <code>retry?</code></td>
 <td><a href="../RetryOptions/"><code>RetryOptions</code></a></td>
 <td>Retry and backoff behavior for this call. Retrying is off unless <code>maxRetries</code> is set. Only the idempotent methods of RFC 9110 (<code>GET</code>, <code>HEAD</code>, <code>PUT</code>, <code>DELETE</code>, <code>OPTIONS</code>) are retried by default — a replayed <code>POST</code> can create the same record twice through the connector. To retry a <code>POST</code> or <code>PATCH</code>, list it explicitly in <code>retryMethods</code>.</td>
+</tr>
+<tr>
+<td><a id="scriptref"></a> <code>scriptRef?</code></td>
+<td><code>string</code></td>
+<td>Reference of the script the version 4 engine runs for this activity, as the activity's metadata names it. Defaults to <code>objectName</code>.</td>
 </tr>
 <tr>
 <td><a id="signal"></a> <code>signal?</code></td>
