@@ -12,6 +12,7 @@ export const IDENTITY_ENDPOINTS = {
   TOKEN: `${IDENTITY_BASE}/connect/token`,
   AUTHORIZE: `${IDENTITY_BASE}/connect/authorize`,
   END_SESSION: `${IDENTITY_BASE}/connect/endsession`,
+  REVOCATION: `${IDENTITY_BASE}/connect/revocation`,
 } as const;
 
 /**

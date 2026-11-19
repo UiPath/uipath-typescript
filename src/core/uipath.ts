@@ -433,7 +433,13 @@ export class UiPath implements IUiPath {
   }
 
   /**
-   * By default only local state is cleared — the UiPath session (Automation
+   * Signs the user out of the app: local state is cleared and UiPath is asked
+   * to revoke the refresh token, so it can no longer be used to get access
+   * tokens. The revocation is best effort: this method does not wait for the
+   * answer, and a failure is only logged as a warning. An access token issued
+   * earlier stays valid until it expires.
+   *
+   * By default the UiPath session (Automation
    * Cloud or Automation Suite) stays active, so the next sign-in completes
    * silently. Pass `endSession: true` (browser-only) to also sign the user
    * out of the UiPath session: the browser is redirected and returns to the
@@ -445,7 +451,7 @@ export class UiPath implements IUiPath {
    *
    * @example
    * ```typescript
-   * // Local logout only (default)
+   * // Sign out of the app only (default)
    * sdk.logout();
    *
    * // Also end the UiPath session

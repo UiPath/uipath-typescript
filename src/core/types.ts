@@ -55,7 +55,7 @@ export interface IUiPath {
   destroy(): void;
 
   /**
-   * Logout from the SDK, clearing all authentication state.
+   * Logout from the SDK, clearing all authentication state and asking UiPath to revoke the refresh token.
    * After calling this method, the user will need to re-initialize to authenticate again.
    * Pass `endSession: true` to also end the UiPath platform session.
    */
