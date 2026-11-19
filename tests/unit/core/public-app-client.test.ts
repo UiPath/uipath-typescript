@@ -31,18 +31,6 @@ describe('PublicAppClient', () => {
     expect(JSON.parse(init.body)).toEqual({ inputArguments: '{"a":1}' });
   });
 
-  it('getJob GETs the job output route', async () => {
-    fetchMock.mockResolvedValueOnce(json(200, { Key: 'J-1', OutputArguments: '{"Sum":12}' }));
-
-    const job = await client.getJob('J-1');
-
-    expect(job).toEqual({ Key: 'J-1', OutputArguments: '{"Sum":12}' });
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe(`${routes}/orchestrator/jobs/J-1/output`);
-    expect(init.method).toBe('GET');
-    expect(init.credentials).toBe('include');
-  });
-
   it('request sends a JSON body and query params to an Apps service route', async () => {
     fetchMock.mockResolvedValueOnce(json(200, { Id: 'R-1' }));
 
@@ -116,7 +104,7 @@ describe('PublicAppClient', () => {
   it('surfaces a 404 when the session cannot read the job', async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
 
-    await expect(client.getJob('someone-elses-job')).rejects.toBeDefined();
+    await expect(client.request('GET', 'integrations/codedapp/orchestrator/jobs/someone-elses-job/output')).rejects.toBeDefined();
   });
 });
 

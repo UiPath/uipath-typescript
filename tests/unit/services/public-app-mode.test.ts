@@ -3,6 +3,7 @@ import { UiPath } from '../../../src/core/uipath';
 import { ProcessService } from '../../../src/services/orchestrator/processes';
 import { BucketService } from '../../../src/services/orchestrator/buckets';
 import { EntityService } from '../../../src/services/data-fabric/entities';
+import { JobService } from '../../../src/services/orchestrator/jobs';
 import { AssetService } from '../../../src/services/orchestrator/assets';
 import { ValidationError } from '../../../src/core/errors';
 import { PUBLIC_APP_UNSUPPORTED_CALL } from '../../../src/core/http/api-client';
@@ -59,6 +60,15 @@ describe('public coded app mode', () => {
   it('rejects starting a process by key, which names a release the app can not reach', async () => {
     await expect(new ProcessService(sdk).start({ key: 'release-guid' })).rejects.toBeInstanceOf(ValidationError);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('reads a job output through the public route without a folder', async () => {
+    fetchMock.mockResolvedValueOnce(json({ Key: 'J-1', OutputArguments: '{"Sum":12}' }));
+
+    const output = await new JobService(sdk).getOutput('J-1');
+
+    expect(output).toEqual({ Sum: 12 });
+    expect(fetchMock.mock.calls[0][0]).toMatch(new RegExp(`^${routes}/orchestrator/jobs/J-1/output`));
   });
 
   it('inserts, reads and lists entity records by binding name', async () => {
