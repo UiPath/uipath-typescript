@@ -44,6 +44,20 @@ await sdk.initialize();
 
 With OAuth sign-in, the SDK renews the access token about a minute before it expires, on the next request your app makes, so users stay signed in.
 
+A renewal can fail without the session being over. The SDK ends the session only when UiPath rejects the refresh token itself, because it expired or was revoked. The request that needed the token then fails with an `AuthenticationError`, and `sdk.initialize()` signs the user in again.
+
+Any other failure leaves the session in place, and the SDK tries the renewal again on a later request, after a pause of a few seconds or for as long as UiPath asks in `Retry-After`:
+
+| What went wrong | The request fails with |
+| --- | --- |
+| UiPath could not be reached | `NetworkError` |
+| UiPath is rate limiting requests (429) | `RateLimitError` |
+| UiPath answered with a server error (5xx) | `ServerError` |
+
+Treat the three alike: a failure produced in front of UiPath can reach a browser app as a `NetworkError` whatever its status was.
+
+While the current access token is still valid, a renewal that fails this way does not fail the request at all: the SDK keeps using that token until it expires. Once it has expired, `sdk.isAuthenticated()` is `false` until a renewal succeeds.
+
 ### Enforcing sign-in through the organization's identity provider
 
 By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them
