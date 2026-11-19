@@ -158,7 +158,6 @@ export class UiPath implements IUiPath {
     // override the ambient execution-context environment contract.
     const mergedConfig = UiPath.#mergeConfigSources(configFromMetaTags, resolved);
 
-    // Public (anonymous) mode is complete without OAuth/secret: the Apps service holds the app's identity.
     if (mergedConfig && (isCompleteConfig(mergedConfig) || (isPublicMode(mergedConfig) && hasRequiredBaseFields(mergedConfig)))) {
       this.#initializeWithConfig(mergedConfig);
     } else {
@@ -174,7 +173,6 @@ export class UiPath implements IUiPath {
   #initializeWithConfig(config: PartialUiPathConfig): void {
     const publicMode = isPublicMode(config);
     const hasSecretAuth = hasSecretConfig(config);
-    // A public app's page still carries its OAuth meta tags; they must not start a sign-in.
     const hasOAuthAuth = !publicMode && hasOAuthConfig(config);
 
     // Initialize core components
@@ -192,13 +190,10 @@ export class UiPath implements IUiPath {
     });
 
     const executionContext = new ExecutionContext();
-    // AuthService is safe without creds (no token manager work happens until a call
-    // needs one, which public-mode services never do — they call the Apps service).
     this.#authService = new AuthService(internalConfig, executionContext);
     this.#config = internalConfig;
 
     const tokenManager = this.#authService.getTokenManager();
-    // A public app has no signed-in user to license; the Apps service starts its jobs as the app.
     const sessionLicense = hasSecretAuth || publicMode ? undefined : new SessionLicense(
       internalConfig,
       new ApiClient(internalConfig, executionContext, tokenManager),
@@ -210,7 +205,6 @@ export class UiPath implements IUiPath {
       if (!this.#debugContextSetByApp) executionContext.set(DEBUG_CONTEXT_KEY, { jobKey });
     });
 
-    // In public mode, build the client the supported services call the Apps service through.
     const publicAppClient = publicMode
       ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appKey!)
       : undefined;
@@ -357,7 +351,6 @@ export class UiPath implements IUiPath {
       return;
     }
 
-    // Public mode has no user to sign in: the Apps service holds the app's identity.
     if (isPublicMode(this.#config!)) {
       await SDKInternalsRegistry.get(this).publicAppClient?.ensureSession().catch(() => undefined);
       this.#initialized = true;

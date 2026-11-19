@@ -9,7 +9,6 @@ import { PUBLIC_APP_UNSUPPORTED_CALL } from '../../../src/core/http/api-client';
 
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
-/** Services on a public (anonymous) coded app page: supported calls go to the Apps service, the rest fail clearly. */
 describe('public coded app mode', () => {
   const routes = 'https://alpha.uipath.com/my-org/apps_/default/api/v1/default/integrations/codedapp';
   let fetchMock: ReturnType<typeof vi.fn>;

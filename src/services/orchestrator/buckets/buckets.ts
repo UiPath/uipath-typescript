@@ -270,8 +270,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       throw new ValidationError({ message: 'content is required for uploadFile' });
     }
 
-    // A public app uploads through the Apps service, which resolves the bucket from the app's binding and picks the
-    // stored path itself, so the file can only ever be added, never overwrite another.
     if (this.publicApp) {
       const name = typeof bucketIdOrRef === 'object' ? bucketIdOrRef.name : undefined;
       if (!name) {

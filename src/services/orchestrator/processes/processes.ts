@@ -206,8 +206,6 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     return transformedProcess;
   }
 
-  // The Apps service starts the job as the app, resolving the process from the app's binding, so only the binding
-  // key and the input arguments go over the wire. A process key names a release, which a public app can't reach.
   private async startAsPublicApp(
     firstArg: ProcessRef | ProcessStartRequest,
     optionsOrFolderId?: ProcessStartRefOptions | ProcessStartOptions | number,

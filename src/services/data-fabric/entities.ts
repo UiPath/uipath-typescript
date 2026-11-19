@@ -206,10 +206,6 @@ function toEntityCloneJob(raw: RawEntityCloneJob): EntityCloneJob {
   };
 }
 
-/**
- * A public app reaches an entity through the app's binding, which the Apps service resolves (overrides included),
- * so it takes the design-time name as is and never an id.
- */
 function publicEntityName(entityRef: EntityRef, callerLabel: string): string {
   const { name } = (entityRef ?? {}) as { name?: string };
   if (!name) {
@@ -1247,7 +1243,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, downstreamOptions);
   }
 
-  // Public apps can only list an entity open to all. Offset paging maps onto the Apps service's start/limit.
   private async getPublicAppRecords(
     entityName: string,
     options?: EntityGetAllRecordsOptions,

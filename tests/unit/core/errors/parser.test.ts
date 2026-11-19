@@ -24,7 +24,6 @@ describe('ErrorResponseParser Unit Tests', () => {
     });
 
     it('should keep a plain { message } body as the message, even with no status text', async () => {
-      // The Apps service's public app routes answer `{ message }`; over HTTP/2 there is no status text to fall back on.
       const response = new Response(JSON.stringify({ message: "This app isn't allowed to upload to the \"Uploads\" bucket." }), {
         status: 403,
         headers: { 'content-type': 'application/json' },

@@ -26,9 +26,7 @@ export interface LoginFields {
   enforceSso?: boolean;
 }
 
-// Public (anonymous) coded-app fields. Injected via meta tags at deploy; the app carries no OAuth creds.
 export interface PublicModeFields {
-  /** Names the app to the Apps service. Minted only for public apps, so its presence means public mode. */
   appKey?: string;
 }
 
@@ -42,7 +40,6 @@ export type UiPathSDKConfig = BaseConfig & LoginFields & (
 // The isCompleteConfig function validates the final merged config
 export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string } & LoginFields & PublicModeFields>;
 
-// Public (anonymous) mode: the Apps service mints an app key only for public apps, so the key alone decides it.
 export function isPublicMode(config: { appKey?: string }): config is { appKey: string } {
   return Boolean(config.appKey);
 }

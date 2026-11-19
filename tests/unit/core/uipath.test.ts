@@ -130,7 +130,6 @@ describe('UiPath Core', () => {
   });
 
   describe('Public mode', () => {
-    // A deployed public app's page carries both its app key and its OAuth meta tags.
     const publicPage = {
       baseUrl: TEST_CONSTANTS.BASE_URL,
       orgName: TEST_CONSTANTS.ORGANIZATION_ID,

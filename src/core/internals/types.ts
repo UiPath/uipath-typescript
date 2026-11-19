@@ -49,10 +49,5 @@ export interface PrivateSDK {
    * service built on the instance shares one resolution.
    */
   organizationIdResolver?: OrganizationIdResolver;
-  /**
-   * Present only in public (anonymous) coded-app mode. Routes supported calls
-   * through the Apps service with a session cookie instead of a user token.
-   * @internal
-   */
   publicAppClient?: PublicAppClient;
 }

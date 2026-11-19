@@ -39,7 +39,6 @@ export class UiPathConfig {
   public readonly redirectUri?: string;
   public readonly scope?: string;
   public readonly enforceSso?: boolean;
-  /** Names the app to the Apps service in public mode; its presence is what turns public mode on. */
   public readonly appKey?: string;
 
   constructor(options: ConfigOptions) {

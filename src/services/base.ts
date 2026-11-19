@@ -77,11 +77,6 @@ export class BaseService {
    * const entities = new Entities(sdk);
    * ```
    */
-  /**
-   * Apps service client, present only when the SDK runs in public (anonymous) mode.
-   * Services that support public mode route through this instead of the token-based
-   * ApiClient. Shared across services so the anonymous session is bootstrapped once.
-   */
   protected readonly publicApp?: PublicAppClient;
 
   constructor(instance: IUiPath, headers?: Record<string, string>) {

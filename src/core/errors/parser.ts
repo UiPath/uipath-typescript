@@ -108,8 +108,7 @@ class GenericErrorParser implements ErrorParsingStrategy {
   }
 
   parse(errorBody: unknown, response: Response): ParsedErrorInfo {
-    // For unknown error formats, keep a plain `{ message }` (what the Apps service's public app routes send),
-    // otherwise fall back to the status text.
+    // For unknown error formats, just pass through the raw error with fallback message
     const bodyMessage = (errorBody as { message?: unknown } | null)?.message;
     const message = (typeof bodyMessage === 'string' && bodyMessage) || response?.statusText || 'An error occurred';
 

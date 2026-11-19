@@ -4,10 +4,6 @@ import { PublicAppClient, publicBindingKey, toAppsBaseUrl } from '@/core/http/pu
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-/**
- * PublicAppClient: cookie-credentialed calls to the Apps service for anonymous coded apps, with single-flight
- * session bootstrap on 401.
- */
 describe('PublicAppClient', () => {
   const routes = 'https://alpha.uipath.com/my-org/apps_/default/api/v1/default/integrations/codedapp';
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -100,9 +96,9 @@ describe('PublicAppClient', () => {
 
   it('on 401 it bootstraps a session then retries the original request once', async () => {
     fetchMock
-      .mockResolvedValueOnce(new Response(null, { status: 401 })) // first call: no session
-      .mockResolvedValueOnce(new Response(null, { status: 204 })) // POST /session
-      .mockResolvedValueOnce(json(200, { value: [{ Key: 'J-2' }] })); // retry
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(json(200, { value: [{ Key: 'J-2' }] }));
 
     const started = await client.startProcess('Invoices.Shared');
 
