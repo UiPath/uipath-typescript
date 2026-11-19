@@ -1,10 +1,11 @@
 import { ExecutionContext } from '../context/execution';
 import { isInActionCenter } from '../../utils/platform';
 import { SessionStore } from '../../utils/storage/session-store';
+import { LocalStore } from '@/utils/storage/local-store';
 import { NO_OP_STORE } from '../../utils/storage/no-op-store';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { AuthToken, TokenInfo } from './types';
-import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
+import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS, TOKEN_REFRESH_LOCK_PREFIX } from './constants';
 import { getExpiryMs } from './token-expiry';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
@@ -18,7 +19,8 @@ import { extractUserIdFromToken } from '../../utils/encoding';
 /**
  * TokenManager is responsible for managing authentication tokens.
  * It provides token operations for a specific client ID.
- * - For OAuth tokens: Uses session storage with client ID-based keys
+ * - For OAuth tokens: Uses session storage with client ID-based keys, or local storage shared by the
+ *   tabs of the app when `tokenStorage` asks for it
  * - For Secret tokens: Stores only in memory, allowing multiple instances
  */
 export class TokenManager {
@@ -28,7 +30,19 @@ export class TokenManager {
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
   private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
   private readonly debugJobKeyListeners: Array<(jobKey: string) => void> = [];
-  private readonly store: KeyValueStore = SessionStore.open() ?? NO_OP_STORE;
+  private readonly store: KeyValueStore;
+  // The storage area the session is not kept in: a copy left there by another `tokenStorage` setting is still removed on logout.
+  private readonly unusedStore: KeyValueStore;
+  // True when the session lives in the store all tabs of the app share, not in this tab's own.
+  private readonly sharedAcrossTabs: boolean;
+  // False for a session the store did not keep, so its absence there is not taken for a sign-out elsewhere.
+  private persisted = false;
+  private readonly onStorageChange = (event: StorageEvent): void => {
+    // A null key means the whole store was cleared.
+    if (event.key === null || event.key === this._getStorageKey()) {
+      this._syncWithSharedStore();
+    }
+  };
 
   /**
    * Creates a new TokenManager instance
@@ -51,6 +65,16 @@ export class TokenManager {
     } else if (hostEmbeddingOrigin) {
       this.embeddedTokenManager = new EmbeddedTokenManager(hostEmbeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
       this.isOAuth = false;
+    }
+
+    const sessionStore = SessionStore.open() ?? NO_OP_STORE;
+    const sharedStore = this.isOAuth && config.tokenStorage === 'localStorage' ? LocalStore.open() : undefined;
+    this.store = sharedStore ?? sessionStore;
+    this.unusedStore = sharedStore ? sessionStore : (this.isOAuth ? LocalStore.open() : undefined) ?? NO_OP_STORE;
+    this.sharedAcrossTabs = sharedStore !== undefined;
+    if (this.sharedAcrossTabs) {
+      // Fires in every other tab when one of them writes or removes the session.
+      window.addEventListener('storage', this.onStorageChange);
     }
   }
 
@@ -78,6 +102,7 @@ export class TokenManager {
    * @throws AuthenticationError if no token available or refresh fails
    */
   public async getValidToken(): Promise<string> {
+    this._syncWithSharedStore();
     const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
 
     if (!tokenInfo) {
@@ -146,6 +171,7 @@ export class TokenManager {
       return false;
     }
 
+    this.persisted = true;
     this.currentToken = tokenInfo;
     this._updateExecutionContext(tokenInfo);
     return !isExpired;
@@ -195,7 +221,7 @@ export class TokenManager {
     this._updateExecutionContext(tokenInfo);
     
     if (this.isOAuth) {
-      this.store.write(this._getStorageKey(), tokenInfo);
+      this.persisted = this.store.write(this._getStorageKey(), tokenInfo);
     }
   }
 
@@ -242,6 +268,9 @@ export class TokenManager {
    */
   destroy(): void {
     this.embeddedTokenManager?.destroy();
+    if (this.sharedAcrossTabs) {
+      window.removeEventListener('storage', this.onStorageChange);
+    }
   }
 
   /**
@@ -262,11 +291,13 @@ export class TokenManager {
    * Clears the current token
    */
   clearToken(): void {
+    this.persisted = false;
     this.currentToken = undefined;
     this._updateExecutionContext(undefined);
     
     if (this.isOAuth) {
       this.store.remove(this._getStorageKey());
+      this.unusedStore.remove(this._getStorageKey());
     }
   }
   
@@ -294,7 +325,7 @@ export class TokenManager {
 
     try {
       // Create new refresh promise
-      this.refreshPromise = this._doRefreshToken();
+      this.refreshPromise = this._withRefreshLock(() => this._doRefreshToken());
       // Wait for refresh to complete
       const result = await this.refreshPromise;
       return result;
@@ -308,6 +339,12 @@ export class TokenManager {
    * Internal method to perform the actual token refresh
    */
   private async _doRefreshToken(): Promise<AuthToken> {
+    // Another tab may have renewed the shared session while this one waited for its turn.
+    const renewedElsewhere = this._tokenRenewedElsewhere();
+    if (renewedElsewhere) {
+      return renewedElsewhere;
+    }
+
     // Destructure before the type guard — hasOAuthConfig narrows this.config to
     // { clientId, redirectUri, scope } which does not include BaseConfig fields.
     const { orgName, baseUrl } = this.config;
@@ -340,12 +377,31 @@ export class TokenManager {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }));
       console.error("Token refresh error:", errorData);
-      // Clear the invalid token to prevent further failed requests
-      this.clearToken();
+      // Another tab may have redeemed the same refresh token first. What it stored is the session then,
+      // and this failure says nothing about it.
+      if (this._sessionChangedSince(tokenInfo)) {
+        const renewedElsewhere = this._tokenRenewedElsewhere();
+        if (renewedElsewhere) {
+          return renewedElsewhere;
+        }
+      } else {
+        // Clear the invalid token to prevent further failed requests
+        this.clearToken();
+      }
       throw new Error(`Failed to refresh access token: ${JSON.stringify(errorData)}`);
     }
 
     const token = await response.json() as AuthToken;
+
+    // The session ended or changed hands while the request was in flight: a logout or a new sign-in, in
+    // this tab or another. The answer belongs to the old session and must not bring it back.
+    if (this._sessionChangedSince(tokenInfo)) {
+      const current = this._tokenRenewedElsewhere();
+      if (current) {
+        return current;
+      }
+      throw new AuthenticationError({ message: 'The session ended while its token was being renewed' });
+    }
     this.setToken({
       token: token.access_token,
       type: 'oauth',
@@ -355,5 +411,73 @@ export class TokenManager {
       idToken: token.id_token ?? tokenInfo.idToken
     });
     return token;
+  }
+
+  /**
+   * Runs a refresh while holding a lock all tabs of the app share, so that tabs renew one at a time
+   * and the next one finds the renewed session instead of asking again. Where Identity issues a new
+   * refresh token on every refresh, it also keeps two tabs from redeeming the same one. With the
+   * per-tab store, or in a browser without the Web Locks API, the refresh just runs.
+   */
+  private async _withRefreshLock(refresh: () => Promise<AuthToken>): Promise<AuthToken> {
+    const locks = this.sharedAcrossTabs ? globalThis.navigator?.locks : undefined;
+    if (!locks) {
+      return refresh();
+    }
+    // The lock is held until the refresh settles, and the request resolves with its result.
+    return await locks.request(`${TOKEN_REFRESH_LOCK_PREFIX}${this.config.clientId}`, refresh);
+  }
+
+  /**
+   * Brings this tab in line with the shared store, where another tab may have renewed the session,
+   * signed in or signed out since this tab last looked. Does nothing for the per-tab store.
+   */
+  private _syncWithSharedStore(): void {
+    // A session the store did not keep is this tab's alone: what the store holds says nothing about it.
+    if (!this.sharedAcrossTabs || (this.currentToken && !this.persisted)) {
+      return;
+    }
+
+    const stored = this._parseTokenInfo(this.store.read(this._getStorageKey()));
+    const current = this.currentToken;
+    if (stored?.token === current?.token && stored?.refreshToken === current?.refreshToken) {
+      return;
+    }
+
+    // Renewed or signed in from another tab; signed out there when nothing is stored any more.
+    this.persisted = stored !== undefined;
+    this.currentToken = stored;
+    this._updateExecutionContext(stored);
+  }
+
+  /** Whether the session is no longer the one `sent` belonged to, here or in the store the tabs share. */
+  private _sessionChangedSince(sent: TokenInfo): boolean {
+    this._syncWithSharedStore();
+    return this.currentToken?.refreshToken !== sent.refreshToken;
+  }
+
+  /**
+   * The session token when another tab has already renewed it, in the shape a refresh answers with;
+   * `undefined` when this tab still has to renew it itself.
+   */
+  private _tokenRenewedElsewhere(): AuthToken | undefined {
+    if (!this.sharedAcrossTabs) {
+      return undefined;
+    }
+
+    this._syncWithSharedStore();
+    const tokenInfo = this.currentToken;
+    if (!tokenInfo?.expiresAt || this.isTokenExpired(tokenInfo, TOKEN_EXPIRY_BUFFER_MS)) {
+      return undefined;
+    }
+
+    return {
+      access_token: tokenInfo.token,
+      token_type: 'Bearer',
+      expires_in: Math.round((getExpiryMs(tokenInfo.expiresAt) - Date.now()) / 1000),
+      scope: this.config.scope ?? '',
+      refresh_token: tokenInfo.refreshToken,
+      id_token: tokenInfo.idToken
+    };
   }
 }

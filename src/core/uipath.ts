@@ -184,6 +184,7 @@ export class UiPath implements IUiPath {
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
       scope: hasOAuthAuth ? config.scope : undefined,
       enforceSso: config.enforceSso,
+      tokenStorage: config.tokenStorage,
     });
 
     const executionContext = new ExecutionContext();
@@ -426,7 +427,8 @@ export class UiPath implements IUiPath {
 
   /**
    * Releases resources held by this SDK instance.
-   * Cancels any in-flight token-refresh request. Call this when the coded app is unmounted.
+   * Cancels any in-flight token-refresh request and stops following the session other tabs share.
+   * Call this when the coded app is unmounted.
    */
   public destroy(): void {
     this.#authService?.getTokenManager()?.destroy();

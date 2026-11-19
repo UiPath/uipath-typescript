@@ -222,6 +222,33 @@ describe('UiPath Core', () => {
 
       expect(config).toBeInstanceOf(UiPathConfig);
     });
+
+    it('should carry tokenStorage into the internal config', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+        scope: TEST_CONSTANTS.OAUTH_SCOPE,
+        tokenStorage: 'localStorage'
+      });
+
+      expect(getConfig(sdk).tokenStorage).toBe('localStorage');
+    });
+
+    it('should leave tokenStorage unset when the app does not choose one', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+        scope: TEST_CONSTANTS.OAUTH_SCOPE
+      });
+
+      expect(getConfig(sdk).tokenStorage).toBeUndefined();
+    });
   });
 
   describe('Context Access', () => {

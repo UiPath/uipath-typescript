@@ -60,6 +60,35 @@ const sdk = new UiPath({ enforceSso: true });
 !!! note "Organization name or id"
     `orgName` can be either the organization name or the organization id.
 
+### Keeping users signed in across tabs and browser restarts
+
+By default the SDK keeps the OAuth session in `sessionStorage`: each tab signs in on its own, and the session ends when the tab closes. A new tab goes through the UiPath sign-in redirect, which completes without a prompt while the user's UiPath session is active.
+
+Set `tokenStorage: 'localStorage'` to keep the session in `localStorage` instead:
+
+```typescript
+const sdk = new UiPath({ tokenStorage: 'localStorage' });
+```
+
+- Every tab that uses the same client ID on the same origin shares one session, so a new tab is signed in without a redirect.
+- The session survives a browser restart, for as long as its refresh token is valid.
+- Tabs stay in sync: a token renewal, a sign-in or `sdk.logout()` in one tab changes the session in the others. The SDK in those tabs follows at once; your app sees it through `sdk.isAuthenticated()`, or when its next call rejects with an `AuthenticationError`.
+
+!!! warning "Weigh the security trade-off first"
+    The stored session holds the access token, the refresh token and the ID token. Any script running on your app's origin can read it, and can replace it. With `sessionStorage` that exposure is limited to one tab and ends when the tab closes. With `localStorage`:
+
+    - The session stays on the device after the browser is closed, until `sdk.logout()` removes it. Closing the browser does not sign the user out, which matters on a shared computer.
+    - Every tab on the origin can reach it, including other apps served from the same origin, such as other Coded Apps of the same organization.
+    - `sdk.logout()` removes it from this browser. A copy read earlier stays usable until its refresh token is used, revoked or expires.
+
+    Use it only when you trust everything served from that origin.
+
+!!! note "Before turning it on"
+    - Apps that share a client ID on one origin share the session and its scopes. Give each app its own External Application.
+    - Tabs coordinate renewals through the Web Locks API, which all current browsers have on HTTPS pages and on `localhost`. Without it tabs still share the session, but two tabs renewing at the same moment make one request more than needed.
+    - Turning the option off later does not remove a session that is already stored. `sdk.logout()` removes it from both storage areas.
+    - A token passed to `sdk.updateToken()` is stored for every tab as well.
+
 
 ## Secret-based Authentication
 ```typescript

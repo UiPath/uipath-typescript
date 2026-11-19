@@ -78,4 +78,4 @@ sdk.logout();
 sdk.logout({ endSession: true });
 ```
 
-Refreshing the page won't help. `sessionStorage` belongs to the browser tab and survives reloads, including a hard reload. Closing the tab clears it, as does **DevTools → Application → Clear site data**.
+Refreshing the page won't help. `sessionStorage` belongs to the browser tab and survives reloads, including a hard reload. Closing the tab clears it, as does **DevTools → Application → Clear site data**. An app that sets `tokenStorage: 'localStorage'` keeps the token in `localStorage`, which closing the tab does not clear: sign out instead.

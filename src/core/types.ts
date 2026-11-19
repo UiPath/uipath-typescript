@@ -50,7 +50,8 @@ export interface IUiPath {
 
   /**
    * Releases resources held by this SDK instance.
-   * Cancels any in-flight token-refresh request. Call this when the coded app is unmounted.
+   * Cancels any in-flight token-refresh request and stops following the session other tabs share.
+   * Call this when the coded app is unmounted.
    */
   destroy(): void;
 
