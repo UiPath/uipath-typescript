@@ -6,21 +6,8 @@ const APPS_INTEGRATION_BASE = 'apps_/default/api/v1/default/integrations/codedap
 
 const APP_KEY_HEADER = 'X-UiPath-App-Key';
 
-const API_HOST_TO_APPS_HOST: Record<string, string> = {
-  'alpha.api.uipath.com': 'alpha.uipath.com',
-  'staging.api.uipath.com': 'staging.uipath.com',
-  'api.uipath.com': 'cloud.uipath.com',
-};
-
 export function publicBindingKey(name: string, folderPath?: string): string {
   return folderPath ? `${name}.${folderPath}` : name;
-}
-
-export function toAppsBaseUrl(baseUrl: string): string {
-  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-  const url = new URL(base);
-  const appsHost = API_HOST_TO_APPS_HOST[url.hostname];
-  return appsHost ? `${url.protocol}//${appsHost}` : base;
 }
 
 export class PublicAppClient {
@@ -29,7 +16,7 @@ export class PublicAppClient {
   private sessionBootstrap: Promise<void> | null = null;
 
   constructor(baseUrl: string, orgName: string, appKey: string) {
-    this.integrationBase = `${toAppsBaseUrl(baseUrl)}/${orgName}/${APPS_INTEGRATION_BASE}`;
+    this.integrationBase = `${baseUrl.replace(/\/$/, '')}/${orgName}/${APPS_INTEGRATION_BASE}`;
     this.appKey = appKey;
   }
 

@@ -11,7 +11,7 @@ import { resource } from '../../../src/resources';
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
 describe('public coded app mode', () => {
-  const routes = 'https://alpha.uipath.com/my-org/apps_/default/api/v1/default/integrations/codedapp';
+  const routes = 'https://alpha.api.uipath.com/my-org/apps_/default/api/v1/default/integrations/codedapp';
   let fetchMock: ReturnType<typeof vi.fn>;
   let sdk: UiPath;
 

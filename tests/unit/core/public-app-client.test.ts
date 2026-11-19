@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PublicAppClient, publicBindingKey, toAppsBaseUrl } from '@/core/http/public-app-client';
+import { PublicAppClient, publicBindingKey } from '@/core/http/public-app-client';
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 describe('PublicAppClient', () => {
-  const routes = 'https://alpha.uipath.com/my-org/apps_/default/api/v1/default/integrations/codedapp';
+  const routes = 'https://alpha.api.uipath.com/my-org/apps_/default/api/v1/default/integrations/codedapp';
   let fetchMock: ReturnType<typeof vi.fn>;
   let client: PublicAppClient;
 
@@ -128,18 +128,5 @@ describe('publicBindingKey', () => {
   it('scopes the name by folder path when there is one, the way bindings_v2.json keys it', () => {
     expect(publicBindingKey('Invoices', 'Shared/Finance')).toBe('Invoices.Shared/Finance');
     expect(publicBindingKey('Orders')).toBe('Orders');
-  });
-});
-
-describe('toAppsBaseUrl', () => {
-  it('maps each API host to the Apps origin behind it', () => {
-    expect(toAppsBaseUrl('https://alpha.api.uipath.com')).toBe('https://alpha.uipath.com');
-    expect(toAppsBaseUrl('https://staging.api.uipath.com/')).toBe('https://staging.uipath.com');
-    expect(toAppsBaseUrl('https://api.uipath.com')).toBe('https://cloud.uipath.com');
-  });
-
-  it('keeps a base URL that is not an API host', () => {
-    expect(toAppsBaseUrl('https://alpha.uipath.com')).toBe('https://alpha.uipath.com');
-    expect(toAppsBaseUrl('https://automation.contoso.com/')).toBe('https://automation.contoso.com');
   });
 });
