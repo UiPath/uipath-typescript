@@ -4655,7 +4655,7 @@ created in the same call. Schema keys are unique per tenant.</p>
 <hr />
 <h3 id="getschema">getSchema()<a class="headerlink" href="#getschema" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getSchema</strong>(<code>taskId</code>: <code>number</code>, <code>options?</code>: <a href="../TaskGetSchemaOptions/"><code>TaskGetSchemaOptions</code></a>): <code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
+<p><strong>getSchema</strong>(<code>taskId</code>: <code>number</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
 <p>Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.</p>
@@ -4663,6 +4663,7 @@ created in the same call. Schema keys are unique per tenant.</p>
 - <code>TaskType.App</code>: <code>schema</code> has <code>inputs</code> (read-only), <code>outputs</code> (filled in by the user), <code>inOuts</code> (pre-filled, editable) and <code>outcomes</code>. A property's <code>name</code> is its key in the task's <code>data</code>, and an outcome's <code>name</code> is the <code>action</code> to pass to <code>complete()</code>.
 - <code>TaskType.QuickForm</code>: the schema the task was created with, same as <code>getSchemaByKey()</code> returns for the task's <code>taskSchemaKey</code>. Its <code>schema</code> body is returned as it was registered.</p>
 <p>An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the <code>Apps</code> or <code>Apps.Read</code> scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.</p>
+<p>Other task types have no schema here and return null. A Form task's form definition is the <code>formLayout</code> returned by <code>getById()</code>.</p>
 <p>The task's type and keys are looked up automatically (one extra read). When called on a task object returned by the SDK, they are already known, so no lookup happens.</p>
 <h4 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h4>
 <table>
@@ -4681,8 +4682,8 @@ created in the same call. Schema keys are unique per tenant.</p>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><a href="../TaskGetSchemaOptions/"><code>TaskGetSchemaOptions</code></a></td>
-<td>Folder scope (folderId, folderKey, or folderPath), plus optional task details that skip the lookup</td>
+<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
+<td>Folder scope (folderId, folderKey, or folderPath)</td>
 </tr>
 </tbody>
 </table>

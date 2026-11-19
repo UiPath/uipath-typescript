@@ -4201,7 +4201,8 @@
 <p><strong><code>Experimental</code></strong></p>
 <p>Gets this task's schema: the fields it holds and the outcomes it can be completed with.</p>
 <p>Supported for App tasks and QuickForm tasks; the <code>type</code> of the response tells which shape <code>schema</code> has.
-An App task's schema has no fields and no outcomes when the caller cannot view apps in the task's folder, when the token lacks the <code>Apps</code> or <code>Apps.Read</code> scope, or when the task's app is no longer deployed there.</p>
+An App task's schema has no fields and no outcomes when the caller cannot view apps in the task's folder, when the token lacks the <code>Apps</code> or <code>Apps.Read</code> scope, or when the task's app is no longer deployed there.
+Other task types return null. A Form task's form definition is its <code>formLayout</code>, returned by <code>getById()</code>.</p>
 <h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>

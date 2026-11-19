@@ -382,7 +382,7 @@ console.log(task.data);
 
 ### getSchema()
 
-> **getSchema**(`taskId`: `number`, `options?`: `TaskGetSchemaOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
+> **getSchema**(`taskId`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
 
 **`Experimental`**
 
@@ -395,12 +395,14 @@ Supported for App tasks and QuickForm tasks. The `type` of the response tells wh
 
 An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the `Apps` or `Apps.Read` scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.
 
+Other task types have no schema here and return null. A Form task's form definition is the `formLayout` returned by `getById()`.
+
 The task's type and keys are looked up automatically (one extra read). When called on a task object returned by the SDK, they are already known, so no lookup happens.
 
 #### Parameters
 
 - `taskId`: `number` — The task to get the schema for
-- `options?`: `TaskGetSchemaOptions` — Folder scope (folderId, folderKey, or folderPath), plus optional task details that skip the lookup
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
