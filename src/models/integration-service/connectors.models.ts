@@ -38,7 +38,7 @@ export interface ConnectorGetResponse extends RawConnectorGetResponse {}
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Connectors } from '@uipath/uipath-typescript/connections';
+ * import { Connectors } from '@uipath/uipath-typescript/integration-service';
  *
  * const connectors = new Connectors(sdk);
  * const allConnectors = await connectors.getAll();
@@ -60,7 +60,7 @@ export interface ConnectorsServiceModel {
    * @returns Promise resolving to an array of {@link ConnectorGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
+   * import { Connectors } from '@uipath/uipath-typescript/integration-service';
    *
    * const connectors = new Connectors(sdk);
    *
@@ -91,7 +91,7 @@ export interface ConnectorsServiceModel {
    * @returns Promise resolving to a {@link ConnectorGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
+   * import { Connectors } from '@uipath/uipath-typescript/integration-service';
    *
    * const connectors = new Connectors(sdk);
    *
@@ -119,7 +119,7 @@ export interface ConnectorsServiceModel {
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
+   * import { Connectors } from '@uipath/uipath-typescript/integration-service';
    *
    * const connectors = new Connectors(sdk);
    *
@@ -152,7 +152,7 @@ export interface ConnectorsServiceModel {
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
+   * import { Connectors } from '@uipath/uipath-typescript/integration-service';
    *
    * const connectors = new Connectors(sdk);
    *

@@ -143,7 +143,7 @@ class HttpRequestExecution extends ConnectionRequestService {
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { executeHttp } from '@uipath/uipath-typescript/connections';
+ * import { executeHttp } from '@uipath/uipath-typescript/integration-service';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
@@ -230,7 +230,7 @@ export function executeHttp(
  * }
  *
  * // anywhere in the project
- * import { executeHttp } from '@uipath/uipath-typescript/connections';
+ * import { executeHttp } from '@uipath/uipath-typescript/integration-service';
  *
  * const result = await executeHttp(sdk, ProjectResources.helpdesk, '/v2/tickets');
  * ```

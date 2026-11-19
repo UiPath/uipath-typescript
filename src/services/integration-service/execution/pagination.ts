@@ -1,5 +1,5 @@
 import { ValidationError } from '@/core/errors';
-import { decodeBase64Url } from '@/utils/encoding/base64';
+import { decodeBase64Url } from './encoding';
 import type { ExecutePage } from '@/models/integration-service/execution.types';
 
 /** Response header telling whether the connector has more records. */

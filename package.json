@@ -316,6 +316,16 @@
                 "default": "./dist/connections/index.cjs"
             }
         },
+        "./integration-service": {
+            "import": {
+                "types": "./dist/integration-service/index.d.ts",
+                "default": "./dist/integration-service/index.mjs"
+            },
+            "require": {
+                "types": "./dist/integration-service/index.d.ts",
+                "default": "./dist/integration-service/index.cjs"
+            }
+        },
         "./roles": {
             "import": {
                 "types": "./dist/roles/index.d.ts",

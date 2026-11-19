@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { decodeBase64, decodeBase64ToBytes, decodeBase64Url, encodeBase64 } from '@/utils/encoding/base64';
+import { decodeBase64, encodeBase64 } from '@/utils/encoding/base64';
+import { decodeBase64ToBytes, decodeBase64Url } from '@/services/integration-service/execution/encoding';
 
 // "ÿþ?" encodes to base64 with both characters the URL-safe alphabet replaces
 const TEXT = '{"k":"ÿþ?>"}';

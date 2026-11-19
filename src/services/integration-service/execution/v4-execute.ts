@@ -1,6 +1,6 @@
 import { ServerError } from '@/core/errors';
 import { CONTENT_TYPES } from '@/utils/constants/headers';
-import { decodeBase64ToBytes } from '@/utils/encoding/base64';
+import { decodeBase64ToBytes } from './encoding';
 import type {
   ExecuteFile,
   ExecuteHttpResult,

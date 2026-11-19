@@ -3,9 +3,6 @@
  */
 import { isBrowser } from '../platform';
 
-const BASE64URL_DASH_RE = /-/g;
-const BASE64URL_UNDERSCORE_RE = /_/g;
-
 /**
  * Encodes a string to base64
  * @param str - The string to encode
@@ -34,39 +31,22 @@ export function encodeBase64(str: string): string {
  * @returns Decoded string
  */
 export function decodeBase64(base64: string): string {
-  // TextDecoder for UTF-8 decoding (works in both browser and Node.js)
-  const decoder = new TextDecoder();
-  return decoder.decode(decodeBase64ToBytes(base64));
-}
-
-/**
- * Decodes a base64 string to its bytes, for content that is not text
- * @param base64 - The base64 string to decode
- * @returns Decoded bytes
- */
-export function decodeBase64ToBytes(base64: string): Uint8Array {
+  let bytes: Uint8Array;
+  
   if (isBrowser) {
     // Browser environment
     const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
+    bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    return bytes;
+  } else {
+    // Node.js environment
+    bytes = new Uint8Array(Buffer.from(base64, 'base64'));
   }
-  // Node.js environment
-  return new Uint8Array(Buffer.from(base64, 'base64'));
+  
+  // TextDecoder for UTF-8 decoding (works in both browser and Node.js)
+  const decoder = new TextDecoder();
+  return decoder.decode(bytes);
 }
 
-/**
- * Decodes a base64url string, the URL-safe alphabet used by JWT segments and
- * Integration Service page tokens. Padding is optional.
- * @param base64Url - The base64url string to decode
- * @returns Decoded string
- */
-export function decodeBase64Url(base64Url: string): string {
-  const base64 = base64Url
-    .replace(BASE64URL_DASH_RE, '+')
-    .replace(BASE64URL_UNDERSCORE_RE, '/');
-  return decodeBase64(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '='));
-}
