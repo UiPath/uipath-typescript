@@ -425,18 +425,6 @@ export interface TaskSchemaGetResponse {
 }
 
 /**
- * Options for getting a task's schema.
- */
-export interface TaskGetSchemaOptions extends FolderScopedOptions {
-  /** Task type. Looked up automatically when omitted. */
-  type?: TaskType;
-  /** The task's key, used to read the schema of an App task. Looked up automatically when omitted. */
-  taskKey?: string;
-  /** The task's schema key, used to read the schema of a QuickForm task. Looked up automatically when omitted. */
-  taskSchemaKey?: string;
-}
-
-/**
  * A field or an outcome in the schema of an App task.
  */
 export interface TaskAppSchemaProperty {

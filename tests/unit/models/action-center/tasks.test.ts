@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTaskWithMethods } from '../../../../src/models/action-center/tasks.models';
 import type { TaskServiceModel } from '../../../../src/models/action-center/tasks.models';
+import type { TaskBoundOperations } from '../../../../src/models/action-center/tasks.internal-types';
 import { TaskType, TaskPriority, TaskAssignmentCriteria } from '../../../../src/models/action-center/tasks.types';
 import { createBasicTask } from '../../../utils/mocks/tasks';
 import { createMockOperationResponse } from '../../../utils/mocks/core';
@@ -373,47 +374,60 @@ describe('Task Models', () => {
     });
 
     describe('task.getSchema()', () => {
-      it('should call service.getSchema with the task id, default folder and the task\'s own type and key', async () => {
+      it('should call the bound getSchema with the task\'s own id, type and keys and its default folder', async () => {
+        const schema = { type: TaskType.App, schema: TASK_TEST_CONSTANTS.APP_TASK_SCHEMA };
+        const bound: TaskBoundOperations = { getSchema: vi.fn().mockResolvedValue(schema) };
         const task = createTaskWithMethods(
           createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID, type: TaskType.App, key: TASK_TEST_CONSTANTS.TASK_GUID_KEY }),
           mockService,
+          bound,
         );
-        const schema = { type: TaskType.App, schema: TASK_TEST_CONSTANTS.APP_TASK_SCHEMA };
-        mockService.getSchema = vi.fn().mockResolvedValue(schema);
 
         const result = await task.getSchema();
 
-        expect(mockService.getSchema).toHaveBeenCalledWith(TASK_TEST_CONSTANTS.TASK_ID, {
-          folderId: TEST_CONSTANTS.FOLDER_ID,
-          type: TaskType.App,
-          taskKey: TASK_TEST_CONSTANTS.TASK_GUID_KEY,
-          taskSchemaKey: undefined,
-        });
+        expect(bound.getSchema).toHaveBeenCalledWith(
+          { id: TASK_TEST_CONSTANTS.TASK_ID, type: TaskType.App, key: TASK_TEST_CONSTANTS.TASK_GUID_KEY, taskSchemaKey: undefined },
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+        expect(mockService.getSchema).not.toHaveBeenCalled();
         expect(result).toEqual(schema);
       });
 
       it('should pass the schema key of a QuickForm task', async () => {
+        const bound: TaskBoundOperations = { getSchema: vi.fn().mockResolvedValue(null) };
         const task = createTaskWithMethods(
           createBasicTask({ type: TaskType.QuickForm, taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY }),
+          mockService,
+          bound,
+        );
+
+        await task.getSchema();
+
+        expect(bound.getSchema).toHaveBeenCalledWith(
+          expect.objectContaining({ type: TaskType.QuickForm, taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY }),
+          expect.anything(),
+        );
+      });
+
+      it('should call service.getSchema with the task id and folder only when no bound calls are supplied', async () => {
+        const task = createTaskWithMethods(
+          createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID, type: TaskType.App, key: TASK_TEST_CONSTANTS.TASK_GUID_KEY }),
           mockService,
         );
         mockService.getSchema = vi.fn().mockResolvedValue(null);
 
         await task.getSchema();
 
-        expect(mockService.getSchema).toHaveBeenCalledWith(
-          TASK_TEST_CONSTANTS.TASK_ID,
-          expect.objectContaining({ type: TaskType.QuickForm, taskSchemaKey: TASK_TEST_CONSTANTS.TASK_SCHEMA_KEY }),
-        );
+        expect(mockService.getSchema).toHaveBeenCalledWith(TASK_TEST_CONSTANTS.TASK_ID, { folderId: TEST_CONSTANTS.FOLDER_ID });
       });
 
       it('should keep a folder scope passed by the caller', async () => {
-        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
-        mockService.getSchema = vi.fn().mockResolvedValue(null);
+        const bound: TaskBoundOperations = { getSchema: vi.fn().mockResolvedValue(null) };
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService, bound);
 
         await task.getSchema({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
 
-        const options = vi.mocked(mockService.getSchema).mock.calls[0][1];
+        const options = vi.mocked(bound.getSchema).mock.calls[0][1];
         expect(options?.folderKey).toBe(TEST_CONSTANTS.FOLDER_KEY);
         expect(options?.folderId).toBeUndefined();
       });

@@ -1,7 +1,7 @@
 import { ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { DEFAULT_TASK_EXPAND, TaskMap, TaskSchemaMap, TaskStatusMap } from '../../models/action-center/tasks.constants';
-import { RawAppTaskSchemaFields, TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
+import { RawAppTaskSchemaFields, TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskBoundOperations, TaskGetFormOptions, TaskSchemaSource, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
 import {
   TaskCreateResponse,
   TaskDataGetResponse,
@@ -19,7 +19,6 @@ import {
   TaskEditMetadataOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
-  TaskGetSchemaOptions,
   TaskGetSchemaResponse,
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
@@ -46,6 +45,11 @@ import { FolderScopedService } from '../folder-scoped';
  * Service for interacting with UiPath Tasks API
  */
 export class TaskService extends FolderScopedService implements TaskServiceModel {
+  // Task objects call these for the task they describe: they already hold its type and keys.
+  private readonly boundOperations: TaskBoundOperations = {
+    getSchema: (task, options) => this.getBoundSchema(task, options)
+  };
+
   @track('Tasks.Create')
   async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
     if (task.type === TaskType.QuickForm && !task.taskSchemaKey) {
@@ -68,7 +72,7 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     // Transform time fields for consistency
     const normalizedData = transformData(response.data, TaskMap);
     const transformedData = applyDataTransforms(normalizedData, { field: 'status', valueMap: TaskStatusMap });
-    return createTaskWithMethods(transformedData, this) as TaskCreateResponse;
+    return createTaskWithMethods(transformedData, this, this.boundOperations) as TaskCreateResponse;
   }
 
   @track('Tasks.GetUsers')
@@ -123,7 +127,8 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
       const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskMap);
       return createTaskWithMethods(
         applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
-        this
+        this,
+        this.boundOperations
       ) as TaskGetResponse;
     };
 
@@ -191,7 +196,8 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
 
     return createTaskWithMethods(
       applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
-      this
+      this,
+      this.boundOperations
     ) as TaskGetResponse;
   }
 
@@ -337,26 +343,36 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
 
   /** @experimental */
   @track('Tasks.GetSchema')
-  async getSchema(taskId: number, options?: TaskGetSchemaOptions): Promise<TaskGetSchemaResponse | null> {
-    if (!taskId) {
+  async getSchema(taskId: number, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
+    return this.readSchema({ id: taskId }, options);
+  }
+
+  // The bound path reports under the same event as the id-based method.
+  @track('Tasks.GetSchema')
+  private async getBoundSchema(task: TaskSchemaSource, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
+    return this.readSchema(task, options);
+  }
+
+  private async readSchema(task: TaskSchemaSource, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
+    if (!task.id) {
       throw new ValidationError({ message: 'taskId is required for getSchema' });
     }
 
     const headers = this.resolveFolder(options, 'Tasks.getSchema');
 
     // An App task's schema is read by task key and a QuickForm task's by schema key.
-    // Look them up when the caller doesn't provide them.
-    let { type, taskKey, taskSchemaKey } = options ?? {};
-    if (!type || (type === TaskType.App && !taskKey) || (type === TaskType.QuickForm && !taskSchemaKey)) {
-      const task = await this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID, { taskId }, headers);
-      type = task.type;
-      taskKey = task.key;
-      taskSchemaKey = task.taskSchemaKey ?? undefined;
+    // Look them up by id when they are not already known.
+    let { type, key, taskSchemaKey } = task;
+    if (!type || (type === TaskType.App && !key) || (type === TaskType.QuickForm && !taskSchemaKey)) {
+      const fetched = await this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID, { taskId: task.id }, headers);
+      type = fetched.type;
+      key = fetched.key;
+      taskSchemaKey = fetched.taskSchemaKey;
     }
 
     switch (type) {
       case TaskType.App:
-        return taskKey ? this.fetchAppTaskSchema(taskKey, headers) : null;
+        return key ? this.fetchAppTaskSchema(key, headers) : null;
       case TaskType.QuickForm: {
         if (!taskSchemaKey) {
           return null;
@@ -552,7 +568,8 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     const transformedTask = transformData(response.data, TaskMap);
     return createTaskWithMethods(
       applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
-      this
+      this,
+      this.boundOperations
     ) as TaskGetResponse;
   }
 

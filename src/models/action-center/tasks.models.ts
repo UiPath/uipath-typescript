@@ -12,7 +12,6 @@ import type {
   TaskEditMetadataOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
-  TaskGetSchemaOptions,
   TaskGetSchemaResponse,
   TaskCreateOptions,
   TaskGetUsersOptions,
@@ -22,6 +21,7 @@ import type {
   UserLoginInfo
 } from './tasks.types';
 import { FolderScopedOptions, OperationResponse } from '../common/types';
+import type { TaskBoundOperations } from './tasks.internal-types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -411,10 +411,12 @@ export interface TaskServiceModel {
    *
    * An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the `Apps` or `Apps.Read` scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.
    *
+   * Other task types have no schema here and return null. A Form task's form definition is the `formLayout` returned by `getById()`.
+   *
    * The task's type and keys are looked up automatically (one extra read). When called on a task object returned by the SDK, they are already known, so no lookup happens.
    *
    * @param taskId - The task to get the schema for
-   * @param options - Folder scope (folderId, folderKey, or folderPath), plus optional task details that skip the lookup
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
    * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
    * @example
    * ```typescript
@@ -461,7 +463,7 @@ export interface TaskServiceModel {
    * ```
    * @experimental
    */
-  getSchema(taskId: number, options?: TaskGetSchemaOptions): Promise<TaskGetSchemaResponse | null>;
+  getSchema(taskId: number, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null>;
 
   /**
    * Saves a task's data (form/task payload), replacing the existing payload.
@@ -592,6 +594,7 @@ export interface TaskMethods {
    *
    * Supported for App tasks and QuickForm tasks; the `type` of the response tells which shape `schema` has.
    * An App task's schema has no fields and no outcomes when the caller cannot view apps in the task's folder, when the token lacks the `Apps` or `Apps.Read` scope, or when the task's app is no longer deployed there.
+   * Other task types return null. A Form task's form definition is its `formLayout`, returned by `getById()`.
    *
    * @param options - Optional folder scope override (defaults to this task's folder)
    * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
@@ -668,9 +671,10 @@ export interface TaskCommentGetResponse extends RawTaskCommentGetResponse {}
  * 
  * @param taskData - The task data (response from API)
  * @param service - The task service instance
+ * @param bound - Calls that use what the task object already holds; without them the id-based service methods are used
  * @returns Object containing task methods
  */
-function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse, service: TaskServiceModel): TaskMethods {
+function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse, service: TaskServiceModel, bound?: TaskBoundOperations): TaskMethods {
   return {
     async assign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
@@ -718,9 +722,11 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
 
     async getSchema(options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
       if (!taskData.id) throw new Error('Task ID is undefined');
-      // The task already knows its type and keys, so the service skips its lookup.
-      const known: TaskGetSchemaOptions = { type: taskData.type, taskKey: taskData.key, taskSchemaKey: taskData.taskSchemaKey ?? undefined };
-      return service.getSchema(taskData.id, resolveTaskFolder({ ...options, ...known }, taskData.folderId));
+      const folderOptions = resolveTaskFolder(options, taskData.folderId);
+      // The task already knows its type and keys, so the bound call skips the lookup by id.
+      return bound
+        ? bound.getSchema({ id: taskData.id, type: taskData.type, key: taskData.key, taskSchemaKey: taskData.taskSchemaKey }, folderOptions)
+        : service.getSchema(taskData.id, folderOptions);
     },
 
     async saveData(data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void> {
@@ -772,12 +778,14 @@ function resolveTaskFolder<T extends FolderScopedOptions>(options: T | undefined
  * 
  * @param taskData - The task data from API
  * @param service - The task service instance
+ * @param bound - Calls that use what the task object already holds (the service supplies them)
  * @returns A task object with added methods
  */
 export function createTaskWithMethods(
   taskData: RawTaskGetResponse | RawTaskCreateResponse, 
-  service: TaskServiceModel
+  service: TaskServiceModel,
+  bound?: TaskBoundOperations
 ): TaskGetResponse | TaskCreateResponse {
-  const methods = createTaskMethods(taskData, service);
+  const methods = createTaskMethods(taskData, service, bound);
   return Object.assign({}, taskData, methods) as TaskGetResponse | TaskCreateResponse;
 } 

@@ -1693,16 +1693,25 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
         creationTime: EXT_TASK.CREATED,
       });
 
+    // A task object as the SDK returns it, with the read that produced it cleared from the mock.
+    const getTaskObject = async (overrides: Partial<any>) => {
+      mockApiClient.get.mockResolvedValueOnce(createMockRawTaskData(overrides));
+      const task = await service.getById(EXT_TASK.ID, { taskType: overrides.type }, EXT_TASK.FOLDER);
+      mockApiClient.get.mockClear();
+      return task;
+    };
+
     it('should throw ValidationError when taskId or folder is missing', async () => {
       await expect(service.getSchema(0, folder)).rejects.toBeInstanceOf(ValidationError);
       await expect(service.getSchema(EXT_TASK.ID)).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should read an App task schema by task key without a lookup when type and taskKey are passed', async () => {
+    it('should read an App task schema by task key without a lookup when called on a task object', async () => {
+      const task = await getTaskObject({ type: TaskType.App, key: TASK_GUID_KEY });
       mockApiClient.get.mockResolvedValue(createMockRawAppTask());
 
-      const result = await service.getSchema(EXT_TASK.ID, { ...folder, type: TaskType.App, taskKey: TASK_GUID_KEY });
+      const result = await task.getSchema();
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -1732,21 +1741,36 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(result).toEqual({ type: TaskType.App, schema: APP_TASK_SCHEMA });
     });
 
-    it('should look up the task key when an App type is passed without it', async () => {
+    it('should look up the task key when a task object does not hold it', async () => {
+      const task = await getTaskObject({ type: TaskType.App, key: undefined });
       mockApiClient.get
         .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
         .mockResolvedValueOnce(createMockRawAppTask());
 
-      await service.getSchema(EXT_TASK.ID, { ...folder, type: TaskType.App });
+      await task.getSchema();
+
+      expect(mockApiClient.get.mock.calls[0][0]).toBe(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID);
+      expect(mockApiClient.get.mock.calls[1][1].params).toEqual({ taskKey: TASK_GUID_KEY });
+    });
+
+    it('should ignore task details passed in the options and read the task by its id', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockResolvedValueOnce(createMockRawAppTask());
+      const otherTask = { type: TaskType.App, taskKey: 'another-task-key', key: 'another-task-key' };
+
+      await service.getSchema(EXT_TASK.ID, { ...folder, ...otherTask });
 
       expect(mockApiClient.get.mock.calls[0][0]).toBe(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID);
       expect(mockApiClient.get.mock.calls[1][1].params).toEqual({ taskKey: TASK_GUID_KEY });
     });
 
     it('should return the App task schema property names verbatim', async () => {
-      mockApiClient.get.mockResolvedValue(createMockRawAppTask());
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockResolvedValueOnce(createMockRawAppTask());
 
-      const result = await service.getSchema(EXT_TASK.ID, { ...folder, type: TaskType.App, taskKey: TASK_GUID_KEY });
+      const result = await service.getSchema(EXT_TASK.ID, folder);
 
       if (result?.type !== TaskType.App) throw new Error('expected an App task schema');
       expect(result.schema.inputs[0].name).toBe('InvoiceNumber'); // not case-converted
@@ -1754,9 +1778,11 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
     });
 
     it('should return null when an App task carries no schema', async () => {
-      mockApiClient.get.mockResolvedValue(createMockRawAppTask(null));
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockResolvedValueOnce(createMockRawAppTask(null));
 
-      const result = await service.getSchema(EXT_TASK.ID, { ...folder, type: TaskType.App, taskKey: TASK_GUID_KEY });
+      const result = await service.getSchema(EXT_TASK.ID, folder);
 
       expect(result).toBeNull();
     });
@@ -1770,10 +1796,11 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(mockApiClient.get).toHaveBeenCalledTimes(1); // the lookup only
     });
 
-    it('should read a QuickForm schema by schema key without a lookup when type and taskSchemaKey are passed', async () => {
+    it('should read a QuickForm schema by schema key without a lookup when called on a task object', async () => {
+      const task = await getTaskObject({ type: TaskType.QuickForm, taskSchemaKey: TASK_SCHEMA_KEY });
       mockApiClient.get.mockResolvedValue(createMockRawTaskSchema());
 
-      const result = await service.getSchema(EXT_TASK.ID, { ...folder, type: TaskType.QuickForm, taskSchemaKey: TASK_SCHEMA_KEY });
+      const result = await task.getSchema();
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -1818,8 +1845,10 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(mockApiClient.get).toHaveBeenCalledTimes(1); // the lookup only
     });
 
-    it('should return null for a task type without a schema, with no request when the type is passed', async () => {
-      const result = await service.getSchema(EXT_TASK.ID, { ...folder, type: TaskType.External });
+    it('should return null for a task type without a schema, with no request when called on a task object', async () => {
+      const task = await getTaskObject({ type: TaskType.External });
+
+      const result = await task.getSchema();
 
       expect(result).toBeNull();
       expect(mockApiClient.get).not.toHaveBeenCalled();
@@ -1835,8 +1864,11 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
     });
 
     it('should propagate API errors from the schema read', async () => {
-      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-      await expect(service.getSchema(EXT_TASK.ID, { ...folder, type: TaskType.App, taskKey: TASK_GUID_KEY })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getSchema(EXT_TASK.ID, folder)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
     });
 
     it('should propagate API errors from the task lookup', async () => {
