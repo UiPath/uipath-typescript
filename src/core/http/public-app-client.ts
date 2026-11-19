@@ -33,12 +33,10 @@ export class PublicAppClient {
     return path.startsWith(PUBLIC_ROUTE_PREFIX);
   }
 
-  // Not in PUBLIC_APP_ENDPOINTS: the route takes a binding key and { inputArguments }, not Orchestrator's StartJobs body, so it can't reuse the signed-in code path.
   async startProcess(bindingKey: string, inputArguments?: unknown): Promise<unknown> {
     return this.request('POST', `${PUBLIC_ROUTE_PREFIX}orchestrator/processes/${encodeURIComponent(bindingKey)}/jobs`, { body: { inputArguments } });
   }
 
-  // Not in PUBLIC_APP_ENDPOINTS: one streamed POST where the service picks the path, unlike the signed-in GetWriteUri-then-upload flow.
   async uploadFile(bucketKey: string, fileName: string, content: Blob | Uint8Array<ArrayBuffer> | File): Promise<{ path: string }> {
     const contentType = content instanceof Blob && content.type ? content.type : 'application/octet-stream';
     return this.request('POST', `${PUBLIC_ROUTE_PREFIX}orchestrator/buckets/${encodeURIComponent(bucketKey)}/files`, {
