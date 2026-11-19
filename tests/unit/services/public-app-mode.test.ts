@@ -101,8 +101,8 @@ describe('public coded app mode', () => {
 
     const page = await new EntityService(sdk).getRecordsByName('Orders', { pageSize: 2, jumpToPage: 2 });
 
-    expect(fetchMock.mock.calls[0][0]).toBe(`${routes}/datafabric/entities/Orders/records?start=2&limit=2`);
-    expect(page).toMatchObject({ totalCount: 5, hasNextPage: true, nextCursor: { value: '4' }, currentPage: 2, totalPages: 3 });
+    expect(fetchMock.mock.calls[0][0]).toBe(`${routes}/datafabric/entities/Orders/records?limit=2&start=2`);
+    expect(page).toMatchObject({ totalCount: 5, hasNextPage: true, currentPage: 2, totalPages: 3 });
   });
 
   it('rejects an entity by id', async () => {

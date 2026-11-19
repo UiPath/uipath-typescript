@@ -43,29 +43,25 @@ describe('PublicAppClient', () => {
     expect(init.credentials).toBe('include');
   });
 
-  it('insertRecord POSTs the record as JSON to the entity records route', async () => {
-    fetchMock.mockResolvedValueOnce(json(200, { Id: 'R-1', Title: 'x' }));
+  it('request sends a JSON body and query params to an Apps service route', async () => {
+    fetchMock.mockResolvedValueOnce(json(200, { Id: 'R-1' }));
 
-    const record = await client.insertRecord('Orders', { Title: 'x' });
+    const record = await client.request('POST', 'integrations/codedapp/datafabric/entities/Orders/records', {
+      body: { Title: 'x' },
+      params: { start: 20, limit: undefined },
+    });
 
-    expect(record).toEqual({ Id: 'R-1', Title: 'x' });
+    expect(record).toEqual({ Id: 'R-1' });
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe(`${routes}/datafabric/entities/Orders/records`);
+    expect(url).toBe(`${routes}/datafabric/entities/Orders/records?start=20`);
     expect(init.method).toBe('POST');
     expect(init.headers['Content-Type']).toBe('application/json');
     expect(JSON.parse(init.body)).toEqual({ Title: 'x' });
   });
 
-  it('getRecord and listRecords GET the record routes, with start and limit only when given', async () => {
-    fetchMock.mockResolvedValueOnce(json(200, { Id: 'R-1' })).mockResolvedValueOnce(json(200, { value: [] })).mockResolvedValueOnce(json(200, { value: [] }));
-
-    await client.getRecord('Orders', 'R 1');
-    await client.listRecords('Orders', { start: 20, limit: 10 });
-    await client.listRecords('Orders');
-
-    expect(fetchMock.mock.calls[0][0]).toBe(`${routes}/datafabric/entities/Orders/records/R%201`);
-    expect(fetchMock.mock.calls[1][0]).toBe(`${routes}/datafabric/entities/Orders/records?start=20&limit=10`);
-    expect(fetchMock.mock.calls[2][0]).toBe(`${routes}/datafabric/entities/Orders/records`);
+  it('serves only the public app routes', () => {
+    expect(client.serves('integrations/codedapp/datafabric/entities/Orders/records')).toBe(true);
+    expect(client.serves('datafabric_/api/EntityService/Orders/read')).toBe(false);
   });
 
   it('uploadFile streams the file as is with its type and returns the stored path', async () => {

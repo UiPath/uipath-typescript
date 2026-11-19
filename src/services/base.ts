@@ -135,11 +135,17 @@ export class BaseService {
   }
 
   protected async get<T>(path: string, options: RequestSpec = {}): Promise<ApiResponse<T>> {
+    if (this.publicApp?.serves(path)) {
+      return { data: (await this.publicApp.request('GET', path, { params: options.params })) as T };
+    }
     const response = await this.#apiClient.get<T>(path, options);
     return { data: response };
   }
 
   protected async post<T>(path: string, data?: unknown, options: RequestSpec = {}): Promise<ApiResponse<T>> {
+    if (this.publicApp?.serves(path)) {
+      return { data: (await this.publicApp.request('POST', path, { body: data, params: options.params })) as T };
+    }
     const response = await this.#apiClient.post<T>(path, data, options);
     return { data: response };
   }

@@ -62,7 +62,6 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
-import { DEFAULT_PAGE_SIZE } from '../../utils/pagination/constants';
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints';
 import { FOLDER_KEY, RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
@@ -81,6 +80,7 @@ import {
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas, RawEntityCloneJob } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
+import { PUBLIC_APP_ENDPOINTS } from '../../core/http/public-app-client';
 import { resolveOverride } from '../../utils/overrides/resolve-override';
 
 /** Wire values for join types on the name-based multi-entity query route. */
@@ -243,10 +243,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   > {
-    if (this.publicApp) {
-      return this.getPublicAppRecords(entityName, options) as any;
-    }
-    return this.getRecordsImpl<T>(false, applyEntityNameOverride(entityName), options);
+    return this.getRecordsImpl<T>(false, this.publicApp ? entityName : applyEntityNameOverride(entityName), options);
   }
 
   @track('Entities.GetRecordById')
@@ -264,10 +261,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     recordId: string,
     options: EntityGetRecordByNameOptions = {}
   ): Promise<EntityRecord> {
-    if (this.publicApp) {
-      return (await this.publicApp.getRecord(entityName, recordId)) as EntityRecord;
-    }
-    return this.getRecordImpl(false, applyEntityNameOverride(entityName), recordId, options);
+    return this.getRecordImpl(false, this.publicApp ? entityName : applyEntityNameOverride(entityName), recordId, options);
   }
 
   @track('Entities.InsertRecord')
@@ -277,7 +271,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       if (!name) {
         throw new ValidationError({ message: 'Entities.insertRecord: a public app reaches an entity by its binding name (`{ name }`), not by id.' });
       }
-      return (await this.publicApp.insertRecord(name, data)) as EntityInsertResponse;
+      return this.insertRecordImpl(false, name, data, options);
     }
     const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.insertRecord');
     return this.insertRecordImpl(byId, identifier, data, options);
@@ -1222,7 +1216,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(identifier)
-        : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS_BY_NAME(identifier),
+        : this.publicApp
+          ? PUBLIC_APP_ENDPOINTS.ENTITY_RECORDS(identifier)
+          : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS_BY_NAME(identifier),
       headers: createHeaders({ [FOLDER_KEY]: folderKey }),
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -1238,35 +1234,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, downstreamOptions);
   }
 
-  private async getPublicAppRecords(
-    entityName: string,
-    options?: EntityGetAllRecordsOptions,
-  ): Promise<PaginatedResponse<EntityRecord> | NonPaginatedResponse<EntityRecord>> {
-    const { pageSize, jumpToPage, cursor } = (options ?? {}) as { pageSize?: number; jumpToPage?: number; cursor?: { value: string } };
-    const paginated = pageSize !== undefined || jumpToPage !== undefined || cursor !== undefined;
-    const limit = pageSize ?? (paginated ? DEFAULT_PAGE_SIZE : undefined);
-    const start = cursor ? Number(cursor.value) : jumpToPage && limit ? (jumpToPage - 1) * limit : undefined;
-    const body = (await this.publicApp!.listRecords(entityName, { start, limit })) as { value?: EntityRecord[]; totalRecordCount?: number } | undefined;
-    const items = body?.value ?? [];
-    const totalCount = body?.totalRecordCount;
-    if (!paginated) {
-      return { items, totalCount };
-    }
-    const offset = start ?? 0;
-    const nextOffset = offset + items.length;
-    const hasNextPage = totalCount !== undefined ? nextOffset < totalCount : items.length === limit;
-    return {
-      items,
-      totalCount,
-      hasNextPage,
-      nextCursor: hasNextPage ? { value: String(nextOffset) } : undefined,
-      previousCursor: offset > 0 ? { value: String(Math.max(0, offset - limit!)) } : undefined,
-      currentPage: Math.floor(offset / limit!) + 1,
-      totalPages: totalCount !== undefined ? Math.ceil(totalCount / limit!) : undefined,
-      supportsPageJump: true,
-    };
-  }
-
   private async getRecordImpl(
     byId: boolean,
     identifier: string,
@@ -1277,7 +1244,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const response = await this.get<EntityRecord>(
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(identifier, recordId)
-        : DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_NAME(identifier, recordId),
+        : this.publicApp
+          ? PUBLIC_APP_ENDPOINTS.ENTITY_RECORD(identifier, recordId)
+          : DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_NAME(identifier, recordId),
       { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
     );
     return response.data;
@@ -1288,7 +1257,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const response = await this.post<EntityInsertResponse>(
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(identifier)
-        : DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_NAME(identifier),
+        : this.publicApp
+          ? PUBLIC_APP_ENDPOINTS.ENTITY_RECORDS(identifier)
+          : DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_NAME(identifier),
       data,
       { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
     );
