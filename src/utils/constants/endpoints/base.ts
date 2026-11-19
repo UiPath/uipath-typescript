@@ -58,3 +58,4 @@ export const DU_FRAMEWORK_BASE = 'du_/api/framework';
 export const NOTIFICATION_BASE = '../notificationservice_';
 export const CONNECTIONS_BASE = 'connections_';
 export const ELEMENTS_BASE = 'elements_/v3/element';
+export const ELEMENTS_V4_BASE = 'elements_/v4';

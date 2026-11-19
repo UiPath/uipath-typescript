@@ -1,20 +1,7 @@
 /**
  * JWT decoding helpers — payload inspection only, no signature verification.
  */
-import { decodeBase64 } from './base64';
-
-const BASE64URL_DASH_RE = /-/g;
-const BASE64URL_UNDERSCORE_RE = /_/g;
-
-/**
- * Converts a base64url-encoded JWT segment to standard base64 with padding.
- */
-function base64UrlToBase64(value: string): string {
-  const base64 = value
-    .replace(BASE64URL_DASH_RE, '+')
-    .replace(BASE64URL_UNDERSCORE_RE, '/');
-  return base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-}
+import { decodeBase64Url } from './base64';
 
 /**
  * Decodes a JWT payload without verifying its signature. Returns `undefined`
@@ -31,7 +18,7 @@ export function decodeJwtClaims<T = Record<string, unknown>>(token?: string | nu
       return undefined;
     }
 
-    return JSON.parse(decodeBase64(base64UrlToBase64(payload))) as T;
+    return JSON.parse(decodeBase64Url(payload)) as T;
   } catch {
     return undefined;
   }

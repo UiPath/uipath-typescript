@@ -4,9 +4,10 @@
  * Two service domains:
  * - `connections_` — connectors and connections (CONNECTOR_ENDPOINTS, CONNECTION_ENDPOINTS)
  * - `elements_/v3/element` — connector elements and metadata (ELEMENT_ENDPOINTS)
+ * - `elements_/v4` — the version 4 engine (ELEMENT_V4_ENDPOINTS)
  */
 
-import { CONNECTIONS_BASE, ELEMENTS_BASE } from '../base';
+import { CONNECTIONS_BASE, ELEMENTS_BASE, ELEMENTS_V4_BASE } from '../base';
 
 export const CONNECTOR_ENDPOINTS = {
   GET_ALL: `${CONNECTIONS_BASE}/api/v1/Connectors`,
@@ -69,5 +70,14 @@ export const ELEMENT_ENDPOINTS = {
         .split('/')
         .map(encodeURIComponent)
         .join('/')}`,
+    /** Sends a raw HTTP request to the vendor with the connection's authentication applied. */
+    HTTP_REQUEST: (connectionId: string) =>
+      `${ELEMENTS_BASE}/instances/${encodeURIComponent(connectionId)}/http-request`,
   },
+} as const;
+
+/** Endpoints of the version 4 engine, which runs connectors built in the version 4 format. */
+export const ELEMENT_V4_ENDPOINTS = {
+  /** Sends one request to the vendor; the connection is named in the request body. */
+  EXECUTE: `${ELEMENTS_V4_BASE}/execute`,
 } as const;

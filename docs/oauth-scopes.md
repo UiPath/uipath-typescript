@@ -107,6 +107,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | Function | OAuth Scope |
 |----------|-------------|
 | `execute()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
+| `executeActivity()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
+| `executeHttp()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
 
 ## Conversational Agent
 
