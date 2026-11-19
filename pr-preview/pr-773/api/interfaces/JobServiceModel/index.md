@@ -143,24 +143,28 @@ console.log(job.robot?.name, job.machine?.name);
 
 ### getOutput()
 
+#### Call Signature
+
 > **getOutput**(`jobKey`: `string`, `folderId`: `number`): `Promise`\<`null` | `Record`\<`string`, `unknown`>>
 
 Gets the output of a completed job.
 
 Retrieves the job's output arguments, handling both inline output (stored directly on the job as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for large outputs). Returns the parsed JSON output or `null` if the job has no output.
 
-#### Parameters
+##### Parameters
 
-- `jobKey`: `string` — The unique key (GUID) of the job to retrieve output from
-- `folderId`: `number` — The folder ID where the job resides
+| Parameter  | Type     | Description                                              |
+| ---------- | -------- | -------------------------------------------------------- |
+| `jobKey`   | `string` | The unique key (GUID) of the job to retrieve output from |
+| `folderId` | `number` | The folder ID where the job resides                      |
 
-#### Returns
+##### Returns
 
 `Promise`\<`null` | `Record`\<`string`, `unknown`>>
 
 Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
 
-#### Examples
+##### Examples
 
 ```
 // Get output from a completed job
@@ -180,6 +184,20 @@ if (completedJob) {
   const output = await completedJob.getOutput();
 }
 ```
+
+#### Call Signature
+
+> **getOutput**(`jobKey`: `string`): `Promise`\<`null` | `Record`\<`string`, `unknown`>>
+
+##### Parameters
+
+| Parameter | Type     |
+| --------- | -------- |
+| `jobKey`  | `string` |
+
+##### Returns
+
+`Promise`\<`null` | `Record`\<`string`, `unknown`>>
 
 ### linkAttachment()
 

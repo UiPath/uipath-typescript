@@ -4381,6 +4381,7 @@ Use <code>expand</code> to include related entities like <code>robot</code>, or 
 </code></pre></div>
 <hr />
 <h3 id="getoutput">getOutput()<a class="headerlink" href="#getoutput" title="Permanent link">&para;</a></h3>
+<h4 id="call-signature">Call Signature<a class="headerlink" href="#call-signature" title="Permanent link">&para;</a></h4>
 <blockquote>
 <p><strong>getOutput</strong>(<code>jobKey</code>: <code>string</code>, <code>folderId</code>: <code>number</code>): <code>Promise</code>&lt;<code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;&gt;</p>
 </blockquote>
@@ -4388,7 +4389,7 @@ Use <code>expand</code> to include related entities like <code>robot</code>, or 
 <p>Retrieves the job's output arguments, handling both inline output (stored directly on the job
 as a JSON string in <code>outputArguments</code>) and file-based output (stored as a blob attachment for
 large outputs). Returns the parsed JSON output or <code>null</code> if the job has no output.</p>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h5 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4410,10 +4411,10 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<h5 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;&gt;</p>
 <p>Promise resolving to the parsed output as <code>Record&lt;string, unknown&gt;</code>, or <code>null</code> if no output exists</p>
-<h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
+<h5 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h5>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Get output from a completed job</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">jobs</span><span class="p">.</span><span class="nx">getOutput</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">jobKey</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
@@ -4429,6 +4430,27 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">completedJob</span><span class="p">.</span><span class="nx">getOutput</span><span class="p">();</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="p">}</span>
 </code></pre></div>
+<h4 id="call-signature_1">Call Signature<a class="headerlink" href="#call-signature_1" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p><strong>getOutput</strong>(<code>jobKey</code>: <code>string</code>): <code>Promise</code>&lt;<code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;&gt;</p>
+</blockquote>
+<h5 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jobKey</code></td>
+<td><code>string</code></td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h5>
+<p><code>Promise</code>&lt;<code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;&gt;</p>
 <hr />
 <h3 id="linkattachment">linkAttachment()<a class="headerlink" href="#linkattachment" title="Permanent link">&para;</a></h3>
 <blockquote>
@@ -4439,7 +4461,7 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 exists in Orchestrator with a job.</p>
 <p>The returned link does not carry <code>attachmentName</code> or <code>creatorUserId</code> yet —
 read them back with <a href="#getattachments">getAttachments</a>.</p>
-<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4471,7 +4493,7 @@ read them back with <a href="#getattachments">getAttachments</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
+<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../JobAttachmentGetResponse/"><code>JobAttachmentGetResponse</code></a>&gt;</p>
 <p>Promise resolving to the created <a href="../JobAttachmentGetResponse/">JobAttachmentGetResponse</a> link</p>
 <h4 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h4>
@@ -4493,7 +4515,7 @@ The new job has its own unique <code>key</code>, starts in <code>Pending</code> 
 the same process and input arguments as the original job.</p>
 <p>To monitor the new job's progress, poll with <a href="#getbyid">getById</a>
 using the returned job's key until the state reaches a final value.</p>
-<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4515,7 +4537,7 @@ using the returned job's key until the state reaches a final value.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
+<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/JobGetResponse/"><code>JobGetResponse</code></a>&gt;</p>
 <p>Promise resolving to the new <a href="../../type-aliases/JobGetResponse/">JobGetResponse</a> with full job details</p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
@@ -4533,7 +4555,7 @@ using the returned job's key until the state reaches a final value.</p>
 <p>Sends a resume request to a job that is currently in the <code>Suspended</code> state.
 The job transitions to <code>Resumed</code> and then to <code>Running</code> as it continues execution. Optionally pass
 input arguments to provide data for the resumed workflow.</p>
-<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4560,7 +4582,7 @@ input arguments to provide data for the resumed workflow.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
+<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise that resolves when the job is resumed successfully, or rejects on failure</p>
 <h4 id="examples_4">Examples<a class="headerlink" href="#examples_4" title="Permanent link">&para;</a></h4>
@@ -4579,7 +4601,7 @@ input arguments to provide data for the resumed workflow.</p>
 </blockquote>
 <p>Stops one or more jobs by their UUID keys.</p>
 <p>Sends a stop request for the specified jobs to the Orchestrator. Throws if any keys cannot be resolved.</p>
-<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4606,7 +4628,7 @@ input arguments to provide data for the resumed workflow.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
+<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise that resolves when the jobs are stopped successfully, or rejects on failure</p>
 <h4 id="examples_5">Examples<a class="headerlink" href="#examples_5" title="Permanent link">&para;</a></h4>
