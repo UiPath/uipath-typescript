@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.8.4",
+  "sdkVersion": "1.9.0-preview.0",
   "services": [
     {
       "name": "AgentMemory",
@@ -1200,6 +1200,14 @@
         {
           "name": "getDataByKey",
           "since": "1.6.1"
+        },
+        {
+          "name": "getSchema",
+          "since": "1.9.0-preview.0"
+        },
+        {
+          "name": "getSchemaByKey",
+          "since": "1.9.0-preview.0"
         },
         {
           "name": "getUsers",
