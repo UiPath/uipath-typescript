@@ -81,7 +81,6 @@ import {
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas, RawEntityCloneJob } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
-import { publicBindingKey } from '../../core/http/public-app-client';
 import { resolveOverride } from '../../utils/overrides/resolve-override';
 
 /** Wire values for join types on the name-based multi-entity query route. */
@@ -253,7 +252,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       : NonPaginatedResponse<EntityRecord>
   > {
     if (this.publicApp) {
-      return this.getPublicAppRecords(publicBindingKey(entityName, options?.folderPath), options) as any;
+      return this.getPublicAppRecords(entityName, options) as any;
     }
     return this.getRecordsImpl<T>(false, applyEntityNameOverride(entityName), options);
   }
@@ -274,7 +273,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     options: EntityGetRecordByNameOptions = {}
   ): Promise<EntityRecord> {
     if (this.publicApp) {
-      return (await this.publicApp.getRecord(publicBindingKey(entityName, options.folderPath), recordId)) as EntityRecord;
+      return (await this.publicApp.getRecord(entityName, recordId)) as EntityRecord;
     }
     return this.getRecordImpl(false, applyEntityNameOverride(entityName), recordId, options);
   }
@@ -282,7 +281,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.InsertRecord')
   async insertRecord(entityRef: EntityRef, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
     if (this.publicApp) {
-      return (await this.publicApp.insertRecord(publicBindingKey(publicEntityName(entityRef, 'Entities.insertRecord'), options.folderPath), data)) as EntityInsertResponse;
+      return (await this.publicApp.insertRecord(publicEntityName(entityRef, 'Entities.insertRecord'), data)) as EntityInsertResponse;
     }
     const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.insertRecord');
     return this.insertRecordImpl(byId, identifier, data, options);

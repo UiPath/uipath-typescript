@@ -16,7 +16,3 @@ export interface EntityFolderScopedOptions {
    */
   folderKey?: string;
 }
-
-export interface EntityPublicAppOptions {
-  folderPath?: string;
-}

@@ -77,21 +77,21 @@ describe('public coded app mode', () => {
     ]);
   });
 
-  it('reaches a folder-scoped entity binding by name and folder path', async () => {
+  it('reaches an entity binding by its name', async () => {
     fetchMock
       .mockResolvedValueOnce(json({ Id: 'R-1' }))
       .mockResolvedValueOnce(json({ Id: 'R-1' }))
       .mockResolvedValueOnce(json({ value: [], totalRecordCount: 0 }));
     const entities = new EntityService(sdk);
 
-    await entities.insertRecord({ name: 'Orders' }, { Title: 'x' }, { folderPath: 'Shared' });
-    await entities.getRecordByName('Orders', 'R-1', { folderPath: 'Shared' });
-    await entities.getRecordsByName('Orders', { folderPath: 'Shared' });
+    await entities.insertRecord({ name: 'Orders' }, { Title: 'x' });
+    await entities.getRecordByName('Orders', 'R-1');
+    await entities.getRecordsByName('Orders');
 
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      `${routes}/datafabric/entities/Orders.Shared/records`,
-      `${routes}/datafabric/entities/Orders.Shared/records/R-1`,
-      `${routes}/datafabric/entities/Orders.Shared/records`,
+      `${routes}/datafabric/entities/Orders/records`,
+      `${routes}/datafabric/entities/Orders/records/R-1`,
+      `${routes}/datafabric/entities/Orders/records`,
     ]);
   });
 
