@@ -2948,6 +2948,43 @@ const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
 console.log(task.data);
 ```
 
+### getSchemaByKey()
+
+> **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
+
+**`Experimental`**
+
+Gets the schema a QuickForm task was created with.
+
+The key is the `taskSchemaKey` of a QuickForm task, returned by `getAll()`, `getById()`, `getDataById()` and `getDataByKey()`. The folder is only used to check task view permission; it does not have to be the folder the schema was registered in.
+
+#### Parameters
+
+- `key`: `string` — The schema key (a task's `taskSchemaKey`)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskSchemaGetResponse`>
+
+Promise resolving to the schema as a [TaskSchemaGetResponse](../TaskSchemaGetResponse/)
+
+#### Examples
+
+```
+const schema = await tasks.getSchemaByKey('<taskSchemaKey>', { folderId: <folderId> });
+console.log(schema.name, schema.schema);
+```
+
+```
+// Get the schema of a QuickForm task
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+if (task.taskSchemaKey) {
+  const schema = await tasks.getSchemaByKey(task.taskSchemaKey, { folderId: <folderId> });
+  console.log(schema.name, schema.schema);
+}
+```
+
 ### getUsers()
 
 > **getUsers**\<`T`>(`folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`UserLoginInfo`> : `NonPaginatedResponse`\<`UserLoginInfo`>>
