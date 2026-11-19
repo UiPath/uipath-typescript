@@ -477,7 +477,7 @@ Gets entity records by entity ID
 
 #### Type Parameters
 
-- `T` *extends* `EntityGetAllRecordsOptions` = `EntityGetAllRecordsOptions`
+- `T` *extends* `EntityGetRecordsByIdOptions` = `EntityGetRecordsByIdOptions`
 
 #### Parameters
 
@@ -752,7 +752,7 @@ Sibling of [getAllRecords](#getallrecords) that addresses the entity by name —
 
 #### Type Parameters
 
-- `T` *extends* `EntityGetAllRecordsOptions` = `EntityGetAllRecordsOptions`
+- `T` *extends* `EntityGetRecordsByIdOptions` = `EntityGetRecordsByIdOptions`
 
 #### Parameters
 
