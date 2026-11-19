@@ -221,7 +221,11 @@ describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (m
         throw new Error('No task ID available for testing');
       }
       const { tasks } = getServices();
-      const folderId = Number(getTestConfig().folderId);
+      const config = getTestConfig();
+      if (!config.folderId) {
+        throw new Error('folderId is required in the test config for getSchema tests');
+      }
+      const folderId = Number(config.folderId);
 
       const result = await tasks.getSchema(createdTaskId, { folderId });
 
