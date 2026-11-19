@@ -129,6 +129,28 @@ export interface ExecuteActivityOptions extends ExecuteOptions {
    * result when more records exist. Ignored for methods other than `GET`.
    */
   maxRecords?: number;
+  /**
+   * Version of the connector behind the connection, e.g. `4.0.0`. A connector of version 4 or
+   * later runs its activities on the version 4 engine, and the call is sent there; without a
+   * version, or with an earlier one, the call uses the version 3 engine.
+   *
+   * On the version 4 engine `objectName` names the activity's script, and `files`,
+   * `fileResponse`, `urlInputFields` and `maxRecords` do not apply.
+   */
+  connectorVersion?: string;
+  /**
+   * Key of the connector behind the connection, e.g. `uipath-salesforce-slack`. Required on the
+   * version 4 engine. Taken from the handle when the connection is a `resource.connection()`
+   * handle.
+   */
+  connectorKey?: string;
+  /**
+   * Reference of the script the version 4 engine runs for this activity, as the activity's
+   * metadata names it. Defaults to `objectName`.
+   */
+  scriptRef?: string;
+  /** Headers the activity's script reads from the call. Version 4 engine only. */
+  headers?: Record<string, string>;
 }
 
 /**

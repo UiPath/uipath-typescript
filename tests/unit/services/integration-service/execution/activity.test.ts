@@ -334,6 +334,97 @@ describe('executeActivity', () => {
     });
   });
 
+  describe('on a version 4 connector', () => {
+    const SCRIPT = 'SendMessageToChannel';
+    const CONNECTOR_KEY = 'uipath-salesforce-slack';
+    const V4_OPTIONS = { connectorVersion: '4.0.0', connectorKey: CONNECTOR_KEY };
+
+    it('posts the script reference and the inbound call to the version 4 engine', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(
+        buildResponse({ body: JSON.stringify({ status: 200, headers: { 'x-vendor': ['a'] }, body: { ok: true } }) }),
+      );
+
+      const result = await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, SCRIPT, 'POST', {
+        ...V4_OPTIONS,
+        queryParams: { send_as: 'bot' },
+        headers: { 'x-trace': '1' },
+        body: { channel: 'C1', messageToSend: 'hi' },
+      });
+
+      const [url, init] = fetchSpy.mock.calls[0];
+      expect(url).toContain('/elements_/v4/execute');
+      expect(url).not.toContain('send_as');
+      expect(init.method).toBe('POST');
+      expect(JSON.parse(init.body)).toEqual({
+        context: {
+          connectionId: IS_TEST_CONSTANTS.CONNECTION_ID,
+          connectorKey: CONNECTOR_KEY,
+          script: { reference: SCRIPT },
+        },
+        request: {
+          body: { channel: 'C1', messageToSend: 'hi' },
+          query: { send_as: 'bot' },
+          headers: { 'x-trace': '1' },
+        },
+      });
+      expect(result).toEqual({ ok: true, status: 200, statusText: '', headers: { 'x-vendor': 'a' }, body: { ok: true } });
+    });
+
+    it('sends scriptRef in place of objectName when both are given', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(buildResponse({ body: JSON.stringify({ status: 200, body: [] }) }));
+
+      await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        ...V4_OPTIONS,
+        scriptRef: 'ListTickets',
+      });
+
+      expect(JSON.parse(fetchSpy.mock.calls[0][1].body).context.script).toEqual({ reference: 'ListTickets' });
+    });
+
+    it('takes the connector key from a connection handle', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(buildResponse({ body: JSON.stringify({ status: 200, body: [] }) }));
+      const handle = resource.connection({ id: IS_TEST_CONSTANTS.CONNECTION_ID, connector: CONNECTOR_KEY });
+
+      await executeActivity(instance, handle, SCRIPT, 'POST', { connectorVersion: '4.0.0' });
+
+      expect(JSON.parse(fetchSpy.mock.calls[0][1].body).context.connectorKey).toBe(CONNECTOR_KEY);
+    });
+
+    it("reports the vendor's status when the vendor refused the call", async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(
+        buildResponse({ body: JSON.stringify({ status: 404, body: { error: 'channel_not_found' } }) }),
+      );
+
+      const result = await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, SCRIPT, 'POST', V4_OPTIONS);
+
+      expect(result.ok).toBe(false);
+      expect(result.status).toBe(404);
+      expect(result.body).toEqual({ error: 'channel_not_found' });
+    });
+
+    it('throws ValidationError without a connector key', async () => {
+      const { instance } = createServiceTestDependencies();
+
+      await expect(
+        executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, SCRIPT, 'POST', { connectorVersion: '4.0.0' }),
+      ).rejects.toThrow(ValidationError);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('keeps the version 3 endpoint for a connector below version 4', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', { connectorVersion: '3.2.0' });
+
+      expect(fetchSpy.mock.calls[0][0]).toContain('/elements_/v3/element/instances/');
+    });
+  });
+
   describe('retry', () => {
     afterEach(() => {
       vi.useRealTimers();

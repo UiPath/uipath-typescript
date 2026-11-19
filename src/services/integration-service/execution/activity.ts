@@ -1,6 +1,6 @@
 import { track } from '@/core/telemetry';
 import { ValidationError } from '@/core/errors';
-import { ELEMENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import { ELEMENT_ENDPOINTS, ELEMENT_V4_ENDPOINTS } from '@/utils/constants/endpoints';
 import { resolveConnectionTarget } from '@/services/integration-service/connection-target';
 import { resolveRetryOptions, DEFAULT_API_CLIENT_RETRY } from '@/utils/http/retry-policy';
 import type { ConnectionResource, ResolvedConnection } from '@/resources';
@@ -15,6 +15,7 @@ import { NEXT_PAGE_PARAM, extractPage, resolveMaxRecords, stripPaginationHeaders
 import { expandBodyPaths, isPlainRecord } from './body-paths';
 import { buildMultipartForm, validateFiles } from './multipart';
 import { encodeUrlInputs } from './url-input';
+import { buildV4ActivityManifest, unwrapV4Response, usesV4Engine } from './v4-execute';
 
 const RESOURCE_TYPE = 'Execution.executeActivity';
 
@@ -41,6 +42,41 @@ class ActivityExecution extends ConnectionRequestService {
     if (files) validateFiles(files, 'executeActivity');
 
     const body = isPlainRecord(options.body) ? expandBodyPaths(options.body) : options.body;
+
+    if (usesV4Engine(options.connectorVersion)) {
+      if (files) {
+        throw new ValidationError({ message: 'files are not supported by executeActivity on a version 4 connector' });
+      }
+      const connectorKey = options.connectorKey ?? (typeof connection === 'string' ? undefined : connection.connector);
+      if (!connectorKey) {
+        throw new ValidationError({ message: 'connectorKey is required for executeActivity on a version 4 connector' });
+      }
+      const answer = await this.send(
+        target,
+        {
+          path: ELEMENT_V4_ENDPOINTS.EXECUTE,
+          // The activity always travels in a POST; `method` is the activity's own operation
+          method: 'POST',
+          body: buildV4ActivityManifest({
+            connectionId: target.id,
+            connectorKey,
+            scriptRef: options.scriptRef ?? objectName,
+            body,
+            queryParams: options.queryParams,
+            headers: options.headers,
+          }),
+          retry: resolveV4Retry(options.retry, method),
+          timeoutMs: options.timeoutMs,
+          signal: options.signal,
+          folderId: options.folderId,
+          folderKey: options.folderKey,
+          folderPath: options.folderPath,
+        },
+        RESOURCE_TYPE,
+      );
+      const { isVendorError: _isVendorError, ...vendor } = unwrapV4Response(answer);
+      return vendor;
+    }
 
     const request: ConnectionRequest = {
       path: ELEMENT_ENDPOINTS.INSTANCE.EXECUTE(target.id, objectName),
@@ -108,6 +144,13 @@ class ActivityExecution extends ConnectionRequestService {
 }
 
 /** Adds the paging state to a single-page result when the connector reported one. */
+/** The caller's retry settings describe the activity's method; the carrier is always a POST. */
+function resolveV4Retry(retry: ExecuteActivityOptions['retry'], method: ExecuteMethod) {
+  const resolved = resolveRetryOptions(retry, DEFAULT_API_CLIENT_RETRY);
+  const carrier: ExecuteMethod[] = resolved.retryMethods.includes(method) ? ['POST'] : [];
+  return { ...resolved, retryMethods: carrier };
+}
+
 function withPage(result: ExecuteActivityResult): ExecuteActivityResult {
   const page = extractPage(result.headers, result.body);
   return page ? { ...result, page } : result;
@@ -217,6 +260,17 @@ function withPage(result: ExecuteActivityResult): ExecuteActivityResult {
  *     backoffFactor: 2,
  *     retryableStatusCodes: [429, 500, 502, 503, 504],
  *   },
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // A connector of version 4 or later: pass its version and key. `objectName` names the script.
+ * const sent = await executeActivity(sdk, '<connectionId>', 'SendMessageToChannel', 'POST', {
+ *   connectorVersion: '4.0.0',
+ *   connectorKey: 'uipath-salesforce-slack',
+ *   queryParams: { send_as: 'bot' },
+ *   body: { channel: '<channelId>', messageToSend: 'Hello' },
  * });
  * ```
  *

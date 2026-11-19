@@ -59,6 +59,31 @@ export interface V4RequestInput {
   file?: ExecuteFile;
 }
 
+/**
+ * The request the version 4 engine accepts to run a connector activity: the script to run and
+ * the inbound call that script reads.
+ *
+ * @internal
+ */
+export interface V4ActivityManifest {
+  context: { connectionId: string; connectorKey: string; script: { reference: string } };
+  request: { body?: unknown; query?: Record<string, string>; headers?: Record<string, string> };
+}
+
+/**
+ * What an activity call through the version 4 engine is built from.
+ *
+ * @internal
+ */
+export interface V4ActivityInput {
+  connectionId: string;
+  connectorKey: string;
+  scriptRef: string;
+  body?: unknown;
+  queryParams?: Record<string, string>;
+  headers?: Record<string, string>;
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -113,6 +138,29 @@ export function buildV4Manifest(input: V4RequestInput): V4Manifest {
     manifest.outboundRequestConfig.body = body;
   }
   return manifest;
+}
+
+/**
+ * Builds the version 4 request that runs one connector activity. The engine finds the activity's
+ * script by its reference and hands it the body, query and headers as the inbound call.
+ *
+ * @param input - The activity call
+ * @returns The request description
+ * @internal
+ */
+export function buildV4ActivityManifest(input: V4ActivityInput): V4ActivityManifest {
+  const request: V4ActivityManifest['request'] = {};
+  if (input.body !== undefined) request.body = input.body;
+  if (input.queryParams && Object.keys(input.queryParams).length > 0) request.query = input.queryParams;
+  if (input.headers && Object.keys(input.headers).length > 0) request.headers = input.headers;
+  return {
+    context: {
+      connectionId: input.connectionId,
+      connectorKey: input.connectorKey,
+      script: { reference: input.scriptRef },
+    },
+    request,
+  };
 }
 
 /**
