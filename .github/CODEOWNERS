@@ -1,0 +1,10 @@
+# Code owners: a pull request that touches these paths requests their review
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Integration Service
+/src/services/integration-service/ @chandusailella @baishalighosh
+/src/models/integration-service/ @chandusailella @baishalighosh
+/src/utils/constants/endpoints/integration-service/ @chandusailella @baishalighosh
+/tests/unit/services/integration-service/ @chandusailella @baishalighosh
+/tests/integration/shared/integration-service/ @chandusailella @baishalighosh
+/tests/utils/constants/integration-service.ts @chandusailella @baishalighosh
