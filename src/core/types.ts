@@ -49,6 +49,35 @@ export interface IUiPath {
   getToken(): string | undefined;
 
   /**
+   * Returns an access token that is valid right now, renewing it first when it has expired or is about to.
+   *
+   * Use it for requests your app makes outside the SDK, so they carry the same token as the SDK's own
+   * calls. Call it before each request instead of keeping the result: it answers from memory until a
+   * renewal is due, and calls made at the same time share one renewal. `getToken()` only reads the
+   * token the SDK holds and never renews it.
+   *
+   * The SDK renews the tokens of its own OAuth sign-in. A token passed as `secret` is returned as it
+   * is, and an app embedded in a UiPath host such as Action Center gets its token from the host.
+   *
+   * Rejects with an `AuthenticationError` when it cannot return a token: the SDK is not signed in, or
+   * the renewal failed. A renewal can fail for a temporary reason such as a network error, so retry
+   * before calling `initialize()` to sign in again.
+   *
+   * @returns Promise resolving to a valid access token
+   *
+   * @example
+   * ```typescript
+   * const token = await sdk.getValidToken();
+   * const { baseUrl, orgName, tenantName } = sdk.config;
+   *
+   * const response = await fetch(`${baseUrl}/${orgName}/${tenantName}/<servicePath>`, {
+   *   headers: { Authorization: `Bearer ${token}` }
+   * });
+   * ```
+   */
+  getValidToken(): Promise<string>;
+
+  /**
    * Releases resources held by this SDK instance.
    * Cancels any in-flight token-refresh request. Call this when the coded app is unmounted.
    */

@@ -4,7 +4,7 @@ import { SessionStore } from '../../utils/storage/session-store';
 import { NO_OP_STORE } from '../../utils/storage/no-op-store';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { AuthToken, TokenInfo } from './types';
-import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
+import { AUTH_STORAGE_KEYS, NO_TOKEN_MESSAGE, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { getExpiryMs } from './token-expiry';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
@@ -82,7 +82,7 @@ export class TokenManager {
 
     if (!tokenInfo) {
       throw new AuthenticationError({
-        message: 'No authentication token available. Make sure to initialize the SDK first.'
+        message: NO_TOKEN_MESSAGE
       });
     }
 
