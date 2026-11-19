@@ -446,6 +446,7 @@ Caller's platform roles govern access
 | `getDataById()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getDataByKey()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSchemaByKey()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getSchema()` | `OR.Tasks` or `OR.Tasks.Read`. For App tasks, also `Apps` or `Apps.Read` |
 | `saveData()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `saveTags()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `editMetadata()` | `OR.Tasks` or `OR.Tasks.Write` |

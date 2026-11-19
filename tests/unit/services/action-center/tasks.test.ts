@@ -1673,6 +1673,211 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
     });
   });
 
+  describe('getSchema', () => {
+    const { TASK_GUID_KEY, TASK_SCHEMA_KEY, TASK_SCHEMA_NAME, TASK_SCHEMA_BODY, APP_TASK_SCHEMA } = TASK_TEST_CONSTANTS;
+    const folder = { folderId: EXT_TASK.FOLDER };
+    const folderHeader = expect.objectContaining({ [FOLDER_ID]: EXT_TASK.FOLDER.toString() });
+
+    // The app-task endpoint returns the whole task; getSchema reads only taskSchema.
+    const createMockRawAppTask = (taskSchema: unknown = APP_TASK_SCHEMA): any =>
+      createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY, taskSchema });
+
+    const createMockRawTaskSchema = (): any =>
+      createMockBaseResponse({
+        key: TASK_SCHEMA_KEY,
+        name: TASK_SCHEMA_NAME,
+        schema: TASK_SCHEMA_BODY,
+        creatorJobKey: null,
+        processKey: null,
+        organizationUnitId: EXT_TASK.FOLDER,
+        creationTime: EXT_TASK.CREATED,
+      });
+
+    // A task object as the SDK returns it, with the read that produced it cleared from the mock.
+    const getTaskObject = async (overrides: Partial<any>) => {
+      mockApiClient.get.mockResolvedValueOnce(createMockRawTaskData(overrides));
+      const task = await service.getById(EXT_TASK.ID, { taskType: overrides.type }, EXT_TASK.FOLDER);
+      mockApiClient.get.mockClear();
+      return task;
+    };
+
+    it('should throw ValidationError when taskId or folder is missing', async () => {
+      await expect(service.getSchema(0, folder)).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.getSchema(EXT_TASK.ID)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should read an App task schema by task key without a lookup when called on a task object', async () => {
+      const task = await getTaskObject({ type: TaskType.App, key: TASK_GUID_KEY });
+      mockApiClient.get.mockResolvedValue(createMockRawAppTask());
+
+      const result = await task.getSchema();
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_APP_TASK_BY_KEY,
+        expect.objectContaining({ params: { taskKey: TASK_GUID_KEY }, headers: folderHeader }),
+      );
+      expect(result).toEqual({ type: TaskType.App, schema: APP_TASK_SCHEMA });
+    });
+
+    it('should look up the task and then read the App task schema when only the id is passed', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY, taskSchemaKey: null }))
+        .mockResolvedValueOnce(createMockRawAppTask());
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        1,
+        TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
+        expect.objectContaining({ params: { taskId: EXT_TASK.ID }, headers: folderHeader }),
+      );
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        TASK_ENDPOINTS.GET_APP_TASK_BY_KEY,
+        expect.objectContaining({ params: { taskKey: TASK_GUID_KEY }, headers: folderHeader }),
+      );
+      expect(result).toEqual({ type: TaskType.App, schema: APP_TASK_SCHEMA });
+    });
+
+    it('should look up the task key when a task object does not hold it', async () => {
+      const task = await getTaskObject({ type: TaskType.App, key: undefined });
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockResolvedValueOnce(createMockRawAppTask());
+
+      await task.getSchema();
+
+      expect(mockApiClient.get.mock.calls[0][0]).toBe(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID);
+      expect(mockApiClient.get.mock.calls[1][1].params).toEqual({ taskKey: TASK_GUID_KEY });
+    });
+
+    it('should ignore task details passed in the options and read the task by its id', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockResolvedValueOnce(createMockRawAppTask());
+      const otherTask = { type: TaskType.App, taskKey: 'another-task-key', key: 'another-task-key' };
+
+      await service.getSchema(EXT_TASK.ID, { ...folder, ...otherTask });
+
+      expect(mockApiClient.get.mock.calls[0][0]).toBe(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID);
+      expect(mockApiClient.get.mock.calls[1][1].params).toEqual({ taskKey: TASK_GUID_KEY });
+    });
+
+    it('should return the App task schema property names verbatim', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockResolvedValueOnce(createMockRawAppTask());
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      if (result?.type !== TaskType.App) throw new Error('expected an App task schema');
+      expect(result.schema.inputs[0].name).toBe('InvoiceNumber'); // not case-converted
+      expect(result.schema.outcomes[0].name).toBe('Approve');
+    });
+
+    it('should return null when an App task carries no schema', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockResolvedValueOnce(createMockRawAppTask(null));
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when an App task has no key', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.App, key: undefined }));
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      expect(result).toBeNull();
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1); // the lookup only
+    });
+
+    it('should read a QuickForm schema by schema key without a lookup when called on a task object', async () => {
+      const task = await getTaskObject({ type: TaskType.QuickForm, taskSchemaKey: TASK_SCHEMA_KEY });
+      mockApiClient.get.mockResolvedValue(createMockRawTaskSchema());
+
+      const result = await task.getSchema();
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
+        expect.objectContaining({ params: { key: TASK_SCHEMA_KEY }, headers: folderHeader }),
+      );
+      // Same as getSchemaByKey returns, plus the task type.
+      expect(result).toEqual({
+        type: TaskType.QuickForm,
+        key: TASK_SCHEMA_KEY,
+        name: TASK_SCHEMA_NAME,
+        schema: TASK_SCHEMA_BODY,
+        creatorJobKey: null,
+        processKey: null,
+        folderId: EXT_TASK.FOLDER,
+        createdTime: EXT_TASK.CREATED,
+      });
+    });
+
+    it('should look up the schema key and then read the QuickForm schema when only the id is passed', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.QuickForm, taskSchemaKey: TASK_SCHEMA_KEY }))
+        .mockResolvedValueOnce(createMockRawTaskSchema());
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      expect(mockApiClient.get.mock.calls[0][0]).toBe(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID);
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
+        expect.objectContaining({ params: { key: TASK_SCHEMA_KEY }, headers: folderHeader }),
+      );
+      expect(result?.type).toBe(TaskType.QuickForm);
+    });
+
+    it('should return null when a QuickForm task has no schema key', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.QuickForm, taskSchemaKey: null }));
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      expect(result).toBeNull();
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1); // the lookup only
+    });
+
+    it('should return null for a task type without a schema, with no request when called on a task object', async () => {
+      const task = await getTaskObject({ type: TaskType.External });
+
+      const result = await task.getSchema();
+
+      expect(result).toBeNull();
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should return null for a task type without a schema after looking the type up', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.Form }));
+
+      const result = await service.getSchema(EXT_TASK.ID, folder);
+
+      expect(result).toBeNull();
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+    });
+
+    it('should propagate API errors from the schema read', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockRawTaskData({ type: TaskType.App, key: TASK_GUID_KEY }))
+        .mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getSchema(EXT_TASK.ID, folder)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+    });
+
+    it('should propagate API errors from the task lookup', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getSchema(EXT_TASK.ID, folder)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('saveData', () => {
     it('should throw ValidationError when taskId or folder is missing', async () => {
       await expect(service.saveData(0, {}, { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);

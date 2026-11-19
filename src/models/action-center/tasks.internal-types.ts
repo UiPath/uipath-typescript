@@ -1,5 +1,5 @@
-import { BaseOptions, CollectionResponse } from "../common/types";
-import { TaskAssignmentOptions, TaskAssignmentResponse, TaskType } from "./tasks.types";
+import { BaseOptions, CollectionResponse, FolderScopedOptions } from "../common/types";
+import { TaskAppSchema, TaskAssignmentOptions, TaskAssignmentResponse, TaskGetSchemaResponse, TaskType } from "./tasks.types";
 import { TASK_ENDPOINTS } from "../../utils/constants/endpoints";
 
 export const TASK_TYPE_ENDPOINTS: Record<TaskType, string> = {
@@ -44,4 +44,37 @@ export type TaskAssignmentResponseCollection = CollectionResponse<TaskAssignment
  */
 export interface TaskGetFormOptions extends BaseOptions {
   expandOnFormLayout?: boolean;
+}
+
+/**
+ * The part of an App task read by key that getSchema uses
+ */
+export interface RawAppTaskSchemaFields {
+  taskSchema?: TaskAppSchema | null;
+}
+
+/**
+ * What getSchema needs to know about a task. Only `id` is required; the type
+ * and keys are looked up by id when they are missing.
+ */
+export interface TaskSchemaSource {
+  id: number;
+  type?: TaskType;
+  key?: string;
+  taskSchemaKey?: string | null;
+}
+
+/**
+ * Calls a task object makes for exactly the task it describes. The task object
+ * already holds its type and keys, so these skip the lookup by id.
+ */
+export interface TaskBoundOperations {
+  /**
+   * Gets the schema of the given task.
+   *
+   * @param task - The task's id, with the type and keys the task object holds
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema
+   */
+  getSchema(task: TaskSchemaSource, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null>;
 }
