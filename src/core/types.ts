@@ -71,8 +71,9 @@ export interface IUiPath {
 
   /**
    * Sets the debug context for the jobs this instance starts, or clears it with `null`. While set,
-   * `Processes.start` carries the parent job key: Orchestrator records it as the parent of the started
-   * job and, when that parent is a debug run, routes the job as a debug sub-job of that session.
+   * `Processes.start`, and `Functions.invoke` when it names no `jobKey`, carry the parent job key:
+   * Orchestrator records it as the parent of the started job and, when that parent is a debug run,
+   * routes the job as a debug sub-job of that session.
    * Hosts set this for you: a Studio Web debug session passes the key on the page URL and Action
    * Center sends it with the token of a debug task, so an app calls this only when another host runs
    * it inside a job. A context set here wins over the host's, and `null` keeps the host's key from

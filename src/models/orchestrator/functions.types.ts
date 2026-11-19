@@ -64,7 +64,10 @@ export type FunctionGetAllOptions = RequestOptions & PaginationOptions & FolderS
  * or initialize the SDK with a folder context.
  */
 export interface FunctionInvokeOptions extends FolderScopedOptions {
-  /** Key (GUID) of the job this invocation belongs to, so the run is attributed to it. */
+  /**
+   * Key (GUID) of the job this invocation belongs to, so the run is attributed to it. Defaults to
+   * the job key of the SDK's debug context, when one is set.
+   */
   jobKey?: string;
   /**
    * Ignored. The SDK acquires the license for the signed-in user on its own.

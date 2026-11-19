@@ -33,6 +33,7 @@ import type { SessionLicense } from '../../../core/licensing/session-license';
 import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../core/context/execution';
 import type { DebugContext } from '../../../models/common/types';
 import { PUBLIC_APP_ENDPOINTS, publicBindingKey } from '../../../core/http/public-app-client';
+import { currentTraceContext, type TraceContext } from '@/core/context/trace';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -193,6 +194,11 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       delete startInfoSdk.processKey;
     }
 
+    const trace = currentTraceContext(this.executionContext);
+    if (trace) {
+      addTraceContext(startInfoSdk, trace);
+    }
+
     const apiRequest = transformRequest(startInfoSdk, ProcessMap);
     const requestBody = { startInfo: apiRequest };
 
@@ -249,6 +255,22 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     );
     return result;
   }
+}
+
+/**
+ * Links the started job to the session trace. Robots, agents and Trace View read `traceId` and
+ * `parentSpanId`; App Insights correlation and the jobs-by-session filter read `parentOperationId`.
+ * `traceId` and `parentSpanId` always come from the session, so the job never names a parent span
+ * from another trace. Only `parentOperationId`, a typed start field, keeps the caller's value.
+ */
+function addTraceContext(startInfo: Record<string, unknown>, trace: TraceContext): void {
+  startInfo.traceId = trace.traceId;
+  if (trace.spanId) {
+    startInfo.parentSpanId = trace.spanId;
+  } else {
+    delete startInfo.parentSpanId;
+  }
+  startInfo.parentOperationId ??= trace.traceId;
 }
 
 /**

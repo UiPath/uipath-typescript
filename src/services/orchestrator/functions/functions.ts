@@ -36,6 +36,8 @@ import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
 import { SDKInternalsRegistry } from '../../../core/internals';
 import type { SessionLicense } from '../../../core/licensing/session-license';
+import { DEBUG_CONTEXT_KEY, type ExecutionContext } from '@/core/context/execution';
+import type { DebugContext } from '@/models/common/types';
 
 /** Cap on the function names listed when a name lookup misses. */
 const MAX_SUGGESTED_NAMES = 20;
@@ -63,10 +65,13 @@ export class FunctionService extends FolderScopedService implements FunctionServ
   /** Folder ID → folder key (GUID); folder keys are immutable, so cache hits stay valid. */
   private readonly folderKeyCache = new Map<number, string>();
   private readonly sessionLicense?: SessionLicense;
+  private readonly executionContext: ExecutionContext;
 
   constructor(instance: IUiPath) {
     super(instance);
-    this.sessionLicense = SDKInternalsRegistry.get(instance).sessionLicense;
+    const { sessionLicense, context } = SDKInternalsRegistry.get(instance);
+    this.sessionLicense = sessionLicense;
+    this.executionContext = context;
   }
 
   @track('Functions.GetAll')
@@ -128,7 +133,9 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     const { fn, target } = await this.findByName(func, folderOptions);
     const invokeTarget = target ?? await this.fallbackTarget(fn, folderOptions);
     await this.sessionLicense?.ensure();
-    return this.invokeFunction<TOutput>(fn, invokeTarget, input ?? {}, jobKey);
+    // Read after the lookup has fetched a token, since Action Center delivers the job key with it.
+    const parentJobKey = jobKey ?? this.executionContext.get<DebugContext>(DEBUG_CONTEXT_KEY)?.jobKey;
+    return this.invokeFunction<TOutput>(fn, invokeTarget, input ?? {}, parentJobKey);
   }
 
   /**
