@@ -1,5 +1,6 @@
 import { ErrorFactory } from '../errors/error-factory';
 import { errorResponseParser } from '../errors/parser';
+import { ServerError } from '../errors/server';
 import { CONTENT_TYPES } from '../../utils/constants/headers';
 
 const APPS_API_BASE = 'apps_/default/api/v1/default';
@@ -103,6 +104,13 @@ export class PublicAppClient {
       return undefined;
     }
     const text = await response.text();
-    return text ? JSON.parse(text) : undefined;
+    if (!text) {
+      return undefined;
+    }
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new ServerError({ message: 'Failed to parse the Apps service response as JSON' });
+    }
   }
 }

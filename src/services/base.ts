@@ -47,6 +47,8 @@ export class BaseService {
    */
   protected readonly config: { folderKey?: string; metaFolderKey?: string; robotKey?: string };
 
+  protected readonly publicApp?: PublicAppClient;
+
   /**
    * Creates a base service instance with dependency injection.
    *
@@ -77,8 +79,6 @@ export class BaseService {
    * const entities = new Entities(sdk);
    * ```
    */
-  protected readonly publicApp?: PublicAppClient;
-
   constructor(instance: IUiPath, headers?: Record<string, string>) {
     const { config, context, tokenManager, folderKey, metaFolderKey, robotKey, publicAppClient } = SDKInternalsRegistry.get(instance);
     this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});

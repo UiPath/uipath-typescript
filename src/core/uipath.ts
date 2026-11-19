@@ -352,7 +352,7 @@ export class UiPath implements IUiPath {
     }
 
     if (isPublicMode(this.#config!)) {
-      await SDKInternalsRegistry.get(this).publicAppClient?.ensureSession().catch(() => undefined);
+      await SDKInternalsRegistry.get(this).publicAppClient?.ensureSession().catch((error) => console.warn('[UiPath SDK] Could not open the public app session; the first call opens it instead:', error));
       this.#initialized = true;
       return;
     }

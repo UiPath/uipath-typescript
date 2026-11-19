@@ -96,6 +96,8 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     return createJobWithMethods(rawJob, this);
   }
 
+  getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
+  getOutput(jobKey: string): Promise<Record<string, unknown> | null>;
   @track('Jobs.GetOutput')
   async getOutput(jobKey: string, folderId?: number): Promise<Record<string, unknown> | null> {
     if (!jobKey) {

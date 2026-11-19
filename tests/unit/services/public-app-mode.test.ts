@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UiPath } from '../../../src/core/uipath';
-import { ProcessService } from '../../../src/services/orchestrator/processes';
-import { BucketService } from '../../../src/services/orchestrator/buckets';
-import { EntityService } from '../../../src/services/data-fabric/entities';
-import { JobService } from '../../../src/services/orchestrator/jobs';
-import { AssetService } from '../../../src/services/orchestrator/assets';
-import { ValidationError } from '../../../src/core/errors';
-import { PUBLIC_APP_UNSUPPORTED_CALL } from '../../../src/core/http/api-client';
-import { resource } from '../../../src/resources';
+import { UiPath } from '@/core/uipath';
+import { ProcessService } from '@/services/orchestrator/processes';
+import { BucketService } from '@/services/orchestrator/buckets';
+import { EntityService } from '@/services/data-fabric/entities';
+import { JobService } from '@/services/orchestrator/jobs';
+import { AssetService } from '@/services/orchestrator/assets';
+import { ValidationError } from '@/core/errors';
+import { PUBLIC_APP_UNSUPPORTED_CALL } from '@/core/http/api-client';
+import { resource } from '@/resources';
 
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
@@ -18,11 +18,14 @@ describe('public coded app mode', () => {
 
   beforeEach(() => {
     fetchMock = vi.fn();
-    (globalThis as any).fetch = fetchMock;
+    vi.stubGlobal('fetch', fetchMock);
     sdk = new UiPath({ baseUrl: 'https://alpha.api.uipath.com', orgName: 'my-org', tenantName: 'my-tenant', appKey: 'uapp_key' });
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
 
   it('starts a process by its binding name and folder path, with the input arguments', async () => {
     fetchMock.mockResolvedValueOnce(json({ value: [{ Key: 'J-1', State: 'Pending' }] }));
@@ -37,13 +40,13 @@ describe('public coded app mode', () => {
 
   it('sends the binding key even when the page carries an override for it, since the service applies overrides itself', async () => {
     const slot = Symbol.for('uipath.resourceOverwrites.v1');
-    (globalThis as any)[slot] = () => ({ 'process.Invoices.Shared': { name: 'Invoices v2', folderPath: 'Shared/Solution 9' } });
+    (globalThis as unknown as Record<string, unknown>)[slot] = () => ({ 'process.Invoices.Shared': { name: 'Invoices v2', folderPath: 'Shared/Solution 9' } });
     fetchMock.mockResolvedValueOnce(json({ value: [] }));
 
     try {
       await new ProcessService(sdk).start({ name: 'Invoices' }, { folderPath: 'Shared' });
     } finally {
-      delete (globalThis as any)[slot];
+      delete (globalThis as unknown as Record<string, unknown>)[slot];
     }
 
     expect(fetchMock.mock.calls[0][0]).toBe(`${routes}/orchestrator/processes/Invoices.Shared/jobs`);

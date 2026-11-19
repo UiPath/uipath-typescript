@@ -130,6 +130,7 @@ export interface JobServiceModel {
    * ```
    */
   getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
+  getOutput(jobKey: string): Promise<Record<string, unknown> | null>;
 
   /**
    * Stops one or more jobs by their UUID keys.

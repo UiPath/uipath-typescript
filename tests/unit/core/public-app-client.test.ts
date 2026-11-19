@@ -11,11 +11,14 @@ describe('PublicAppClient', () => {
 
   beforeEach(() => {
     fetchMock = vi.fn();
-    (globalThis as any).fetch = fetchMock;
+    vi.stubGlobal('fetch', fetchMock);
     client = new PublicAppClient('https://alpha.api.uipath.com', 'my-org', 'uapp_key');
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
 
   it('POSTs to the Apps route with the app key and credentials', async () => {
     fetchMock.mockResolvedValueOnce(json(200, { value: [{ Key: 'J-1', State: 'Pending' }] }));

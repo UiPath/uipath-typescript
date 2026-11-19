@@ -130,6 +130,10 @@ describe('UiPath Core', () => {
   });
 
   describe('Public mode', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
     const publicPage = {
       baseUrl: TEST_CONSTANTS.BASE_URL,
       orgName: TEST_CONSTANTS.ORGANIZATION_ID,
@@ -173,7 +177,6 @@ describe('UiPath Core', () => {
       expect(fetchMock).toHaveBeenCalledOnce();
       expect(fetchMock.mock.calls[0][0]).toMatch(/\/integrations\/codedapp\/session$/);
       expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST', credentials: 'include' });
-      vi.unstubAllGlobals();
     });
 
     it('still initializes when opening the session fails, leaving it to the first call', async () => {
@@ -183,7 +186,6 @@ describe('UiPath Core', () => {
       await expect(sdk.initialize()).resolves.toBeUndefined();
 
       expect(sdk.isInitialized()).toBe(true);
-      vi.unstubAllGlobals();
     });
   });
 
