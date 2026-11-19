@@ -40,13 +40,13 @@ describe('public coded app mode', () => {
 
   it('sends the binding key even when the page carries an override for it, since the service applies overrides itself', async () => {
     const slot = Symbol.for('uipath.resourceOverwrites.v1');
-    (globalThis as unknown as Record<string, unknown>)[slot] = () => ({ 'process.Invoices.Shared': { name: 'Invoices v2', folderPath: 'Shared/Solution 9' } });
+    Reflect.set(globalThis, slot, () => ({ 'process.Invoices.Shared': { name: 'Invoices v2', folderPath: 'Shared/Solution 9' } }));
     fetchMock.mockResolvedValueOnce(json({ value: [] }));
 
     try {
       await new ProcessService(sdk).start({ name: 'Invoices' }, { folderPath: 'Shared' });
     } finally {
-      delete (globalThis as unknown as Record<string, unknown>)[slot];
+      Reflect.deleteProperty(globalThis, slot);
     }
 
     expect(fetchMock.mock.calls[0][0]).toBe(`${routes}/orchestrator/processes/Invoices.Shared/jobs`);

@@ -13,6 +13,7 @@ export const PUBLIC_APP_ENDPOINTS = {
   JOB_OUTPUT: (jobKey: string) => `${PUBLIC_ROUTE_PREFIX}orchestrator/jobs/${encodeURIComponent(jobKey)}/output`,
   ENTITY_RECORD: (entityName: string, recordId: string) =>
     `${PUBLIC_ROUTE_PREFIX}datafabric/entities/${encodeURIComponent(entityName)}/records/${encodeURIComponent(recordId)}`,
+  BUCKET_FILES: (bucketKey: string) => `${PUBLIC_ROUTE_PREFIX}orchestrator/buckets/${encodeURIComponent(bucketKey)}/files`,
 };
 
 const APP_KEY_HEADER = 'X-UiPath-App-Key';
@@ -37,7 +38,7 @@ export class PublicAppClient {
 
   async uploadFile(bucketKey: string, fileName: string, content: Blob | Uint8Array<ArrayBuffer> | File): Promise<{ path: string }> {
     const contentType = content instanceof Blob && content.type ? content.type : 'application/octet-stream';
-    return this.request('POST', `${PUBLIC_ROUTE_PREFIX}orchestrator/buckets/${encodeURIComponent(bucketKey)}/files`, {
+    return this.request('POST', PUBLIC_APP_ENDPOINTS.BUCKET_FILES(bucketKey), {
       params: { fileName },
       raw: { body: content, contentType },
     }) as Promise<{ path: string }>;
@@ -50,6 +51,8 @@ export class PublicAppClient {
           method: 'POST',
           credentials: 'include',
           headers: { [APP_KEY_HEADER]: this.appKey },
+        }).catch((error) => {
+          throw ErrorFactory.createNetworkError(error);
         });
         if (!response.ok) {
           const errorInfo = await errorResponseParser.parse(response);
@@ -83,17 +86,14 @@ export class PublicAppClient {
           ...(contentType ? { 'Content-Type': contentType } : {}),
         },
         body: raw ? raw.body : body === undefined ? undefined : JSON.stringify(body),
+      }).catch((error) => {
+        throw ErrorFactory.createNetworkError(error);
       });
 
-    let response: Response;
-    try {
+    let response = await doFetch();
+    if (response.status === 401) {
+      await this.ensureSession();
       response = await doFetch();
-      if (response.status === 401) {
-        await this.ensureSession();
-        response = await doFetch();
-      }
-    } catch (error) {
-      throw ErrorFactory.createNetworkError(error);
     }
 
     if (!response.ok) {
@@ -110,7 +110,7 @@ export class PublicAppClient {
     try {
       return JSON.parse(text);
     } catch {
-      throw new ServerError({ message: 'Failed to parse the Apps service response as JSON' });
+      throw new ServerError({ message: 'Failed to parse the Apps service response as JSON', statusCode: response.status });
     }
   }
 }

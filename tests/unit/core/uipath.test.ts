@@ -153,26 +153,14 @@ describe('UiPath Core', () => {
     });
 
     it('initializes without starting a sign-in', async () => {
-      const authenticate = vi.fn();
-      vi.mocked(AuthService).mockImplementationOnce(function () {
-        return {
-          getTokenManager: () => mockTokenManager,
-          hasValidToken: () => false,
-          getToken: () => undefined,
-          authenticateWithSecret: vi.fn(),
-          authenticate,
-          setMultiLogin: vi.fn(),
-          logout: vi.fn(),
-        };
-      } as any);
-
+      mockAuthenticate.mockClear();
       const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
       vi.stubGlobal('fetch', fetchMock);
 
       const sdk = new UiPath(publicPage);
       await sdk.initialize();
 
-      expect(authenticate).not.toHaveBeenCalled();
+      expect(mockAuthenticate).not.toHaveBeenCalled();
       expect(sdk.isInitialized()).toBe(true);
       expect(fetchMock).toHaveBeenCalledOnce();
       expect(fetchMock.mock.calls[0][0]).toMatch(/\/integrations\/codedapp\/session$/);

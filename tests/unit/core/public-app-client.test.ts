@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PUBLIC_APP_ENDPOINTS, PublicAppClient, publicBindingKey } from '@/core/http/public-app-client';
+import { NotFoundError } from '@/core/errors/not-found';
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -101,7 +102,7 @@ describe('PublicAppClient', () => {
       .mockResolvedValueOnce(new Response(null, { status: 401 }))
       .mockResolvedValueOnce(new Response(null, { status: 404 }));
 
-    await expect(client.request('POST', PUBLIC_APP_ENDPOINTS.START_JOB('Invoices.Shared'))).rejects.toBeDefined();
+    await expect(client.request('POST', PUBLIC_APP_ENDPOINTS.START_JOB('Invoices.Shared'))).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('surfaces a 404 when the session cannot read the job', async () => {
