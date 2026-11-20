@@ -45,29 +45,42 @@ $ uip tools install codedapp
 
 ---
 
-## Convert an existing VB app
+## Convert an existing low-code app
 
-If you already have a **VB low-code app** built in Apps Studio — a standalone app whose expressions are written in VB — you do not have to start from scratch. Export it as a `.uiapp` and convert it into a coded app you own:
+If you already have a low-code app, you do not have to start from scratch. `uip codedapp convert` turns its export into a coded app you own. Two kinds of export convert:
 
-<!-- termynal -->
+=== "VB app (.uiapp)"
 
-```bash
-$ uip codedapp convert ./expense-app.uiapp --out ./expense-app
-```
+    A low-code app built in Apps Studio whose expressions are written in VB. Export it from Apps Studio as a `.uiapp` file.
 
-The result is a Vite + React + TypeScript project: one component per page, typed data access through this SDK, and a `conversion-report.json` that lists what converted, what did not, and whose fault each gap is (`converter`, `source-app`, `by-design`). Continue with the sections below — `uipath.json`, local development, deployment — exactly as for an app written by hand.
-
-!!! info "Prerequisite: .NET 10 Runtime"
-    The converter binds VB expressions with the Roslyn compiler, which runs on .NET, so the **.NET 10 Runtime** must be installed on the machine that runs `convert`. Download it from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/10.0) (the *Runtime* is enough), then check:
+    <!-- termynal -->
 
     ```bash
-    dotnet --list-runtimes
+    $ uip codedapp convert ./expense-app.uiapp --out ./expense-app
     ```
 
-    The output must include a line starting with `Microsoft.NETCore.App 10.`. The converter itself ships with the `codedapp` tool; run `uip tools update` to get a version that has `convert`.
+    The coded app is written to `./expense-app`. Continue with the sections below (`uipath.json`, local development, deployment) exactly as for an app written by hand.
 
-!!! note "What converts today"
-    VB apps exported as `.uiapp`. A UiPath Business Solution export (`.uis`) is refused with a clear message.
+=== "Unified Build Solution (.uis)"
+
+    A solution built in Studio Web that holds one or more apps. Export it from Studio Web as a `.uis` file (right-click the solution, then **Export**).
+
+    <!-- termynal -->
+
+    ```bash
+    $ uip codedapp convert ./Invoices.uis --out ./invoices
+    ```
+
+    The solution is extracted into `./invoices` and the coded app is added to it as `Invoices_Coded`, beside the original app, so it keeps using the solution's resources. The code is in `./invoices/Invoices_Coded/source`. Deploy it with the `uip solution` commands, not with `uip codedapp pack`, `publish` and `deploy`. When the solution holds several apps, choose them with `--app`.
+
+The result is a Vite + React + TypeScript project: one component per page, typed data access through this SDK, and a `conversion-report.json` that lists what converted, what did not, and where each gap comes from (`converter`, `source-app`, `by-design`). The conversion runs on your machine and needs no login.
+
+!!! info "Prerequisites"
+    - **.NET 10 Runtime.** The converter binds VB expressions with the Roslyn compiler, which runs on .NET, so the .NET 10 Runtime must be installed on the machine that runs `convert`. Download it from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/10.0) (the *Runtime* is enough), then run `dotnet --list-runtimes`. The output must include a line starting with `Microsoft.NETCore.App 10.`.
+    - **codedapp tool version >= 1.205.0** to convert a VB app, and **>= 1.207.0** to convert a Unified Build Solution. The converter itself ships with the tool.
+
+!!! note "What converts"
+    Apps whose expressions are written in VB: VB apps from Apps Studio and the apps in a Unified Build Solution, action apps included. Apps Studio apps that do not use VB expressions are not supported.
 
 The output also carries the `fix-converted-app` skill for your coding agent. From the converted project:
 
@@ -75,7 +88,7 @@ The output also carries the `fix-converted-app` skill for your coding agent. Fro
 uip skills install --repo ./.uipath/agent-skills --path .
 ```
 
-Then ask your agent (Claude Code, Cursor, Copilot, …) to run `fix-converted-app`: it works through the report's converter-blamed gaps in the generated code. See [`convert`](cli-reference.md#convert) in the CLI reference for every option.
+Then ask your agent (Claude Code, Cursor, Copilot, …) to run `fix-converted-app`: it works through the gaps the report attributes to the converter. See [`convert`](cli-reference.md#convert) in the CLI reference for every option, the solution layout and the deploy commands.
 
 ---
 

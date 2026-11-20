@@ -105,33 +105,111 @@ $ uip codedapp init ./expense-app --template dashboard
 
 ## convert
 
-Convert an exported **VB low-code app** (`.uiapp`) into a React + TypeScript coded app. Runs locally; no login needed.
+Convert an exported low-code app into a React + TypeScript coded app you own. The conversion runs on your machine: it contacts no tenant and needs no login.
 
 ```
 $ uip codedapp convert <file> [options]
 ```
 
+`<file>` is one of two exports:
+
+- A `.uiapp` file: a **VB app**, exported from Apps Studio. A VB app is a low-code app whose expressions are written in VB.
+- A `.uis` file: a **Unified Build Solution**, which is a solution built in Studio Web and exported from it (right-click the solution, then **Export**). Its apps keep their event logic in workflows, which become TypeScript handlers in the coded app. A solution can hold several apps, and each one becomes a project of its own.
+
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
-| `<file>` | string | The exported VB low-code app: a `.uiapp` file | required |
-| `--out` | string | Output directory for the coded app | `./<file name>` |
-| `--force` | boolean | Convert into a non-empty directory (a re-conversion; `uipath.json` and `node_modules` are kept) | — |
+| `<file>` | string | The export: a `.uiapp` file (VB app) or a `.uis` file (Unified Build Solution). Put it before `--app` | required |
+| `--out` | string | Output directory. It must be missing or empty unless you pass `--force` | `./<file name>` |
+| `--app` | string[] | For a `.uis` that holds several apps: the names of the apps to convert, or `all`. Not needed when the solution holds one app, and not accepted for a `.uiapp` | — |
+| `--skip-solution-registration` | boolean | Write a standalone coded app: do not extract the `.uis` into `--out`, and do not register the app in a solution | — |
+| `--client-id` | string | Client ID of the non-confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) the coded app signs users in with. Written to `uipath.json` as `clientId` and, for an app registered in a solution, to its solution resource as `externalClientId` | — |
+| `--force` | boolean | Convert into a non-empty directory (a re-conversion). The generated code is replaced, hand edits included; `uipath.json` and `node_modules` are kept | — |
 | `--refresh` | boolean | Bind every expression afresh instead of reusing the output directory's bind cache | — |
 
-Requires the **.NET 10 Runtime** on the machine (`dotnet --list-runtimes` lists `Microsoft.NETCore.App 10.`). The converter ships with the `codedapp` tool. Only `.uiapp` (VB apps) is accepted; a `.uis` Solution is refused.
+!!! info "Requirements"
+    - The **.NET 10 Runtime** must be installed on the machine that runs `convert`. Check with `dotnet --list-runtimes`: the output must include a line starting with `Microsoft.NETCore.App 10.`. The converter itself ships with the codedapp tool.
+    - `convert` requires **codedapp tool version >= 1.205.0**. Converting a Unified Build Solution (`.uis`), and the `--app`, `--skip-solution-registration` and `--client-id` options, require **codedapp tool version >= 1.207.0**.
 
-`Code` in the result is one of: `ConvertCompleted` (nothing blamed on the converter), `ConvertCompletedWithGaps` (the project runs; `conversion-report.json` lists what the converter did not manage), `ConvertOutputCannotRun` (written, but cannot run as is). The output includes the `fix-converted-app` skill; `uip skills install --repo ./.uipath/agent-skills --path .` installs it for your coding agent.
+**What you get**
+
+A Vite + React + TypeScript project with one component per page and typed data access through `@uipath/uipath-typescript`. Beside the code:
+
+- `conversion-report.json` lists what converted, what did not, and where each gap comes from: `converter`, `source-app` (already broken in the low-code app) or `by-design`.
+- The `fix-converted-app` skill for your coding agent. Run `uip skills install --repo ./.uipath/agent-skills --path .` from the converted project, then ask your agent to run `fix-converted-app`: it works through the gaps the report attributes to the converter.
+- For an action app, `action-schema.json` with the task's inputs, outputs and outcomes. The result is a coded action app.
+
+**Where the output goes**
+
+A `.uiapp` converts into a standalone project in `--out`. Configure, build and deploy it like any other coded app: [`pack`](#pack), [`publish`](#publish), [`deploy`](#deploy).
+
+A `.uis` converts **into its solution**, so the coded app can keep using the solution's resources (connections, queues, buckets). The solution is extracted into `--out` and each selected app is added beside the original as a project named `<App>_Coded`:
+
+```
+invoices/                  # --out: the extracted solution
+  Invoices.uipx            # now lists both apps
+  Invoices/                # the original low-code app, untouched
+  Invoices_Coded/          # the converted app, registered in the solution
+    source/                # the React + TypeScript project: run npm install and npm run build here
+```
+
+Deploy an app converted this way with the solution, not with `uip codedapp pack`, `publish` or `deploy`:
+
+<!-- termynal -->
+
+```bash
+$ cd invoices/Invoices_Coded/source && npm install && npm run build && cd ../..
+
+$ uip solution pack . ./pack
+
+$ uip solution publish ./pack/<package>_<version>.zip --wait
+
+$ uip solution deploy run -n <deployment> --package-name <package> --package-version <version> --folder-name <folder>
+```
+
+To open the solution in Studio Web instead, run `uip solution upload .`. See [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution) for the same flow in a pipeline.
+
+A solution deploy requires the coded app's External App. Pass it with `--client-id` when you convert, or set `clientId` in `source/uipath.json` and convert again with `--force`. The app's deployed URL must be one of that External App's redirect URLs.
+
+Pass `--skip-solution-registration` to get a standalone project from a `.uis` instead.
+
+**Result**
+
+`Code` in the result tells a script how the conversion went:
+
+| `Result` | `Code` | Meaning |
+|----------|--------|---------|
+| `Success` | `ConvertCompleted` | Everything converted; the report attributes nothing to the converter |
+| `Success` | `ConvertCompletedWithGaps` | The project builds and runs, but `conversion-report.json` lists things the converter did not manage |
+| `Failure` | `ConvertOutputCannotRun` | The project was written but cannot run as it is; the report says why |
+| `Failure` | `ConvertNotRegistered` | The project was written into a solution but is not registered in it; `Instructions` says how to register it |
+| `Failure` | `CONVERT_*` | The command stopped before converting, for example an unreadable file, a non-empty `--out` without `--force`, a missing .NET runtime, or a solution with several apps and no `--app`. `Message` and `Instructions` say what to change |
 
 **Examples**
 
 <!-- termynal -->
 
 ```bash
+# VB app: the coded app lands in ./expense-app
 $ uip codedapp convert ./expense-app.uiapp
 
+# Choose the output directory
 $ uip codedapp convert ./expense-app.uiapp --out ./apps/expense
 
+# Convert again into the same directory, binding every expression afresh
 $ uip codedapp convert ./expense-app.uiapp --force --refresh
+
+# Unified Build Solution with one app: converted into the solution in ./Invoices
+$ uip codedapp convert ./Invoices.uis
+
+# Solution with several apps: convert all of them, or name the ones you want
+$ uip codedapp convert ./HR.uis --app all --out ./hr
+$ uip codedapp convert ./HR.uis --app Onboarding Leave --out ./hr
+
+# Set the External App the coded app signs users in with
+$ uip codedapp convert ./Invoices.uis --out ./invoices --client-id <client-id>
+
+# A standalone coded app, outside any solution
+$ uip codedapp convert ./Invoices.uis --out ./invoices-app --skip-solution-registration
 ```
 
 ---
