@@ -122,7 +122,7 @@ jobs:
           echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
 
   deploy-docs:
-    if: ${{ !inputs.github_packages_only }}
+    if: ${{ !inputs.github_packages_only && !inputs.preview }}
     needs: publish-sdk
     uses: ./.github/workflows/docs.yml
     # Called workflows receive no secrets by default. Pass just the two the docs
