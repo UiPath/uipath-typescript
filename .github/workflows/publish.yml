@@ -17,6 +17,11 @@ on:
         required: false
         default: false
         type: boolean
+      preview:
+        description: 'Preview release (ts-sdk only): publish under the "preview" npm tag instead of "latest"'
+        required: false
+        default: false
+        type: boolean
 
 permissions: {}
 
@@ -80,7 +85,9 @@ jobs:
         if: ${{ !inputs.github_packages_only }}
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
-          npm publish --provenance --access public
+          npm publish --provenance --access public --tag "$NPM_TAG"
+        env:
+          NPM_TAG: ${{ inputs.preview && 'preview' || 'latest' }}
 
       - name: Publish to GitHub Packages
         run: |
@@ -89,7 +96,7 @@ jobs:
           npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || 'latest' }}
+          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || inputs.preview && 'preview' || 'latest' }}
 
       - name: Generate Summary
         env:
