@@ -12,6 +12,11 @@
 
 export { TelemetryClient } from './client';
 export { getOrCreateClient } from './registry';
+export {
+    APPS_TELEMETRY_DISABLED_ENV,
+    TELEMETRY_DISABLED_ENV,
+    isTelemetryDisabled,
+} from './opt-out';
 export { createTrack, createTrackEvent } from './track';
 export type { Track } from './track';
 export * from './types';
