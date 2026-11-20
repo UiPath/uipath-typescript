@@ -113,19 +113,43 @@ describe('isTelemetryDisabled', () => {
         expect(isTelemetryDisabled()).toBe(false);
     });
 
-    it('treats an environment that throws on read as not opted out', () => {
+    it('warns and treats an environment that throws on read as not opted out', () => {
+        const denied = new Error('no env permission');
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const original = Object.getOwnPropertyDescriptor(globalThis, 'process');
         Object.defineProperty(globalThis, 'process', {
             configurable: true,
             get() {
-                throw new Error('no env permission');
+                throw denied;
             },
         });
 
         try {
             expect(isTelemetryDisabled()).toBe(false);
+            expect(warn).toHaveBeenCalledWith(denied);
         } finally {
             Object.defineProperty(globalThis, 'process', original!);
+            warn.mockRestore();
+        }
+    });
+
+    it('warns and treats a Deno environment that throws on read as not opted out', () => {
+        const denied = new Error('Requires env access');
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        holder.Deno = {
+            env: {
+                get() {
+                    throw denied;
+                },
+            },
+        };
+
+        try {
+            expect(isTelemetryDisabled()).toBe(false);
+            expect(warn).toHaveBeenCalledWith(denied);
+        } finally {
+            delete holder.Deno;
+            warn.mockRestore();
         }
     });
 });

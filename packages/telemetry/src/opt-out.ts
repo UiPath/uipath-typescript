@@ -49,14 +49,16 @@ function readProcessEnv(name: string): string | undefined {
         if (fromNode) {
             return fromNode;
         }
-    } catch {
+    } catch (error) {
         // No env permission; fall through to the Deno accessor.
+        console.warn(error);
     }
 
     try {
         return globals.Deno?.env?.get?.(name);
-    } catch {
+    } catch (error) {
         // No env permission; treat the variable as absent.
+        console.warn(error);
         return undefined;
     }
 }
