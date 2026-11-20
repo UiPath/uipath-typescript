@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: read
+  # coverage.yml's schema DDL leg reads other runs' jobs to take its turn.
+  actions: read
 
 # Serialize a manual dispatch against the scheduled run so two coverage passes
 # don't hit the same dev tenant's integration data at once. Let an in-flight run
