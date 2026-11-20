@@ -24,6 +24,7 @@ on:
       - "mkdocs.yml"
       - "package.json"
       - "scripts/fetch-js-functions-docs.sh"
+      - "scripts/fetch-widget-docs.mjs"
       - ".github/workflows/docs-pr-preview.yml"
 
 permissions:
@@ -91,10 +92,14 @@ jobs:
       - name: Generate API documentation
         # docs:api also fetches the JS Functions pages from
         # UiPath/coded-functions-js using the token minted above, when there is
-        # one.
+        # one, and the React Widgets pages from the package READMEs in the
+        # public UiPath/uipath-ui-widgets. GITHUB_TOKEN covers the latter --
+        # read-only on a fork PR, which is all the fetch needs, and enough to
+        # lift the unauthenticated rate limit either way.
         if: github.event.action != 'closed'
         env:
           CODED_FUNCTIONS_DOCS_TOKEN: ${{ steps.js_functions_docs_token.outputs.token }}
+          WIDGET_DOCS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run docs:api
 
       - name: Build MkDocs site (CI gate)
