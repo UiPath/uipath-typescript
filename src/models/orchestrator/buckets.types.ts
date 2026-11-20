@@ -265,4 +265,6 @@ export interface BucketUploadResponse {
    * HTTP status code from the upload operation
    */
   statusCode: number;
+
+  path?: string;
 }

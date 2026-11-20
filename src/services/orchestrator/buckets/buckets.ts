@@ -2,6 +2,7 @@ import { FolderScopedService } from '../../folder-scoped';
 import type { BucketResource } from '@/resources';
 import { unpackFolderScopedHandle } from '@/utils/overrides/handles';
 import { ValidationError, HttpStatus } from '../../../core/errors';
+import { publicBindingKey } from '../../../core/http/public-app-client';
 import {
   BucketGetResponse,
   BucketGetAllOptions,
@@ -267,6 +268,15 @@ export class BucketService extends FolderScopedService implements BucketServiceM
 
     if (!resolvedContent) {
       throw new ValidationError({ message: 'content is required for uploadFile' });
+    }
+
+    if (this.publicApp) {
+      const name = typeof bucketIdOrRef === 'object' ? bucketIdOrRef.name : undefined;
+      if (!name) {
+        throw new ValidationError({ message: 'Buckets.uploadFile: a public app uploads to a bucket by its binding name (`{ name }`), not by id.' });
+      }
+      const { path: storedPath } = await this.publicApp.uploadFile(publicBindingKey(name, (bucketIdOrRef as { folderPath?: string }).folderPath ?? folderPath), resolvedPath, resolvedContent);
+      return { success: true, statusCode: 200, path: storedPath };
     }
 
     const { id: bucketId, effectiveFolder } = await this.resolveBucketRef(

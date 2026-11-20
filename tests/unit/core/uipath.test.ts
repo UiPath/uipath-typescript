@@ -129,6 +129,54 @@ describe('UiPath Core', () => {
     });
   });
 
+  describe('Public mode', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const publicPage = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: 'http://localhost:3000/callback',
+      scope: 'OR.Jobs',
+      appKey: 'uapp_key',
+    };
+
+    it('drops the OAuth credentials when an app key is present', () => {
+      const config = getConfig(new UiPath(publicPage));
+
+      expect(config.appKey).toBe('uapp_key');
+      expect(config.clientId).toBeUndefined();
+      expect(config.scope).toBeUndefined();
+    });
+
+    it('initializes without starting a sign-in', async () => {
+      mockAuthenticate.mockClear();
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      const sdk = new UiPath(publicPage);
+      await sdk.initialize();
+
+      expect(mockAuthenticate).not.toHaveBeenCalled();
+      expect(sdk.isInitialized()).toBe(true);
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(fetchMock.mock.calls[0][0]).toMatch(/\/integrations\/codedapp\/session$/);
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST', credentials: 'include' });
+    });
+
+    it('still initializes when opening the session fails, leaving it to the first call', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 503 })));
+
+      const sdk = new UiPath(publicPage);
+      await expect(sdk.initialize()).resolves.toBeUndefined();
+
+      expect(sdk.isInitialized()).toBe(true);
+    });
+  });
+
   describe('Secret-based Authentication', () => {
     let sdk: UiPath;
 
@@ -789,6 +837,14 @@ describe('UiPath Core', () => {
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
       });
+
+      expect(SessionLicense).not.toHaveBeenCalled();
+      expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
+      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
+    });
+
+    it('should not subscribe a session license for a public app', () => {
+      const sdk = new UiPath({ ...oauthConfig, appKey: 'uapp_key' });
 
       expect(SessionLicense).not.toHaveBeenCalled();
       expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
