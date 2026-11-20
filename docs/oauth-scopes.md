@@ -28,6 +28,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getIncidentDistribution()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getUnitConsumptionSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getRunsTimeline()` | `Traces.Api` |
 
 ## Assets
 

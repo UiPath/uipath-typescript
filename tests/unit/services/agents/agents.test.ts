@@ -4,7 +4,18 @@ import { AgentService } from '../../../../src/services/agents/agents';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { AGENTS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { AgentErrorSortColumn, AgentListSortColumn, AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
+import {
+  AgentErrorSortColumn,
+  AgentListSortColumn,
+  AgentType,
+  AgentExecutionType,
+  AgentRunsSegment,
+  AgentRunsStats,
+  AgentRunsTimelineBucket,
+  AgentRunsTopAgent,
+} from '@/models/agents/agents.types';
+import type { RawAgentGetRunsTimelineResponse } from '@/models/agents/agents.internal-types';
+import { ServerError } from '@/core/errors';
 import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
@@ -962,6 +973,118 @@ describe('AgentService Unit Tests', () => {
 
       await expect(
         agentService.getUnitConsumptionSummary(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getRunsTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockStats: AgentRunsStats = {
+      jobs: { total: 10, successful: 7, faulted: 2, stopped: 0, unfinished: 1 },
+      errorRate: 22.22,
+      activeAgents: 3,
+      durationSeconds: { p50: 12.5, p95: 40.1 },
+    };
+    const mockTopAgent: AgentRunsTopAgent = {
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+      name: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
+      jobs: mockStats.jobs,
+      durationSeconds: mockStats.durationSeconds,
+    };
+    const buildTimeline = (
+      data: Partial<RawAgentGetRunsTimelineResponse['data']> = {},
+    ): RawAgentGetRunsTimelineResponse => ({
+      data: {
+        startTime: AGENT_TEST_CONSTANTS.START_TIME,
+        endTime: AGENT_TEST_CONSTANTS.END_TIME,
+        timeZone: AGENT_TEST_CONSTANTS.RUNS_TIMELINE_DEFAULT_ZONE,
+        summary: mockStats,
+        ...data,
+      },
+      hasError: false,
+    });
+
+    it('should unwrap the data envelope and send the window', async () => {
+      mockApiClient.post.mockResolvedValue(buildTimeline());
+
+      const result = await agentService.getRunsTimeline(startTime, endTime);
+
+      expect(result.summary).toEqual(mockStats);
+      expect(result.timeZone).toBe(AGENT_TEST_CONSTANTS.RUNS_TIMELINE_DEFAULT_ZONE);
+      expect(result.buckets).toBeUndefined();
+      expect(result.topAgents).toBeUndefined();
+      expect((result as { data?: unknown }).data).toBeUndefined();
+      expect((result as { hasError?: unknown }).hasError).toBeUndefined();
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_RUNS_TIMELINE);
+      expect(body).toEqual({ startTime: startTime.toISOString(), endTime: endTime.toISOString() });
+    });
+
+    it('should send bucket, timeZone, segments, topAgents and folderKeys', async () => {
+      mockApiClient.post.mockResolvedValue(buildTimeline());
+
+      await agentService.getRunsTimeline(startTime, endTime, {
+        bucket: AgentRunsTimelineBucket.Day,
+        timeZone: AGENT_TEST_CONSTANTS.RUNS_TIMELINE_ZONE,
+        segments: [AgentRunsSegment.Conversational],
+        topAgents: { limit: 10 },
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.bucket).toBe('Day');
+      expect(body.timeZone).toBe(AGENT_TEST_CONSTANTS.RUNS_TIMELINE_ZONE);
+      expect(body.segments).toEqual(['conversational']);
+      expect(body.topAgents).toEqual({ limit: 10 });
+      expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
+    });
+
+    it('should rename each bucket start from bucket to startTime', async () => {
+      const segments = { [AgentRunsSegment.Conversational]: mockStats };
+      mockApiClient.post.mockResolvedValue(buildTimeline({
+        bucket: AgentRunsTimelineBucket.Day,
+        buckets: [{ bucket: AGENT_TEST_CONSTANTS.RUNS_TIMELINE_BUCKET_START, ...mockStats, segments }],
+      }));
+
+      const result = await agentService.getRunsTimeline(startTime, endTime, { bucket: AgentRunsTimelineBucket.Day });
+
+      expect(result.bucket).toBe(AgentRunsTimelineBucket.Day);
+      expect(result.buckets).toEqual([
+        { startTime: AGENT_TEST_CONSTANTS.RUNS_TIMELINE_BUCKET_START, ...mockStats, segments },
+      ]);
+      expect(result.buckets?.[0]).not.toHaveProperty('bucket');
+    });
+
+    it('should return top agents, leaving errorRate undefined when the API omits it', async () => {
+      mockApiClient.post.mockResolvedValue(buildTimeline({ topAgents: [mockTopAgent] }));
+
+      const result = await agentService.getRunsTimeline(startTime, endTime, { topAgents: {} });
+
+      expect(result.topAgents).toEqual([mockTopAgent]);
+      expect(result.topAgents?.[0].errorRate).toBeUndefined();
+    });
+
+    it('should throw a ServerError with the API message when hasError is true', async () => {
+      mockApiClient.post.mockResolvedValue({
+        ...buildTimeline(),
+        hasError: true,
+        errorMessage: AGENT_TEST_CONSTANTS.RUNS_TIMELINE_ERROR,
+      });
+
+      const promise = agentService.getRunsTimeline(startTime, endTime);
+
+      await expect(promise).rejects.toBeInstanceOf(ServerError);
+      await expect(promise).rejects.toThrow(AGENT_TEST_CONSTANTS.RUNS_TIMELINE_ERROR);
+      await expect(promise).rejects.toMatchObject({ statusCode: 200 });
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getRunsTimeline(startTime, endTime),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });

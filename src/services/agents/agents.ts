@@ -22,12 +22,19 @@ import {
   AgentGetUnitConsumptionSummaryResponse,
   AgentListItem,
   AgentGetAllOptions,
+  AgentGetRunsTimelineOptions,
+  AgentGetRunsTimelineResponse,
+  AgentRunsBucket,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import type {
+  RawAgentGetRunsTimelineResponse,
   RawAgentGetSummaryResponse,
   RawAgentSummaryPeriod,
 } from '../../models/agents/agents.internal-types';
+import { AgentRunsBucketMap } from '@/models/agents/agents.constants';
+import { ServerError } from '@/core/errors';
+import { transformData } from '@/utils/transform';
 import { JobState } from '../../models/common/types';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
 import {
@@ -293,6 +300,26 @@ export class AgentService extends BaseService implements AgentServiceModel {
     );
 
     return response.data.data;
+  }
+
+  @track('Agents.GetRunsTimeline')
+  async getRunsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetRunsTimelineOptions,
+  ): Promise<AgentGetRunsTimelineResponse> {
+    const response = await this.post<RawAgentGetRunsTimelineResponse>(
+      AGENTS_ENDPOINTS.GET_RUNS_TIMELINE,
+      { ...options, startTime: startTime.toISOString(), endTime: endTime.toISOString() },
+    );
+
+    const { data, hasError, errorMessage } = response.data;
+    // A 200 with hasError means the read is unavailable; its zeroed data is not "no runs".
+    if (hasError) throw new ServerError({ message: errorMessage, statusCode: 200 });
+
+    const { buckets, ...timeline } = data;
+    if (!buckets) return timeline;
+    return { ...timeline, buckets: transformData(buckets, AgentRunsBucketMap) as unknown as AgentRunsBucket[] };
   }
 
   /**

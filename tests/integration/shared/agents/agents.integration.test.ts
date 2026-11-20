@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
-import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
+import {
+  AgentType,
+  AgentExecutionType,
+  AgentRunsSegment,
+  AgentRunsTimelineBucket,
+} from '@/models/agents/agents.types';
 import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 import { recentWindow } from '../../utils/helpers';
@@ -404,4 +409,59 @@ describeIntegration('Agents - Integration Tests', 'user', modes, () => {
   // insightsrtm_ answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
   // default fails healthy responses; 90 s covers one slow call plus a follow-up.
   timeout: 90_000,
+});
+
+describeIntegration('Agents runs timeline - Integration Tests', 'both', modes, () => {
+  let agents!: Agents;
+
+  beforeAll(() => {
+    const services = getServices();
+    if (!services.agents) {
+      throw new Error('Agents service not initialized');
+    }
+    agents = services.agents;
+  });
+
+  describe('getRunsTimeline', () => {
+    const { startTime, endTime } = recentWindow(7);
+
+    it('should retrieve window totals without buckets or top agents', async () => {
+      const result = await agents.getRunsTimeline(startTime, endTime);
+
+      expect(typeof result.startTime).toBe('string');
+      expect(typeof result.endTime).toBe('string');
+      expect(result.timeZone).toBe(AGENT_TEST_CONSTANTS.RUNS_TIMELINE_DEFAULT_ZONE);
+      const { jobs } = result.summary;
+      expect(jobs.total).toBe(jobs.successful + jobs.faulted + jobs.stopped + jobs.unfinished);
+      expect(typeof result.summary.errorRate).toBe('number');
+      expect(typeof result.summary.activeAgents).toBe('number');
+      expect(result.bucket).toBeUndefined();
+      expect(result.buckets).toBeUndefined();
+      expect(result.topAgents).toBeUndefined();
+    });
+
+    it('should return day buckets, segments and top agents when requested', async () => {
+      const result = await agents.getRunsTimeline(startTime, endTime, {
+        bucket: AgentRunsTimelineBucket.Day,
+        timeZone: AGENT_TEST_CONSTANTS.RUNS_TIMELINE_ZONE,
+        segments: [AgentRunsSegment.Conversational],
+        topAgents: { limit: 3 },
+      });
+
+      expect(result.bucket).toBe(AgentRunsTimelineBucket.Day);
+      expect(result.timeZone).toBe(AGENT_TEST_CONSTANTS.RUNS_TIMELINE_ZONE);
+      expect(result.summary.segments?.[AgentRunsSegment.Conversational]).toBeDefined();
+      expect(Array.isArray(result.buckets)).toBe(true);
+      expect(Array.isArray(result.topAgents)).toBe(true);
+      expect((result.topAgents ?? []).length).toBeLessThanOrEqual(3);
+      for (const bucket of result.buckets ?? []) {
+        expect(bucket.startTime.endsWith(AGENT_TEST_CONSTANTS.RUNS_TIMELINE_ZONE_OFFSET)).toBe(true);
+        expect(bucket).not.toHaveProperty('bucket');
+      }
+      for (const agent of result.topAgents ?? []) {
+        expect(typeof agent.processKey).toBe('string');
+        expect(typeof agent.name).toBe('string');
+      }
+    });
+  });
 });
