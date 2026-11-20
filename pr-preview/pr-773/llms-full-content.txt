@@ -1218,15 +1218,25 @@ if (completedJob) {
 
 > **getOutput**(`jobKey`: `string`): `Promise`\<`null` | `Record`\<`string`, `unknown`>>
 
+Gets the output of a job started by a public coded app. No folder is needed in public mode.
+
 ##### Parameters
 
-| Parameter | Type     |
-| --------- | -------- |
-| `jobKey`  | `string` |
+| Parameter | Type     | Description                                              |
+| --------- | -------- | -------------------------------------------------------- |
+| `jobKey`  | `string` | The unique key (GUID) of the job to retrieve output from |
 
 ##### Returns
 
 `Promise`\<`null` | `Record`\<`string`, `unknown`>>
+
+Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
+
+##### Example
+
+```
+const output = await jobs.getOutput(<jobKey>);
+```
 
 ### linkAttachment()
 
