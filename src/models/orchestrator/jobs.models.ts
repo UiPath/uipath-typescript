@@ -130,6 +130,17 @@ export interface JobServiceModel {
    * ```
    */
   getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
+  /**
+   * Gets the output of a job started by a public coded app. No folder is needed in public mode.
+   *
+   * @param jobKey - The unique key (GUID) of the job to retrieve output from
+   * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
+   *
+   * @example
+   * ```typescript
+   * const output = await jobs.getOutput(<jobKey>);
+   * ```
+   */
   getOutput(jobKey: string): Promise<Record<string, unknown> | null>;
 
   /**
