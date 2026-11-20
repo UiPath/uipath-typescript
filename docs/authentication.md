@@ -57,10 +57,8 @@ const sdk = new UiPath({ enforceSso: true });
     Users who sign in with a UiPath account do not exist in the organization's identity
     provider and will be rejected by it.
 
-!!! note "Needs the organization id"
-    This uses the organization id, which the platform and `uipath.json` supply for you. If
-    you instead pass configuration directly to the constructor, set `orgName` to the
-    organization id, otherwise `enforceSso` is ignored and a warning is logged.
+!!! note "Organization name or id"
+    `orgName` can be either the organization name or the organization id.
 
 
 ## Secret-based Authentication
@@ -133,6 +131,18 @@ export default defineFunction({
 Construct the SDK **inside the handler**, once per invocation. A single instance
 hoisted to module scope would keep serving the org, tenant and token of whichever
 invocation created it.
+
+The constructor reads `ctx.platform` — `baseUrl`, reduced to its origin, and the
+`orgId` and `tenantId` GUIDs, which the platform accepts in place of names — and
+`ctx.robot.accessToken` as the bearer token. `ctx.platform.folderKey` is the
+fallback folder for a call that needs a folder and names none, such as a lookup
+by name, which runs against the invocation's folder. Integration Service calls
+are left unscoped: Integration Service rejects a connection outside the folder a
+call names, and the connection a function uses often lives in another folder.
+Explicit `folderId`, `folderKey` or `folderPath` options still win. On a local
+run, where `ctx.platform` is null, the constructor
+falls through to the environment contract below; when neither supplies a
+coordinate, the error names it.
 
 ## Server-side and scripts (environment contract)
 
@@ -280,6 +290,7 @@ useEffect(() => {
 - `sdk.getToken()` - Get the logged-in user's access token
 - `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
+- `sdk.setDebugContext()` - Attach a parent job key to the jobs the app starts so Orchestrator links them to it and, when that parent is a debug run, routes them as debug sub-jobs. Studio Web debug sessions and Action Center debug tasks hand the key to the SDK themselves; call this only when another host runs the app inside a job
 
 ---
 

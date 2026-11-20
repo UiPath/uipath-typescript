@@ -3,11 +3,23 @@ import path from 'node:path'
 import type { UnpluginFactory, UnpluginInstance } from 'unplugin'
 import { createUnplugin } from 'unplugin'
 import type { Options } from './types'
-import { PLUGIN_NAME, DEV_MODE } from './constants'
-import { readConfig, generateMetaTagsForVite, generateMetaTagsHtml } from './core/index'
+import { PLUGIN_NAME, DEV_MODE, DEV_ENV_FILES } from './constants'
+import {
+  readConfig,
+  generateMetaTagsForVite,
+  generateMetaTagsHtml,
+  readDevEnvValues,
+  isWebpackServe,
+  generateEnvScriptForVite,
+  injectEnvScriptHtml,
+} from './core/index'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
   let isDev = false
+  // Local env values reach only a page a dev server is serving. Anything written to disk can be
+  // deployed, and a deployed app must take its values from the deployment's env.js, so Rollup and
+  // esbuild builds, `vite build --mode development` and unminified builds never get them.
+  let isDevServer = false
   let cachedConfig: ReturnType<typeof readConfig> | null = null
   const configPath = options.configPath ?? 'uipath.json'
 
@@ -18,14 +30,20 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
     vite: {
       configResolved(config) {
         isDev = config.command === 'serve' || config.mode === DEV_MODE
+        isDevServer = config.command === 'serve'
       },
       configureServer(server) {
         // Watch uipath.json — invalidate cache on change so next request picks it up
         const fullConfigPath = path.resolve(process.cwd(), configPath)
         server.watcher.add(fullConfigPath)
+        // Env files are re-read per request, so a change only has to reload the page.
+        const envPaths = DEV_ENV_FILES.map(envFile => path.resolve(process.cwd(), envFile))
+        server.watcher.add(envPaths)
         server.watcher.on('change', (changedPath) => {
           if (changedPath === fullConfigPath) {
             cachedConfig = null
+          } else if (envPaths.includes(changedPath)) {
+            server.ws.send({ type: 'full-reload' })
           }
         })
       },
@@ -33,13 +51,16 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         if (!cachedConfig) {
           cachedConfig = readConfig({ ...options, isDev })
         }
-        return generateMetaTagsForVite(cachedConfig)
+        const tags = generateMetaTagsForVite(cachedConfig)
+        const envValues = readDevEnvValues(isDevServer)
+        return envValues ? [...generateEnvScriptForVite(envValues), ...tags] : tags
       },
     },
 
     // Webpack-specific hooks
     webpack(compiler) {
       isDev = compiler.options.mode === DEV_MODE
+      isDevServer = isWebpackServe()
 
       type Compilation = {
         assets: Record<string, { source: () => string | Buffer; size: () => number }>
@@ -49,8 +70,9 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         try {
           const config = readConfig({ ...options, isDev })
           const metaTagsHtml = generateMetaTagsHtml(config)
+          const envValues = readDevEnvValues(isDevServer)
 
-          if (!metaTagsHtml) {
+          if (!metaTagsHtml && !envValues) {
             callback()
             return
           }
@@ -60,7 +82,10 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
             if (filename.endsWith('.html')) {
               const asset = compilation.assets[filename]
               const html = asset.source().toString()
-              const modifiedHtml = html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+              let modifiedHtml = envValues ? injectEnvScriptHtml(html, envValues) : html
+              if (metaTagsHtml) {
+                modifiedHtml = modifiedHtml.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+              }
 
               compilation.assets[filename] = {
                 source: () => modifiedHtml,

@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.7.2",
+    "version": "1.8.4",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -66,6 +66,16 @@
                 "default": "./dist/assets/index.cjs"
             }
         },
+        "./resources": {
+            "import": {
+                "types": "./dist/resources/index.d.ts",
+                "default": "./dist/resources/index.mjs"
+            },
+            "require": {
+                "types": "./dist/resources/index.d.ts",
+                "default": "./dist/resources/index.cjs"
+            }
+        },
         "./jobs": {
             "import": {
                 "types": "./dist/jobs/index.d.ts",
@@ -124,6 +134,16 @@
             "require": {
                 "types": "./dist/folders/index.d.ts",
                 "default": "./dist/folders/index.cjs"
+            }
+        },
+        "./orchestrator-users": {
+            "import": {
+                "types": "./dist/orchestrator-users/index.d.ts",
+                "default": "./dist/orchestrator-users/index.mjs"
+            },
+            "require": {
+                "types": "./dist/orchestrator-users/index.d.ts",
+                "default": "./dist/orchestrator-users/index.cjs"
             }
         },
         "./cases": {
@@ -256,14 +276,14 @@
                 "default": "./dist/functions/index.cjs"
             }
         },
-        "./platform": {
+        "./settings": {
             "import": {
-                "types": "./dist/platform/index.d.ts",
-                "default": "./dist/platform/index.mjs"
+                "types": "./dist/settings/index.d.ts",
+                "default": "./dist/settings/index.mjs"
             },
             "require": {
-                "types": "./dist/platform/index.d.ts",
-                "default": "./dist/platform/index.cjs"
+                "types": "./dist/settings/index.d.ts",
+                "default": "./dist/settings/index.cjs"
             }
         },
         "./business-apps": {
@@ -304,6 +324,36 @@
             "require": {
                 "types": "./dist/roles/index.d.ts",
                 "default": "./dist/roles/index.cjs"
+            }
+        },
+        "./groups": {
+            "import": {
+                "types": "./dist/groups/index.d.ts",
+                "default": "./dist/groups/index.mjs"
+            },
+            "require": {
+                "types": "./dist/groups/index.d.ts",
+                "default": "./dist/groups/index.cjs"
+            }
+        },
+        "./directory": {
+            "import": {
+                "types": "./dist/directory/index.d.ts",
+                "default": "./dist/directory/index.mjs"
+            },
+            "require": {
+                "types": "./dist/directory/index.d.ts",
+                "default": "./dist/directory/index.cjs"
+            }
+        },
+        "./ontologies": {
+            "import": {
+                "types": "./dist/ontologies/index.d.ts",
+                "default": "./dist/ontologies/index.mjs"
+            },
+            "require": {
+                "types": "./dist/ontologies/index.d.ts",
+                "default": "./dist/ontologies/index.cjs"
             }
         }
     },

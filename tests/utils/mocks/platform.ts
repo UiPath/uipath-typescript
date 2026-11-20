@@ -4,12 +4,17 @@
  * Shapes mirror the real API response captured during onboarding.
  */
 
-import type { RawPlatformSetting } from '../../../src/models/platform/platform.internal-types';
+import type { RawPlatformSetting } from '../../../src/models/platform/settings.internal-types';
 import type {
   RawPlatformUser,
   RawPlatformUserListResponse,
   RawPlatformUserUpdateResult,
 } from '../../../src/models/platform/users.internal-types';
+import type {
+  RawPlatformGroup,
+  RawPlatformGroupMember,
+  RawPlatformGroupMembersResponse,
+} from '../../../src/models/platform/groups.internal-types';
 import type {
   RawPlatformRole,
   RawPlatformRoleAction,
@@ -19,10 +24,16 @@ import type {
   RawPlatformRoleAssignmentListResponse,
   RawPlatformEffectiveAccessResponse,
 } from '../../../src/models/platform/roles.internal-types';
+import type {
+  RawPlatformDirectoryEntry,
+  RawPlatformDirectoryGroup,
+} from '../../../src/models/platform/directory.internal-types';
 import {
   PLATFORM_TEST_CONSTANTS,
   PLATFORM_USER_TEST_CONSTANTS,
+  PLATFORM_GROUP_TEST_CONSTANTS,
   PLATFORM_ROLE_TEST_CONSTANTS,
+  PLATFORM_DIRECTORY_TEST_CONSTANTS,
 } from '../constants/platform';
 
 /**
@@ -238,5 +249,82 @@ export const createRawPlatformEffectiveAccessResponse = (
   },
   grantedServicesMetadata: [],
   grantedRolesMetadata: [{ id: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_ID, roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME }],
+  ...overrides,
+});
+
+/**
+ * Builds a single group in the raw wire shape: camelCase fields, numeric `type`
+ * code, and the internal fields the service drops (`members`, `mappedRole`, `scope`).
+ */
+export const createBasicRawPlatformGroup = (
+  overrides?: Partial<RawPlatformGroup>
+): RawPlatformGroup => ({
+  id: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
+  name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  displayName: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  type: 0,
+  creationTime: PLATFORM_GROUP_TEST_CONSTANTS.CREATION_TIME,
+  lastModificationTime: PLATFORM_GROUP_TEST_CONSTANTS.LAST_MODIFICATION_TIME,
+  members: [],
+  mappedRole: null,
+  scope: null,
+  ...overrides,
+});
+
+/**
+ * Builds a single group member reference in the raw wire shape — numeric `type` code.
+ */
+export const createBasicRawPlatformGroupMember = (
+  overrides?: Partial<RawPlatformGroupMember>
+): RawPlatformGroupMember => ({
+  id: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
+  type: 0,
+  ...overrides,
+});
+
+/**
+ * Builds the paged group members response in the raw wire shape. `totalCount`
+ * defaults to the number of members so single-page mocks satisfy the service's
+ * fetch-all loop; pass it explicitly to simulate further pages.
+ */
+export const createRawPlatformGroupMembersResponse = (
+  members: RawPlatformGroupMember[] = [createBasicRawPlatformGroupMember()],
+  totalCount: number = members.length
+): RawPlatformGroupMembersResponse => ({
+  totalCount,
+  results: members,
+});
+
+/**
+ * Builds a directory search result in the raw wire shape: `identifier`/`identityName`
+ * naming, numeric `type` code, and the redundant `objectType` the service drops.
+ */
+export const createBasicRawPlatformDirectoryEntry = (
+  overrides?: Partial<RawPlatformDirectoryEntry>
+): RawPlatformDirectoryEntry => ({
+  source: PLATFORM_DIRECTORY_TEST_CONSTANTS.SOURCE_LOCAL,
+  identifier: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
+  identityName: PLATFORM_DIRECTORY_TEST_CONSTANTS.ENTRY_NAME,
+  displayName: PLATFORM_DIRECTORY_TEST_CONSTANTS.ENTRY_DISPLAY_NAME,
+  email: PLATFORM_DIRECTORY_TEST_CONSTANTS.ENTRY_NAME,
+  domain: null,
+  type: 0,
+  objectType: 'DirectoryUser',
+  ...overrides,
+});
+
+/**
+ * Builds a membership-check result in the raw wire shape.
+ */
+export const createBasicRawPlatformDirectoryGroup = (
+  overrides?: Partial<RawPlatformDirectoryGroup>
+): RawPlatformDirectoryGroup => ({
+  objectType: 'DirectoryGroup',
+  externalId: null,
+  source: PLATFORM_DIRECTORY_TEST_CONSTANTS.SOURCE_LOCAL,
+  identifier: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
+  name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  email: null,
+  displayName: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
   ...overrides,
 });

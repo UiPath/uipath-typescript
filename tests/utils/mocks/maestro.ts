@@ -409,6 +409,20 @@ export const createMockCaseSla = (overrides: Partial<any> = {}) => {
 };
 
 /**
+ * Creates a mock stage SLA rule as stored in Case JSON `slaRules`
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock default SLA rule
+ */
+export const createMockCaseSlaRule = (overrides: Partial<any> = {}) => {
+  return createMockCaseSla({
+    id: MAESTRO_TEST_CONSTANTS.SLA_RULE_DEFAULT_ID,
+    displayName: MAESTRO_TEST_CONSTANTS.SLA_RULE_DEFAULT_NAME,
+    expression: MAESTRO_TEST_CONSTANTS.SLA_RULE_DEFAULT_EXPRESSION,
+    ...overrides
+  });
+};
+
+/**
  * Creates a mock stage node for Case JSON
  * @param overrides - Optional overrides for specific fields
  * @returns Mock stage node with tasks and SLA
@@ -419,7 +433,7 @@ export const createMockCaseStageNode = (overrides: Partial<any> = {}) => {
     type: MAESTRO_TEST_CONSTANTS.NODE_TYPE_STAGE,
     data: {
       label: MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME,
-      sla: createMockCaseSla(),
+      slaRules: [createMockCaseSlaRule()],
       tasks: [[createMockCaseTask()]]
     }
   }, overrides);
@@ -431,7 +445,7 @@ export const createMockCaseStageNode = (overrides: Partial<any> = {}) => {
  * @param overrides - Optional overrides for specific fields
  * @returns Mock Case JSON response with stages configuration
  */
-export const createMockCaseJsonWithStages = (scenario?: 'empty' | 'no-tasks' | 'no-sla' | 'binding-task', overrides: Partial<any> = {}) => {
+export const createMockCaseJsonWithStages = (scenario?: 'empty' | 'no-tasks' | 'no-sla' | 'legacy-sla' | 'conditional-sla-only' | 'binding-task', overrides: Partial<any> = {}) => {
   switch (scenario) {
     case 'empty':
       return createMockBaseResponse({ nodes: [] }, overrides);
@@ -453,6 +467,32 @@ export const createMockCaseJsonWithStages = (scenario?: 'empty' | 'no-tasks' | '
         })]
       }, overrides);
     
+    case 'legacy-sla':
+      return createMockBaseResponse({
+        nodes: [createMockCaseStageNode({
+          data: {
+            label: MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME,
+            sla: createMockCaseSla(),
+            tasks: [[createMockCaseTask()]]
+          }
+        })]
+      }, overrides);
+
+    case 'conditional-sla-only':
+      return createMockBaseResponse({
+        nodes: [createMockCaseStageNode({
+          data: {
+            label: MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME,
+            slaRules: [createMockCaseSlaRule({
+              id: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_ID,
+              displayName: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_NAME,
+              expression: MAESTRO_TEST_CONSTANTS.SLA_RULE_CONDITIONAL_EXPRESSION
+            })],
+            tasks: [[createMockCaseTask()]]
+          }
+        })]
+      }, overrides);
+
     case 'binding-task':
       return createMockBaseResponse({
         nodes: [createMockCaseStageNode({

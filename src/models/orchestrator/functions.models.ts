@@ -4,7 +4,6 @@ import {
   FunctionRef,
   RawFunctionGetResponse,
 } from './functions.types';
-import { FunctionAcquireLicenseOptions, StudioWebLicense } from './functions.internal-types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { ValidationError } from '../../core/errors/validation';
 
@@ -113,20 +112,13 @@ export interface FunctionServiceModel {
    * one of `folderId`, `folderKey`, or `folderPath` in the options, or initialize
    * the SDK with a folder context.
    *
-   * Before invoking, the SDK acquires a license for the calling user — their own
-   * if they hold one, otherwise the free Attended Studio Web license — and
-   * reuses it while it stays valid, so a burst of invocations costs one
-   * acquisition. Acquiring is a precondition rather than bookkeeping: it
-   * provisions the robot the function runs on, so an invocation whose license
-   * cannot be acquired fails with that error rather than proceeding.
-   *
-   * @param func - Function to invoke. Currently identified by `name` (unique within
-   *   a folder); additional identifiers may be added in future releases.
+   * @param func - Function to invoke, by `name`: the name declared in its source
+   *   (`hello`) or the full name `getAll` returns (`my-functions_hello`). Add
+   *   `processName` when several processes in the folder declare the same name.
    * @param input - Input for the function, sent as the request body (or as query
    *   parameters for functions declared with the `Get` method). Defaults to an empty object.
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`),
-   *   parent job attribution (`jobKey`), and `refreshLicense` to force a fresh
-   *   license acquisition
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and
+   *   parent job attribution (`jobKey`)
    * @returns Promise resolving to the function's output
    *
    * @example
@@ -137,11 +129,11 @@ export interface FunctionServiceModel {
    *
    * @example
    * ```typescript
-   * // Force a fresh license, e.g. just after the user's licensing changed
+   * // Pick one process when several in the folder declare a `hello` function
    * const result = await functions.invoke(
-   *   { name: 'hello' },
+   *   { name: 'hello', processName: 'my-functions' },
    *   { name: 'Alice' },
-   *   { folderKey: '<folderKey>', refreshLicense: true }
+   *   { folderId: <folderId> }
    * );
    * ```
    *
@@ -164,19 +156,6 @@ export interface FunctionServiceModel {
     input?: TInput,
     options?: FunctionInvokeOptions
   ): Promise<TOutput>;
-
-  /**
-   * Acquires a license for the calling user without invoking anything.
-   *
-   * {@link FunctionServiceModel.invoke | invoke} already does this, so callers
-   * do not need to.
-   *
-   * @internal
-   *
-   * @param options - Whether to force a fresh acquisition rather than reusing the license already held
-   * @returns Promise resolving to the acquired license
-   */
-  acquireLicense(options?: FunctionAcquireLicenseOptions): Promise<StudioWebLicense>;
 }
 
 /**
@@ -207,7 +186,7 @@ export interface FunctionMethods {
    * @example
    * ```typescript
    * const deployed = await functions.getAll({ folderId: <folderId> });
-   * const hello = deployed.items.find(f => f.name === 'hello');
+   * const hello = deployed.items.find(f => f.slug === 'hello');
    *
    * if (hello) {
    *   const result = await hello.invoke({ name: 'Alice' });

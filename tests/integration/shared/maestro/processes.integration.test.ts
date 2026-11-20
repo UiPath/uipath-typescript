@@ -305,4 +305,8 @@ describeIntegration('Maestro Processes - Integration Tests', 'both', modes, (_mo
       await testGetInstanceStats(maestroProcesses, 'processes');
     });
   });
+}, {
+  // insightsrtm_ (the Insights block) answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
+  // default fails healthy responses; 90 s covers one slow call plus a follow-up.
+  timeout: 90_000,
 });

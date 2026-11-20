@@ -21,7 +21,12 @@ export enum UiPathMetaTags {
   // Folder context (injected during coded-app deployment)
   FOLDER_KEY = 'uipath:folder-key',
 
+  // Debug session (injected by Studio Web when it stages a debug bundle)
+  DEBUG_SOURCE = 'uipath:debug-source',
 }
+
+/** Query parameter a Studio Web debug page carries with the job key of its debug session. */
+export const DEBUG_JOB_KEY_QUERY_PARAM = 'jobKey';
 
 /**
  * Ids of page elements carrying runtime configuration

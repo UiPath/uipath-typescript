@@ -25,4 +25,15 @@ export const FOLDER_TEST_CONSTANTS = {
     IsActive: true,
     '@odata.context': 'https://uipath.com/odata/$metadata#Folders',
   },
+  /** One folder as the folder-list endpoint returns it. */
+  RAW_LIST_FOLDER: {
+    Id: 123,
+    Key: FOLDER_KEY,
+    DisplayName: 'Finance',
+    FullyQualifiedName: 'Shared/Finance',
+    Description: 'AP invoices',
+    FolderType: 'Standard',
+    ParentId: 10,
+    ParentKey: PARENT_KEY,
+  },
 } as const;

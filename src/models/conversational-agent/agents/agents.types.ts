@@ -2,6 +2,10 @@
  * Types for Agent Service
  */
 
+import { PackageType } from '../../common/types';
+
+export { PackageType };
+
 // ==================== Agent Types ====================
 
 /**
@@ -50,6 +54,8 @@ export interface RawAgentGetResponse {
   feedId: string;
   /** Creation timestamp */
   createdTime?: string;
+  /** Orchestrator process type of the release (e.g. `Agent`, `Flow`). Same values as {@link PackageType}. */
+  processType?: PackageType;
 }
 
 /**

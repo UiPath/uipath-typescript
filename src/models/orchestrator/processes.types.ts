@@ -1,23 +1,7 @@
-import { JobState, RequestOptions, BaseOptions, FolderScopedOptions } from '../common/types';
+import { JobState, RequestOptions, BaseOptions, FolderScopedOptions, PackageType } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
-/**
- * Enum for package types
- */
-export enum PackageType {
-  Undefined = 'Undefined',
-  Process = 'Process',
-  ProcessOrchestration = 'ProcessOrchestration',
-  WebApp = 'WebApp',
-  Agent = 'Agent',
-  TestAutomationProcess = 'TestAutomationProcess',
-  Api = 'Api',
-  MCPServer = 'MCPServer',
-  BusinessRules = 'BusinessRules',
-  CaseManagement = 'CaseManagement',
-  Flow = 'Flow',
-  Function = 'Function',
-}
+export { PackageType };
 
 /**
  * Enum for job priority
@@ -165,6 +149,7 @@ export enum RuntimeType {
   BusinessRule = 'BusinessRule',
   CaseManagement = 'CaseManagement',
   Flow = 'Flow',
+  Local = 'Local',
 }
 
 
@@ -419,8 +404,9 @@ export interface ProcessGetByNameOptions extends FolderScopedOptions {}
  * (`expand`, `select`, `filter`, `orderby`) accepted by the start endpoint.
  *
  * Folder scoping is optional in the type — the SDK falls back to the
- * init-time folderKey (e.g. `<meta name="uipath:folder-key">` in coded-app
- * deployments). A `ValidationError` is raised when neither is provided.
+ * init-time folderKey (a coded function's `ctx.platform.folderKey`, or
+ * `<meta name="uipath:folder-key">` in coded-app deployments). A
+ * `ValidationError` is raised when neither is provided.
  */
 export interface ProcessStartOptions extends FolderScopedOptions, RequestOptions {}
 

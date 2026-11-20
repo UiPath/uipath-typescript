@@ -228,6 +228,31 @@ export const FEEDBACK_OFFSET_PARAMS = {
 };
 
 /**
+ * Folder pagination response shape constants
+ */
+export const FOLDER_PAGINATION = {
+  /** Field name for items in the folder list response */
+  ITEMS_FIELD: 'PageItems',
+
+  /** Field name for total count in the folder list response */
+  TOTAL_COUNT_FIELD: 'Count'
+};
+
+/**
+ * Folder OFFSET pagination parameter names (take/skip style)
+ */
+export const FOLDER_OFFSET_PARAMS = {
+  /** Folder page size parameter name */
+  PAGE_SIZE_PARAM: 'take',
+
+  /** Folder offset parameter name */
+  OFFSET_PARAM: 'skip',
+
+  /** Folder count parameter (not used) */
+  COUNT_PARAM: undefined
+};
+
+/**
  * Entity OFFSET pagination parameter names (limit/start style)
  */
 export const ENTITY_OFFSET_PARAMS = {
@@ -276,6 +301,28 @@ export const PROCESS_INSTANCE_TOKEN_PARAMS = {
   /** Process instance token parameter name */
   TOKEN_PARAM: 'nextPage'
 };
+
+/**
+ * Ontology pagination response shape constants
+ */
+export const ONTOLOGY_PAGINATION = {
+  ITEMS_FIELD: 'items',
+  TOTAL_COUNT_FIELD: 'total',
+};
+
+/**
+ * Ontology OFFSET pagination parameter names (1-based page number)
+ */
+export const ONTOLOGY_OFFSET_PARAMS = {
+  PAGE_SIZE_PARAM: 'limit',
+  OFFSET_PARAM: 'page',
+  COUNT_PARAM: undefined,
+};
+
+/**
+ * Largest page the ontology list route returns
+ */
+export const ONTOLOGY_MAX_PAGE_SIZE = 100;
 
 /**
  * Conversational Agent pagination constants for cursor-based pagination
@@ -366,3 +413,16 @@ export const AUTHORIZATION_ROLES_MAX_PAGE_SIZE = 1000;
  * above 100 (live-verified: "Page size cannot be greater than 100!").
  */
 export const AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE = 100;
+
+/** Decisions list/query pagination response shape — an envelope, not a bare array. */
+export const DECISIONS_PAGINATION = {
+  ITEMS_FIELD: 'items',
+  TOTAL_COUNT_FIELD: 'totalCount'
+};
+
+/** Decisions OFFSET pagination parameter names (take/skip style). */
+export const DECISIONS_OFFSET_PARAMS = {
+  PAGE_SIZE_PARAM: 'take',
+  OFFSET_PARAM: 'skip',
+  COUNT_PARAM: undefined
+};

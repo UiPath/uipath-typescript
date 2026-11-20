@@ -6,6 +6,7 @@ Standalone helper functions that you call directly. Unlike the SDK's services, t
 |--------|-------------|
 | [`httpRequest()`](/uipath-typescript/api/functions/httpRequest) | Calls any URL, with optional retries and backoff |
 | [`wait()`](/uipath-typescript/api/functions/wait) | Pauses for a given duration, useful between calls you are pacing yourself |
+| [`trace()`](/uipath-typescript/api/functions/trace) | Marks a point in your code, or every call of a method, so you can see its values without a breakpoint |
 
 !!! warning "For third-party endpoints"
     `httpRequest` sends no UiPath authentication and adds no UiPath headers. Use the SDK's service methods for UiPath APIs.
@@ -128,3 +129,38 @@ import { wait } from '@uipath/uipath-typescript/core';
 
 await wait(1000); // pause for one second
 ```
+
+## trace()
+
+Records a point in your code, with optional named values, so you can inspect it without a breakpoint. Call it as a statement to mark a line, or apply it as a decorator to record every call of a class method.
+
+```typescript
+import { trace } from '@uipath/uipath-typescript/core';
+
+const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+trace('after-total', { orderId: '<orderId>', total });
+```
+
+When tracing is available, such as in a UiPath coded function, the marker is added to the trace. Otherwise it is printed with `console.debug`. `trace` never throws.
+
+### Tracing a Method
+
+```typescript
+import { trace } from '@uipath/uipath-typescript/core';
+
+class ApprovalPolicy {
+  @trace
+  approve(total: number): boolean {
+    return total <= 1000;
+  }
+}
+```
+
+Each call is recorded under the method's name, with its arguments and its result, or the error it threw. Markers recorded during the call appear under it. The method behaves exactly as before.
+
+- Apply `@trace` without parentheses.
+- It works with standard decorators and with `experimentalDecorators`.
+- It applies to class methods only.
+
+!!! warning "What gets recorded"
+    Markers can include the values you pass, the arguments and results of traced methods, and the local variables of the calling function. Do not trace code that handles secrets or personal data.

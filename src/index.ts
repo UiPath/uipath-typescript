@@ -8,6 +8,8 @@
 export { UiPath } from './uipath';
 export type { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, OAuthFields } from './core/config/sdk-config';
 export { loadFromMetaTags } from './core/config/runtime';
+export { env } from './core/env';
+export type { UiPathEnvironment } from './core/env';
 
 // Export all models
 export * from './models/common';
@@ -24,6 +26,7 @@ export * from './models/governance';
 export * from './models/platform';
 export * from './models/integration-service';
 export * from './models/observability';
+export * from './models/ontology';
 
 // Export error handling functionality (public API only)
 export * from './core/errors';
@@ -32,6 +35,7 @@ export * from './utils/pagination';
 export * from './utils/runtime';
 export { httpRequest } from './utils/http/http-request';
 export { wait } from './utils/http/fetch-with-retry';
+export { trace } from './utils/tracing/trace';
 
 // Export telemetry
 export * from './core/telemetry';

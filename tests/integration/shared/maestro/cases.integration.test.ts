@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { CaseExploreFilterKind, CaseExploreSortDirection } from '@/models/maestro/case-explore.types';
+import type { CaseExploreQuery } from '@/models/maestro/case-explore.types';
+import { CASE_EXPLORE_TEST_CONSTANTS as EXPLORE } from '@tests/utils/constants/case-explore';
 import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 
@@ -232,6 +235,72 @@ describeIntegration('Maestro Cases - Integration Tests', 'both', modes, (_mode, 
     });
   });
 
+  // insightsrtm_ rejects PAT — user-token cell only.
+  // TODO: unskip once the CI integration user holds Case view grants in the test tenant. Without them
+  // the explore query answers no rows, so every test here fails its own data guard.
+  describe.skip('explore', () => {
+    const CASE_ID_FIELD = EXPLORE.FIELD_CASE_ID;
+    const STATUS_FIELD = EXPLORE.FIELD_STATUS;
+    const COUNT_ID = EXPLORE.AGGREGATE_ID;
+    const latestCasesQuery: CaseExploreQuery = {
+      groupBy: [CASE_ID_FIELD, STATUS_FIELD],
+      filters: [[{ kind: CaseExploreFilterKind.Value, field: EXPLORE.FIELD_IS_LATEST, values: [EXPLORE.IS_LATEST] }]],
+      sort: [{ field: CASE_ID_FIELD, direction: CaseExploreSortDirection.Ascending }],
+    };
+
+    it('should return one row per group keyed by field id, without engine marker columns', async () => {
+      const { cases } = getServices();
+
+      const result = await cases.explore({ ...latestCasesQuery, limit: 5 });
+
+      expect(Array.isArray(result.items)).toBe(true);
+      if (result.items.length === 0) {
+        throw new Error('No case runs available to test explore');
+      }
+      expect(result.items.length).toBeLessThanOrEqual(5);
+      for (const row of result.items) {
+        expect(typeof row[CASE_ID_FIELD]).toBe('string');
+        expect(Object.keys(row).some(key => key.toLowerCase().startsWith('__uipath:'))).toBe(false);
+      }
+    });
+
+    it('should compute aggregates per group', async () => {
+      const { cases } = getServices();
+
+      const result = await cases.explore({
+        groupBy: [STATUS_FIELD],
+        aggregates: [{ id: COUNT_ID, measureRef: EXPLORE.MEASURE_CASE_COUNT }],
+        filters: latestCasesQuery.filters,
+        sort: [{ field: COUNT_ID, direction: CaseExploreSortDirection.Descending }],
+      });
+
+      if (result.items.length === 0) {
+        throw new Error('No case runs available to test explore aggregates');
+      }
+      for (const row of result.items) {
+        expect(Number(row[COUNT_ID])).toBeGreaterThan(0);
+      }
+    });
+
+    it('should page through results with a cursor', async () => {
+      const { cases } = getServices();
+
+      const first = await cases.explore(latestCasesQuery, { pageSize: 1 });
+
+      expect(first.items.length).toBeLessThanOrEqual(1);
+      expect(first.currentPage).toBe(1);
+      if (!first.hasNextPage || !first.nextCursor) {
+        throw new Error('Need at least two case runs to test explore pagination');
+      }
+
+      const second = await cases.explore(latestCasesQuery, { cursor: first.nextCursor });
+
+      expect(second.currentPage).toBe(2);
+      expect(second.items).toHaveLength(1);
+      expect(second.items[0][CASE_ID_FIELD]).not.toBe(first.items[0][CASE_ID_FIELD]);
+    });
+  });
+
   // skip: the duration fields (minDurationMs onward) come back undefined — the
   // tenant has no completed instances in the window to compute them from.
   describe.skip('getInstanceStats', () => {
@@ -240,4 +309,8 @@ describeIntegration('Maestro Cases - Integration Tests', 'both', modes, (_mode, 
       await testGetInstanceStats(cases, 'cases');
     });
   });
+}, {
+  // insightsrtm_ (the Insights block) answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
+  // default fails healthy responses; 90 s covers one slow call plus a follow-up.
+  timeout: 90_000,
 });

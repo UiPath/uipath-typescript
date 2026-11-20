@@ -10,9 +10,11 @@ vi.mock('@/utils/platform', () => ({
 vi.mock('@/core/http/api-client');
 
 import { UiPath } from '@/core/uipath';
+import { UiPathEnvVars } from '@/core/config/environment';
 import { EntityService } from '@/services/data-fabric/entities';
 import { clearContractEnv } from '../../../utils/env-contract';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { functionContext } from '../../../utils/function-context';
 
 let restoreEnv: () => void;
 
@@ -32,6 +34,40 @@ describe('SDKInternalsRegistry error reporting', () => {
 
     expect(() => new EntityService(sdk)).toThrow(/was never configured/);
     expect(() => new EntityService(sdk)).toThrow(/new UiPath\(ctx\)/);
+  });
+
+  it('names the missing coordinate when the instance was built from an incomplete handler context', () => {
+    const sdk = new UiPath(functionContext({ robot: null }));
+
+    expect(() => new EntityService(sdk)).toThrow(/was never configured/);
+    expect(() => new EntityService(sdk)).toThrow(/ctx\.robot\.accessToken is null/);
+    expect(() => new EntityService(sdk)).not.toThrow(/pass the handler context/);
+  });
+
+  it('names a null platform when the handler context carried only a token', () => {
+    const sdk = new UiPath(functionContext({ platform: null }));
+
+    expect(() => new EntityService(sdk)).toThrow(/ctx\.platform is null/);
+    expect(() => new EntityService(sdk)).not.toThrow(/ctx\.robot\.accessToken/);
+  });
+
+  it('keeps the generic guidance for a UiPath-like instance that recorded no reason', () => {
+    // An older core bundle registers nothing for an unconfigured instance; the structural check
+    // still tells it apart from a stray object.
+    const olderCore: UiPath = Object.create(UiPath.prototype);
+
+    expect(() => new EntityService(olderCore)).toThrow(/was never configured/);
+    expect(() => new EntityService(olderCore)).toThrow(/new UiPath\(ctx\)/);
+  });
+
+  it('constructs services once the configuration completes on initialize()', async () => {
+    const sdk = new UiPath(functionContext({ robot: null }));
+    expect(() => new EntityService(sdk)).toThrow(/was never configured/);
+
+    process.env[UiPathEnvVars.ACCESS_TOKEN] = TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN;
+    await sdk.initialize();
+
+    expect(() => new EntityService(sdk)).not.toThrow();
   });
 
   it('keeps the generic message for something that is not a UiPath instance', () => {

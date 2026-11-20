@@ -5,7 +5,7 @@ description: Analyze recent PR review comments and update Claude documentation f
 
 # Enhance Claude Docs
 
-Analyzes review comments from PRs merged in `UiPath/uipath-typescript` and updates Claude documentation files (`CLAUDE.md`, `Agents.md`, `agent_docs/`) with documentation-worthy insights not already captured.
+Analyzes review comments from PRs merged in `UiPath/uipath-typescript` and updates Claude documentation files (`CLAUDE.md`, `AGENTS.md`, `agent_docs/`) with documentation-worthy insights not already captured.
 
 ---
 
@@ -109,7 +109,7 @@ Collect all remaining **resolved + effectively resolved** threads with their PR 
 Read all five documentation files:
 
 1. `CLAUDE.md`
-2. `Agents.md`
+2. `AGENTS.md`
 3. `agent_docs/architecture.md`
 4. `agent_docs/conventions.md`
 5. `agent_docs/rules.md`
@@ -140,7 +140,7 @@ For each thread that passes Stage 1, determine if it contains a documentation-wo
 | Explaining WHY a convention exists or should be followed | `agent_docs/conventions.md` |
 | New testing guidelines or quality rules | `agent_docs/rules.md` (testing & quality only) |
 | New project structure info, service patterns, or architecture decisions | `agent_docs/architecture.md` |
-| New commands, quick-reference items, or workflow changes | `Agents.md` |
+| New commands, quick-reference items, or workflow changes | `AGENTS.md` |
 | Top-level pointers or high-level project changes (rare) | `CLAUDE.md` |
 
 ### Ignore (skip these)
@@ -174,7 +174,8 @@ If actionable insights exist:
 3. For `agent_docs/conventions.md`, add conventions and anti-patterns to the relevant section. Anti-patterns go inline as **NEVER** next to the related convention — only when they add a non-obvious *why* or call out a specific trap. Do not add NEVERs that merely restate the convention in negative form.
 4. For `agent_docs/rules.md`, add only testing guidelines, integration test rules, documentation/JSDoc rules, or quality checklist items. This file does not contain coding conventions or anti-patterns — those belong in `conventions.md`.
 5. For `agent_docs/architecture.md`, update tables or sections as appropriate.
-6. For `Agents.md`, update the quick reference or add new sections.
+6. For `AGENTS.md`, update the quick reference or add new sections.
+7. Keep the YAML frontmatter (`description`, `alwaysApply`) at the top of each `agent_docs/*.md` file unchanged. Cursor reads those files as rules through the links in `.cursor/rules/`, and drops a rule whose frontmatter is missing.
 
 ### Content rules for doc edits
 

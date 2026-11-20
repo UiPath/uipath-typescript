@@ -11,6 +11,14 @@ import { buildInsightsTopBody, buildInsightsTimelineBody, buildInsightsCommonBod
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
+import type { CaseExploreQuery, CaseExploreResponse } from '@/models/maestro/case-explore.types';
+import type { RawCaseExploreColumns, RawCaseExplorePagedResponse } from '@/models/maestro/case-explore.internal-types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationOptions, getLimitedPageSize } from '@/utils/pagination';
+import { PaginationHelpers } from '@/utils/pagination/helpers';
+import { PaginationManager } from '@/utils/pagination/pagination-manager';
+import { PaginationType } from '@/utils/pagination/internal-types';
+import { toWireExploreQuery, toExploreRows, isPagedExploreResponse } from './explore-helpers';
+import { ServerError } from '@/core/errors';
 
 /**
  * Service for interacting with UiPath Maestro Cases
@@ -127,6 +135,47 @@ export class CasesService extends BaseService implements CasesServiceModel {
       buildInsightsCommonBody(request)
     );
     return transformData(data, InstanceStatsMap) as unknown as InstanceStats;
+  }
+
+  @track('Cases.Explore')
+  async explore<T extends PaginationOptions = PaginationOptions>(
+    query: CaseExploreQuery,
+    options?: T
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<CaseExploreResponse> : NonPaginatedResponse<CaseExploreResponse>> {
+    type ExploreResult = T extends HasPaginationOptions<T> ? PaginatedResponse<CaseExploreResponse> : NonPaginatedResponse<CaseExploreResponse>;
+
+    if (!PaginationHelpers.hasPaginationParameters(options)) {
+      const { data } = await this.post<RawCaseExploreColumns>(MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE, toWireExploreQuery(query));
+      const result: NonPaginatedResponse<CaseExploreResponse> = { items: toExploreRows(data ?? {}) };
+      return result as ExploreResult;
+    }
+
+    const { pageNumber, pageSize } = PaginationHelpers.validatePaginationOptions(options ?? {}, PaginationType.OFFSET);
+    const page = pageNumber ?? 1;
+    const limitedPageSize = getLimitedPageSize(pageSize);
+    const { data } = await this.post<RawCaseExploreColumns | RawCaseExplorePagedResponse>(
+      MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+      toWireExploreQuery(query, limitedPageSize),
+      { params: createParams({ page, pageSize: limitedPageSize }) }
+    );
+
+    // The engine answers a bare {} when the caller can view no case process. Any other answer without the page
+    // wrapper cannot be paged, so it is an error rather than a page that silently drops rows.
+    if (!isPagedExploreResponse(data) && Object.keys(data ?? {}).length > 0) {
+      throw new ServerError({ message: 'The explore query answered a paginated request without page information' });
+    }
+    const paged = isPagedExploreResponse(data)
+      ? data
+      : { data: {}, pagination: { page, pageSize: limitedPageSize, hasNextPage: false } };
+
+    const result = PaginationManager.createPaginatedResponse(
+      {
+        pageInfo: { hasMore: paged.pagination.hasNextPage, currentPage: page, pageSize: paged.pagination.pageSize },
+        type: PaginationType.OFFSET,
+      },
+      toExploreRows(paged.data)
+    );
+    return result as ExploreResult;
   }
 
   /**

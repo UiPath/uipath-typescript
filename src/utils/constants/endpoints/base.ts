@@ -5,6 +5,7 @@
 export const ORCHESTRATOR_BASE = 'orchestrator_';
 export const PIMS_BASE = 'pims_';
 export const DATAFABRIC_BASE = 'datafabric_';
+export const ONTOLOGY_BASE = 'ontology_';
 export const IDENTITY_BASE = 'identity_';
 /**
  * Identity API base for requests routed through {@link ApiClient}.

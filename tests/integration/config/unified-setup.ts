@@ -21,12 +21,19 @@ import { AgentMemory } from '../../../src/services/agents/memory';
 import { AgentHub } from '../../../src/services/agenthub';
 import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
+import { Decisions } from '../../../src/services/observability/traces/decisions';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
+import { ConnectorsService } from '../../../src/services/integration-service/connectors/connectors';
+import { ConnectionsService } from '../../../src/services/integration-service/connections/connections';
+import { ElementsService } from '../../../src/services/integration-service/elements/elements';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Folders } from '../../../src/services/orchestrator/folders';
-import { Platform } from '../../../src/services/platform';
+import { OrchestratorUsers } from '../../../src/services/orchestrator/users';
+import { Settings } from '../../../src/services/platform/settings';
+import { Directory } from '../../../src/services/platform/directory';
+import { Groups } from '../../../src/services/platform/groups';
 import { Roles } from '../../../src/services/platform/roles';
 import { Users } from '../../../src/services/platform/users';
 import { BusinessApps } from '../../../src/services/maestro/business-apps';
@@ -35,6 +42,7 @@ import { loadIntegrationConfig, IntegrationConfig, resolveAuthModes, AuthRequire
 } from './test-config';
 export { resolveAuthModes } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
+import { OntologyService } from '@/services/ontology/ontology';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll, describe } from 'vitest';
 
@@ -75,18 +83,26 @@ export interface TestServices {
   memory?: AgentMemory;
   agentTraces?: AgentTraces;
   traces?: Traces;
+  decisions?: Decisions;
   agents?: Agents;
   agentHub?: AgentHub;
   governance?: Governance;
   notifications?: Notifications;
   subscriptions?: Subscriptions;
   conversationalAgent?: ConversationalAgentService;
+  integrationServiceConnectors?: ConnectorsService;
+  integrationServiceConnections?: ConnectionsService;
+  integrationServiceElements?: ElementsService;
   functions?: Functions;
   folders?: Folders;
-  platform?: Platform;
+  orchestratorUsers?: OrchestratorUsers;
+  settings?: Settings;
   businessApps?: BusinessApps;
   platformUsers?: Users;
   platformRoles?: Roles;
+  platformGroups?: Groups;
+  platformDirectory?: Directory;
+  ontologies?: OntologyService;
 }
 
 /**
@@ -198,18 +214,26 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     memory: new AgentMemory(sdk),
     agentTraces: new AgentTraces(sdk),
     traces: new Traces(sdk),
+    decisions: new Decisions(sdk),
     agents: new Agents(sdk),
     agentHub: new AgentHub(sdk),
     governance: new Governance(sdk),
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),
     conversationalAgent: new ConversationalAgentService(sdk),
+    integrationServiceConnectors: new ConnectorsService(sdk),
+    integrationServiceConnections: new ConnectionsService(sdk),
+    integrationServiceElements: new ElementsService(sdk),
     functions: new Functions(sdk),
     folders: new Folders(sdk),
-    platform: new Platform(sdk),
+    orchestratorUsers: new OrchestratorUsers(sdk),
+    settings: new Settings(sdk),
     businessApps: new BusinessApps(sdk),
     platformUsers: new Users(sdk),
     platformRoles: new Roles(sdk),
+    platformGroups: new Groups(sdk),
+    platformDirectory: new Directory(sdk),
+    ontologies: new OntologyService(sdk),
   };
 }
 

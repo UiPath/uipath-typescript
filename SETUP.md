@@ -36,9 +36,9 @@ npm ls rollup vitest typescript --depth=0
 ## Build
 
 ```bash
-# The .d.ts bundling across ~20 subpath modules peaks above Node's default heap
-# cap on 7GB CI agents — grant 4GB explicitly to avoid an OOM abort.
-NODE_OPTIONS="--max-old-space-size=4096" npm run build
+# The .d.ts bundling across the subpath modules peaks above a 4GB heap — grant
+# 6GB, as the repo's CI does (coverage.yml, publish.yml), to avoid an OOM abort.
+NODE_OPTIONS="--max-old-space-size=6144" npm run build
 ```
 
 Runs rollup and emits ESM, CJS, UMD bundles and `.d.ts` files per module into `dist/`.
@@ -106,7 +106,7 @@ npm run typecheck
 
 ### Build aborts with `FatalProcessOutOfMemory` / `JavaScript heap out of memory`
 
-Node's default heap cap is below the build's peak memory on machines with ~7GB RAM (typical hosted CI agents). Re-run with an explicit 4GB heap: `NODE_OPTIONS="--max-old-space-size=4096" npm run build`.
+The build's peak heap is above both Node's default cap and 4GB. Re-run with the 6GB heap the repo's CI uses: `NODE_OPTIONS="--max-old-space-size=6144" npm run build`.
 
 ### `vitest: command not found` / `rollup: command not found`
 

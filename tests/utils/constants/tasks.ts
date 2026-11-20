@@ -55,4 +55,26 @@ export const TASK_TEST_CONSTANTS = {
     Content: null,
     Comment: null
   },
+
+  // Task Schema
+  TASK_SCHEMA_KEY: '8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91',
+  TASK_SCHEMA_NAME: 'Invoice Approval',
+  TASK_SCHEMA_BODY: { inputs: [{ id: 'invoice' }], outcomes: [{ name: 'Approve' }] },
+  TASK_SCHEMA_JOB_PROCESS_NAME: 'InvoiceProcess',
+  TASK_SCHEMA_FOLDER_KEY: 'd1f37437-7cbd-457f-857f-b7a1b0627839',
+  TASK_SCHEMA_PROCESS_KEY: '5b1d6c3a-9f2e-4a7b-8c1d-2e3f4a5b6c7d',
+  ERROR_TASK_SCHEMA_NOT_FOUND: 'Task schema not found',
+  TASK_GUID_KEY: '5310d617-2d27-4d7f-9ba7-0af82aa29df8',
+  APP_TASK_SCHEMA: {
+    inputs: [
+      { key: '6a7af829-41dc-523c-b6bc-9a63d4600a9e', name: 'InvoiceNumber', isList: false, customType: null, version: 0, required: false, type: 'String', typeNamespace: 'System', properties: [], collectionDataType: null },
+    ],
+    outputs: [
+      { key: '27b8f7a2-21ce-59a5-b9cc-6a585b2035a3', name: 'Comment', isList: false, customType: null, version: 0, required: true, type: 'String', typeNamespace: 'System', properties: [], collectionDataType: null },
+    ],
+    inOuts: [],
+    outcomes: [
+      { key: '010ad993-227d-5eca-8cd8-ffad9a3889fc', name: 'Approve', isList: false, customType: null, version: 0, required: false, type: 'String', typeNamespace: 'System', properties: [], collectionDataType: null },
+    ],
+  },
 } as const;

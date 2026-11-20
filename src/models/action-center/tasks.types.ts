@@ -162,6 +162,8 @@ export interface TaskBaseResponse {
   deleterUserId: number | null;
   deletedTime: string | null;
   lastModifiedTime: string | null;
+  /** Key of the schema a QuickForm task was created with; `null` for other task types. */
+  taskSchemaKey?: string | null;
 }
 
 /**
@@ -390,8 +392,101 @@ export interface RawTaskDataGetResponse {
   action: string | null;
   createdTime: string;
   lastModifiedTime: string | null;
+  /**
+   * Key of the schema a QuickForm task was created with; `null` for other
+   * task types. Pass it to `getSchemaByKey` to fetch the schema.
+   */
+  taskSchemaKey?: string | null;
   tags?: Tag[];
 }
+
+/**
+ * A task schema (the QuickForm form definition), as returned by `getSchemaByKey`.
+ */
+export interface TaskSchemaGetResponse {
+  /** Unique key the schema is registered under (a task's `taskSchemaKey`). */
+  key: string;
+  /** Human-readable schema name, if one was given. */
+  name: string | null;
+  /** The schema body (fields, outcomes, etc.). */
+  schema: Record<string, unknown>;
+  /** Key of the job that registered the schema, if any. */
+  creatorJobKey: string | null;
+  /** Key of the Maestro process the schema was registered from; `null` for debug runs. */
+  processKey: string | null;
+  /** Name of the process run by the job that registered the schema. Not returned for every tenant. */
+  jobProcessName?: string | null;
+  /** Id of the folder the schema was registered in. */
+  folderId: number;
+  /** Key of the folder the schema was registered in. Not returned for every tenant. */
+  folderKey?: string;
+  /** Creation timestamp. */
+  createdTime: string;
+}
+
+/**
+ * A field or an outcome in the schema of an App task.
+ */
+export interface TaskAppSchemaProperty {
+  /** Unique identifier of the property. */
+  key: string;
+  /** Property name. The property's value is stored under this name in the task's `data`; for an outcome, this is the `action` to complete the task with. */
+  name: string;
+  /** Data type name, for example `String`, `Int64`, `Boolean`, `Decimal`, `DateOnly`, `Guid` or `Object`. */
+  type: string;
+  /** Namespace of the data type, for example `System`. */
+  typeNamespace: string;
+  /** Whether the value is a list of `type` items. */
+  isList: boolean;
+  /** Collection kind when `isList` is true, for example `Array`. Null for a single value. */
+  collectionDataType: string | null;
+  /** Name of the property's custom type, when it has one. Null for the built-in types. */
+  customType: string | null;
+  /** Whether a value is required to complete the task. */
+  required: boolean;
+  /** Version of the property within the schema. */
+  version: number;
+  /** Nested properties of an `Object` property. Empty for simple types. */
+  properties: TaskAppSchemaProperty[];
+}
+
+/**
+ * Schema of an App task, as defined by the action app the task was created for.
+ */
+export interface TaskAppSchema {
+  /** Values passed to the task, shown read-only. */
+  inputs: TaskAppSchemaProperty[];
+  /** Values the user fills in. */
+  outputs: TaskAppSchemaProperty[];
+  /** Values passed to the task that the user can edit. */
+  inOuts: TaskAppSchemaProperty[];
+  /** Actions the task can be completed with. */
+  outcomes: TaskAppSchemaProperty[];
+}
+
+/**
+ * Schema of an App task, as returned by `getSchema`.
+ */
+export interface TaskAppSchemaGetResponse {
+  /** Task type the schema belongs to. */
+  type: TaskType.App;
+  /** The schema of the task's action app. */
+  schema: TaskAppSchema;
+}
+
+/**
+ * Schema of a QuickForm task, as returned by `getSchema`: the schema the task
+ * was created with, same as `getSchemaByKey` returns for the task's `taskSchemaKey`.
+ */
+export interface TaskQuickFormSchemaGetResponse extends TaskSchemaGetResponse {
+  /** Task type the schema belongs to. */
+  type: TaskType.QuickForm;
+}
+
+/**
+ * A task's schema, as returned by `getSchema`. Check `type` to tell the two shapes apart.
+ */
+export type TaskGetSchemaResponse = TaskAppSchemaGetResponse | TaskQuickFormSchemaGetResponse;
 
 /**
  * Raw task comment shape returned by the API, before any method attachment.

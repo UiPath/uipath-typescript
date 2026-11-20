@@ -51,4 +51,6 @@ export interface OAuthContext {
   orgName: string;
   tenantName: string;
   scope: string;
+  /** Page URL the sign-in started from, restored after the callback so its query string survives. */
+  returnTo?: string;
 }

@@ -4,10 +4,20 @@
 export const CaseInstanceMap: { [key: string]: string } = {
     startedTimeUtc: 'startedTime',
     completedTimeUtc: 'completedTime',
+    createdTimeUtc: 'createdTime',
     expiryTimeUtc: 'expiredTime',
     createdAt: 'createdTime',
     updatedAt: 'updatedTime',
     externalId: 'caseId',
+  };
+
+/**
+ * Maps list-filter query parameters to SDK option names; `transformRequest` reverses it
+ */
+export const CaseInstanceFilterMap: { [key: string]: string } = {
+    externalId: 'caseId',
+    startedTimeUtcStart: 'startedTimeStart',
+    startedTimeUtcEnd: 'startedTimeEnd',
   };
 
 /**
@@ -40,7 +50,8 @@ export const TimeFieldTransformMap: { [key: string]: string } = {
 export const CASE_STAGE_CONSTANTS = {
   TRIGGER_NODE_TYPE: 'case-management:Trigger',
   UNDEFINED_VALUE: 'Undefined',
-  NOT_STARTED_STATUS: 'Not Started'
+  NOT_STARTED_STATUS: 'Not Started',
+  DEFAULT_SLA_EXPRESSION: '=js:true'
 } as const;
 
 /**

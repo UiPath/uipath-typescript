@@ -90,4 +90,8 @@ describeIntegration('Governance - Integration Tests', 'user', modes, () => {
       expect(typeof result.totalEvaluations).toBe('number');
     });
   });
+}, {
+  // insightsrtm_ answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
+  // default fails healthy responses; 90 s covers one slow call plus a follow-up.
+  timeout: 90_000,
 });

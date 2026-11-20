@@ -1,4 +1,6 @@
 import { FolderScopedService } from '../../folder-scoped';
+import type { ProcessResource } from '@/resources';
+import { unpackFolderScopedHandle } from '@/utils/overrides/handles';
 import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
@@ -15,7 +17,7 @@ import { ProcessServiceModel } from '../../../models/orchestrator/processes.mode
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
-import { FOLDER_ID } from '../../../utils/constants/headers';
+import { FOLDER_ID, JOB_KEY } from '../../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
@@ -25,11 +27,26 @@ import { track } from '../../../core/telemetry';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { resolveOverride } from '../../../utils/overrides/resolve-override';
 import { ValidationError } from '../../../core/errors';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
+import type { SessionLicense } from '../../../core/licensing/session-license';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../core/context/execution';
+import type { DebugContext } from '../../../models/common/types';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends FolderScopedService implements ProcessServiceModel {
+  private readonly sessionLicense?: SessionLicense;
+  private readonly executionContext: ExecutionContext;
+
+  constructor(instance: IUiPath) {
+    super(instance);
+    const { sessionLicense, context } = SDKInternalsRegistry.get(instance);
+    this.sessionLicense = sessionLicense;
+    this.executionContext = context;
+  }
+
   @track('Processes.GetAll')
   async getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
     options?: T
@@ -137,6 +154,15 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       fallbackFolderKey: this.config.folderKey,
     });
 
+    // Orchestrator reads the parent job key on StartJobs alone, and not every backend's CORS allows
+    // the header, so it travels only on this request (JIT debug sub-jobs of the parent run).
+    // Action Center delivers the key with a token, so an app's first call must fetch one before the read.
+    await this.getValidAuthToken();
+    const debugContext = this.executionContext.get<DebugContext>(DEBUG_CONTEXT_KEY);
+    if (debugContext?.jobKey) {
+      headers[JOB_KEY] = debugContext.jobKey;
+    }
+
     // Build the startInfo shape. For the ref form we synthesize a ProcessStartRequest with just
     // the resolved identity + the extra startInfo fields the caller passed via options.
     const startInfoSdk: Record<string, unknown> = looksLikeRef
@@ -158,6 +184,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     const apiFieldOptions = transformOptions(queryOptions, ProcessMap);
     const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
+    await this.sessionLicense?.ensure();
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,
       requestBody,
@@ -192,15 +219,20 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     return transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
   }
 
+  getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
+  getByName(process: ProcessResource, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
   @track('Processes.GetByName')
-  async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
+  async getByName(nameOrHandle: string | ProcessResource, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
+    const { name, options: effectiveOptions, overrideScope } = unpackFolderScopedHandle(nameOrHandle, options);
     const { result } = await this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(
       'Process',
       PROCESS_ENDPOINTS.GET_ALL,
       name,
-      options,
+      effectiveOptions,
       (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
       ProcessMap,
+      undefined,
+      overrideScope,
     );
     return result;
   }

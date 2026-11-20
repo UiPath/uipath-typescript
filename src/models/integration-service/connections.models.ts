@@ -7,6 +7,7 @@ import {
   ConnectionGetAllOptions,
   ConnectionGetByIdOptions,
 } from './connections.types';
+import type { ConnectionResource } from '@/resources';
 
 /**
  *
@@ -48,8 +49,10 @@ export interface ConnectionsServiceModel {
    * paginate by incrementing `pageIndex` until a short page is returned.
    *
    * Folder scoping is optional — pass `folderId`, `folderKey`, or `folderPath`
-   * to narrow the query. When none is supplied, the folder context the SDK was
-   * initialized with is used.
+   * to list a folder's connections. When none is supplied, a deployed coded
+   * app's folder is used; elsewhere, including in a coded function, the service
+   * lists the caller's personal workspace, so a robot account, which has none,
+   * gets an empty list.
    *
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), paging, sorting, and filter options
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
@@ -98,6 +101,9 @@ export interface ConnectionsServiceModel {
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
    *
+   * When an admin remapped this connection id at deployment, the call targets the
+   * connection it was mapped to.
+   *
    * @param connectionId - Connection GUID
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag
    * @returns Promise resolving to a {@link ConnectionGetResponse}
@@ -128,5 +134,39 @@ export interface ConnectionsServiceModel {
    * ```
    */
   getById(connectionId: string, options?: ConnectionGetByIdOptions): Promise<ConnectionGetResponse>;
+
+  /**
+   * Get a single connection declared in `uipath_resources.ts`.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * When an admin remapped the connection at deployment, the call targets the
+   * connection it was mapped to, in that connection's folder, even when a folder
+   * option is passed: the mapped connection is found only in its own folder.
+   *
+   * @param connection - Handle created with `resource.connection()` from `@uipath/uipath-typescript/resources`
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag
+   * @returns Promise resolving to a {@link ConnectionGetResponse}
+   * @example
+   * ```typescript
+   * // uipath_resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly financeSlack = resource.connection({ id: '<connectionId>', connector: 'uipath-slack' });
+   * }
+   *
+   * // anywhere in the project
+   * import { Connections } from '@uipath/uipath-typescript/connections';
+   *
+   * const connections = new Connections(sdk);
+   * const conn = await connections.getById(ProjectResources.financeSlack);
+   * ```
+   */
+  getById(connection: ConnectionResource, options?: ConnectionGetByIdOptions): Promise<ConnectionGetResponse>;
 
 }

@@ -17,7 +17,11 @@ import type {
   CaseInstanceSendMessageOptions,
   CaseInstanceGetVariablesOptions,
 } from '../../../../src/models/maestro/case-instances.types';
-import { CaseInstanceMessageName } from '../../../../src/models/maestro';
+import {
+  CaseInstanceMessageName,
+  CaseInstanceElementType,
+  type CaseInstanceGetExecutionHistoryOptions,
+} from '../../../../src/models/maestro';
 
 // ===== TEST SUITE =====
 describe('Case Instance Models', () => {
@@ -357,9 +361,24 @@ describe('Case Instance Models', () => {
 
         expect(mockService.getExecutionHistory).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          MAESTRO_TEST_CONSTANTS.FOLDER_KEY
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          undefined
         );
         expect(result).toEqual(mockHistory);
+      });
+
+      it('should forward the element-type filter', async () => {
+        const instance = createCaseInstanceWithMethods(createMockCaseInstance(), mockService);
+        mockService.getExecutionHistory = vi.fn().mockResolvedValue(createMockCaseInstanceExecutionHistory());
+        const options: CaseInstanceGetExecutionHistoryOptions = { elementTypes: [CaseInstanceElementType.Hitl] };
+
+        await instance.getExecutionHistory(options);
+
+        expect(mockService.getExecutionHistory).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          options
+        );
       });
 
       it('should throw error if instanceId is undefined', async () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { resolveFolderHeaders } from '../../../../src/utils/folder/folder-headers';
+import { resolveFolderHeaders, isCurrentFolderPath, hasFolderOption } from '@/utils/folder/folder-headers';
+import { TEST_CONSTANTS } from '@tests/utils/constants/common';
 import { encodeFolderPathHeader } from '../../../../src/utils/encoding/folder-path';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { ValidationError } from '../../../../src/core/errors';
@@ -120,6 +121,37 @@ describe('resolveFolderHeaders', () => {
     });
   });
 
+  describe('current folder', () => {
+    it('resolves folderPath "." to fallbackFolderKey instead of sending it as a path', () => {
+      const headers = resolveFolderHeaders({ folderPath: '.', resourceType: 'Test', fallbackFolderKey: GUID });
+      expect(headers).toEqual({ [FOLDER_KEY]: GUID });
+    });
+
+    it('resolves a whitespace-padded "." the same way', () => {
+      const headers = resolveFolderHeaders({ folderPath: ' . ', resourceType: 'Test', fallbackFolderKey: GUID });
+      expect(headers).toEqual({ [FOLDER_KEY]: GUID });
+    });
+
+    it('sends only the explicit folderKey when folderPath is "."', () => {
+      const headers = resolveFolderHeaders({
+        folderKey: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        folderPath: '.',
+        resourceType: 'Test',
+        fallbackFolderKey: GUID,
+      });
+      expect(headers).toEqual({ [FOLDER_KEY]: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' });
+    });
+
+    it('still sends a path that only starts with "."', () => {
+      const headers = resolveFolderHeaders({ folderPath: './Finance', resourceType: 'Test', fallbackFolderKey: GUID });
+      expect(headers).toEqual({ [FOLDER_PATH_ENCODED]: encodeFolderPathHeader('./Finance') });
+    });
+
+    it('throws ValidationError for "." when there is no fallback', () => {
+      expect(() => resolveFolderHeaders({ folderPath: '.', resourceType: 'Test' })).toThrow(ValidationError);
+    });
+  });
+
   describe('errors', () => {
     it('throws ValidationError when no folder context is supplied and no fallback', () => {
       expect(() => resolveFolderHeaders({ resourceType: 'Test' }))
@@ -130,5 +162,34 @@ describe('resolveFolderHeaders', () => {
       expect(() => resolveFolderHeaders({ resourceType: 'Asset.getByName' }))
         .toThrow(/Asset\.getByName/);
     });
+  });
+});
+
+describe('isCurrentFolderPath', () => {
+  it.each([[undefined], [''], ['   '], ['.'], [' . ']])('is true for %j', (path) => {
+    expect(isCurrentFolderPath(path)).toBe(true);
+  });
+
+  it.each([['Shared'], ['./Finance'], ['..']])('is false for %j', (path) => {
+    expect(isCurrentFolderPath(path)).toBe(false);
+  });
+});
+
+describe('hasFolderOption', () => {
+  it.each([
+    ['a folderId', { folderId: TEST_CONSTANTS.FOLDER_ID }],
+    ['a folderKey', { folderKey: TEST_CONSTANTS.FOLDER_KEY }],
+    ['a folderPath', { folderPath: TEST_CONSTANTS.FOLDER_PATH }],
+  ])('is true for %s', (_label, options) => {
+    expect(hasFolderOption(options)).toBe(true);
+  });
+
+  it.each([
+    ['no option', {}],
+    ["an empty folderPath", { folderPath: '' }],
+    ["the current-folder path '.'", { folderPath: '.' }],
+    ['a whitespace-only folderKey', { folderKey: TEST_CONSTANTS.FOLDER_KEY_WHITESPACE }],
+  ])('is false for %s, which resolveFolderHeaders reads as no folder', (_label, options) => {
+    expect(hasFolderOption(options)).toBe(false);
   });
 });

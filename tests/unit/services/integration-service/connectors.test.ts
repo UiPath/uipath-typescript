@@ -151,8 +151,8 @@ describe('ConnectorsService', () => {
       );
     });
 
-    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
-      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+    it('should fall back to the meta-tag folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
       const scopedService = new ConnectorsService(instance);
       mockApiClient.get.mockResolvedValue(createMockConnection());
 
@@ -161,6 +161,19 @@ describe('ConnectorsService', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith(
         CONNECTOR_ENDPOINTS.GET_DEFAULT_CONNECTION(IS_TEST_CONSTANTS.CONNECTOR_KEY),
         { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
+      );
+    });
+
+    it('should not fall back to the invocation folder of a coded function', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectorsService(instance);
+      mockApiClient.get.mockResolvedValue(createMockConnection());
+
+      await scopedService.getDefaultConnection(IS_TEST_CONSTANTS.CONNECTOR_KEY);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTOR_ENDPOINTS.GET_DEFAULT_CONNECTION(IS_TEST_CONSTANTS.CONNECTOR_KEY),
+        { headers: {}, params: {} },
       );
     });
 
@@ -222,8 +235,8 @@ describe('ConnectorsService', () => {
       );
     });
 
-    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
-      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+    it('should fall back to the meta-tag folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
       const scopedService = new ConnectorsService(instance);
       mockApiClient.get.mockResolvedValue([]);
 
@@ -232,6 +245,19 @@ describe('ConnectorsService', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith(
         CONNECTOR_ENDPOINTS.GET_CONNECTIONS(IS_TEST_CONSTANTS.CONNECTOR_KEY),
         { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
+      );
+    });
+
+    it('should not fall back to the invocation folder of a coded function', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectorsService(instance);
+      mockApiClient.get.mockResolvedValue([]);
+
+      await scopedService.getConnections(IS_TEST_CONSTANTS.CONNECTOR_KEY);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTOR_ENDPOINTS.GET_CONNECTIONS(IS_TEST_CONSTANTS.CONNECTOR_KEY),
+        { headers: {}, params: {} },
       );
     });
 

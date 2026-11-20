@@ -3,6 +3,7 @@ import { TokenInfo } from './types';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { Config } from '../config/config';
 import { HostTokenResponse, isTokenExpired, requestHostToken } from './host-token-request';
+import { GUID_REGEX } from '../../utils/validation/guid';
 
 export class ActionCenterTokenManager {
   private readonly parentOrigin = new URLSearchParams(window.location.search).get('basedomain');
@@ -10,7 +11,8 @@ export class ActionCenterTokenManager {
 
   constructor(
     private readonly config: Config,
-    private readonly onTokenRefreshed: (tokenInfo: TokenInfo) => void
+    private readonly onTokenRefreshed: (tokenInfo: TokenInfo) => void,
+    private readonly onDebugJobKey?: (jobKey: string) => void
   ) {}
 
   async refreshAccessToken(tokenInfo: TokenInfo): Promise<string> {
@@ -40,11 +42,16 @@ export class ActionCenterTokenManager {
       }),
       responseEventType: ActionCenterEventNames.TOKENREFRESHED,
       extractToken: (data): HostTokenResponse | undefined => {
-        const token = (data as ActionCenterEventResponsePayload)?.content?.token;
+        const content = (data as ActionCenterEventResponsePayload)?.content;
+        const token = content?.token;
         if (!token?.accessToken) return undefined;
-        return { accessToken: token.accessToken, expiresAt: token.expiresAt };
+        const debugJobKey = typeof content.debugJobKey === 'string' && GUID_REGEX.test(content.debugJobKey)
+          ? content.debugJobKey
+          : undefined;
+        return { accessToken: token.accessToken, expiresAt: token.expiresAt, debugJobKey };
       },
       onTokenRefreshed: this.onTokenRefreshed,
+      onDebugJobKey: this.onDebugJobKey,
     });
 
     this.refreshPromise = promise;

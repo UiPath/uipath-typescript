@@ -12,18 +12,25 @@ import type { PrivateSDK } from './types';
 import { missingConfigMessage } from '../config/config-utils';
 import { OrganizationIdResolver } from '../organization/organization-id-resolver';
 
-// Global symbol key to ensure WeakMap is shared across module instances
-// This prevents issues when core and service modules are bundled separately
-const REGISTRY_KEY = Symbol.for('@uipath/sdk-internals-registry');
+// Global symbol keys so both stores are shared across module instances: core and each service
+// subpath are bundled separately, and a service's `get` must see what core's constructor recorded.
+const REGISTRY_KEY: unique symbol = Symbol.for('@uipath/sdk-internals-registry');
+const UNCONFIGURED_KEY: unique symbol = Symbol.for('@uipath/sdk-unconfigured-reason');
+
+interface GlobalStores {
+  [REGISTRY_KEY]?: WeakMap<object, PrivateSDK>;
+  [UNCONFIGURED_KEY]?: WeakMap<object, string>;
+}
+
+const globalStores = (): GlobalStores => globalThis as typeof globalThis & GlobalStores;
 
 // Get or create the global WeakMap store
-const getGlobalStore = (): WeakMap<object, PrivateSDK> => {
-  const globalObj = globalThis as any;
-  if (!globalObj[REGISTRY_KEY]) {
-    globalObj[REGISTRY_KEY] = new WeakMap<object, PrivateSDK>();
-  }
-  return globalObj[REGISTRY_KEY];
-};
+const getGlobalStore = (): WeakMap<object, PrivateSDK> =>
+  (globalStores()[REGISTRY_KEY] ??= new WeakMap<object, PrivateSDK>());
+
+// Why an instance resolved no configuration, for the diagnostic `get` raises on it
+const getUnconfiguredStore = (): WeakMap<object, string> =>
+  (globalStores()[UNCONFIGURED_KEY] ??= new WeakMap<object, string>());
 
 /**
  * Whether a value looks like a UiPath instance — used only to choose between two
@@ -46,17 +53,24 @@ const looksLikeUiPath = (instance: object): boolean =>
  * @internal - Not exported in public API
  */
 export class SDKInternalsRegistry {
-  // Use global store to ensure sharing across module bundles
-  private static get store(): WeakMap<object, PrivateSDK> {
-    return getGlobalStore();
-  }
-
   /**
    * Register SDK instance internals
-   * Called by UiPath constructor
+   * Called once a UiPath instance has a complete configuration
    */
   static set(instance: object, internals: PrivateSDK): void {
     this.store.set(instance, internals);
+  }
+
+  /**
+   * Record why an instance resolved no configuration, so a service constructed from it later
+   * reports that reason rather than a generic one. Consulted only while the instance has no
+   * internals registered.
+   *
+   * @param instance - The UiPath instance that stayed unconfigured
+   * @param reason - The configuration-not-found message for that instance
+   */
+  static setUnconfigured(instance: object, reason: string): void {
+    this.unconfigured.set(instance, reason);
   }
 
   /**
@@ -66,10 +80,13 @@ export class SDKInternalsRegistry {
   static get(instance: object): PrivateSDK {
     const internals = this.store.get(instance);
     if (!internals) {
-      if (looksLikeUiPath(instance)) {
+      // A recorded reason proves the instance is a UiPath; the structural check covers an older core
+      // bundle that records none.
+      const reason = this.unconfigured.get(instance);
+      if (reason !== undefined || looksLikeUiPath(instance)) {
         throw new Error(
           'Cannot create a service: the UiPath instance was never configured. ' +
-          missingConfigMessage()
+          (reason ?? missingConfigMessage())
         );
       }
 
@@ -88,5 +105,14 @@ export class SDKInternalsRegistry {
     const internals = this.get(instance);
     internals.organizationIdResolver ??= new OrganizationIdResolver(internals.config, internals.tokenManager);
     return internals.organizationIdResolver;
+  }
+
+  // Use global store to ensure sharing across module bundles
+  private static get store(): WeakMap<object, PrivateSDK> {
+    return getGlobalStore();
+  }
+
+  private static get unconfigured(): WeakMap<object, string> {
+    return getUnconfiguredStore();
   }
 }

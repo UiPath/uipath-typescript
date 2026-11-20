@@ -3,6 +3,24 @@ import { createHeaders } from '../http/headers';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../constants/headers';
 import { encodeFolderPathHeader } from '../encoding/folder-path';
 
+// Bindings write `'.'` for a resource in the folder the code runs in (Solutions defaults a binding's folder path to
+// it); Orchestrator resolves a relative path only against an org-unit header the SDK does not send.
+const CURRENT_FOLDER_PATH = '.';
+
+/** `undefined`, blank and `'.'` all name the folder the code runs in; bindings and debug overwrites write them for it. */
+export function isCurrentFolderPath(folderPath: string | undefined): boolean {
+  const trimmed = folderPath?.trim();
+  return !trimmed || trimmed === CURRENT_FOLDER_PATH;
+}
+
+/**
+ * Whether the options name a folder the way {@link resolveFolderHeaders} reads them: a `folderId`, a
+ * non-blank `folderKey`, or a `folderPath` other than the current folder.
+ */
+export function hasFolderOption(options: { folderId?: unknown; folderKey?: string; folderPath?: string }): boolean {
+  return options.folderId !== undefined || Boolean(options.folderKey?.trim()) || !isCurrentFolderPath(options.folderPath);
+}
+
 export interface ResolveFolderHeadersInput {
   /** Numeric folder ID — sent as `X-UIPATH-OrganizationUnitId`. */
   folderId?: number;
@@ -24,9 +42,9 @@ export interface ResolveFolderHeadersInput {
   resourceType: string;
 
   /**
-   * SDK init-time folder key (sourced from `<meta name="uipath:folder-key">`
-   * in coded-app deployments). Used as a fallback when none of `folderId`,
-   * `folderKey`, or `folderPath` is supplied.
+   * SDK init-time folder key (a coded function's `ctx.platform.folderKey`, or
+   * `<meta name="uipath:folder-key">` in coded-app deployments). Used as a
+   * fallback when none of `folderId`, `folderKey`, or `folderPath` is supplied.
    */
   fallbackFolderKey?: string;
 }
@@ -44,7 +62,7 @@ export interface ResolveFolderHeadersInput {
  * Routing:
  * - `folderId` → `X-UIPATH-OrganizationUnitId`
  * - `folderKey` → `X-UIPATH-FolderKey`
- * - `folderPath` → `X-UIPATH-FolderPath-Encoded`
+ * - `folderPath` → `X-UIPATH-FolderPath-Encoded`, except `'.'` (the current folder), which counts as not set
  * - none set + `fallbackFolderKey` → fallback used as `X-UIPATH-FolderKey`
  * - none set + no fallback → `ValidationError`
  *
@@ -64,7 +82,7 @@ export function resolveFolderHeaders(input: ResolveFolderHeadersInput): Record<s
   if (trimmedKey) {
     headers[FOLDER_KEY] = trimmedKey;
   }
-  if (trimmedPath) {
+  if (trimmedPath && !isCurrentFolderPath(trimmedPath)) {
     headers[FOLDER_PATH_ENCODED] = encodeFolderPathHeader(trimmedPath);
   }
 

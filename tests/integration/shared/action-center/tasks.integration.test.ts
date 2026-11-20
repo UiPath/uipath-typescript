@@ -8,7 +8,8 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { generateTestResourceName, generateRandomString } from '../../utils/helpers';
-import { TaskPriority, TaskType, TaskUserType, TaskAssignmentCriteria } from '../../../../src/models/action-center/tasks.types';
+import { TaskPriority, TaskType, TaskUserType, TaskAssignmentCriteria, type TaskSchemaGetResponse } from '@/models/action-center/tasks.types';
+import type { TaskCreateResponse } from '@/models/action-center/tasks.models';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -97,46 +98,138 @@ describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (m
     });
   });
 
-  describe('create (QuickForm)', () => {
-    it('should create a QuickForm task with inline schema', async () => {
+  describe('QuickForm', () => {
+    const NOTE = 'Sample input for QuickForm integration test';
+    let folderId!: number;
+    let taskSchemaKey!: string;
+    let quickFormTitle!: string;
+    let created!: TaskCreateResponse;
+
+    beforeAll(async () => {
       const { tasks } = getServices();
       const config = getTestConfig();
-
-      // Use a fresh schema key per run so we don't collide with prior tests.
-      const taskSchemaKey = crypto.randomUUID();
-      const quickFormTitle = generateTestResourceName(`QuickForm_${mode}`);
-
-      const schema = {
-        id: taskSchemaKey,
-        fields: [
-          { id: 'note', label: 'Reviewer Note', type: 'text', direction: 'input' },
-        ],
-        outcomes: [
-          { id: 'approve', name: 'Approve', type: 'string', isPrimary: true },
-          { id: 'reject', name: 'Reject', type: 'string', isPrimary: false },
-        ],
-      };
-
       if (!config.folderId) {
-        throw new Error('QuickForm integration test requires folderId — set FOLDER_ID in the test environment');
+        throw new Error('QuickForm integration test requires folderId — set INTEGRATION_TEST_FOLDER_ID in the test environment');
       }
-      const folderId = Number(config.folderId);
+      folderId = Number(config.folderId);
 
-      const result = await tasks.create({
+      // Fresh schema key per run so we don't collide with prior tests.
+      taskSchemaKey = crypto.randomUUID();
+      quickFormTitle = generateTestResourceName(`QuickForm_${mode}`);
+
+      created = await tasks.create({
         type: TaskType.QuickForm,
         title: quickFormTitle,
         taskSchemaKey,
-        schema,
-        data: { note: 'Sample input for QuickForm integration test' },
+        schema: {
+          id: taskSchemaKey,
+          fields: [
+            { id: 'note', label: 'Reviewer Note', type: 'text', direction: 'input' },
+          ],
+          outcomes: [
+            { id: 'approve', name: 'Approve', type: 'string', isPrimary: true },
+            { id: 'reject', name: 'Reject', type: 'string', isPrimary: false },
+          ],
+        },
+        data: { note: NOTE },
         priority: TaskPriority.Medium,
       }, folderId);
+      registerResource('tasks', { id: created.id, folderId });
+    });
 
-      expect(result).toBeDefined();
-      expect(result.title).toBe(quickFormTitle);
-      expect(result.id).toBeDefined();
-      expect(typeof result.id).toBe('number');
+    it('should create a QuickForm task with inline schema', () => {
+      expect(created.title).toBe(quickFormTitle);
+      expect(typeof created.id).toBe('number');
+      expect(created.taskSchemaKey).toBe(taskSchemaKey);
+    });
 
-      registerResource('tasks', { id: result.id, folderId });
+    it('should return the taskSchemaKey of a QuickForm task from getById', async () => {
+      const { tasks } = getServices();
+
+      const task = await tasks.getById(created.id, {}, folderId);
+
+      expect(task.taskSchemaKey).toBe(taskSchemaKey);
+    });
+
+    describe('getSchemaByKey', () => {
+      let fetchedSchema!: TaskSchemaGetResponse;
+
+      beforeAll(async () => {
+        fetchedSchema = await getServices().tasks.getSchemaByKey(taskSchemaKey, { folderId });
+      });
+
+      it('should get the registered schema by key', () => {
+        expect(fetchedSchema.key).toBe(taskSchemaKey);
+        expect(fetchedSchema.schema).toMatchObject({ id: taskSchemaKey });
+        expect(fetchedSchema.folderId).toBe(folderId);
+      });
+
+      it('should return the schema with transformed fields', () => {
+        expect(fetchedSchema.createdTime).toBeDefined();
+        expect((fetchedSchema as any).creationTime).toBeUndefined();
+        expect((fetchedSchema as any).organizationUnitId).toBeUndefined();
+        expect((fetchedSchema as any).organizationUnitKey).toBeUndefined();
+      });
+    });
+
+    it('should return the schema of a QuickForm task from getSchema, by id and from the task object', async () => {
+      const { tasks } = getServices();
+
+      const byId = await tasks.getSchema(created.id, { folderId });
+      if (byId?.type !== TaskType.QuickForm) {
+        throw new Error(`Expected a QuickForm schema, got ${JSON.stringify(byId)}`);
+      }
+      expect(byId.key).toBe(taskSchemaKey);
+      expect(byId.schema).toMatchObject({ id: taskSchemaKey });
+      expect(byId.folderId).toBe(folderId);
+
+      const fromTask = await created.getSchema();
+      expect(fromTask).toEqual(byId);
+    });
+
+    it('should return the taskSchemaKey of a QuickForm task from getDataById', async () => {
+      const { tasks } = getServices();
+
+      const taskData = await tasks.getDataById(created.id, { folderId });
+
+      expect(taskData.taskSchemaKey).toBe(taskSchemaKey);
+      expect(taskData.data).toMatchObject({ note: NOTE });
+    });
+  });
+
+  describe('getSchema', () => {
+    it('should return the schema of an App task', async () => {
+      const { tasks } = getServices();
+
+      const allTasks = await tasks.getAll({ filter: "type eq 'AppTask' and isDeleted eq false", pageSize: 5 });
+      if (allTasks.items.length === 0) {
+        throw new Error('No App task available in the test environment');
+      }
+
+      const result = await allTasks.items[0].getSchema();
+      if (result?.type !== TaskType.App) {
+        throw new Error(`Expected an App task schema, got ${JSON.stringify(result)}`);
+      }
+      expect(Array.isArray(result.schema.inputs)).toBe(true);
+      expect(Array.isArray(result.schema.outputs)).toBe(true);
+      expect(Array.isArray(result.schema.inOuts)).toBe(true);
+      expect(Array.isArray(result.schema.outcomes)).toBe(true);
+    });
+
+    it('should return null for a task type without a schema', async () => {
+      if (!createdTaskId) {
+        throw new Error('No task ID available for testing');
+      }
+      const { tasks } = getServices();
+      const config = getTestConfig();
+      if (!config.folderId) {
+        throw new Error('folderId is required in the test config for getSchema tests');
+      }
+      const folderId = Number(config.folderId);
+
+      const result = await tasks.getSchema(createdTaskId, { folderId });
+
+      expect(result).toBeNull();
     });
   });
 
@@ -514,6 +607,7 @@ describeIntegration('Action Center Tasks (extended) - Integration Tests', 'both'
       expect((result as any).OrganizationUnitId).toBeUndefined();
       expect(result.createdTime).toBeDefined();
       expect((result as any).CreationTime).toBeUndefined();
+      expect(result.taskSchemaKey).toBeNull(); // not a QuickForm task
     });
 
     it('should get a task\'s data addressing the folder by key', async () => {

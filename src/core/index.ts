@@ -55,6 +55,7 @@ export type {
   CodedFunctionRobot,
 } from './config/function-context';
 export type { TokenInfo, LogoutOptions } from './auth/types';
+export type { DebugContext } from '../models/common/types';
 export * from './errors';
 
 // Pagination (common across all services)
@@ -69,6 +70,14 @@ export type {
   RetryOptions,
   BackoffStrategy,
 } from '../models/common/http.types';
+export type {
+  HttpMethod,
+  Headers,
+  QueryParams,
+  ResponseType,
+} from '../models/common/request-spec';
+
+export { trace } from '../utils/tracing/trace';
 
 // Export telemetry
 export * from './telemetry';

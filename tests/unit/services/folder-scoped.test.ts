@@ -8,6 +8,8 @@ import { ASSET_TEST_CONSTANTS } from '../../utils/constants/assets';
 import { OVERRIDE_TEST_CONSTANTS } from '../../utils/constants/overrides';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../src/utils/constants/headers';
+import { NotFoundError } from '../../../src/core/errors';
+import type { AssetGetByNameOptions } from '../../../src/models/orchestrator/assets.types';
 import type { ResourceOverrides } from '../../../src/utils/overrides/overrides.types';
 
 // ===== MOCKING =====
@@ -185,5 +187,46 @@ describe('FolderScopedService getByName override resolution', () => {
     });
 
     expect(requestedName()).toBe(`Name eq '${ASSET_TEST_CONSTANTS.ASSET_NAME}'`);
+  });
+});
+
+describe('FolderScopedService getByName not-found folder hint', () => {
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
+
+  beforeEach(() => {
+    mockApiClient = createMockApiClient();
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
+    mockApiClient.get.mockResolvedValue({ value: [] });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  /** An asset service whose SDK falls back to `TEST_CONSTANTS.FOLDER_KEY` when a call names no folder. */
+  function serviceWithDefaultFolder(): AssetService {
+    const { instance } = createServiceTestDependencies({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
+    return new AssetService(instance);
+  }
+
+  it('names the default folder when the lookup fell back to it', async () => {
+    const lookup = serviceWithDefaultFolder().getByName(ASSET_TEST_CONSTANTS.MISSING_ASSET_NAME);
+
+    await expect(lookup).rejects.toBeInstanceOf(NotFoundError);
+    await expect(lookup).rejects.toThrow(`in folder (key: ${TEST_CONSTANTS.FOLDER_KEY})`);
+  });
+
+  const namedFolders: Array<[string, AssetGetByNameOptions, string]> = [
+    ['folderId', { folderId: TEST_CONSTANTS.FOLDER_ID }, `in folder (id: ${TEST_CONSTANTS.FOLDER_ID})`],
+    ['folderKey', { folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY }, `in folder (key: ${ASSET_TEST_CONSTANTS.FOLDER_KEY})`],
+    ['folderPath', { folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH }, `in folder '${ASSET_TEST_CONSTANTS.FOLDER_PATH}'`],
+  ];
+
+  it.each(namedFolders)('names the %s the call passed, not the default folder', async (_label, options, hint) => {
+    const lookup = serviceWithDefaultFolder().getByName(ASSET_TEST_CONSTANTS.MISSING_ASSET_NAME, options);
+
+    await expect(lookup).rejects.toBeInstanceOf(NotFoundError);
+    await expect(lookup).rejects.toThrow(hint);
+    await expect(lookup).rejects.not.toThrow(TEST_CONSTANTS.FOLDER_KEY);
   });
 });

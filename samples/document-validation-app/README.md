@@ -4,7 +4,7 @@ A sample React + TypeScript + Vite application that demonstrates building a huma
 
 ## Preview
 
-![Reviewing a document validation task: task list, extracted fields, and the document text view](./screenshots/preview.gif)
+![Reviewing a document validation task: task list, extracted fields, table editing, and submitting the validated data](./screenshots/preview.gif)
 
 ## What this sample demonstrates
 
