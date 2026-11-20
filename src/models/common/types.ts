@@ -123,8 +123,9 @@ export interface FolderScopedOptions extends BaseOptions, FolderScopingOnly {}
 /**
  * Debug context applied to API requests while the app runs inside a platform
  * debug session (for example, a coded action app opened from a debug task in
- * Action Center). While set, every request carries the parent job key so the
- * platform routes runs it triggers as debug sub-jobs of that session.
+ * Action Center). While set, the processes the app starts and the functions it
+ * invokes carry the parent job key, so the platform links the runs to that job
+ * and, for a debug run, routes them as debug sub-jobs of that session.
  */
 export interface DebugContext {
   /** Job key of the debug parent job, delivered to the app by its host (e.g. Action Center task context). */

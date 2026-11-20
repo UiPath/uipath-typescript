@@ -32,6 +32,7 @@ import { SDKInternalsRegistry } from '../../../core/internals';
 import type { SessionLicense } from '../../../core/licensing/session-license';
 import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../core/context/execution';
 import type { DebugContext } from '../../../models/common/types';
+import { currentTraceContext, type TraceContext } from '@/core/context/trace';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -176,6 +177,11 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       delete startInfoSdk.processKey;
     }
 
+    const trace = currentTraceContext(this.executionContext);
+    if (trace) {
+      addTraceContext(startInfoSdk, trace);
+    }
+
     const apiRequest = transformRequest(startInfoSdk, ProcessMap);
     const requestBody = { startInfo: apiRequest };
 
@@ -236,6 +242,19 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     );
     return result;
   }
+}
+
+/**
+ * Links the started job to the session trace. Robots, agents and Trace View read `traceId` and
+ * `parentSpanId`; App Insights correlation and the jobs-by-session filter read `parentOperationId`.
+ * Values the caller supplied are kept.
+ */
+function addTraceContext(startInfo: Record<string, unknown>, trace: TraceContext): void {
+  startInfo.traceId ??= trace.traceId;
+  if (trace.spanId) {
+    startInfo.parentSpanId ??= trace.spanId;
+  }
+  startInfo.parentOperationId ??= trace.traceId;
 }
 
 /**

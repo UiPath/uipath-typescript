@@ -20,9 +20,11 @@ import {
 } from '../../../utils/constants';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createHeldSessionLicense } from '../../../utils/mocks/session-license';
-import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessRef, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
+import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessRef, ProcessStartRefOptions, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED, JOB_KEY } from '../../../../src/utils/constants/headers';
 import { DEBUG_CONTEXT_KEY } from '../../../../src/core/context/execution';
+import { TRACE_CONTEXT_KEY } from '@/core/context/trace';
+import { TRACE_CONTEXT_TEST_CONSTANTS } from '@tests/utils/constants/tracing';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 import { RequestOptions } from '../../../../src/models/common';
@@ -327,6 +329,77 @@ describe('ProcessService Unit Tests', () => {
 
       await expect(service.start(startRequest, TEST_CONSTANTS.FOLDER_ID)).rejects.toBeInstanceOf(AuthenticationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('start under a session trace', () => {
+    const startRequest = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+
+    function tracedService(spanId?: string): ProcessService {
+      const { instance, executionContext } = createServiceTestDependencies();
+      executionContext.set(TRACE_CONTEXT_KEY, () => ({ traceId: TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID, spanId }));
+      return new ProcessService(instance);
+    }
+
+    beforeEach(() => {
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+    });
+
+    it('links the job to the session trace and the active span', async () => {
+      await tracedService(TRACE_CONTEXT_TEST_CONSTANTS.SPAN_ID).start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.startInfo).toEqual(expect.objectContaining({
+        traceId: TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID,
+        parentSpanId: TRACE_CONTEXT_TEST_CONSTANTS.SPAN_ID,
+        parentOperationId: TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID,
+      }));
+    });
+
+    it('links the job by the ref form too', async () => {
+      await tracedService(TRACE_CONTEXT_TEST_CONSTANTS.SPAN_ID).start(
+        { name: PROCESS_TEST_CONSTANTS.PROCESS_NAME },
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.startInfo).toEqual(expect.objectContaining({
+        releaseName: PROCESS_TEST_CONSTANTS.PROCESS_NAME,
+        traceId: TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID,
+        parentSpanId: TRACE_CONTEXT_TEST_CONSTANTS.SPAN_ID,
+      }));
+    });
+
+    it('omits parentSpanId when no span is active', async () => {
+      await tracedService().start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.startInfo.traceId).toBe(TRACE_CONTEXT_TEST_CONSTANTS.TRACE_ID);
+      expect(body.startInfo).not.toHaveProperty('parentSpanId');
+    });
+
+    it('keeps the trace fields the caller supplied', async () => {
+      // traceId is not a typed start field; the ref form forwards extra fields as they are.
+      const options: ProcessStartRefOptions & { traceId: string } = {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        parentOperationId: TRACE_CONTEXT_TEST_CONSTANTS.CALLER_PARENT_OPERATION_ID,
+        traceId: TRACE_CONTEXT_TEST_CONSTANTS.CALLER_TRACE_ID,
+      };
+
+      await tracedService(TRACE_CONTEXT_TEST_CONSTANTS.SPAN_ID).start({ name: PROCESS_TEST_CONSTANTS.PROCESS_NAME }, options);
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.startInfo.parentOperationId).toBe(TRACE_CONTEXT_TEST_CONSTANTS.CALLER_PARENT_OPERATION_ID);
+      expect(body.startInfo.traceId).toBe(TRACE_CONTEXT_TEST_CONSTANTS.CALLER_TRACE_ID);
+    });
+
+    it('adds no trace fields without a session trace', async () => {
+      await service.start(startRequest, TEST_CONSTANTS.FOLDER_ID);
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.startInfo).not.toHaveProperty('traceId');
+      expect(body.startInfo).not.toHaveProperty('parentSpanId');
+      expect(body.startInfo).not.toHaveProperty('parentOperationId');
     });
   });
 
