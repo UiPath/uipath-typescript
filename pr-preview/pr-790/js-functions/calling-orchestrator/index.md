@@ -43,11 +43,16 @@ interface GetAssetInput {
   folderId: number;
 }
 
+interface GetAssetOutput {
+  value: unknown;
+}
+
 export default defineFunction({
   name: "get-asset-secret-vault",
   method: "POST",
   path: "/get-asset-secret-vault",
   input: defineSchema<GetAssetInput>(),
+  output: defineSchema<GetAssetOutput>(),
   handler: async (inp, ctx) => {
     const workloadToken =
       ctx.robot?.accessToken ||             // populated by platform when deployed
@@ -179,11 +184,16 @@ interface GetAssetInput {
   folderId: number;
 }
 
+interface GetAssetOutput {
+  value: unknown;
+}
+
 export default defineFunction({
   name: "get-asset-delegated",
   method: "POST",
   path: "/get-asset-delegated",
   input: defineSchema<GetAssetInput>(),
+  output: defineSchema<GetAssetOutput>(),
   handler: async (inp, ctx) => {
     if (!ctx.user?.accessToken) {
       throw new FunctionError(
@@ -259,11 +269,16 @@ interface StartJobInput {
   folderId: number;
 }
 
+interface StartJobOutput {
+  jobId: number | null;
+}
+
 export default defineFunction({
   name: "start-job",
   method: "POST",
   path: "/start-job",
   input: defineSchema<StartJobInput>(),
+  output: defineSchema<StartJobOutput>(),
   handler: async (inp, ctx) => {
     if (!ctx.user?.accessToken) {
       throw new FunctionError("User access token not available", 403);

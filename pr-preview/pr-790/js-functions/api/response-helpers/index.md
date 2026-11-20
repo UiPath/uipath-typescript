@@ -35,7 +35,7 @@ return created({ id: "new-resource-id" });
 ### `accepted(body?)`
 
 ```
-accepted<T>(body?: T): FunctionResponse<T | undefined>
+accepted<T = never>(body?: T): FunctionResponse<T>
 ```
 
 Returns `{ status: 202, body }`. Use for long-running operations where the result is not yet available.
@@ -43,7 +43,7 @@ Returns `{ status: 202, body }`. Use for long-running operations where the resul
 ### `noContent()`
 
 ```
-noContent(): FunctionResponse<undefined>
+noContent(): FunctionResponse<never>
 ```
 
 Returns `{ status: 204 }`. No body.
@@ -54,7 +54,7 @@ These return a `FunctionResponse` — they do **not** throw. Use them when you w
 
 For errors that must halt execution (e.g. auth failures, validation errors that prevent the handler from continuing), throw [`FunctionError`](../function-error/) instead.
 
-> **Run-as-job behavior:** when the function runs as a UiPath job (no HTTP caller), returning any response with status ≥ 400 reports the job as **Faulted**, with the message surfaced in Orchestrator's job error info (`{ error }` maps to the error title, `details` to its detail). On the HTTP path the response body is returned to the caller verbatim, exactly as written.
+> **Run-as-job behavior:** when an HTTP function runs as a UiPath job (no HTTP caller), returning any response with status ≥ 400 reports the job as **Faulted**, with the message surfaced in Orchestrator's job error info (`{ error }` maps to the error title, `details` to its detail). On the HTTP path the response body is returned to the caller verbatim, exactly as written.
 
 ### `badRequest(message?, details?)`
 
@@ -110,7 +110,7 @@ Returns `{ status: 409, body: { error } }`.
 ### `response(status, body?, headers?)`
 
 ```
-response<T>(status: number, body?: T, headers?: Record<string, string>): FunctionResponse<T | undefined>
+response<T = never>(status: number, body?: T, headers?: Record<string, string>): FunctionResponse<T>
 ```
 
 Full control over status, body, and headers.

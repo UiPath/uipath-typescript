@@ -18,14 +18,15 @@ Scaffold a new JS/TS Functions project.
 uip functions new [name] [options]
 ```
 
-| Option                  | Default        | Description                                                                                                     |
-| ----------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| `[name]`                | `my-functions` | Project name and directory                                                                                      |
-| `--name <name>`         |                | Alias for positional name                                                                                       |
-| `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
-| `--empty`               |                | Skip the hello world function (JS/TS only)                                                                      |
+| Option                  | Default        | Description                                                                                                           |
+| ----------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `[name]`                | `my-functions` | Project name and directory                                                                                            |
+| `--name <name>`         |                | Alias for positional name                                                                                             |
+| `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/)       |
+| `--empty`               |                | Skip the hello world function (JS/TS only)                                                                            |
+| `--kind <job\|http>`    | `job`          | Hello world function kind. `job` sets `targetRuntime` to `javascript` in `uipath.json`, `http` to `javascript-server` |
 
-Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with the package manager the machine resolves to: npm when both npm and bun are present, and that manager writes the project's lock file.
+Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with npm, which writes the project's `package-lock.json`.
 
 ______________________________________________________________________
 
@@ -37,11 +38,11 @@ Start local function server with hot reload.
 uip functions serve [options]
 ```
 
-| Option                   | Default | Description                                                                    |
-| ------------------------ | ------- | ------------------------------------------------------------------------------ |
-| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                             |
-| `--port <port>`          | `7070`  | Port to listen on                                                              |
-| `--production`           |         | Skip server-runner install and freePort check (used by the platform container) |
+| Option                   | Default | Description                                                                                  |
+| ------------------------ | ------- | -------------------------------------------------------------------------------------------- |
+| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                                           |
+| `--port <port>`          | `7070`  | Port to listen on                                                                            |
+| `--production`           |         | Skip the freePort check and run with production permissions (used by the platform container) |
 
 Auto-syncs the `functions` map in `uipath.json` before starting. A `.env` file at the project root is loaded on both runtimes — `serve` passes `--env-file` to Node (through tsx) and to Deno (see [Getting Started — local dev](../getting-started/#2-run-locally)).
 
@@ -55,18 +56,18 @@ Execute a single coded function once (one-shot job) and report the result. Unlik
 uip functions run [options]
 ```
 
-| Option                   | Default | Description                                                                                   |
-| ------------------------ | ------- | --------------------------------------------------------------------------------------------- |
-| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                                            |
-| `--entrypoint <path>`    |         | Path to the function file                                                                     |
-| `--function <name>`      |         | Function name resolved via `uipath.json`                                                      |
-| `--input <json>`         | `{}`    | JSON input payload                                                                            |
-| `--input-file <path>`    |         | Path to a JSON input file (takes priority over `--input`)                                     |
-| `--context <json>`       |         | JSON runtime-context payload (used when `--context-file` is absent)                           |
-| `--context-file <path>`  |         | Path to the runtime-context JSON file (takes priority over `--context`)                       |
-| `--production`           |         | Run under production context; skip the `.uipath/server-runner` install when it already exists |
+| Option                   | Default | Description                                                             |
+| ------------------------ | ------- | ----------------------------------------------------------------------- |
+| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                      |
+| `--entrypoint <path>`    |         | Path to a function file directly in `functions/`                        |
+| `--function <name>`      |         | Function name resolved via `uipath.json`                                |
+| `--input <json>`         | `{}`    | JSON input payload                                                      |
+| `--input-file <path>`    |         | Path to a JSON input file (takes priority over `--input`)               |
+| `--context <json>`       |         | JSON runtime-context payload (used when `--context-file` is absent)     |
+| `--context-file <path>`  |         | Path to the runtime-context JSON file (takes priority over `--context`) |
+| `--production`           |         | Run under production context                                            |
 
-Provide the target with exactly one of `--entrypoint` (path to the file) or `--function` (name resolved through `uipath.json`). Bootstraps runtime dependencies into `.uipath/server-runner` on first run. The process exit code reflects the job outcome (non-zero on failure).
+Provide the target with exactly one of `--entrypoint` (path to the file) or `--function` (name resolved through `uipath.json`). The process exit code reflects the job outcome (non-zero on failure).
 
 ```
 uip functions run --function hello --input '{"name":"world"}'
@@ -110,7 +111,7 @@ uip functions pack [options]
 
 Reads `name` and `version` from `package.json`. Writes `.uipath/<name>.<version>.nupkg`. Re-packing the same version overwrites the file.
 
-The project must be ready to package: `node_modules/` present, exactly one supported lock file — `package-lock.json` (npm) or `bun.lock` (bun) — and that lock still current, which the package manager itself confirms via `npm ci --dry-run` / `bun install --frozen-lockfile --dry-run` (neither installs nor writes anything). When the manager cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it. `serve`, `run` and `debug` do not check the lock at all — Node does not read one.
+The project must be ready to package: `node_modules/` present and a current `package-lock.json`, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it.
 
 Steps performed:
 
@@ -163,6 +164,8 @@ Auto-syncs the `functions` map in `uipath.json`, generates `entry-points.json`, 
 
 The remote layout mirrors the local project root; Studio Web system files (`project.uiproj`, `.project/`, `.settings/`) are never touched, and neither is anything under `.uipath/` apart from `studio_metadata.json`.
 
+A push leaves the datasets that Studio Web's Evaluations panel keeps under `evals/` in place when the project has no `evals/` folder. When the project has an `evals/` folder, even an empty one, the push replaces them with that folder's contents.
+
 Each push also updates `.uipath/studio_metadata.json`, which Studio Web uses to detect the push (offering a Reload in an open editor) and to display the version and last-pushed-by author in the Properties panel. The version increments automatically on every push that carries a change; a push with no changes reports "Already up to date." and leaves it alone.
 
 ______________________________________________________________________
@@ -181,7 +184,7 @@ Called automatically by `new` as a prerequisite. Run explicitly to set up Deno:
 uip functions setup --runtime deno
 ```
 
-Requires Node.js v20+. Installs `tsx` globally if not found.
+Requires Node.js v20+.
 
 ______________________________________________________________________
 

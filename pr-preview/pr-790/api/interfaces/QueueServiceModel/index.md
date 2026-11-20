@@ -23,6 +23,8 @@ Marks the item `Successful` or `Failed`, and can persist output data alongside t
 
 Applies to items with an active transaction. Changing the outcome of an item that already reached a terminal status is rejected.
 
+Folder scoping works like the other methods: `folderId` / `folderKey` / `folderPath`, else the SDK's configured folder. When the item came from `startTransaction`, pass `{ folderId: item.folderId }` — that's the resolved folder the item lives in after any override redirect, so no re-derivation is needed at the call site.
+
 #### Parameters
 
 - `itemId`: `number` — Queue item ID of the transaction to complete
@@ -242,28 +244,67 @@ const queue = await queues.getByKey('<queueKey>', { folderId: <folderId> });
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
 
 Gets a single queue by name
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Queue name (exact match)
-- `options?`: `QueueGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+| Parameter  | Type                    | Description                                                                |
+| ---------- | ----------------------- | -------------------------------------------------------------------------- |
+| `name`     | `string`                | Queue name (exact match)                                                   |
+| `options?` | `QueueGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options |
 
-#### Returns
+##### Returns
 
 `Promise`\<`QueueGetWithMethodsResponse`>
 
 Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
 
-#### Example
+##### Example
 
 ```
 const queue = await queues.getByName('<queueName>', { folderId: <folderId> });
 
 // Folder scoping also accepts a folder key or path
 const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' });
+```
+
+#### Call Signature
+
+> **getByName**(`queue`: `QueueResource`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Retrieves a single queue declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                    | Description                                                                       |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `queue`    | `QueueResource`         | Handle created with `resource.queue()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `QueueGetByNameOptions` | Optional folder override and query parameters                                     |
+
+##### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly queue = resource.queue({ name: 'InvoiceReview', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await queues.getByName(ProjectResources.queue);
 ```
 
 ### insertItemByName()
@@ -275,6 +316,8 @@ Inserts a new item into a queue by queue name
 Returns the created queue item including its id, status, and the stored payload. Payload keys keep their original casing — the SDK performs no case conversion on them, while method options and response fields still use the SDK's usual camelCase; `Date` values in the payload are serialized to ISO-8601 strings.
 
 The payload must be flat — values are simple scalars (see [QueueItemValue](../../type-aliases/QueueItemValue/)); nested objects and arrays are rejected.
+
+The returned item's `folderId` reflects the folder the SDK actually targeted — after any runtime resource-override redirect on `folderPath`. Pass `{ folderId: item.folderId }` to follow-up calls on the same queue (e.g. `getAllItems`, `startTransaction`) so they scope to the same folder without the caller having to re-derive it. A freshly inserted item has no transaction yet, so `completeTransaction` applies only once a robot has acquired it.
 
 #### Parameters
 
@@ -316,11 +359,13 @@ const rushItem = await queues.insertItemByName('<queueName>', {
 
 Starts a transaction: acquires the next available item from a queue and marks it `InProgress`
 
-Requires a robot session. Orchestrator allocates the item to the robot that sent the request, so user and application identities always receive `null`, however many items are waiting. Queue items are normally consumed by a robot running a process — apps produce with `insertItemByName` and observe with `getAllItems`, leaving acquisition to the robot.
+Requires a robot session. Orchestrator allocates the item to the robot that sent the request, so user and application identities always receive `null`, however many items are waiting. Inside a coded function, build the SDK with `new UiPath(ctx)`: the SDK then sends the function's robot key, which Orchestrator needs to allocate the item. Queue items are normally consumed by a robot running a process — apps produce with `insertItemByName` and observe with `getAllItems`, leaving acquisition to the robot.
 
 `null` covers both "no eligible items" and "no allocation target" — the two are not distinguishable.
 
 The queue is selected by exactly one of `name` or `id`. The transaction API identifies queues by name, so an `id` selector is first resolved to the queue's name (one extra lookup).
+
+The returned item's `folderId` reflects the folder the SDK actually targeted — after any runtime resource-override redirect on the `{ name }` selector's `folderPath`. Pass `{ folderId: item.folderId }` to `completeTransaction` so the follow-up scopes to the same folder without the caller having to re-derive it.
 
 #### Parameters
 
@@ -336,6 +381,8 @@ Promise resolving to the acquired [QueueItem](../QueueItem/) (in `InProgress` st
 #### Example
 
 ```
+import { QueueTransactionOutcome } from '@uipath/uipath-typescript/queues';
+
 const transaction = await queues.startTransaction({ name: '<queueName>' }, { folderId: <folderId> });
 
 // or select by ID — the SDK first resolves the queue's name (one extra lookup)
@@ -348,6 +395,14 @@ if (transaction) {
   // Running under a robot session: the item is now locked to this caller
   console.log(transaction.status);        // 'InProgress'
   console.log(transaction.specificData);  // the item's business payload
+
+  // Complete via the SAME folder the item lives in — `folderId` on the
+  // returned item is the resolved folder after any override redirect.
+  await queues.completeTransaction(
+    transaction.id,
+    QueueTransactionOutcome.Successful,
+    { folderId: transaction.folderId },
+  );
 } else {
   // No item was acquired. This happens when the queue has no eligible
   // items — and always for user/application identities (e.g. a coded app

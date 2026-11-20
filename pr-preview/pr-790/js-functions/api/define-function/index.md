@@ -10,40 +10,58 @@ import { defineFunction } from "@uipath/coded-functions-js-sdk";
 
 ```
 function defineFunction<I extends ContractSchema, O extends ContractSchema>(
-  options: DefineFunctionOptions<I, O>
+  options: HttpFunctionOptions<I, O>
+): FunctionDefinition
+
+function defineFunction<I extends ContractSchema, O extends ContractSchema>(
+  options: JobFunctionOptions<I, O>
 ): FunctionDefinition
 ```
 
-## DefineFunctionOptions
+A helper that wraps `defineFunction` types its options as `HttpFunctionOptions` or `JobFunctionOptions` and calls `defineFunction` with that type.
 
-| Property      | Type                                              | Required | Description                                                                                                      |
-| ------------- | ------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
-| `name`        | `string`                                          | yes      | Logical name, used in the manifest and Studio                                                                    |
-| `method`      | `"GET" \| "POST" \| "PUT" \| "PATCH" \| "DELETE"` | no\*     | HTTP method. Omit (together with `path`) for a job-only function                                                 |
-| `path`        | `string`                                          | no\*     | URL path, must start with `/`. Supports `:param` segments. Omit (together with `method`) for a job-only function |
-| `input`       | [`ContractSchema`](#declaring-contracts)          | no       | Request contract — validates and types input                                                                     |
-| `output`      | [`ContractSchema`](#declaring-contracts)          | no       | Response contract — types the return value                                                                       |
-| `handler`     | `(input, ctx) => result \| Promise<result>`       | yes      | Business logic                                                                                                   |
-| `description` | `string`                                          | no       | Human-readable description, shown in Studio                                                                      |
-| `tags`        | `string[]`                                        | no       | Tags for grouping in Studio                                                                                      |
+## Options
 
-*\* `method` and `path` must be provided* *together* *or* *both omitted*\*. Providing one without the other throws.\*
+| Property      | Type                                              | Required    | Description                                                                           |
+| ------------- | ------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------- |
+| `name`        | `string`                                          | yes         | Logical name, used in the manifest and Studio                                         |
+| `method`      | `"GET" \| "POST" \| "PUT" \| "PATCH" \| "DELETE"` | HTTP only\* | HTTP method                                                                           |
+| `path`        | `string`                                          | HTTP only\* | URL path, must start with `/`. Supports `:param` segments                             |
+| `input`       | [`ContractSchema`](#declaring-contracts)          | no          | Request contract — validates and types input                                          |
+| `output`      | [`ContractSchema`](#declaring-contracts)          | no          | Response contract: types the return value. Omit it for a handler that returns nothing |
+| `handler`     | `(input, ctx) => result \| Promise<result>`       | yes         | Business logic                                                                        |
+| `description` | `string`                                          | no          | Human-readable description, shown in Studio                                           |
+| `tags`        | `string[]`                                        | no          | Tags for grouping in Studio                                                           |
+
+*\* An HTTP function declares `method` and `path` together; a job-only function declares neither.*
 
 ## HTTP vs. job-only functions
 
 Every function **runs as a job** — callable from a Trigger, a Maestro process, a Flow, or the Orchestrator API — regardless of whether it declares HTTP semantics.
 
 - **Declare `method` + `path`** to *additionally* expose the function as an HTTP endpoint. This is what local `serve` routes to, and the use case for **Coded Apps** backends and API-style integrations.
-- **Omit both** for a **job-only** function. It stays in the manifest and is fully invokable as a job, but gets no HTTP route. When run as a job there is no HTTP request, so `ctx.params` and `ctx.headers` are empty.
+- **Omit both** for a **job-only** function. It stays in the manifest and is fully invokable as a job, but gets no HTTP route. Its handler receives a [`JobContext`](../function-context/#jobcontext) and returns the declared output.
 
 ## handler
 
+An HTTP function's handler:
+
 ```
-handler: async (input: HandlerInput<I>, ctx: FunctionContext) =>
-  | T                  // plain value — serialized as JSON with status 200
-  | FunctionResponse   // { status, body?, headers? } — full control
-  | void               // empty 200 response
+handler: async (input: HandlerInput<I>, ctx: HttpContext) =>
+  | T                                                      // the declared output, serialized as JSON with status 200
+  | FunctionResponse<T>                                    // { status, body?, headers? } carrying the declared output
+  | FunctionResponse<{ error: string; details?: unknown }> // an error body, e.g. badRequest(...)
 ```
+
+`T` is the declared output. Without an `output`, `T` is `void`: the handler returns nothing, `noContent()`, or an error response.
+
+A job-only function's handler returns the declared output, or nothing when it declares no `output`. To fail the job, throw a [`FunctionError`](../function-error/).
+
+```
+handler: async (input: HandlerInput<I>, ctx: JobContext) => T
+```
+
+The runtime fails a job-only function's job with `OutputValidationFailed` when the handler returns a `Response`, or an object with a numeric `status` that no declared `output` accepts.
 
 The handler's `input` parameter is typed from the declared contract: for `defineSchema<T>()` it is `T`; for a JSON Schema literal it is the type derived from the literal. If `output` is declared, `T` must match it the same way.
 
@@ -62,11 +80,16 @@ interface CreateOrderInput {
   note?: string;
 }
 
+interface CreateOrderOutput {
+  ok: boolean;
+}
+
 export default defineFunction({
   name: "create-order",
   method: "POST",
   path: "/orders",
   input: defineSchema<CreateOrderInput>(),
+  output: defineSchema<CreateOrderOutput>(),
   handler: async (input) => ({ ok: true }), // input is CreateOrderInput
 });
 ```
@@ -99,6 +122,12 @@ export default defineFunction({
       note: { type: "string" },
     },
     required: ["customerId", "items"],
+    additionalProperties: false,
+  },
+  output: {
+    type: "object",
+    properties: { ok: { type: "boolean" } },
+    required: ["ok"],
     additionalProperties: false,
   },
   handler: async (input) => ({ ok: true }), // input type is derived from the literal
@@ -263,9 +292,8 @@ export default defineFunction({
   input: defineSchema<ProcessInvoiceInput>(),
   output: defineSchema<ProcessInvoiceOutput>(),
   handler: async (input, ctx) => {
-    // Called as a job — ctx.params/ctx.headers are empty and there is no caller identity
-    // (ctx.user?.accessToken is undefined); use ctx.robot?.accessToken, which the platform
-    // provides for a deployed job.
+    // Called as a job: there is no caller identity (ctx.user?.accessToken is undefined);
+    // use ctx.robot?.accessToken, which the platform provides for a deployed job.
     return { status: "processed" };
   },
 });
@@ -274,10 +302,15 @@ export default defineFunction({
 ### GET with path parameter
 
 ```
+interface Invoice {
+  id: string;
+}
+
 export default defineFunction({
   name: "get-invoice",
   method: "GET",
   path: "/invoices/:id",
+  output: defineSchema<Invoice>(),
   handler: async (input, ctx) => {
     return { id: ctx.params.id };
   },
