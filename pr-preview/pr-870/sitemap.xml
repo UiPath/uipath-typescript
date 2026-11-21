@@ -3429,6 +3429,18 @@
          <lastmod>2026-11-21</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskAppSchema/</loc>
+         <lastmod>2026-11-21</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskAppSchemaGetResponse/</loc>
+         <lastmod>2026-11-21</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskAppSchemaProperty/</loc>
+         <lastmod>2026-11-21</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskAssignment/</loc>
          <lastmod>2026-11-21</lastmod>
     </url>
@@ -3490,6 +3502,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskMethods/</loc>
+         <lastmod>2026-11-21</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskQuickFormSchemaGetResponse/</loc>
          <lastmod>2026-11-21</lastmod>
     </url>
     <url>
@@ -4034,6 +4050,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskGetResponse/</loc>
+         <lastmod>2026-11-21</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskGetSchemaResponse/</loc>
          <lastmod>2026-11-21</lastmod>
     </url>
     <url>
