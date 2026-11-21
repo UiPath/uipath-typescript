@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, expectTypeOf, vi, beforeEach, afterEach } from 'vitest';
 import { executeHttp } from '@/services/integration-service/execution/http-request';
+import type { Connection } from '@/models/integration-service/connections.types';
 import { ValidationError } from '@/core/errors';
 import { FOLDER_KEY, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '@/utils/constants/headers';
 import { resource } from '@/resources';
@@ -55,6 +56,19 @@ describe('executeHttp', () => {
       'Content-Type': 'application/json',
     });
     expect(sentBody()).toEqual({ method: 'GET', url: IS_TEST_CONSTANTS.VENDOR_PATH });
+  });
+
+  it('accepts a Connection input as the connection id', async () => {
+    const { instance } = createServiceTestDependencies();
+    fetchSpy.mockResolvedValue(carrierResponse(vendorSuccess()));
+    const input: { connection: Connection<typeof IS_TEST_CONSTANTS.CONNECTOR_KEY> } = {
+      connection: IS_TEST_CONSTANTS.CONNECTION_ID,
+    };
+
+    await executeHttp(instance, input.connection, IS_TEST_CONSTANTS.VENDOR_PATH);
+
+    expect(fetchSpy.mock.calls[0][0]).toContain(PASSTHROUGH_PATH);
+    expectTypeOf(input.connection).toMatchTypeOf<string>();
   });
 
   it('returns the vendor response, not the Integration Service one', async () => {

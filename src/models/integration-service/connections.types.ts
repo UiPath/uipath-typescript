@@ -115,3 +115,32 @@ export interface ConnectionGetByIdOptions extends IntegrationServiceFolderContex
   /** Include the connector's full configuration blob in the response. */
   includeConfigs?: boolean;
 }
+
+/**
+ * A connection id typed by the key of the connector it belongs to.
+ *
+ * Use it for a coded function input that takes a connection. At run time the value is the
+ * connection id string, so it goes wherever a connection id does: `executeHttp()`,
+ * `executeActivity()`, `execute()` and `connections.getById()`. The connector key exists only in
+ * the type: tools that read the function's input type use it to offer a picker of that
+ * connector's connections. A call that needs the key at run time, such as a version 4
+ * `executeHttp()`, still takes it as `connectorKey`.
+ *
+ * @typeParam ConnectorKey - Key of the connector, e.g. `uipath-zendesk`
+ *
+ * @example
+ * ```typescript
+ * import { executeHttp, type Connection } from '@uipath/uipath-typescript/integration-service';
+ *
+ * interface ListTicketsInput {
+ *   zendesk: Connection<'uipath-zendesk'>;
+ * }
+ *
+ * async function listTickets(sdk: UiPath, { zendesk }: ListTicketsInput) {
+ *   return executeHttp(sdk, zendesk, '/v2/tickets');
+ * }
+ * ```
+ */
+export type Connection<ConnectorKey extends string = string> = string & {
+  readonly __uipathConnector?: ConnectorKey;
+};
