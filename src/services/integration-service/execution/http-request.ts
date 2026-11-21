@@ -169,6 +169,8 @@ class HttpRequestExecution extends ConnectionRequestService {
  *
  * @example
  * ```typescript
+ * import { readFile } from 'node:fs/promises';
+ *
  * // A connector of version 4 or later: pass its version and a full vendor URL
  * const result = await executeHttp(sdk, '<connectionId>', 'https://api.example.com/v2/tickets', 'GET', {
  *   connectorVersion: '4.0.0',
@@ -176,6 +178,7 @@ class HttpRequestExecution extends ConnectionRequestService {
  * });
  *
  * // Upload a file as the vendor request body (version 4 connectors only)
+ * const fileBytes = await readFile('<path-to-file>');
  * const upload = await executeHttp(sdk, '<connectionId>', 'https://api.example.com/v2/files', 'PUT', {
  *   connectorVersion: '4.0.0',
  *   file: { name: 'file', content: fileBytes, contentType: 'application/pdf' },
