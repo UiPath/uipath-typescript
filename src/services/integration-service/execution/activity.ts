@@ -143,7 +143,6 @@ class ActivityExecution extends ConnectionRequestService {
   }
 }
 
-/** Adds the paging state to a single-page result when the connector reported one. */
 /** The caller's retry settings describe the activity's method; the carrier is always a POST. */
 function resolveV4Retry(retry: ExecuteActivityOptions['retry'], method: ExecuteMethod) {
   const resolved = resolveRetryOptions(retry, DEFAULT_API_CLIENT_RETRY);
@@ -151,6 +150,7 @@ function resolveV4Retry(retry: ExecuteActivityOptions['retry'], method: ExecuteM
   return { ...resolved, retryMethods: carrier };
 }
 
+/** Adds the paging state to a single-page result when the connector reported one. */
 function withPage(result: ExecuteActivityResult): ExecuteActivityResult {
   const page = extractPage(result.headers, result.body);
   return page ? { ...result, page } : result;
