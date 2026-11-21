@@ -26,6 +26,10 @@ export interface LoginFields {
   enforceSso?: boolean;
 }
 
+export interface PublicModeFields {
+  appKey?: string;
+}
+
 // Configuration type that enforces either secret or complete OAuth fields
 export type UiPathSDKConfig = BaseConfig & LoginFields & (
   | { secret: string; clientId?: never; redirectUri?: never; scope?: never }
@@ -34,7 +38,11 @@ export type UiPathSDKConfig = BaseConfig & LoginFields & (
 
 // Flexible partial type for constructor input (allows any combination of fields)
 // The isCompleteConfig function validates the final merged config
-export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string } & LoginFields>;
+export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string } & LoginFields & PublicModeFields>;
+
+export function isPublicMode(config: { appKey?: string }): config is { appKey: string } {
+  return Boolean(config.appKey);
+}
 
 // Type guard to check if config has OAuth credentials
 export function hasOAuthConfig(config: { clientId?: string; redirectUri?: string; scope?: string }): config is { clientId: string; redirectUri: string; scope: string } {

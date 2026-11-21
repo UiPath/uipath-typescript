@@ -14,6 +14,7 @@ import { FOLDER_ID } from '../../../utils/constants/headers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
+import { PUBLIC_APP_ENDPOINTS } from '../../../core/http/public-app-client';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
 import { StopStrategy } from '../../../models/orchestrator/processes.types';
@@ -75,7 +76,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     if (!id) {
       throw new ValidationError({ message: 'id is required for getById' });
     }
-    if (!folderId) {
+    if (!folderId && !this.publicApp) {
       throw new ValidationError({ message: 'folderId is required for getById' });
     }
 
@@ -84,7 +85,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
     const response = await this.get<Record<string, unknown>>(
-      JOB_ENDPOINTS.GET_BY_KEY(id),
+      this.publicApp ? PUBLIC_APP_ENDPOINTS.JOB_OUTPUT(id) : JOB_ENDPOINTS.GET_BY_KEY(id),
       {
         params: apiOptions,
         headers,
@@ -95,13 +96,19 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     return createJobWithMethods(rawJob, this);
   }
 
+  getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
+  getOutput(jobKey: string): Promise<Record<string, unknown> | null>;
   @track('Jobs.GetOutput')
-  async getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null> {
+  async getOutput(jobKey: string, folderId?: number): Promise<Record<string, unknown> | null> {
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
-    const job = await this.getById(jobKey, folderId, { select: 'outputArguments,outputFile' });
+    if (folderId === undefined && !this.publicApp) {
+      throw new ValidationError({ message: 'folderId is required for getOutput' });
+    }
+
+    const job = await this.getById(jobKey, folderId as number, { select: 'outputArguments,outputFile' });
 
     if (job.outputArguments) {
       try {

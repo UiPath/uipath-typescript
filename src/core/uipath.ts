@@ -3,8 +3,9 @@ import { DEBUG_CONTEXT_KEY, ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
 import type { DebugContext } from '../models/common/types';
-import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
-import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage } from './config/config-utils';
+import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig, isPublicMode } from './config/sdk-config';
+import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage, hasRequiredBaseFields } from './config/config-utils';
+import { PublicAppClient } from './http/public-app-client';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
@@ -157,7 +158,7 @@ export class UiPath implements IUiPath {
     // override the ambient execution-context environment contract.
     const mergedConfig = UiPath.#mergeConfigSources(configFromMetaTags, resolved);
 
-    if (mergedConfig && isCompleteConfig(mergedConfig)) {
+    if (mergedConfig && (isCompleteConfig(mergedConfig) || (isPublicMode(mergedConfig) && hasRequiredBaseFields(mergedConfig)))) {
       this.#initializeWithConfig(mergedConfig);
     } else {
       if (resolved) {
@@ -169,21 +170,23 @@ export class UiPath implements IUiPath {
     }
   }
 
-  #initializeWithConfig(config: UiPathSDKConfig): void {
+  #initializeWithConfig(config: PartialUiPathConfig): void {
+    const publicMode = isPublicMode(config);
     const hasSecretAuth = hasSecretConfig(config);
-    const hasOAuthAuth = hasOAuthConfig(config);
+    const hasOAuthAuth = !publicMode && hasOAuthConfig(config);
 
     // Initialize core components
     const internalConfig = new UiPathConfig({
-      baseUrl: normalizeBaseUrl(config.baseUrl),
-      orgName: config.orgName,
-      tenantName: config.tenantName,
+      baseUrl: normalizeBaseUrl(config.baseUrl!),
+      orgName: config.orgName!,
+      tenantName: config.tenantName!,
       organizationId: config.organizationId,
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
       scope: hasOAuthAuth ? config.scope : undefined,
       enforceSso: config.enforceSso,
+      appKey: config.appKey,
     });
 
     const executionContext = new ExecutionContext();
@@ -191,7 +194,7 @@ export class UiPath implements IUiPath {
     this.#config = internalConfig;
 
     const tokenManager = this.#authService.getTokenManager();
-    const sessionLicense = hasSecretAuth ? undefined : new SessionLicense(
+    const sessionLicense = hasSecretAuth || publicMode ? undefined : new SessionLicense(
       internalConfig,
       new ApiClient(internalConfig, executionContext, tokenManager),
       SessionStore.open() ?? new MemoryStore(),
@@ -201,6 +204,10 @@ export class UiPath implements IUiPath {
     tokenManager.onDebugJobKey((jobKey) => {
       if (!this.#debugContextSetByApp) executionContext.set(DEBUG_CONTEXT_KEY, { jobKey });
     });
+
+    const publicAppClient = publicMode
+      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appKey!)
+      : undefined;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
@@ -213,6 +220,7 @@ export class UiPath implements IUiPath {
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
       sessionLicense,
+      publicAppClient,
     });
 
     if (this.#pendingDebugContext !== undefined) {
@@ -340,6 +348,12 @@ export class UiPath implements IUiPath {
 
     // For secret-based auth, it's already initialized in constructor
     if (hasSecretConfig(this.#config!)) {
+      return;
+    }
+
+    if (isPublicMode(this.#config!)) {
+      await SDKInternalsRegistry.get(this).publicAppClient?.ensureSession().catch((error) => console.warn('[UiPath SDK] Could not open the public app session; the first call opens it instead:', error));
+      this.#initialized = true;
       return;
     }
 
