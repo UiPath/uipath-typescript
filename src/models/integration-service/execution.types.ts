@@ -171,11 +171,9 @@ export interface ExecuteHttpResult extends ExecuteResult {
 /**
  * Options accepted by {@link executeHttp}.
  */
-export interface ExecuteHttpOptions extends IntegrationServiceFolderContextOptions {
+export interface ExecuteHttpOptions extends ExecuteOptions {
   /** Headers to send to the vendor. The connection's authentication is added for you. */
   headers?: Record<string, string>;
-  /** Query string parameters to send to the vendor. */
-  queryParams?: Record<string, string>;
   /** Body to send to the vendor. A string is sent as is; anything else is serialized as JSON. */
   body?: unknown;
   /**
@@ -205,11 +203,4 @@ export interface ExecuteHttpOptions extends IntegrationServiceFolderContextOptio
    * retried; a vendor error status is returned as the result.
    */
   retry?: RetryOptions;
-  /**
-   * Timeout for a single attempt, in milliseconds. Applies whether or not retrying is enabled;
-   * each retry starts a fresh timeout. Unbounded by default.
-   */
-  timeoutMs?: number;
-  /** Signal for cancelling the request, including any pending retry. */
-  signal?: AbortSignal;
 }
