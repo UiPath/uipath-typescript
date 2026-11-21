@@ -56,3 +56,99 @@ export interface ExecuteOptions extends IntegrationServiceFolderContextOptions {
   /** Signal for cancelling the request, including any pending retry. */
   signal?: AbortSignal;
 }
+
+/**
+ * A file sent with an {@link executeActivity} call.
+ */
+export interface ExecuteFile {
+  /** Name of the form part the connector reads the file from, e.g. `file`. */
+  name: string;
+  /** The file's bytes. */
+  content: Uint8Array | Blob;
+  /** File name reported to the connector. */
+  fileName?: string;
+  /** Content type of the file. Defaults to `application/octet-stream`. */
+  contentType?: string;
+}
+
+/**
+ * Where a paged list stands after an {@link executeActivity} call.
+ */
+export interface ExecutePage {
+  /** True when the connector has more records after this page. */
+  hasMore: boolean;
+  /** Token for the next page. Pass it as the `nextPage` query parameter to fetch that page. */
+  nextPageToken: string;
+}
+
+/**
+ * Result envelope returned by {@link executeActivity}.
+ *
+ * `body` is the parsed JSON when the response is JSON and the raw text otherwise. A file response
+ * (a binary content type, or an attachment that is not JSON, XML, CSV or plain text) is a
+ * `Uint8Array`.
+ */
+export interface ExecuteActivityResult extends ExecuteResult {
+  /**
+   * Paging state of a list response. Absent when the response is not a paged list, when the
+   * connector reported its last page, or when `maxRecords` already gathered the pages.
+   */
+  page?: ExecutePage;
+}
+
+/**
+ * Options accepted by {@link executeActivity}.
+ *
+ * A top-level key of `body` can be a path: `{ 'fields.summary': 'x' }` is sent as
+ * `{ fields: { summary: 'x' } }`. A path can address an array item (`items[0].name`) or every
+ * item of an array (`items[*].name`).
+ */
+export interface ExecuteActivityOptions extends ExecuteOptions {
+  /**
+   * Files to upload. The call is sent as a multipart form with one part per file, and a
+   * non-empty `body` travels as a JSON part named by `bodyPartName`.
+   */
+  files?: ExecuteFile[];
+  /** Name of the form part that carries `body` when `files` is set. Defaults to `body`. */
+  bodyPartName?: string;
+  /**
+   * Names of the query parameters the connector marks as accepting a URL. A listed parameter
+   * whose value is an http or https URL is sent Base64-encoded, which is the form the connector
+   * expects for such a field.
+   */
+  urlInputFields?: string[];
+  /**
+   * Read a successful response as a file: `body` is a `Uint8Array` whatever content type the
+   * connector reports. Without it a file is still detected from the response headers.
+   */
+  fileResponse?: boolean;
+  /**
+   * How many records a `GET` list call should return in total. The call follows the connector's
+   * pages until it has this many records or the list ends, then returns them as one array.
+   * Pass `-1` to fetch every record. Without it a single page is returned, with `page` on the
+   * result when more records exist. Ignored for methods other than `GET`.
+   */
+  maxRecords?: number;
+  /**
+   * Version of the connector behind the connection, e.g. `4.0.0`. A connector of version 4 or
+   * later runs its activities on the version 4 engine, and the call is sent there; without a
+   * version, or with an earlier one, the call uses the version 3 engine.
+   *
+   * On the version 4 engine `objectName` names the activity's script, and `files`,
+   * `fileResponse`, `urlInputFields` and `maxRecords` do not apply.
+   */
+  connectorVersion?: string;
+  /**
+   * Key of the connector behind the connection, e.g. `uipath-salesforce-slack`. Required on the
+   * version 4 engine. Taken from the handle when the connection is a `resource.connection()`
+   * handle.
+   */
+  connectorKey?: string;
+  /**
+   * Reference of the script the version 4 engine runs for this activity, as the activity's
+   * metadata names it. Defaults to `objectName`.
+   */
+  scriptRef?: string;
+  /** Headers the activity's script reads from the call. Version 4 engine only. */
+  headers?: Record<string, string>;
+}

@@ -161,7 +161,7 @@ class Execution extends BaseService {
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { execute } from '@uipath/uipath-typescript/connections';
+ * import { execute } from '@uipath/uipath-typescript/integration-service';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
@@ -256,7 +256,7 @@ export function execute(
  * }
  *
  * // anywhere in the project
- * import { execute } from '@uipath/uipath-typescript/connections';
+ * import { execute } from '@uipath/uipath-typescript/integration-service';
  *
  * const result = await execute(sdk, ProjectResources.helpdesk, 'tickets', 'GET');
  * ```

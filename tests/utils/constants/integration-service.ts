@@ -25,6 +25,26 @@ export const IS_TEST_CONSTANTS = {
   /** `FOLDER_PATH` encoded as base64-of-UTF-16-LE, per the Orchestrator folder-path contract. */
   FOLDER_PATH_ENCODED_VALUE: 'UwBoAGEAcgBlAGQALwBGAGkAbgBhAG4AYwBlAA==',
   FOLDER_DISPLAY_NAME: 'Test Folder',
+  /** Vendor path sent through the HTTP passthrough, resolved against the connection's base URL. */
+  VENDOR_PATH: '/v2/tickets',
+  VENDOR_ERROR_MESSAGE: 'Ticket not found',
+  /** Full vendor URL, which the version 4 engine needs. */
+  VENDOR_URL: 'https://api.example.com/v2/tickets',
+  /** Connector versions on either side of the engine switch. */
+  CONNECTOR_VERSION_V3: '3.2.1',
+  CONNECTOR_VERSION_V4: '4.0.0',
+  FILE_PART_NAME: 'file',
+  FILE_NAME: 'report.pdf',
+  FILE_CONTENT_TYPE: 'application/pdf',
+  /** Boundary of a version 4 two-part answer. */
+  MULTIPART_BOUNDARY: 'ipe-0123456789abcdef0123456789abcdef',
+  /** Page tokens are base64url JSON; these two point at further pages. */
+  PAGE_TOKEN: Buffer.from(JSON.stringify({ providerNextPage: '2' })).toString('base64url'),
+  PAGE_TOKEN_2: Buffer.from(JSON.stringify({ providerNextPage: '3' })).toString('base64url'),
+  /** Token a connector sends with its last page. */
+  PAGE_TOKEN_DONE: Buffer.from(JSON.stringify({ providerNextPage: 'done' })).toString('base64url'),
+  /** Token that is not base64url JSON. */
+  PAGE_TOKEN_OPAQUE: 'not a json token',
   ERROR_CONNECTOR_NOT_FOUND: 'Connector not found',
   ERROR_CONNECTION_NOT_FOUND: 'Connection not found',
 } as const;

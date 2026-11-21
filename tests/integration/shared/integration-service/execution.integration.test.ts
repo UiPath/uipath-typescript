@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { execute } from '../../../../src/services/integration-service/execution/execution';
+import { executeActivity } from '@/services/integration-service/execution/activity';
 import type { UiPath } from '../../../../src/core/uipath';
 import { resource } from '@/resources';
 
@@ -70,4 +71,34 @@ describeIntegration('Integration Service Execute - Integration Tests', 'user', m
       expect(result.status).toBeLessThan(600);
     });
   });
+
+  describe('connector activity', () => {
+    it('should return a successful response for an object the connection exposes', async () => {
+      const result = await retryTransient(() => executeActivity(sdk, connectionId, objectName, 'GET'));
+
+      expect(result.ok, `GET ${objectName} returned ${result.status}`).toBe(true);
+      expect(Object.keys(result.headers).length).toBeGreaterThan(0);
+    });
+
+    it('should return no more than maxRecords records', async () => {
+      const result = await retryTransient(() =>
+        executeActivity(sdk, connectionId, objectName, 'GET', { maxRecords: 1 }),
+      );
+
+      expect(result.ok, `GET ${objectName} with maxRecords returned ${result.status}`).toBe(true);
+      // An object that returns a single record instead of a list is left as it is
+      if (Array.isArray(result.body)) {
+        expect(result.body.length).toBeLessThanOrEqual(1);
+      }
+    });
+
+    it('should surface a non-2xx response as an envelope instead of throwing', async () => {
+      const result = await executeActivity(sdk, connectionId, '__non_existent_object__', 'GET');
+
+      expect(result.ok).toBe(false);
+      expect(result.status).toBeGreaterThanOrEqual(400);
+      expect(result.status).toBeLessThan(600);
+    });
+  });
+
 });
