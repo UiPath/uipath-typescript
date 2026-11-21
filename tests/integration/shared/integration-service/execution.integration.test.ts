@@ -2,16 +2,12 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { execute } from '../../../../src/services/integration-service/execution/execution';
 import { executeActivity } from '@/services/integration-service/execution/activity';
-import { executeHttp } from '@/services/integration-service/execution/http-request';
 import type { UiPath } from '../../../../src/core/uipath';
 import { resource } from '@/resources';
 
 const modes: InitMode[] = ['v1'];
 const EXECUTE_ATTEMPTS = 3;
 const EXECUTE_RETRY_DELAY_MS = 2000;
-// Any path proves the round trip: the vendor's answer to it, even a 404, comes back unwrapped
-const HTTP_PROBE_PATH = '/__sdk_integration_probe__';
-const V4_CONNECTOR_VERSION = '4.0.0';
 
 const isTransientStatus = (status: number): boolean => status === 429 || status >= 500;
 
@@ -105,36 +101,4 @@ describeIntegration('Integration Service Execute - Integration Tests', 'user', m
     });
   });
 
-  describe('HTTP passthrough', () => {
-    it('should send the request to the vendor and return its response', async () => {
-      const result = await retryTransient(() => executeHttp(sdk, connectionId, HTTP_PROBE_PATH, 'GET'));
-
-      // The vendor decides the status. A call that never reached it is not ok and not a vendor error.
-      expect(result.status).toBeGreaterThanOrEqual(200);
-      expect(result.status).toBeLessThan(600);
-      expect(result.isVendorError, `GET ${HTTP_PROBE_PATH} returned ${result.status}`).toBe(!result.ok);
-    });
-
-    it('should reach the same connection from a resource.connection() handle', async () => {
-      const connection = resource.connection({ id: connectionId, connector: connectorKey });
-      const byId = await retryTransient(() => executeHttp(sdk, connectionId, HTTP_PROBE_PATH, 'GET'));
-      const byHandle = await retryTransient(() => executeHttp(sdk, connection, HTTP_PROBE_PATH, 'GET'));
-
-      expect(byHandle.status).toBe(byId.status);
-      expect(byHandle.isVendorError).toBe(byId.isVendorError);
-    });
-  });
-
-  describe('HTTP passthrough on the version 4 engine', () => {
-    it('should route a version 4 connector to the version 4 engine', async () => {
-      // The engine takes full URLs only, so its refusal of a path proves the call reached it
-      const result = await retryTransient(() =>
-        executeHttp(sdk, connectionId, HTTP_PROBE_PATH, 'GET', { connectorVersion: V4_CONNECTOR_VERSION, connectorKey }),
-      );
-
-      expect(result.ok).toBe(false);
-      expect(result.isVendorError).toBe(false);
-      expect(result.body).toMatchObject({ error: { kind: expect.any(String) } });
-    });
-  });
 });

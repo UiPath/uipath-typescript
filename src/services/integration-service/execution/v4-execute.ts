@@ -1,21 +1,12 @@
 import { ServerError } from '@/core/errors';
-import { CONTENT_TYPES } from '@/utils/constants/headers';
 import { decodeBase64ToBytes } from './encoding';
-import type {
-  ExecuteFile,
-  ExecuteHttpResult,
-  ExecuteMethod,
-  ExecuteResult,
-} from '@/models/integration-service/execution.types';
+import type { ExecuteResult } from '@/models/integration-service/execution.types';
 import { headerValue } from './response-content';
-import { toBlob } from './multipart';
 
 /** First connector major version that runs on the version 4 engine. */
 const V4_MAJOR_VERSION = 4;
 const MAJOR_VERSION_RE = /^v?(\d+)(?:\.|$)/i;
 
-/** Name of the form part that carries the request description when a file is uploaded. */
-const MANIFEST_PART_NAME = 'manifest';
 const BASE64_ENCODING = 'base64';
 const CONTENT_TYPE = 'content-type';
 const MULTIPART_MIXED = 'multipart/mixed';
@@ -23,41 +14,6 @@ const BOUNDARY_RE = /boundary="?([^";]+)"?/i;
 
 const CRLF = [13, 10];
 const HEADER_END = [13, 10, 13, 10];
-
-/**
- * The request the version 4 engine accepts: one vendor call and the connection to make it with.
- *
- * @internal
- */
-export interface V4Manifest {
-  outboundRequestConfig: {
-    method: ExecuteMethod;
-    url: string;
-    headers?: { name: string; value: string }[];
-    /** Body as text. Exclusive with `bodyRef`. */
-    body?: string;
-    /** Name of the attachment sent as the whole body. */
-    bodyRef?: string;
-  };
-  attachments?: { name: string; size: number; contentType: string }[];
-  context: { connectionId: string; connectorKey?: string };
-}
-
-/**
- * What a vendor call through the version 4 engine is built from.
- *
- * @internal
- */
-export interface V4RequestInput {
-  connectionId: string;
-  connectorKey?: string;
-  method: ExecuteMethod;
-  url: string;
-  headers?: Record<string, string>;
-  queryParams?: Record<string, string>;
-  body?: unknown;
-  file?: ExecuteFile;
-}
 
 /**
  * The request the version 4 engine accepts to run a connector activity: the script to run and
@@ -84,6 +40,16 @@ export interface V4ActivityInput {
   headers?: Record<string, string>;
 }
 
+/**
+ * The vendor's response as the version 4 engine reported it.
+ *
+ * @internal
+ */
+export interface V4VendorResult extends ExecuteResult {
+  /** True when the vendor answered with a non-2xx status; false when the engine never reached it. */
+  isVendorError: boolean;
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -98,46 +64,6 @@ export function usesV4Engine(connectorVersion: string | undefined): boolean {
   if (!connectorVersion) return false;
   const match = MAJOR_VERSION_RE.exec(connectorVersion.trim());
   return match !== null && Number(match[1]) >= V4_MAJOR_VERSION;
-}
-
-/**
- * Builds the version 4 request for one vendor call. The engine sends the body as given and has
- * no query field, so query parameters join the URL and a serialized body is labelled as JSON.
- *
- * @param input - The vendor call
- * @returns The request description
- * @internal
- */
-export function buildV4Manifest(input: V4RequestInput): V4Manifest {
-  const headers = { ...input.headers };
-
-  let body: string | undefined;
-  if (input.body !== undefined && input.body !== null) {
-    if (typeof input.body === 'string') {
-      body = input.body;
-    } else {
-      body = JSON.stringify(input.body);
-      if (headerValue(headers, CONTENT_TYPE) === undefined) headers['Content-Type'] = CONTENT_TYPES.JSON;
-    }
-  }
-
-  const headerList = Object.entries(headers).map(([name, value]) => ({ name, value }));
-
-  const manifest: V4Manifest = {
-    outboundRequestConfig: { method: input.method, url: withQuery(input.url, input.queryParams) },
-    context: { connectionId: input.connectionId },
-  };
-  if (headerList.length > 0) manifest.outboundRequestConfig.headers = headerList;
-  if (input.connectorKey) manifest.context.connectorKey = input.connectorKey;
-
-  if (input.file) {
-    const blob = toBlob(input.file);
-    manifest.outboundRequestConfig.bodyRef = input.file.name;
-    manifest.attachments = [{ name: input.file.name, size: blob.size, contentType: blob.type }];
-  } else if (body !== undefined) {
-    manifest.outboundRequestConfig.body = body;
-  }
-  return manifest;
 }
 
 /**
@@ -164,21 +90,6 @@ export function buildV4ActivityManifest(input: V4ActivityInput): V4ActivityManif
 }
 
 /**
- * The form for a version 4 call that uploads a file: the request description first, then the file.
- *
- * @param manifest - The request description, naming the file as its body
- * @param file - The file to send as the vendor request body
- * @returns The form to send
- * @internal
- */
-export function buildV4UploadForm(manifest: V4Manifest, file: ExecuteFile): FormData {
-  const form = new FormData();
-  form.append(MANIFEST_PART_NAME, new Blob([JSON.stringify(manifest)], { type: CONTENT_TYPES.JSON }));
-  form.append(file.name, toBlob(file), file.fileName ?? file.name);
-  return form;
-}
-
-/**
  * Turns the version 4 engine's answer into the vendor's response.
  *
  * The engine answers 2xx whenever it reached the vendor and reports the vendor's status, headers
@@ -190,7 +101,7 @@ export function buildV4UploadForm(manifest: V4Manifest, file: ExecuteFile): Form
  * @returns The vendor's response, or the engine's own response when it did not reach the vendor
  * @internal
  */
-export function unwrapV4Response(result: ExecuteResult): ExecuteHttpResult {
+export function unwrapV4Response(result: ExecuteResult): V4VendorResult {
   if (!result.ok) return { ...result, isVendorError: false };
 
   if (result.body instanceof Uint8Array) {
@@ -208,13 +119,7 @@ export function unwrapV4Response(result: ExecuteResult): ExecuteHttpResult {
   return toVendorResult(result.body, decoded);
 }
 
-function withQuery(url: string, queryParams: Record<string, string> | undefined): string {
-  if (!queryParams || Object.keys(queryParams).length === 0) return url;
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}${new URLSearchParams(queryParams).toString()}`;
-}
-
-function toVendorResult(envelope: Record<string, unknown>, body: unknown): ExecuteHttpResult {
+function toVendorResult(envelope: Record<string, unknown>, body: unknown): V4VendorResult {
   const status = typeof envelope.status === 'number' ? envelope.status : 0;
   const ok = status >= 200 && status < 300;
   return {

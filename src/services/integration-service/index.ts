@@ -16,7 +16,6 @@
  *   Elements,
  *   execute,
  *   executeActivity,
- *   executeHttp,
  * } from '@uipath/uipath-typescript/integration-service';
  *
  * const sdk = new UiPath(config);
@@ -32,8 +31,6 @@
  * const objects = await elements.getObjects('uipath-slack');
  *
  * const result = await execute(sdk, '<connectionId>', 'tickets', 'GET');
- *
- * const vendorResponse = await executeHttp(sdk, '<connectionId>', '/v2/tickets');
  * ```
  *
  * @module
@@ -45,7 +42,6 @@ export { ConnectionsService as Connections, ConnectionsService } from './connect
 export { ElementsService as Elements, ElementsService } from './elements/elements';
 export { execute } from './execution/execution';
 export { executeActivity } from './execution/activity';
-export { executeHttp } from './execution/http-request';
 
 // Re-export service-specific types
 export * from '../../models/integration-service';

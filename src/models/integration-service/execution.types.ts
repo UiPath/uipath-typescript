@@ -58,7 +58,7 @@ export interface ExecuteOptions extends IntegrationServiceFolderContextOptions {
 }
 
 /**
- * A file sent with an {@link executeActivity} or {@link executeHttp} call.
+ * A file sent with an {@link executeActivity} call.
  */
 export interface ExecuteFile {
   /** Name of the form part the connector reads the file from, e.g. `file`. */
@@ -151,65 +151,4 @@ export interface ExecuteActivityOptions extends ExecuteOptions {
   scriptRef?: string;
   /** Headers the activity's script reads from the call. Version 4 engine only. */
   headers?: Record<string, string>;
-}
-
-/**
- * Result returned by {@link executeHttp}.
- *
- * `ok`, `status`, `statusText`, `headers` and `body` describe the vendor's response, not the
- * Integration Service call that carried it. Like {@link execute}, this does not throw on
- * non-2xx responses.
- */
-export interface ExecuteHttpResult extends ExecuteResult {
-  /**
-   * True when the vendor answered with a non-2xx status. False when the call failed before
-   * reaching the vendor, in which case the fields describe the Integration Service response.
-   */
-  isVendorError: boolean;
-}
-
-/**
- * Options accepted by {@link executeHttp}.
- */
-export interface ExecuteHttpOptions extends IntegrationServiceFolderContextOptions {
-  /** Headers to send to the vendor. The connection's authentication is added for you. */
-  headers?: Record<string, string>;
-  /** Query string parameters to send to the vendor. */
-  queryParams?: Record<string, string>;
-  /** Body to send to the vendor. A string is sent as is; anything else is serialized as JSON. */
-  body?: unknown;
-  /**
-   * Version of the connector behind the connection, e.g. `4.0.0`. A connector of version 4 or
-   * later runs on the version 4 engine, and the call is sent there; without a version, or with
-   * an earlier one, the call uses the version 3 engine.
-   *
-   * On the version 4 engine `url` must be a full URL, and a vendor file or large body comes
-   * back as a `Uint8Array`.
-   */
-  connectorVersion?: string;
-  /**
-   * Key of the connector behind the connection, e.g. `uipath-zendesk`. Used on the version 4
-   * engine. Taken from the handle when the connection is a `resource.connection()` handle.
-   */
-  connectorKey?: string;
-  /**
-   * A file to send as the whole body of the vendor request. Needs a version 4 connector, and
-   * cannot be combined with `body`.
-   */
-  file?: ExecuteFile;
-  /**
-   * Retry and backoff behavior for this call. Retrying is off unless `maxRetries` is set.
-   *
-   * `retryMethods` is matched against the method sent to the vendor, so by default a `GET`
-   * is retried and a `POST` is not. Only a failure of the Integration Service call itself is
-   * retried; a vendor error status is returned as the result.
-   */
-  retry?: RetryOptions;
-  /**
-   * Timeout for a single attempt, in milliseconds. Applies whether or not retrying is enabled;
-   * each retry starts a fresh timeout. Unbounded by default.
-   */
-  timeoutMs?: number;
-  /** Signal for cancelling the request, including any pending retry. */
-  signal?: AbortSignal;
 }
