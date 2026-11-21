@@ -59,6 +59,18 @@ const slack = await new Connections(sdk).getById(ProjectResources.financeSlack);
 const result = await execute(sdk, ProjectResources.financeSlack, 'channels', 'GET');
 ```
 
+A handle fixes the connection when you write the code. When the caller picks the connection, as with a coded function input, type the input as `Connection<'<connectorKey>'>` instead. The value is a plain connection id, and the connector key in the type tells tools which connector's connections to offer.
+
+```typescript
+import { executeHttp, type Connection } from '@uipath/uipath-typescript/integration-service';
+
+interface ListChannelsInput {
+  slack: Connection<'uipath-salesforce-slack'>;
+}
+
+const result = await executeHttp(sdk, input.slack, '/conversations.list');
+```
+
 ### What the handle resolves to
 
 `handle.value` is the name and folder the SDK will actually send, after any override published for the binding has been applied. It is computed on each read, so it always reflects the current overrides. An override whose folder is `'.'` or empty points at the folder the code runs in, so `value` carries no `folderPath` and the call uses the SDK's own folder context.
