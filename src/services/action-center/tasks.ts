@@ -1,7 +1,7 @@
 import { ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { DEFAULT_TASK_EXPAND, TaskMap, TaskSchemaMap, TaskStatusMap } from '../../models/action-center/tasks.constants';
-import { TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
+import { RawAppTaskSchemaFields, TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskBoundOperations, TaskGetFormOptions, TaskSchemaSource, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
 import {
   TaskCreateResponse,
   TaskDataGetResponse,
@@ -19,6 +19,7 @@ import {
   TaskEditMetadataOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
+  TaskGetSchemaResponse,
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
   TaskSaveDataOptions,
@@ -44,6 +45,11 @@ import { FolderScopedService } from '../folder-scoped';
  * Service for interacting with UiPath Tasks API
  */
 export class TaskService extends FolderScopedService implements TaskServiceModel {
+  // Task objects call these for the task they describe: they already hold its type and keys.
+  private readonly boundOperations: TaskBoundOperations = {
+    getSchema: (task, options) => this.getBoundSchema(task, options)
+  };
+
   @track('Tasks.Create')
   async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
     if (task.type === TaskType.QuickForm && !task.taskSchemaKey) {
@@ -66,7 +72,7 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     // Transform time fields for consistency
     const normalizedData = transformData(response.data, TaskMap);
     const transformedData = applyDataTransforms(normalizedData, { field: 'status', valueMap: TaskStatusMap });
-    return createTaskWithMethods(transformedData, this) as TaskCreateResponse;
+    return createTaskWithMethods(transformedData, this, this.boundOperations) as TaskCreateResponse;
   }
 
   @track('Tasks.GetUsers')
@@ -121,7 +127,8 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
       const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskMap);
       return createTaskWithMethods(
         applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
-        this
+        this,
+        this.boundOperations
       ) as TaskGetResponse;
     };
 
@@ -189,7 +196,8 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
 
     return createTaskWithMethods(
       applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
-      this
+      this,
+      this.boundOperations
     ) as TaskGetResponse;
   }
 
@@ -311,6 +319,7 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     return this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_KEY, { taskKey: key }, headers);
   }
 
+  /** @experimental */
   @track('Tasks.GetSchemaByKey')
   async getSchemaByKey(key: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse> {
     if (!key) {
@@ -318,13 +327,7 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     }
 
     const headers = this.resolveFolder(options, 'Tasks.getSchemaByKey');
-    const response = await this.get<Record<string, unknown>>(
-      TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
-      { params: { key }, headers }
-    );
-    // The schema body is user-defined: keep its keys verbatim, transform only the envelope.
-    const { schema, ...envelope } = response.data;
-    return { ...transformData(envelope, TaskSchemaMap), schema } as unknown as TaskSchemaGetResponse;
+    return this.fetchSchemaByKey(key, headers);
   }
 
   private async fetchTaskData(endpoint: string, params: Record<string, string | number>, headers: Record<string, string>): Promise<TaskDataGetResponse> {
@@ -336,6 +339,50 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     const transformed = transformData(systemFields, TaskMap) as TaskDataGetResponse;
     const withStatus = applyDataTransforms(transformed, { field: 'status', valueMap: TaskStatusMap }) as TaskDataGetResponse;
     return { ...withStatus, data: (userPayload ?? null) as Record<string, unknown> | null };
+  }
+
+  /** @experimental */
+  @track('Tasks.GetSchema')
+  async getSchema(taskId: number, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
+    return this.readSchema({ id: taskId }, options);
+  }
+
+  // The bound path reports under the same event as the id-based method.
+  @track('Tasks.GetSchema')
+  private async getBoundSchema(task: TaskSchemaSource, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
+    return this.readSchema(task, options);
+  }
+
+  private async readSchema(task: TaskSchemaSource, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
+    if (!task.id) {
+      throw new ValidationError({ message: 'taskId is required for getSchema' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.getSchema');
+
+    // An App task's schema is read by task key and a QuickForm task's by schema key.
+    // Look them up by id when they are not already known.
+    let { type, key, taskSchemaKey } = task;
+    if (!type || (type === TaskType.App && !key) || (type === TaskType.QuickForm && !taskSchemaKey)) {
+      const fetched = await this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID, { taskId: task.id }, headers);
+      type = fetched.type;
+      key = fetched.key;
+      taskSchemaKey = fetched.taskSchemaKey;
+    }
+
+    switch (type) {
+      case TaskType.App:
+        return key ? this.fetchAppTaskSchema(key, headers) : null;
+      case TaskType.QuickForm: {
+        if (!taskSchemaKey) {
+          return null;
+        }
+        const schema = await this.fetchSchemaByKey(taskSchemaKey, headers);
+        return { ...schema, type: TaskType.QuickForm };
+      }
+      default:
+        return null;
+    }
   }
 
   @track('Tasks.SaveData')
@@ -466,6 +513,28 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
   }
 
   /**
+   * Reads the schema of an App task. Null when the task carries no schema.
+   */
+  private async fetchAppTaskSchema(taskKey: string, headers: Record<string, string>): Promise<TaskGetSchemaResponse | null> {
+    const response = await this.get<RawAppTaskSchemaFields>(TASK_ENDPOINTS.GET_APP_TASK_BY_KEY, { params: { taskKey }, headers });
+    const schema = response.data.taskSchema;
+    return schema ? { type: TaskType.App, schema } : null;
+  }
+
+  /**
+   * Reads a registered task schema by its key.
+   */
+  private async fetchSchemaByKey(key: string, headers: Record<string, string>): Promise<TaskSchemaGetResponse> {
+    const response = await this.get<Record<string, unknown>>(
+      TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
+      { params: { key }, headers }
+    );
+    // The schema body is user-defined: keep its keys verbatim, transform only the envelope.
+    const { schema, ...envelope } = response.data;
+    return { ...transformData(envelope, TaskSchemaMap), schema } as unknown as TaskSchemaGetResponse;
+  }
+
+  /**
    * Routes to the type-specific endpoint based on task type.
    */
   private getByTaskType(id: number, folderId: number, taskType: TaskType, options: BaseOptions = {}): Promise<TaskGetResponse> {
@@ -499,7 +568,8 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     const transformedTask = transformData(response.data, TaskMap);
     return createTaskWithMethods(
       applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
-      this
+      this,
+      this.boundOperations
     ) as TaskGetResponse;
   }
 

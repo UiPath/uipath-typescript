@@ -32,6 +32,7 @@ import { SDKInternalsRegistry } from '../../../core/internals';
 import type { SessionLicense } from '../../../core/licensing/session-license';
 import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../core/context/execution';
 import type { DebugContext } from '../../../models/common/types';
+import { PUBLIC_APP_ENDPOINTS, publicBindingKey } from '../../../core/http/public-app-client';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -140,6 +141,22 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       queryOptions = rest;
     }
 
+    const toStartResponses = (data?: CollectionResponse<ProcessStartResponse>) =>
+      (data?.value ?? []).map(process => transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap));
+
+    if (this.publicApp) {
+      const name = looksLikeRef ? (firstArg as ProcessRef).name : (firstArg as ProcessStartRequest).processName;
+      if (!name) {
+        throw new ValidationError({
+          message: 'Processes.start: a public app starts a process by its binding name (`{ name }`), not by key.',
+        });
+      }
+      const inputArguments = looksLikeRef ? startInfoExtras.inputArguments : (firstArg as ProcessStartRequest).inputArguments;
+      const bindingKey = publicBindingKey(name, (firstArg as { folderPath?: string }).folderPath ?? folderPath);
+      const response = await this.post<CollectionResponse<ProcessStartResponse>>(PUBLIC_APP_ENDPOINTS.START_JOB(bindingKey), { inputArguments });
+      return toStartResponses(response.data);
+    }
+
     // Resolve the effective identity + folderPath. Overrides apply to name/key on both the
     // new ref form and the legacy processName/processKey path — matching Assets and Queues.
     const identity = looksLikeRef
@@ -194,11 +211,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       }
     );
 
-    const transformedProcess = response.data?.value.map(process =>
-      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
-    );
-
-    return transformedProcess;
+    return toStartResponses(response.data);
   }
 
   @track('Processes.GetById')
