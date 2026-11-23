@@ -53,10 +53,8 @@ describe('extractPage', () => {
     expect(page?.hasMore).toBe(true);
   });
 
-  it('reports hasMore false when the flag is not true', () => {
-    const page = extractPage(pagingHeaders('false', IS_TEST_CONSTANTS.PAGE_TOKEN), RECORDS);
-
-    expect(page).toEqual({ hasMore: false, nextPageToken: IS_TEST_CONSTANTS.PAGE_TOKEN });
+  it('returns undefined when the flag is not true, even with a token', () => {
+    expect(extractPage(pagingHeaders('false', IS_TEST_CONSTANTS.PAGE_TOKEN), RECORDS)).toBeUndefined();
   });
 
   it('returns undefined when the has-more header is missing', () => {
@@ -81,10 +79,14 @@ describe('extractPage', () => {
     expect(extractPage(headers, RECORDS)).toBeUndefined();
   });
 
-  it('keeps a token it cannot decode and warns', () => {
+  it('keeps a token it cannot decode and warns once however many pages carry one', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.resetModules();
+    const fresh = await import('@/services/integration-service/execution/pagination');
+    const headers = pagingHeaders('true', IS_TEST_CONSTANTS.PAGE_TOKEN_OPAQUE);
 
-    const page = extractPage(pagingHeaders('true', IS_TEST_CONSTANTS.PAGE_TOKEN_OPAQUE), RECORDS);
+    const page = fresh.extractPage(headers, RECORDS);
+    fresh.extractPage(headers, RECORDS);
 
     expect(page).toEqual({ hasMore: true, nextPageToken: IS_TEST_CONSTANTS.PAGE_TOKEN_OPAQUE });
     expect(warn).toHaveBeenCalledTimes(1);

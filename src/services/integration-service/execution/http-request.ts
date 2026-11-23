@@ -1,8 +1,7 @@
 import { track } from '@/core/telemetry';
 import { ValidationError } from '@/core/errors';
-import { ELEMENT_ENDPOINTS, ELEMENT_V4_ENDPOINTS } from '@/utils/constants/endpoints';
+import { ELEMENT_ENDPOINTS } from '@/utils/constants/endpoints';
 import { resolveConnectionTarget } from '@/services/integration-service/connection-target';
-import { resolveRetryOptions, DEFAULT_API_CLIENT_RETRY } from '@/utils/http/retry-policy';
 import type { ConnectionResource } from '@/resources';
 import type { IUiPath } from '@/core/types';
 import type {
@@ -10,15 +9,10 @@ import type {
   ExecuteHttpResult,
   ExecuteMethod,
 } from '@/models/integration-service/execution.types';
-import { ConnectionRequestService } from './connection-request';
+import { CARRIER_METHOD, ConnectionRequestService, resolveCarrierRetry } from './connection-request';
 import { unwrapProxyResponse } from './proxy-response';
-import { validateFiles } from './multipart';
-import { buildV4Manifest, buildV4UploadForm, unwrapV4Response, usesV4Engine } from './v4-execute';
 
 const RESOURCE_TYPE = 'Execution.executeHttp';
-
-/** Method of the Integration Service call that carries the vendor request. */
-const CARRIER_METHOD: ExecuteMethod = 'POST';
 
 /**
  * Internal class so we can decorate `executeHttp` with `@track`. Method decorators
@@ -39,60 +33,18 @@ class HttpRequestExecution extends ConnectionRequestService {
       throw new ValidationError({ message: 'url is required for executeHttp' });
     }
 
-    const onV4 = usesV4Engine(options.connectorVersion);
-    if (options.file) {
-      if (!onV4) {
-        throw new ValidationError({ message: 'file needs a version 4 connector: pass connectorVersion' });
-      }
-      if (options.body !== undefined) {
-        throw new ValidationError({ message: 'file and body cannot both be passed to executeHttp' });
-      }
-      validateFiles([options.file], 'executeHttp');
-    }
-
-    // The caller's retry settings describe the vendor request, which always travels in a POST
-    const retry = resolveRetryOptions(options.retry, DEFAULT_API_CLIENT_RETRY);
-    const carrierRetry = { ...retry, retryMethods: retry.retryMethods.includes(method) ? [CARRIER_METHOD] : [] };
-
-    const carrier = {
-      method: CARRIER_METHOD,
-      retry: carrierRetry,
-      timeoutMs: options.timeoutMs,
-      signal: options.signal,
-      folderId: options.folderId,
-      folderKey: options.folderKey,
-      folderPath: options.folderPath,
-    };
-
-    if (onV4) {
-      const manifest = buildV4Manifest({
-        connectionId: target.id,
-        connectorKey: options.connectorKey ?? (typeof connection === 'string' ? undefined : connection.connector),
-        method,
-        url,
-        headers: options.headers,
-        queryParams: options.queryParams,
-        body: options.body,
-        file: options.file,
-      });
-      const result = await this.send(
-        target,
-        {
-          ...carrier,
-          path: ELEMENT_V4_ENDPOINTS.EXECUTE,
-          body: manifest,
-          form: options.file ? buildV4UploadForm(manifest, options.file) : undefined,
-        },
-        RESOURCE_TYPE,
-      );
-      return unwrapV4Response(result);
-    }
-
     const result = await this.send(
       target,
       {
-        ...carrier,
         path: ELEMENT_ENDPOINTS.INSTANCE.HTTP_REQUEST(target.id),
+        // The vendor request travels in the body of a POST, whatever its own method
+        method: CARRIER_METHOD,
+        retry: resolveCarrierRetry(options.retry, method),
+        timeoutMs: options.timeoutMs,
+        signal: options.signal,
+        folderId: options.folderId,
+        folderKey: options.folderKey,
+        folderPath: options.folderPath,
         body: {
           method,
           url,
@@ -164,24 +116,6 @@ class HttpRequestExecution extends ConnectionRequestService {
  *   headers: { 'X-Request-Source': 'my-app' },
  *   queryParams: { notify: 'true' },
  *   body: { subject: 'New ticket', priority: 'high' },
- * });
- * ```
- *
- * @example
- * ```typescript
- * import { readFile } from 'node:fs/promises';
- *
- * // A connector of version 4 or later: pass its version and a full vendor URL
- * const result = await executeHttp(sdk, '<connectionId>', 'https://api.example.com/v2/tickets', 'GET', {
- *   connectorVersion: '4.0.0',
- *   connectorKey: 'my-connector',
- * });
- *
- * // Upload a file as the vendor request body (version 4 connectors only)
- * const fileBytes = await readFile('<path-to-file>');
- * const upload = await executeHttp(sdk, '<connectionId>', 'https://api.example.com/v2/files', 'PUT', {
- *   connectorVersion: '4.0.0',
- *   file: { name: 'file', content: fileBytes, contentType: 'application/pdf' },
  * });
  * ```
  *

@@ -91,6 +91,13 @@ export interface IntegrationConfig {
   integrationServiceTestObjectName?: string;
   integrationServiceTestEventOperation?: string;
   /**
+   * A connection on a connector that runs on the version 4 engine, and one of that connector's
+   * activities to run. Required by the version 4 Execute tests.
+   */
+  integrationServiceTestV4ConnectorKey?: string;
+  integrationServiceTestV4ConnectionId?: string;
+  integrationServiceTestV4ScriptRef?: string;
+  /**
    * Trace GUID used by the Agent Traces span tests. The trace must exist in the
    * test tenant and have at least one span; suites guard on it and throw when unset.
    */
@@ -192,6 +199,9 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     integrationServiceTestConnectionId: typeof rawConfig.integrationServiceTestConnectionId === 'string' ? rawConfig.integrationServiceTestConnectionId : undefined,
     integrationServiceTestObjectName: typeof rawConfig.integrationServiceTestObjectName === 'string' ? rawConfig.integrationServiceTestObjectName : undefined,
     integrationServiceTestEventOperation: typeof rawConfig.integrationServiceTestEventOperation === 'string' ? rawConfig.integrationServiceTestEventOperation : undefined,
+    integrationServiceTestV4ConnectorKey: typeof rawConfig.integrationServiceTestV4ConnectorKey === 'string' ? rawConfig.integrationServiceTestV4ConnectorKey : undefined,
+    integrationServiceTestV4ConnectionId: typeof rawConfig.integrationServiceTestV4ConnectionId === 'string' ? rawConfig.integrationServiceTestV4ConnectionId : undefined,
+    integrationServiceTestV4ScriptRef: typeof rawConfig.integrationServiceTestV4ScriptRef === 'string' ? rawConfig.integrationServiceTestV4ScriptRef : undefined,
     tracesTestTraceId: typeof rawConfig.tracesTestTraceId === 'string' ? rawConfig.tracesTestTraceId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
@@ -254,6 +264,9 @@ export function loadIntegrationConfig(): IntegrationConfig {
     integrationServiceTestConnectionId: process.env.INTEGRATION_SERVICE_TEST_CONNECTION_ID || undefined,
     integrationServiceTestObjectName: process.env.INTEGRATION_SERVICE_TEST_OBJECT_NAME || undefined,
     integrationServiceTestEventOperation: process.env.INTEGRATION_SERVICE_TEST_EVENT_OPERATION || undefined,
+    integrationServiceTestV4ConnectorKey: process.env.INTEGRATION_SERVICE_TEST_V4_CONNECTOR_KEY || undefined,
+    integrationServiceTestV4ConnectionId: process.env.INTEGRATION_SERVICE_TEST_V4_CONNECTION_ID || undefined,
+    integrationServiceTestV4ScriptRef: process.env.INTEGRATION_SERVICE_TEST_V4_SCRIPT_REF || undefined,
     tracesTestTraceId: process.env.TRACES_TEST_TRACE_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,

@@ -10,7 +10,14 @@ import type {
   ExecuteActivityOptions,
   ExecuteActivityResult,
 } from '@/models/integration-service/execution.types';
-import { BODY_METHODS, ConnectionRequestService, type ConnectionRequest } from './connection-request';
+import {
+  BODY_METHODS,
+  CARRIER_METHOD,
+  ConnectionRequestService,
+  resolveCarrierRetry,
+  resolveConnectorKey,
+  type ConnectionRequest,
+} from './connection-request';
 import { NEXT_PAGE_PARAM, extractPage, resolveMaxRecords, stripPaginationHeaders } from './pagination';
 import { expandBodyPaths, isPlainRecord } from './body-paths';
 import { buildMultipartForm, validateFiles } from './multipart';
@@ -18,6 +25,26 @@ import { encodeUrlInputs } from './url-input';
 import { buildV4ActivityManifest, unwrapV4Response, usesV4Engine } from './v4-execute';
 
 const RESOURCE_TYPE = 'Execution.executeActivity';
+
+/** Options that belong to one engine only; passing one to the other engine is refused. */
+const V3_ONLY_OPTIONS = ['files', 'bodyPartName', 'urlInputFields', 'fileResponse', 'maxRecords'] as const;
+const V4_ONLY_OPTIONS = ['scriptRef', 'headers'] as const;
+
+/** True when the caller set an option to something that asks for work: not `undefined`, `false` or an empty list. */
+function isSet(value: unknown): boolean {
+  if (value === undefined || value === false) return false;
+  return !Array.isArray(value) || value.length > 0;
+}
+
+/** Refuses the options the engine in use cannot honour, so none is dropped without a word. */
+function assertEngineOptions(options: ExecuteActivityOptions, onV4: boolean): void {
+  const refused = (onV4 ? V3_ONLY_OPTIONS : V4_ONLY_OPTIONS).filter((name) => isSet(options[name]));
+  if (refused.length === 0) return;
+  const engine = onV4 ? 'on a version 4 connector' : 'without a version 4 connector';
+  throw new ValidationError({
+    message: `${refused.join(', ')} ${refused.length === 1 ? 'is' : 'are'} not supported by executeActivity ${engine}`,
+  });
+}
 
 /**
  * Internal class so we can decorate `executeActivity` with `@track`. Method decorators
@@ -43,11 +70,11 @@ class ActivityExecution extends ConnectionRequestService {
 
     const body = isPlainRecord(options.body) ? expandBodyPaths(options.body) : options.body;
 
-    if (usesV4Engine(options.connectorVersion)) {
-      if (files) {
-        throw new ValidationError({ message: 'files are not supported by executeActivity on a version 4 connector' });
-      }
-      const connectorKey = options.connectorKey ?? (typeof connection === 'string' ? undefined : connection.connector);
+    const onV4 = usesV4Engine(options.connectorVersion);
+    assertEngineOptions(options, onV4);
+
+    if (onV4) {
+      const connectorKey = resolveConnectorKey(connection, options.connectorKey);
       if (!connectorKey) {
         throw new ValidationError({ message: 'connectorKey is required for executeActivity on a version 4 connector' });
       }
@@ -56,7 +83,7 @@ class ActivityExecution extends ConnectionRequestService {
         {
           path: ELEMENT_V4_ENDPOINTS.EXECUTE,
           // The activity always travels in a POST; `method` is the activity's own operation
-          method: 'POST',
+          method: CARRIER_METHOD,
           body: buildV4ActivityManifest({
             connectionId: target.id,
             connectorKey,
@@ -65,7 +92,7 @@ class ActivityExecution extends ConnectionRequestService {
             queryParams: options.queryParams,
             headers: options.headers,
           }),
-          retry: resolveV4Retry(options.retry, method),
+          retry: resolveCarrierRetry(options.retry, method),
           timeoutMs: options.timeoutMs,
           signal: options.signal,
           folderId: options.folderId,
@@ -141,13 +168,6 @@ class ActivityExecution extends ConnectionRequestService {
       headers: stripPaginationHeaders(last.headers),
     };
   }
-}
-
-/** The caller's retry settings describe the activity's method; the carrier is always a POST. */
-function resolveV4Retry(retry: ExecuteActivityOptions['retry'], method: ExecuteMethod) {
-  const resolved = resolveRetryOptions(retry, DEFAULT_API_CLIENT_RETRY);
-  const carrier: ExecuteMethod[] = resolved.retryMethods.includes(method) ? ['POST'] : [];
-  return { ...resolved, retryMethods: carrier };
 }
 
 /** Adds the paging state to a single-page result when the connector reported one. */

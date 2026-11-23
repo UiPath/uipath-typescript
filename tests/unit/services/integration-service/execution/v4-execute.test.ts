@@ -1,24 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import {
-  buildV4Manifest,
-  buildV4UploadForm,
-  unwrapV4Response,
-  usesV4Engine,
-} from '@/services/integration-service/execution/v4-execute';
+import { unwrapV4Response, usesV4Engine } from '@/services/integration-service/execution/v4-execute';
 import { ServerError } from '@/core/errors';
-import type { ExecuteFile, ExecuteResult } from '@/models/integration-service/execution.types';
+import type { ExecuteResult } from '@/models/integration-service/execution.types';
 import { HTTP_TEST_CONSTANTS } from '@tests/utils/constants';
 import { IS_TEST_CONSTANTS } from '@tests/utils/constants/integration-service';
 
 const FILE_BYTES = new Uint8Array([37, 80, 68, 70, 13, 10, 45, 45, 0, 255]);
 const BOUNDARY = IS_TEST_CONSTANTS.MULTIPART_BOUNDARY;
-
-const file = (): ExecuteFile => ({
-  name: IS_TEST_CONSTANTS.FILE_PART_NAME,
-  content: FILE_BYTES,
-  fileName: IS_TEST_CONSTANTS.FILE_NAME,
-  contentType: IS_TEST_CONSTANTS.FILE_CONTENT_TYPE,
-});
 
 /** The engine's answer as the SDK's request layer hands it over. */
 const engineResult = (body: unknown, overrides: Partial<ExecuteResult> = {}): ExecuteResult => ({
@@ -62,97 +50,6 @@ describe('usesV4Engine', () => {
     [undefined, false],
   ])('routes version %s to the version 4 engine: %s', (version, expected) => {
     expect(usesV4Engine(version)).toBe(expected);
-  });
-});
-
-describe('buildV4Manifest', () => {
-  const base = { connectionId: IS_TEST_CONSTANTS.CONNECTION_ID, method: 'GET' as const, url: IS_TEST_CONSTANTS.VENDOR_URL };
-
-  it('describes a bare vendor call', () => {
-    expect(buildV4Manifest(base)).toEqual({
-      outboundRequestConfig: { method: 'GET', url: IS_TEST_CONSTANTS.VENDOR_URL },
-      context: { connectionId: IS_TEST_CONSTANTS.CONNECTION_ID },
-    });
-  });
-
-  it('carries the connector key', () => {
-    const manifest = buildV4Manifest({ ...base, connectorKey: IS_TEST_CONSTANTS.CONNECTOR_KEY });
-
-    expect(manifest.context.connectorKey).toBe(IS_TEST_CONSTANTS.CONNECTOR_KEY);
-  });
-
-  it('joins query parameters to the URL', () => {
-    const manifest = buildV4Manifest({ ...base, queryParams: { status: 'open', q: 'a b' } });
-
-    expect(manifest.outboundRequestConfig.url).toBe(`${IS_TEST_CONSTANTS.VENDOR_URL}?status=open&q=a+b`);
-  });
-
-  it('appends query parameters to a URL that already has a query', () => {
-    const manifest = buildV4Manifest({ ...base, url: `${IS_TEST_CONSTANTS.VENDOR_URL}?page=2`, queryParams: { status: 'open' } });
-
-    expect(manifest.outboundRequestConfig.url).toBe(`${IS_TEST_CONSTANTS.VENDOR_URL}?page=2&status=open`);
-  });
-
-  it('lists headers as name and value pairs', () => {
-    const manifest = buildV4Manifest({ ...base, headers: { Accept: 'application/json' } });
-
-    expect(manifest.outboundRequestConfig.headers).toEqual([{ name: 'Accept', value: 'application/json' }]);
-  });
-
-  it('serializes an object body and labels it as JSON', () => {
-    const manifest = buildV4Manifest({ ...base, method: 'POST', body: { subject: 'New' } });
-
-    expect(manifest.outboundRequestConfig.body).toBe('{"subject":"New"}');
-    expect(manifest.outboundRequestConfig.headers).toEqual([{ name: 'Content-Type', value: 'application/json' }]);
-  });
-
-  it('keeps the content type the caller set for a serialized body', () => {
-    const manifest = buildV4Manifest({
-      ...base,
-      method: 'POST',
-      headers: { 'content-type': 'application/vnd.api+json' },
-      body: { subject: 'New' },
-    });
-
-    expect(manifest.outboundRequestConfig.headers).toEqual([{ name: 'content-type', value: 'application/vnd.api+json' }]);
-  });
-
-  it('sends a string body as it is, without a content type', () => {
-    const manifest = buildV4Manifest({ ...base, method: 'POST', body: 'a=1&b=2' });
-
-    expect(manifest.outboundRequestConfig.body).toBe('a=1&b=2');
-    expect(manifest.outboundRequestConfig.headers).toBeUndefined();
-  });
-
-  it('names a file as the body and declares its size and type', () => {
-    const manifest = buildV4Manifest({ ...base, method: 'PUT', file: file() });
-
-    expect(manifest.outboundRequestConfig.bodyRef).toBe(IS_TEST_CONSTANTS.FILE_PART_NAME);
-    expect(manifest.outboundRequestConfig.body).toBeUndefined();
-    expect(manifest.attachments).toEqual([
-      { name: IS_TEST_CONSTANTS.FILE_PART_NAME, size: FILE_BYTES.length, contentType: IS_TEST_CONSTANTS.FILE_CONTENT_TYPE },
-    ]);
-  });
-});
-
-describe('buildV4UploadForm', () => {
-  it('puts the request description first and the file after it', async () => {
-    const manifest = buildV4Manifest({
-      connectionId: IS_TEST_CONSTANTS.CONNECTION_ID,
-      method: 'PUT',
-      url: IS_TEST_CONSTANTS.VENDOR_URL,
-      file: file(),
-    });
-
-    const form = buildV4UploadForm(manifest, file());
-
-    expect(Array.from(form.keys())).toEqual(['manifest', IS_TEST_CONSTANTS.FILE_PART_NAME]);
-    const manifestPart = form.get('manifest') as File;
-    expect(manifestPart.type).toBe('application/json');
-    expect(JSON.parse(await manifestPart.text())).toEqual(manifest);
-    const filePart = form.get(IS_TEST_CONSTANTS.FILE_PART_NAME) as File;
-    expect(filePart.name).toBe(IS_TEST_CONSTANTS.FILE_NAME);
-    expect(filePart.size).toBe(FILE_BYTES.length);
   });
 });
 

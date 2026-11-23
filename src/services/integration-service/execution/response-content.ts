@@ -1,4 +1,5 @@
-const CONTENT_TYPE = 'content-type';
+/** Name of the content type header, as a flat header record holds it. */
+export const CONTENT_TYPE = 'content-type';
 const CONTENT_DISPOSITION = 'content-disposition';
 
 /** Content types that carry data to read, even when the server marks them as an attachment. */

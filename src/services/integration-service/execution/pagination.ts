@@ -36,17 +36,16 @@ export function resolveMaxRecords(maxRecords: number | undefined, method: string
  *
  * @param headers - Response headers with lowercase names
  * @param body - Parsed response body
- * @returns The paging state, or `undefined` when the response is not a paged list or the
- *   connector reported its last page
+ * @returns The paging state when the connector has more records, otherwise `undefined`
  * @internal
  */
 export function extractPage(headers: Record<string, string>, body: unknown): ExecutePage | undefined {
   const hasMore = headers[HAS_MORE_HEADER];
   const nextPageToken = headers[NEXT_PAGE_TOKEN_HEADER];
-  if (!hasMore || !nextPageToken || !Array.isArray(body)) return undefined;
+  if (hasMore?.toLowerCase() !== 'true' || !nextPageToken || !Array.isArray(body)) return undefined;
   if (isTokenExhausted(nextPageToken)) return undefined;
 
-  return { hasMore: hasMore.toLowerCase() === 'true', nextPageToken };
+  return { hasMore: true, nextPageToken };
 }
 
 /**
@@ -61,6 +60,9 @@ export function stripPaginationHeaders(headers: Record<string, string>): Record<
   return rest;
 }
 
+/** Some connectors issue tokens that are not base64url JSON; one warning covers them all. */
+let warnedUnreadableToken = false;
+
 /** A page token is base64url JSON; the connector marks the end of the list inside it. */
 function isTokenExhausted(token: string): boolean {
   try {
@@ -70,7 +72,10 @@ function isTokenExhausted(token: string): boolean {
     return typeof providerNextPage === 'string' && providerNextPage.toUpperCase() === PROVIDER_DONE;
   } catch (error) {
     // An unreadable token is still a usable token: only a decodable one can say the list is done.
-    console.warn('execute: page token could not be decoded, treating it as a next page', error);
+    if (!warnedUnreadableToken) {
+      warnedUnreadableToken = true;
+      console.warn('executeActivity: page token could not be decoded, treating it as a next page', error);
+    }
     return false;
   }
 }

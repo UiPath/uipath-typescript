@@ -58,7 +58,7 @@ export interface ExecuteOptions extends IntegrationServiceFolderContextOptions {
 }
 
 /**
- * A file sent with an {@link executeActivity} or {@link executeHttp} call.
+ * A file sent with an {@link executeActivity} call.
  */
 export interface ExecuteFile {
   /** Name of the form part the connector reads the file from, e.g. `file`. */
@@ -135,7 +135,8 @@ export interface ExecuteActivityOptions extends ExecuteOptions {
    * version, or with an earlier one, the call uses the version 3 engine.
    *
    * On the version 4 engine `objectName` names the activity's script, and `files`,
-   * `fileResponse`, `urlInputFields` and `maxRecords` do not apply.
+   * `bodyPartName`, `fileResponse`, `urlInputFields` and `maxRecords` are refused with a
+   * `ValidationError`.
    */
   connectorVersion?: string;
   /**
@@ -146,10 +147,10 @@ export interface ExecuteActivityOptions extends ExecuteOptions {
   connectorKey?: string;
   /**
    * Reference of the script the version 4 engine runs for this activity, as the activity's
-   * metadata names it. Defaults to `objectName`.
+   * metadata names it. Defaults to `objectName`. Refused without a version 4 connector.
    */
   scriptRef?: string;
-  /** Headers the activity's script reads from the call. Version 4 engine only. */
+  /** Headers the activity's script reads from the call. Refused without a version 4 connector. */
   headers?: Record<string, string>;
 }
 
@@ -176,25 +177,6 @@ export interface ExecuteHttpOptions extends ExecuteOptions {
   headers?: Record<string, string>;
   /** Body to send to the vendor. A string is sent as is; anything else is serialized as JSON. */
   body?: unknown;
-  /**
-   * Version of the connector behind the connection, e.g. `4.0.0`. A connector of version 4 or
-   * later runs on the version 4 engine, and the call is sent there; without a version, or with
-   * an earlier one, the call uses the version 3 engine.
-   *
-   * On the version 4 engine `url` must be a full URL, and a vendor file or large body comes
-   * back as a `Uint8Array`.
-   */
-  connectorVersion?: string;
-  /**
-   * Key of the connector behind the connection, e.g. `uipath-zendesk`. Used on the version 4
-   * engine. Taken from the handle when the connection is a `resource.connection()` handle.
-   */
-  connectorKey?: string;
-  /**
-   * A file to send as the whole body of the vendor request. Needs a version 4 connector, and
-   * cannot be combined with `body`.
-   */
-  file?: ExecuteFile;
   /**
    * Retry and backoff behavior for this call. Retrying is off unless `maxRetries` is set.
    *

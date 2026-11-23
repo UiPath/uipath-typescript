@@ -4,16 +4,50 @@ import { CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '@/utils/const
 import { resolveFolderScope } from '@/services/integration-service/folder-scope';
 import { withConnectionFolder } from '@/services/integration-service/connection-target';
 import { fetchWithRetry } from '@/utils/http/fetch-with-retry';
-import type { ResolvedConnection } from '@/resources';
+import { resolveRetryOptions, DEFAULT_API_CLIENT_RETRY } from '@/utils/http/retry-policy';
+import type { ConnectionResource, ResolvedConnection } from '@/resources';
 import type { IUiPath } from '@/core/types';
 import type { UiPathConfig } from '@/core/config/config';
 import type { ResolvedRetryOptions } from '@/models/common/http.internal-types';
 import type { IntegrationServiceFolderContextOptions } from '@/models/integration-service/integration-service.types';
-import type { ExecuteMethod, ExecuteResult } from '@/models/integration-service/execution.types';
+import type { ExecuteMethod, ExecuteOptions, ExecuteResult } from '@/models/integration-service/execution.types';
 import { readResponseBody } from './response-content';
 
 /** HTTP methods that carry a request body. */
 export const BODY_METHODS = new Set<ExecuteMethod>(['POST', 'PUT', 'PATCH']);
+
+/** Method of an Integration Service call that carries another request inside its body. */
+export const CARRIER_METHOD: ExecuteMethod = 'POST';
+
+/**
+ * Retry settings for a call that travels inside a carrier request. The caller's settings
+ * describe the carried method, so the carrier is retried only when that method would be.
+ *
+ * @param retry - The caller's retry option
+ * @param method - The method the caller asked for
+ * @returns The retry policy for the carrier request
+ * @internal
+ */
+export function resolveCarrierRetry(retry: ExecuteOptions['retry'], method: ExecuteMethod): ResolvedRetryOptions {
+  const resolved = resolveRetryOptions(retry, DEFAULT_API_CLIENT_RETRY);
+  return { ...resolved, retryMethods: resolved.retryMethods.includes(method) ? [CARRIER_METHOD] : [] };
+}
+
+/**
+ * The connector key of a call: the option when given, otherwise the key on a
+ * `resource.connection()` handle.
+ *
+ * @param connection - Connection id or handle the call was made with
+ * @param connectorKey - The caller's `connectorKey` option
+ * @returns The connector key, or `undefined` when neither names one
+ * @internal
+ */
+export function resolveConnectorKey(
+  connection: string | ConnectionResource,
+  connectorKey: string | undefined,
+): string | undefined {
+  return connectorKey ?? (typeof connection === 'string' ? undefined : connection.connector);
+}
 
 /**
  * One request against a connection instance.

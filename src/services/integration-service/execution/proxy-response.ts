@@ -2,13 +2,11 @@ import type {
   ExecuteHttpResult,
   ExecuteResult,
 } from '@/models/integration-service/execution.types';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+import { isPlainRecord } from './body-paths';
 
 /** Keeps the string-valued entries of a header or query map. */
 function toStringRecord(value: unknown): Record<string, string> | undefined {
-  if (!isRecord(value)) return undefined;
+  if (!isPlainRecord(value)) return undefined;
   const result: Record<string, string> = {};
   for (const [key, entry] of Object.entries(value)) {
     if (entry !== undefined && entry !== null) result[key] = String(entry);
@@ -30,7 +28,7 @@ function toStringRecord(value: unknown): Record<string, string> | undefined {
  */
 export function unwrapProxyResponse(result: ExecuteResult): ExecuteHttpResult {
   const envelope = result.body;
-  if (!result.ok || !isRecord(envelope) || typeof envelope.code !== 'number') {
+  if (!result.ok || !isPlainRecord(envelope) || typeof envelope.code !== 'number') {
     return { ...result, isVendorError: false };
   }
 
