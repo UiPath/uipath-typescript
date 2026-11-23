@@ -129,7 +129,45 @@ The SDK supports two import patterns. Choose based on your SDK version.
 
 ## **Telemetry**
 
-To improve the developer experience, the SDK collects basic usage data about method invocations. For details on UiPath’s privacy practices, see our [privacy policy](https://www.uipath.com/legal/privacy-policy).
+To improve the developer experience, the SDK collects basic usage data about method invocations. Telemetry is enabled by default. For details on UiPath’s privacy practices, see our [privacy policy](https://www.uipath.com/legal/privacy-policy).
+
+### **What is sent**
+
+The SDK sends one event when a `UiPath` instance is created and one event for each SDK method call. Events go to a UiPath-owned Azure Application Insights resource. Each event contains:
+
+| Field | Value |
+|-------|-------|
+| `ApplicationName`, `Version` | The SDK's name and version |
+| `Service` | The SDK method that was called, for example `Tasks.GetAll` |
+| `CloudUrl` | The base URL with the organization and tenant |
+| `CloudOrganizationName`, `CloudOrganizationId` | The organization the SDK is configured for |
+| `CloudTenantName`, `CloudTenantId` | The tenant the SDK is configured for |
+| `CloudUserId` | The id of the signed-in user, taken from the access token |
+| `CloudClientId`, `CloudRedirectUri` | The OAuth client id and redirect URI, when OAuth is used |
+
+Method arguments, request bodies and response data are never sent.
+
+### **Disabling telemetry**
+
+When telemetry is disabled, the SDK sends no events at all.
+
+=== "Coded apps"
+
+    Set the `UIPATH_APPS_TELEMETRY_DISABLED` environment variable to `true` for the deployment. Add it to `.env.local` to disable telemetry under the dev server too.
+
+    ```bash
+    UIPATH_APPS_TELEMETRY_DISABLED=true
+    ```
+
+    A deployment's environment variables replace the package defaults as a whole, so include this variable in every deployment that sets its own.
+
+=== "Node.js, Deno and the UiPath CLI"
+
+    Set the `UIPATH_TELEMETRY_DISABLED` environment variable to `1` or `true` in the process environment. This is the same variable the [UiPath CLI](https://github.com/UiPath/cli) reads, so disabling CLI telemetry also disables SDK telemetry for CLI commands.
+
+    ```bash
+    export UIPATH_TELEMETRY_DISABLED=1
+    ```
 
 
 
