@@ -26,7 +26,19 @@ uip functions new [name] [options]
 | `--empty`               |                | Skip the hello world function (JS/TS only)                                                                            |
 | `--kind <job\|http>`    | `job`          | Hello world function kind. `job` sets `targetRuntime` to `javascript` in `uipath.json`, `http` to `javascript-server` |
 
-Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with npm, which writes the project's `package-lock.json`.
+Creates the project directory, scaffolds `uipath.json`, `project.uiproj`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with npm, which writes the project's `package-lock.json`.
+
+______________________________________________________________________
+
+## `init`
+
+Make the current folder a JS/TS Functions project.
+
+```
+uip functions init
+```
+
+Writes `uipath.json` (`targetRuntime` `javascript`, functions map from `functions/`) and `project.uiproj` (`Name` from `package.json`, else the folder name). Files that already exist are kept as they are.
 
 ______________________________________________________________________
 
@@ -110,6 +122,8 @@ uip functions pack [options]
 | `--nolock` | Deprecated and ignored — the project's lock file is always packaged |
 
 Reads `name` and `version` from `package.json`. Writes `.uipath/<name>.<version>.nupkg`. Re-packing the same version overwrites the file.
+
+The package's default entry point is the function file `project.uiproj` names in `MainFile`, else the first function in `functions/`. A `MainFile` that names no function fails the pack.
 
 The project must be ready to package: `node_modules/` present and a current `package-lock.json`, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it.
 
