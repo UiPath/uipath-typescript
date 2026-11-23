@@ -75,7 +75,7 @@ A resource missing from `access` is open to all visitors, so list every resource
 
 The `@uipath/coded-apps-dev` plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. Vite only.
 
-<!-- TODO: add the @uipath/coded-apps-dev version that ships local public mode. -->
+Needs `@uipath/coded-apps-dev` `1.0.0-beta.2` or later.
 
 Put the confidential external application in `.env.local`, and keep that file out of source control:
 
