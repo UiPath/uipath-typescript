@@ -135,7 +135,8 @@ export interface ExecuteActivityOptions extends ExecuteOptions {
    * version, or with an earlier one, the call uses the version 3 engine.
    *
    * On the version 4 engine `objectName` names the activity's script, and `files`,
-   * `fileResponse`, `urlInputFields` and `maxRecords` do not apply.
+   * `bodyPartName`, `fileResponse`, `urlInputFields` and `maxRecords` are refused with a
+   * `ValidationError`.
    */
   connectorVersion?: string;
   /**
@@ -146,9 +147,9 @@ export interface ExecuteActivityOptions extends ExecuteOptions {
   connectorKey?: string;
   /**
    * Reference of the script the version 4 engine runs for this activity, as the activity's
-   * metadata names it. Defaults to `objectName`.
+   * metadata names it. Defaults to `objectName`. Refused without a version 4 connector.
    */
   scriptRef?: string;
-  /** Headers the activity's script reads from the call. Version 4 engine only. */
+  /** Headers the activity's script reads from the call. Refused without a version 4 connector. */
   headers?: Record<string, string>;
 }

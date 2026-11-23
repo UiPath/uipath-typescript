@@ -1,14 +1,14 @@
 import { ServerError } from '@/core/errors';
 import { decodeBase64ToBytes } from './encoding';
 import type { ExecuteResult } from '@/models/integration-service/execution.types';
-import { headerValue } from './response-content';
+import { CONTENT_TYPE, headerValue } from './response-content';
+import { isPlainRecord } from './body-paths';
 
 /** First connector major version that runs on the version 4 engine. */
 const V4_MAJOR_VERSION = 4;
 const MAJOR_VERSION_RE = /^v?(\d+)(?:\.|$)/i;
 
 const BASE64_ENCODING = 'base64';
-const CONTENT_TYPE = 'content-type';
 const MULTIPART_MIXED = 'multipart/mixed';
 const BOUNDARY_RE = /boundary="?([^";]+)"?/i;
 
@@ -49,9 +49,6 @@ export interface V4VendorResult extends ExecuteResult {
   /** True when the vendor answered with a non-2xx status; false when the engine never reached it. */
   isVendorError: boolean;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * True when a connector of this version runs on the version 4 engine: major version 4 or later.
@@ -111,7 +108,7 @@ export function unwrapV4Response(result: ExecuteResult): V4VendorResult {
     return toVendorResult(envelope, bytes);
   }
 
-  if (!isRecord(result.body) || typeof result.body.status !== 'number') {
+  if (!isPlainRecord(result.body) || typeof result.body.status !== 'number') {
     return { ...result, isVendorError: false };
   }
   const { body, bodyEncoding } = result.body;
@@ -134,7 +131,7 @@ function toVendorResult(envelope: Record<string, unknown>, body: unknown): V4Ven
 
 /** The engine reports a repeated header as a list; the SDK result holds one string per name. */
 function flattenHeaders(value: unknown): Record<string, string> {
-  if (!isRecord(value)) return {};
+  if (!isPlainRecord(value)) return {};
   const headers: Record<string, string> = {};
   for (const [name, entry] of Object.entries(value)) {
     if (entry === undefined || entry === null) continue;
@@ -174,11 +171,10 @@ function parseTwoPartAnswer(
   let envelope: unknown;
   try {
     envelope = JSON.parse(new TextDecoder().decode(document.subarray(firstBodyStart, second)));
-  } catch (error) {
-    console.warn('Integration Service file response: first part is not valid JSON', error);
+  } catch {
     return fail('first part is not JSON');
   }
-  if (!isRecord(envelope)) return fail('first part is not an object');
+  if (!isPlainRecord(envelope)) return fail('first part is not an object');
 
   return { envelope, bytes: document.slice(secondBodyStart, end) };
 }

@@ -415,6 +415,71 @@ describe('executeActivity', () => {
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['maxRecords', { maxRecords: 10 }],
+      ['fileResponse', { fileResponse: true }],
+      ['urlInputFields', { urlInputFields: ['link'] }],
+      ['bodyPartName', { bodyPartName: 'metadata' }],
+    ])('throws ValidationError for %s, which the version 4 engine cannot honour', async (name, option) => {
+      const { instance } = createServiceTestDependencies();
+
+      await expect(
+        executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, SCRIPT, 'GET', { ...V4_OPTIONS, ...option }),
+      ).rejects.toThrow(new RegExp(`${name} is not supported by executeActivity on a version 4 connector`));
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('names every refused option in one error', async () => {
+      const { instance } = createServiceTestDependencies();
+
+      await expect(
+        executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, SCRIPT, 'GET', {
+          ...V4_OPTIONS,
+          maxRecords: 10,
+          fileResponse: true,
+        }),
+      ).rejects.toThrow(/fileResponse, maxRecords are not supported/);
+    });
+
+    it('accepts an option left at its off value', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(buildResponse({ body: JSON.stringify({ status: 200, body: [] }) }));
+
+      const result = await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, SCRIPT, 'GET', {
+        ...V4_OPTIONS,
+        fileResponse: false,
+        urlInputFields: [],
+      });
+
+      expect(result.ok).toBe(true);
+    });
+
+    it.each([
+      ['headers', { headers: { 'x-trace': '1' } }],
+      ['scriptRef', { scriptRef: SCRIPT }],
+    ])('throws ValidationError for %s without a version 4 connector', async (name, option) => {
+      const { instance } = createServiceTestDependencies();
+
+      await expect(
+        executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', option),
+      ).rejects.toThrow(new RegExp(`${name} is not supported by executeActivity without a version 4 connector`));
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('retries the carrier request only when the activity method is retryable', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(
+        buildResponse({ status: HTTP_TEST_CONSTANTS.STATUS_SERVICE_UNAVAILABLE, body: '{}' }),
+      );
+
+      await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, SCRIPT, 'POST', {
+        ...V4_OPTIONS,
+        retry: { maxRetries: 2, initialDelayMs: 1 },
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
     it('keeps the version 3 endpoint for a connector below version 4', async () => {
       const { instance } = createServiceTestDependencies();
       fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
