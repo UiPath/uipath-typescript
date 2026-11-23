@@ -67,9 +67,47 @@ Set per resource in `uipath.json` who may read it, using the binding key:
 - `session`: only the visitor who created the record or started the job can read it.
 - `all`: every visitor can read it.
 
-A resource missing from `access` is open to all visitors during the preview, so list every resource the app reads and use `session` for anything personal. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.
+A resource missing from `access` is open to all visitors, so list every resource the app reads and use `session` for anything personal. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.
 
 `scope` must list what the app calls and include `OR.Execution`.
+
+## Running it locally
+
+The `@uipath/coded-apps-dev` plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. Vite only.
+
+<!-- TODO: add the @uipath/coded-apps-dev version that ships local public mode. -->
+
+Put the confidential external application in `.env.local`, and keep that file out of source control:
+
+```bash title=".env.local"
+UIPATH_PUBLIC_APP=true
+UIPATH_PUBLIC_APP_CLIENT_ID=<external app id>
+UIPATH_PUBLIC_APP_CLIENT_SECRET=<client secret>
+# Optional: the folder you deploy to, used for resources declared without a folder
+UIPATH_PUBLIC_APP_FOLDER_KEY=<folder key>
+```
+
+Then start the dev server as usual:
+
+```bash
+npm run dev
+```
+
+The page opens without a sign-in, and its calls go to the dev server instead of the Apps service. The dev server holds the secret, gets the external application's token with the `scope` from `uipath.json`, and applies the same rules as a deployed public app before it calls Orchestrator and Data Fabric:
+
+- Only the resources declared in `uipath_resources.ts`. Anything else is refused with `403`.
+- `session` and `all` from `uipath.json` `access`.
+- Visitors can add records, start jobs and upload files, but can't change or delete anything.
+
+The secret and the token never reach the browser. To test as a second visitor, open the app in a private window.
+
+A local run differs from a deployed app in three ways:
+
+- Resources use the name and folder declared in `uipath_resources.ts`. Solution overrides apply only after you deploy.
+- Sessions live in the dev server's memory, so restarting it starts new sessions.
+- The external application still needs a role in the folders that hold the resources, as it does after deploy.
+
+Set `UIPATH_PUBLIC_APP=false`, or remove it, to go back to signing in as yourself.
 
 ## Deploying
 
