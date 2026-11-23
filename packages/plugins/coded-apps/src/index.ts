@@ -13,6 +13,13 @@ import {
   generateEnvScriptForVite,
   injectEnvScriptHtml,
 } from './core/index'
+import {
+  createPublicDevMiddleware,
+  readDeclaredResources,
+  readPublicDevSettings,
+  toPublicConfig,
+  bindingKey,
+} from './core/public-dev-server'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
   let isDev = false
@@ -21,6 +28,9 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
   // esbuild builds, `vite build --mode development` and unminified builds never get them.
   let isDevServer = false
   let cachedConfig: ReturnType<typeof readConfig> | null = null
+  // Set only by a Vite dev server started with UIPATH_PUBLIC_APP=true.
+  let publicMode = false
+  const getConfig = () => (cachedConfig ??= readConfig({ ...options, isDev }))
   const configPath = options.configPath ?? 'uipath.json'
 
   return {
@@ -46,12 +56,22 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
             server.ws.send({ type: 'full-reload' })
           }
         })
-      },
-      transformIndexHtml() {
-        if (!cachedConfig) {
-          cachedConfig = readConfig({ ...options, isDev })
+
+        const settings = readPublicDevSettings()
+        if (settings) {
+          publicMode = true
+          server.middlewares.use(createPublicDevMiddleware({ settings, getConfig }))
+          const declared = readDeclaredResources().map(item => `${item.kind} ${bindingKey(item)}`)
+          console.log(
+            `[${PLUGIN_NAME}] Public mode: the app runs without sign-in, as external application ${settings.clientId}. ` +
+            `Declared resources: ${declared.length ? declared.join(', ') : 'none'}.`
+          )
         }
-        const tags = generateMetaTagsForVite(cachedConfig)
+      },
+      transformIndexHtml(_html, ctx) {
+        const config = getConfig()
+        const devOrigin = publicMode ? resolveDevOrigin(ctx.server) : undefined
+        const tags = generateMetaTagsForVite(devOrigin ? toPublicConfig(config, devOrigin) : config)
         const envValues = readDevEnvValues(isDevServer)
         return envValues ? [...generateEnvScriptForVite(envValues), ...tags] : tags
       },
@@ -164,6 +184,13 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
       },
     },
   }
+}
+
+// The page calls the dev server it was served from, as a deployed public app calls the Apps service.
+function resolveDevOrigin(server?: { resolvedUrls?: { local: string[] } | null; config: { server: { port?: number; https?: unknown } } }): string {
+  const local = server?.resolvedUrls?.local[0]
+  if (local) return new URL(local).origin
+  return `${server?.config.server.https ? 'https' : 'http'}://localhost:${server?.config.server.port ?? 5173}`
 }
 
 export const unplugin: UnpluginInstance<Options | undefined, boolean> =
