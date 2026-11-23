@@ -2571,6 +2571,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#running-it-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running it locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deploying" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4081,6 +4092,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#running-it-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running it locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deploying" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4188,18 +4210,46 @@
 <li><code>session</code>: only the visitor who created the record or started the job can read it.</li>
 <li><code>all</code>: every visitor can read it.</li>
 </ul>
-<p>A resource missing from <code>access</code> is open to all visitors during the preview, so list every resource the app reads and use <code>session</code> for anything personal. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.</p>
+<p>A resource missing from <code>access</code> is open to all visitors, so list every resource the app reads and use <code>session</code> for anything personal. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.</p>
 <p><code>scope</code> must list what the app calls and include <code>OR.Execution</code>.</p>
+<h2 id="running-it-locally">Running it locally<a class="headerlink" href="#running-it-locally" title="Permanent link">&para;</a></h2>
+<p>The <code>@uipath/coded-apps-dev</code> plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. Vite only.</p>
+<!-- TODO: add the @uipath/coded-apps-dev version that ships local public mode. -->
+
+<p>Put the confidential external application in <code>.env.local</code>, and keep that file out of source control:</p>
+<div class="highlight"><span class="filename">.env.local</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">UIPATH_PUBLIC_APP</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">UIPATH_PUBLIC_APP_CLIENT_ID</span><span class="o">=</span>&lt;external<span class="w"> </span>app<span class="w"> </span>id&gt;
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nv">UIPATH_PUBLIC_APP_CLIENT_SECRET</span><span class="o">=</span>&lt;client<span class="w"> </span>secret&gt;
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Optional: the folder you deploy to, used for resources declared without a folder</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nv">UIPATH_PUBLIC_APP_FOLDER_KEY</span><span class="o">=</span>&lt;folder<span class="w"> </span>key&gt;
+</code></pre></div>
+<p>Then start the dev server as usual:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>npm<span class="w"> </span>run<span class="w"> </span>dev
+</code></pre></div>
+<p>The page opens without a sign-in, and its calls go to the dev server instead of the Apps service. The dev server holds the secret, gets the external application's token with the <code>scope</code> from <code>uipath.json</code>, and applies the same rules as a deployed public app before it calls Orchestrator and Data Fabric:</p>
+<ul>
+<li>Only the resources declared in <code>uipath_resources.ts</code>. Anything else is refused with <code>403</code>.</li>
+<li><code>session</code> and <code>all</code> from <code>uipath.json</code> <code>access</code>.</li>
+<li>Visitors can add records, start jobs and upload files, but can't change or delete anything.</li>
+</ul>
+<p>The secret and the token never reach the browser. To test as a second visitor, open the app in a private window.</p>
+<p>A local run differs from a deployed app in three ways:</p>
+<ul>
+<li>Resources use the name and folder declared in <code>uipath_resources.ts</code>. Solution overrides apply only after you deploy.</li>
+<li>Sessions live in the dev server's memory, so restarting it starts new sessions.</li>
+<li>The external application still needs a role in the folders that hold the resources, as it does after deploy.</li>
+</ul>
+<p>Set <code>UIPATH_PUBLIC_APP=false</code>, or remove it, to go back to signing in as yourself.</p>
 <h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link">&para;</a></h2>
 <p>A public app lives in a solution and is deployed with it. Pack and publish the solution with the preview CLI (<code>npm install -g @uipath/cli@preview</code>). At deploy, set the app's runtime auth mode to <strong>Application</strong>, pick a <strong>confidential</strong> external application with application scopes for everything the app calls, and enter its client secret. The same package deploys as a sign-in app with the auth mode set to <strong>User</strong>.</p>
 <p>From the CLI:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>-d<span class="w"> </span>config.json
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>routingName<span class="w"> </span>&lt;routing-name&gt;<span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>externalClientId<span class="w"> </span><span class="s2">&quot;&lt;external app id&gt;&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application<span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>-d<span class="w"> </span>config.json
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>routingName<span class="w"> </span>&lt;routing-name&gt;<span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>externalClientId<span class="w"> </span><span class="s2">&quot;&lt;external app id&gt;&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application<span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
 </code></pre></div>
 <p>Keep <code>config.json</code> out of source control: it holds the secret. See <a href="../ci-cd-github-actions/#coded-app-inside-solution">Coded App inside Solution</a> for building, packing and publishing the solution.</p>
 <p>For Data Fabric entities, give the external app a role in the deployment folder with Entity Records View and Create, for example <strong>Automation User</strong>.</p>
