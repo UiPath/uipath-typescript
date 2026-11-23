@@ -3959,21 +3959,6 @@
 <td>Body to send to the vendor. A string is sent as is; anything else is serialized as JSON.</td>
 </tr>
 <tr>
-<td><a id="connectorkey"></a> <code>connectorKey?</code></td>
-<td><code>string</code></td>
-<td>Key of the connector behind the connection, e.g. <code>uipath-zendesk</code>. Used on the version 4 engine. Taken from the handle when the connection is a <code>resource.connection()</code> handle.</td>
-</tr>
-<tr>
-<td><a id="connectorversion"></a> <code>connectorVersion?</code></td>
-<td><code>string</code></td>
-<td>Version of the connector behind the connection, e.g. <code>4.0.0</code>. A connector of version 4 or later runs on the version 4 engine, and the call is sent there; without a version, or with an earlier one, the call uses the version 3 engine. On the version 4 engine <code>url</code> must be a full URL, and a vendor file or large body comes back as a <code>Uint8Array</code>.</td>
-</tr>
-<tr>
-<td><a id="file"></a> <code>file?</code></td>
-<td><a href="../ExecuteFile/"><code>ExecuteFile</code></a></td>
-<td>A file to send as the whole body of the vendor request. Needs a version 4 connector, and cannot be combined with <code>body</code>.</td>
-</tr>
-<tr>
 <td><a id="folderid"></a> <code>folderId?</code></td>
 <td><code>number</code></td>
 <td>Numeric folder ID.</td>

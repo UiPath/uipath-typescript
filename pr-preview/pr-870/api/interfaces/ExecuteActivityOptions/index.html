@@ -3974,7 +3974,7 @@ item of an array (<code>items[*].name</code>).</p>
 <tr>
 <td><a id="connectorversion"></a> <code>connectorVersion?</code></td>
 <td><code>string</code></td>
-<td>Version of the connector behind the connection, e.g. <code>4.0.0</code>. A connector of version 4 or later runs its activities on the version 4 engine, and the call is sent there; without a version, or with an earlier one, the call uses the version 3 engine. On the version 4 engine <code>objectName</code> names the activity's script, and <code>files</code>, <code>fileResponse</code>, <code>urlInputFields</code> and <code>maxRecords</code> do not apply.</td>
+<td>Version of the connector behind the connection, e.g. <code>4.0.0</code>. A connector of version 4 or later runs its activities on the version 4 engine, and the call is sent there; without a version, or with an earlier one, the call uses the version 3 engine. On the version 4 engine <code>objectName</code> names the activity's script, and <code>files</code>, <code>bodyPartName</code>, <code>fileResponse</code>, <code>urlInputFields</code> and <code>maxRecords</code> are refused with a <code>ValidationError</code>.</td>
 </tr>
 <tr>
 <td><a id="fileresponse"></a> <code>fileResponse?</code></td>
@@ -4004,7 +4004,7 @@ item of an array (<code>items[*].name</code>).</p>
 <tr>
 <td><a id="headers"></a> <code>headers?</code></td>
 <td><code>Record</code>&lt;<code>string</code>, <code>string</code>&gt;</td>
-<td>Headers the activity's script reads from the call. Version 4 engine only.</td>
+<td>Headers the activity's script reads from the call. Refused without a version 4 connector.</td>
 </tr>
 <tr>
 <td><a id="maxrecords"></a> <code>maxRecords?</code></td>
@@ -4024,7 +4024,7 @@ item of an array (<code>items[*].name</code>).</p>
 <tr>
 <td><a id="scriptref"></a> <code>scriptRef?</code></td>
 <td><code>string</code></td>
-<td>Reference of the script the version 4 engine runs for this activity, as the activity's metadata names it. Defaults to <code>objectName</code>.</td>
+<td>Reference of the script the version 4 engine runs for this activity, as the activity's metadata names it. Defaults to <code>objectName</code>. Refused without a version 4 connector.</td>
 </tr>
 <tr>
 <td><a id="signal"></a> <code>signal?</code></td>
