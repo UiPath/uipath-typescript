@@ -9,6 +9,13 @@ alwaysApply: true
 
 - Tests use `vitest` with `vi.mock()` and `vi.hoisted()`. Shared mocks in `tests/utils/mocks/`. Use `createMockApiClient()` and `createServiceTestDependencies()` from `tests/utils/setup.ts`. **Type `mockApiClient` as `ReturnType<typeof createMockApiClient>`, not `any`** — using `any` defeats type safety in tests and hides real type errors. Pattern: `let mockApiClient: ReturnType<typeof createMockApiClient>;`.
 - **Arrange-Act-Assert** pattern. Reset mocks in `afterEach`.
+- **Mock globals with `vi.stubGlobal` / `vi.unstubAllGlobals()`** — when a test needs to override a global (e.g., `fetch`), use `vi.stubGlobal('fetch', fetchMock)` rather than `(globalThis as any).fetch = fetchMock`. The `as any` cast violates the no-`any` rule, and the manual assignment is not automatically undone between tests. Call `vi.unstubAllGlobals()` in `afterEach` (not inline in the test body — an assertion failure before the inline call leaves the global permanently stubbed for subsequent tests). Pattern:
+  ```typescript
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+  ```
 - Test both **success and error scenarios** for every public method.
 - Test descriptions must match what's being tested — **NEVER** write `'should call entity.insert'` if testing `insertRecord()`. Mismatched descriptions make failures misleading.
 - Type request objects in tests — don't leave as untyped objects.
@@ -87,6 +94,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - **NEVER** reference unrelated parameters in JSDoc examples — keep examples focused on the method being documented. If `getOutput()` doesn't accept `folderId`, don't show `folderId` in its example.
 - **Show bare minimum call first** in the first `@example`, then a second example with filtering/options. Never use `$` prefix on OData params in examples (`expand` not `$expand`).
 - **NEVER** assign a `void` return to a variable in JSDoc examples — if a method returns `Promise<void>`, write `await service.method()` not `const result = await service.method()`. Assigning void implies the return value is usable, which misleads users.
+- **NEVER** declare the same variable name more than once in a single `@example` block — a duplicate `const result` (or any other name) is a TypeScript compile error (TS2300) and breaks copy-pasted code. Split into separate `@example` blocks or rename the second variable.
 - **When a new option or feature is added to one method, update related methods' `@example` blocks too** — if `create()` gains an `agentInput` option, `updateById()` (which accepts the same option) also needs a second `@example` showing it. Users look at examples to learn what's possible; a feature shown on one method but silently omitted from a parallel method is effectively invisible.
 - **Add JSDoc to non-obvious enum values** — if an enum has values whose meaning isn't clear from the name alone, add a brief comment to each value.
 - **NEVER use unexplained abbreviations or acronyms in JSDoc** — spell out the full form (e.g., write "Automation Governance Units" not "AGU"). If the abbreviated form is necessary for brevity, introduce it with the full form first: `Automation Governance Units (AGU)`.
