@@ -3,7 +3,7 @@
 A **public** coded app opens without a sign-in. The visitor has no UiPath account and no token: the Apps service holds the app's identity (its confidential external application) and makes each call on the app's behalf, limited to the resources the app declares in its bindings.
 
 !!! warning "Preview"
-    Public coded apps are in preview. They are built and deployed through Solutions only, and need `@uipath/uipath-typescript` `1.9.0-preview.0` or later. For the product overview, see [About public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/about-public-coded-apps).
+    Public coded apps are in preview. They are built and deployed through Solutions only, and need `@uipath/uipath-typescript` `1.9.0-preview.0` or later. For the product overview, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
 
 ---
 
