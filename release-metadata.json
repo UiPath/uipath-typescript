@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.8.5",
+  "sdkVersion": "1.9.0-preview.0",
   "services": [
     {
       "name": "AgentMemory",
@@ -361,8 +361,46 @@
       ]
     },
     {
+      "name": "Connections",
+      "subpath": "@uipath/uipath-typescript/integration-service",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
       "name": "Connectors",
       "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getConnections",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getDefaultConnection",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
+      "name": "Connectors",
+      "subpath": "@uipath/uipath-typescript/integration-service",
       "since": "1.7.2",
       "methods": [
         {
@@ -461,6 +499,49 @@
     {
       "name": "Elements",
       "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getActivities",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getEventObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getEventObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceEventObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceEventObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getObjects",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
+      "name": "Elements",
+      "subpath": "@uipath/uipath-typescript/integration-service",
       "since": "1.7.2",
       "methods": [
         {
