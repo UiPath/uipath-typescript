@@ -67,13 +67,13 @@ Set per resource in `uipath.json` who may read it, using the binding key:
 - `session`: only the visitor who created the record or started the job can read it.
 - `all`: every visitor can read it.
 
-List every resource the app reads, so who can read it doesn't depend on the platform default. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.
+A resource missing from `access` is open to all visitors during the preview, so list every resource the app reads and use `session` for anything personal. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.
 
 `scope` must list what the app calls and include `OR.Execution`.
 
 ## Deploying
 
-A public app lives in a solution and is deployed with it, in a folder on the tenant feed such as **Shared**. At deploy, set the app's runtime auth mode to **Application**, pick a **confidential** external application with application scopes for everything the app calls, and enter its client secret. The same package deploys as a sign-in app with the auth mode set to **User**.
+A public app lives in a solution and is deployed with it. Pack and publish the solution with the preview CLI (`npm install -g @uipath/cli@preview`). At deploy, set the app's runtime auth mode to **Application**, pick a **confidential** external application with application scopes for everything the app calls, and enter its client secret. The same package deploys as a sign-in app with the auth mode set to **User**.
 
 From the CLI:
 
