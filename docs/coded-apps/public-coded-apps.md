@@ -41,18 +41,50 @@ Resources are named by their **binding**, the way they appear in `bindings_v2.js
 // Binding "Invoices" scoped to folder "Shared" (key "Invoices.Shared" in bindings_v2.json)
 await sdk.processes.start({ name: 'Invoices' }, { folderPath: 'Shared', inputArguments: '{"amount":12}' });
 
-// Entity binding "Orders" (key "Orders"; `uip resources` keys entities by name only)
+// Entity binding "Orders" (key "Orders"; entities are keyed by name only)
 await sdk.entities.insertRecord({ name: 'Orders' }, { Title: 'First order' });
 const orders = await sdk.entities.getRecordsByName('Orders', { pageSize: 20 });
 
 const { path } = await sdk.buckets.uploadFile({ name: 'Uploads' }, 'report.pdf', file, { folderPath: 'Shared' });
 ```
 
-Pass the same `name` the binding was declared with, plus its `folderPath` for processes and buckets. A handle from `uipath_resources.ts` carries both: pass it to `processes.start`, `entities.insertRecord` and `buckets.uploadFile` as is, and pass its `.name` to `entities.getRecordByName` and `entities.getRecordsByName`, which take the entity name as a string. Solution overrides are applied by the service, so the code does not change when an admin points a binding at another resource.
+Pass the same `name` the binding was declared with, plus its `folderPath` for processes and buckets. `entities.getRecordByName` and `entities.getRecordsByName` take the entity name as a string. Solution overrides are applied by the service, so the code does not change when an admin points a binding at another resource.
+
+### Declaring the bindings
+
+Write `bindings_v2.json` at the app project root (in a solution, next to `source/`), one entry per resource the app uses:
+
+```json
+{
+  "version": "2.0",
+  "resources": [
+    {
+      "resource": "process",
+      "key": "Invoices.Shared",
+      "value": {
+        "name": { "defaultValue": "Invoices", "isExpression": false, "displayName": "Name" },
+        "folderPath": { "defaultValue": "Shared", "isExpression": false, "displayName": "Folder Path" }
+      },
+      "metadata": { "BindingsVersion": "2.2" }
+    },
+    {
+      "resource": "entity",
+      "key": "Orders",
+      "value": {
+        "name": { "defaultValue": "Orders", "isExpression": false, "displayName": "Name" },
+        "folderPath": { "defaultValue": ".", "isExpression": false, "displayName": "Folder Path" }
+      },
+      "metadata": { "BindingsVersion": "2.2" }
+    }
+  ]
+}
+```
+
+`resource` is `process`, `entity` or `bucket`. `key` is `Name.FolderPath` for processes and buckets, and the name alone for entities. Run `uip solution resources refresh` from the solution root to add the resources to the solution; packing ships the file in the app package. A resource that isn't listed is refused with `403`.
 
 ## Who can read what
 
-Set per resource in `uipath.json` who may read it, using the binding key:
+Set per resource in `uipath.json` who may read it, using the binding key. `uipath.json` must be in the build output so it is packed with the app (Vite: `public/uipath.json`):
 
 ```json
 {
@@ -95,7 +127,7 @@ npm run dev
 
 The page opens without a sign-in, and its calls go to the dev server instead of the Apps service. The dev server holds the secret, gets the external application's token with the `scope` from `uipath.json`, and applies the same rules as a deployed public app before it calls Orchestrator and Data Fabric:
 
-- Only the resources declared in `uipath_resources.ts`. Anything else is refused with `403`.
+- Only the resources listed in `bindings_v2.json`. Anything else is refused with `403`.
 - `session` and `all` from `uipath.json` `access`.
 - Visitors can add records, start jobs and upload files, but can't change or delete anything.
 
@@ -103,7 +135,7 @@ The secret and the token never reach the browser. To test as a second visitor, o
 
 A local run differs from a deployed app in three ways:
 
-- Resources use the name and folder declared in `uipath_resources.ts`. Solution overrides apply only after you deploy.
+- Resources use the name and folder in `bindings_v2.json`. Solution overrides apply only after you deploy.
 - Sessions live in the dev server's memory, so restarting it starts new sessions.
 - The external application still needs a role in the folders that hold the resources, as it does after deploy.
 
