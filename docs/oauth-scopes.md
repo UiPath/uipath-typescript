@@ -234,7 +234,7 @@ Creating a validation action and polling its result both go through the [Documen
 
 ## Functions
 
-Finding a function reads the folder's HTTP triggers, which needs `OR.Jobs.Read`. Calling the function's HTTP endpoint needs `OR.Jobs.Write`. Request these scopes explicitly.
+`getAll()` reads the folder's HTTP triggers, which needs `OR.Jobs.Read`. `invoke()` reads the triggers to find the function and then calls its HTTP endpoint, which also needs `OR.Jobs.Write`, so it needs `OR.Jobs`.
 
 | Method | OAuth Scope |
 |--------|-------------|
