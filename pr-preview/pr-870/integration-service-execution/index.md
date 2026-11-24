@@ -1,6 +1,6 @@
 # Integration Service Execution
 
-Functions that run an operation through an Integration Service connection. Integration Service adds the connection's authentication, so the vendor's key or token stays out of your code. Import them from `@uipath/uipath-typescript/integration-service` and pass a `UiPath` instance as the first argument.
+Functions that run an operation through an Integration Service connection. Integration Service adds the connection's authentication, so the vendor's key or token stays out of your code. Import them from `@uipath/uipath-typescript/connections` and pass a `UiPath` instance as the first argument.
 
 | Function            | Description                                                                      |
 | ------------------- | -------------------------------------------------------------------------------- |
@@ -20,7 +20,7 @@ Takes a connection, an object name, a method and optional `ExecuteOptions`, and 
 
 ```
 import { UiPath } from '@uipath/uipath-typescript/core';
-import { execute } from '@uipath/uipath-typescript/integration-service';
+import { execute } from '@uipath/uipath-typescript/connections';
 
 const sdk = new UiPath(config);
 await sdk.initialize();
@@ -41,7 +41,7 @@ if (result.ok) {
 Takes the same arguments with `ExecuteActivityOptions`, and resolves to an `ExecuteActivityResult`.
 
 ```
-import { executeActivity } from '@uipath/uipath-typescript/integration-service';
+import { executeActivity } from '@uipath/uipath-typescript/connections';
 
 const created = await executeActivity(sdk, '<connectionId>', 'issue', 'POST', {
   body: { 'fields.summary': 'Login fails', 'fields.labels[0]': 'urgent' },
@@ -97,7 +97,7 @@ Each engine takes its own options, and passing one to the other engine throws a 
 Takes a connection, a vendor URL, a method and optional `ExecuteHttpOptions`, and resolves to an `ExecuteHttpResult`. Use it for a vendor endpoint the connector has no object for. A path such as `/v2/tickets` is resolved against the connection's base URL.
 
 ```
-import { executeHttp } from '@uipath/uipath-typescript/integration-service';
+import { executeHttp } from '@uipath/uipath-typescript/connections';
 
 const result = await executeHttp(sdk, '<connectionId>', '/v2/tickets', 'POST', {
   headers: { 'X-Request-Source': 'my-app' },
