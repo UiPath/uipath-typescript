@@ -7,6 +7,7 @@ import {
   addPublicDevMiddleware,
   bindingKey,
   injectPublicBaseUrlScriptHtml,
+  isLocalRequest,
   createPublicDevMiddleware,
   isOpenToAll,
   readDeclaredResources,
@@ -92,6 +93,24 @@ describe('declarations and access', () => {
     expect(own).toHaveBeenCalled()
     expect(result).toEqual([{ name: 'coded-apps-public-app', middleware }, 'static', 'app'])
   })
+
+  it('puts the proxy after webpack-dev-server\'s host and cross-origin guards', () => {
+    const devServer: Parameters<typeof addPublicDevMiddleware>[0] = {}
+    const middleware = vi.fn()
+    addPublicDevMiddleware(devServer, middleware)
+    const result = devServer.setupMiddlewares!([{ name: 'host-header-check' }, { name: 'cross-origin-header-check' }, 'static'], {})
+    expect(result).toEqual([{ name: 'host-header-check' }, { name: 'cross-origin-header-check' }, { name: 'coded-apps-public-app', middleware }, 'static'])
+  })
+
+  it('answers only to the developer\'s own browser on localhost', () => {
+    expect(isLocalRequest({ headers: { host: 'localhost:5173' } })).toBe(true)
+    expect(isLocalRequest({ headers: { host: '127.0.0.1:5173', origin: 'http://127.0.0.1:5173' } })).toBe(true)
+    expect(isLocalRequest({ headers: { host: '[::1]:5173' } })).toBe(true)
+    // DNS rebinding: the attacker's name arrives as Host
+    expect(isLocalRequest({ headers: { host: 'evil.example:5173', origin: 'http://evil.example:5173' } })).toBe(false)
+    expect(isLocalRequest({ headers: { host: 'localhost:5173', origin: 'https://evil.example' } })).toBe(false)
+    expect(isLocalRequest({ headers: { host: 'localhost:5173', 'sec-fetch-site': 'cross-site' } })).toBe(false)
+  })
 })
 
 // ===== Middleware =====
@@ -117,7 +136,7 @@ function request(middleware: ReturnType<typeof createPublicDevMiddleware>, metho
     const req = Object.assign(new EventEmitter(), {
       method,
       url: API + route,
-      headers: { cookie, 'content-type': 'application/json' } as Record<string, string | undefined>,
+      headers: { host: 'localhost:5173', cookie, 'content-type': 'application/json' } as Record<string, string | undefined>,
     })
     const headers: Record<string, string> = {}
     const res = {

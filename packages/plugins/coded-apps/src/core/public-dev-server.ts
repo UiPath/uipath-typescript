@@ -28,6 +28,11 @@ const RESOURCES_FILE = 'uipath_resources.ts'
 const ROUTE_RE = /\/apps_\/default\/api\/v1\/default\/integrations\/codedapp\/([^?]*)/
 const SESSION_COOKIE = 'uipath_local_public_session'
 const TOKEN_REFRESH_MARGIN_SECONDS = 120
+// The proxy acts as the app's external application, so only the developer's own browser may call it: a page on
+// another site that rebinds its DNS to 127.0.0.1 still sends its own name as Host.
+const LOCAL_HOST_RE = /^(localhost|127\.0\.0\.1|::1|[a-z0-9-]+\.localhost)$/i
+// webpack-dev-server's own Host and cross-origin guards; the proxy goes right after them.
+const WEBPACK_GUARD_MIDDLEWARES = ['host-header-check', 'cross-origin-header-check']
 const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const RESOURCE_RE = /resource\.(process|entity|bucket)\(\s*\{([^}]*)\}\s*\)/g
 
@@ -145,14 +150,16 @@ interface WebpackDevServerOptions {
 }
 
 /**
- * webpack-dev-server reads `devServer` from the compiler's options after plugins run, so the proxy goes first in its
- * middleware list, ahead of the app's own `setupMiddlewares`.
+ * webpack-dev-server reads `devServer` from the compiler's options after plugins run. The proxy goes after the
+ * server's Host and cross-origin guards and ahead of the app's own `setupMiddlewares`.
  */
 export function addPublicDevMiddleware(devServer: WebpackDevServerOptions, middleware: Middleware): void {
   const existing = devServer.setupMiddlewares
   devServer.setupMiddlewares = (middlewares, server) => {
     const result = existing ? existing(middlewares, server) : middlewares
-    result.unshift({ name: `${PLUGIN_NAME}-public-app`, middleware })
+    const lastGuard = Math.max(-1, ...WEBPACK_GUARD_MIDDLEWARES.map(name =>
+      result.findIndex(entry => (entry as { name?: string })?.name === name)))
+    result.splice(lastGuard + 1, 0, { name: `${PLUGIN_NAME}-public-app`, middleware })
     return result
   }
 }
@@ -372,6 +379,11 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       res.end(JSON.stringify(data))
     }
 
+    if (!isLocalRequest(req)) {
+      send(403, { message: 'Local public mode answers only to pages served from localhost.' })
+      return
+    }
+
     const chunks: Buffer[] = []
     req.on('data', (chunk: Buffer) => chunks.push(chunk))
     req.on('end', () => {
@@ -404,5 +416,20 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
           }
         })
     })
+  }
+}
+
+/** Host must be a loopback name, and a browser call must come from the same origin as the page. */
+export function isLocalRequest(req: Pick<IncomingMessage, 'headers'>): boolean {
+  const host = req.headers.host ?? ''
+  const hostname = host.replace(/:\d+$/, '').replace(/^\[|\]$/g, '')
+  if (!LOCAL_HOST_RE.test(hostname)) return false
+  if (req.headers['sec-fetch-site'] === 'cross-site') return false
+  const origin = req.headers.origin
+  if (!origin) return true
+  try {
+    return new URL(origin).host === host
+  } catch {
+    return false
   }
 }
