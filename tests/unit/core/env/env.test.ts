@@ -18,6 +18,11 @@ afterEach(() => {
 });
 
 describe('env', () => {
+  // `@uipath/core-telemetry` reads its opt-out from this global under the same name.
+  it('should read from the `__UIPATH_ENV__` global', () => {
+    expect(UIPATH_ENV_GLOBAL).toBe('__UIPATH_ENV__');
+  });
+
   it('reads a variable by property access', () => {
     setGlobal({ UIPATH_APPS_REGION: 'EU' });
     expect(env.UIPATH_APPS_REGION).toBe('EU');
