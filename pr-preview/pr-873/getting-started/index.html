@@ -4322,7 +4322,7 @@
 <h2 id="telemetry"><strong>Telemetry</strong><a class="headerlink" href="#telemetry" title="Permanent link">&para;</a></h2>
 <p>To improve the developer experience, the SDK collects basic usage data about method invocations. Telemetry is enabled by default. For details on UiPath’s privacy practices, see our <a href="https://www.uipath.com/legal/privacy-policy">privacy policy</a>.</p>
 <h3 id="what-is-sent"><strong>What is sent</strong><a class="headerlink" href="#what-is-sent" title="Permanent link">&para;</a></h3>
-<p>The SDK sends one event when a <code>UiPath</code> instance is created and one event for each SDK method call. Events go to a UiPath-owned Azure Application Insights resource. Each event contains:</p>
+<p>The SDK sends one event when a <code>UiPath</code> instance is created and one event for each SDK method call. Events go to a UiPath-owned Azure Application Insights resource, which also records the time of each event and an approximate location derived from the sender's IP address. Each event contains:</p>
 <table>
 <thead>
 <tr>
@@ -4353,7 +4353,7 @@
 </tr>
 <tr>
 <td><code>CloudUserId</code></td>
-<td>The id of the signed-in user, taken from the access token</td>
+<td>The id of the signed-in user, taken from the access token. Empty for tokens that carry no user id, such as a personal access token</td>
 </tr>
 <tr>
 <td><code>CloudClientId</code>, <code>CloudRedirectUri</code></td>
@@ -4367,16 +4367,19 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Coded apps</label><label for="__tabbed_4_2">Node.js, Deno and the UiPath CLI</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>Set the <code>UIPATH_APPS_TELEMETRY_DISABLED</code> environment variable to <code>true</code> for the deployment. Add it to <code>.env.local</code> to disable telemetry under the dev server too.</p>
+<p>Set the <code>UIPATH_APPS_TELEMETRY_DISABLED</code> environment variable to <code>1</code> or <code>true</code> in the <a href="../coded-apps/ci-cd-github-actions/#coded-app-inside-solution">deployment's environment variables</a>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">UIPATH_APPS_TELEMETRY_DISABLED</span><span class="o">=</span><span class="nb">true</span>
 </code></pre></div>
 <p>A deployment's environment variables replace the package defaults as a whole, so include this variable in every deployment that sets its own.</p>
 </div>
 <div class="tabbed-block">
-<p>Set the <code>UIPATH_TELEMETRY_DISABLED</code> environment variable to <code>1</code> or <code>true</code> in the process environment. This is the same variable the <a href="https://github.com/UiPath/cli">UiPath CLI</a> reads, so disabling CLI telemetry also disables SDK telemetry for CLI commands.</p>
+<p>Set the <code>UIPATH_TELEMETRY_DISABLED</code> environment variable to <code>1</code> or <code>true</code> in the process environment. This is the same variable the <a href="https://www.npmjs.com/package/@uipath/cli">UiPath CLI</a> reads, so disabling CLI telemetry also disables SDK telemetry for CLI commands.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">UIPATH_TELEMETRY_DISABLED</span><span class="o">=</span><span class="m">1</span>
 </code></pre></div>
-<p>Under Deno, the SDK reads the variable only when the process is allowed to, for example with <code>--allow-env=UIPATH_TELEMETRY_DISABLED</code>. Without that permission the variable is ignored.</p>
+<div class="admonition warning">
+<p class="admonition-title">Deno</p>
+<p>Deno must be allowed to read the variable, for example with <code>--allow-env=UIPATH_TELEMETRY_DISABLED</code>. Without that permission the variable is ignored and telemetry stays on.</p>
+</div>
 </div>
 </div>
 </div>

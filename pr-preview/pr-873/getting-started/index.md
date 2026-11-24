@@ -81,17 +81,17 @@ To improve the developer experience, the SDK collects basic usage data about met
 
 ### **What is sent**
 
-The SDK sends one event when a `UiPath` instance is created and one event for each SDK method call. Events go to a UiPath-owned Azure Application Insights resource. Each event contains:
+The SDK sends one event when a `UiPath` instance is created and one event for each SDK method call. Events go to a UiPath-owned Azure Application Insights resource, which also records the time of each event and an approximate location derived from the sender's IP address. Each event contains:
 
-| Field                                          | Value                                                      |
-| ---------------------------------------------- | ---------------------------------------------------------- |
-| `ApplicationName`, `Version`                   | The SDK's name and version                                 |
-| `Service`                                      | The SDK method that was called, for example `Tasks.GetAll` |
-| `CloudUrl`                                     | The base URL with the organization and tenant              |
-| `CloudOrganizationName`, `CloudOrganizationId` | The organization the SDK is configured for                 |
-| `CloudTenantName`, `CloudTenantId`             | The tenant the SDK is configured for                       |
-| `CloudUserId`                                  | The id of the signed-in user, taken from the access token  |
-| `CloudClientId`, `CloudRedirectUri`            | The OAuth client id and redirect URI, when OAuth is used   |
+| Field                                          | Value                                                                                                                              |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `ApplicationName`, `Version`                   | The SDK's name and version                                                                                                         |
+| `Service`                                      | The SDK method that was called, for example `Tasks.GetAll`                                                                         |
+| `CloudUrl`                                     | The base URL with the organization and tenant                                                                                      |
+| `CloudOrganizationName`, `CloudOrganizationId` | The organization the SDK is configured for                                                                                         |
+| `CloudTenantName`, `CloudTenantId`             | The tenant the SDK is configured for                                                                                               |
+| `CloudUserId`                                  | The id of the signed-in user, taken from the access token. Empty for tokens that carry no user id, such as a personal access token |
+| `CloudClientId`, `CloudRedirectUri`            | The OAuth client id and redirect URI, when OAuth is used                                                                           |
 
 Method arguments, request bodies and response data are never sent.
 
@@ -99,7 +99,7 @@ Method arguments, request bodies and response data are never sent.
 
 When telemetry is disabled, the SDK sends no events at all.
 
-Set the `UIPATH_APPS_TELEMETRY_DISABLED` environment variable to `true` for the deployment. Add it to `.env.local` to disable telemetry under the dev server too.
+Set the `UIPATH_APPS_TELEMETRY_DISABLED` environment variable to `1` or `true` in the [deployment's environment variables](../coded-apps/ci-cd-github-actions/#coded-app-inside-solution).
 
 ```
 UIPATH_APPS_TELEMETRY_DISABLED=true
@@ -107,13 +107,15 @@ UIPATH_APPS_TELEMETRY_DISABLED=true
 
 A deployment's environment variables replace the package defaults as a whole, so include this variable in every deployment that sets its own.
 
-Set the `UIPATH_TELEMETRY_DISABLED` environment variable to `1` or `true` in the process environment. This is the same variable the [UiPath CLI](https://github.com/UiPath/cli) reads, so disabling CLI telemetry also disables SDK telemetry for CLI commands.
+Set the `UIPATH_TELEMETRY_DISABLED` environment variable to `1` or `true` in the process environment. This is the same variable the [UiPath CLI](https://www.npmjs.com/package/@uipath/cli) reads, so disabling CLI telemetry also disables SDK telemetry for CLI commands.
 
 ```
 export UIPATH_TELEMETRY_DISABLED=1
 ```
 
-Under Deno, the SDK reads the variable only when the process is allowed to, for example with `--allow-env=UIPATH_TELEMETRY_DISABLED`. Without that permission the variable is ignored.
+Deno
+
+Deno must be allowed to read the variable, for example with `--allow-env=UIPATH_TELEMETRY_DISABLED`. Without that permission the variable is ignored and telemetry stays on.
 
 ## **Vibe Coding**
 
