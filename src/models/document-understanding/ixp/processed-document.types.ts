@@ -72,7 +72,8 @@ export interface ProcessedDocumentMetadata<TModelConfig extends ProcessedDocumen
  * and the identifiers of the run.
  *
  * @typeParam TOutput - The shape of `result.output`, described by `taxonomy`;
- *   leave it `unknown` when the taxonomy is not known at compile time.
+ *   leave it `unknown` when the taxonomy is not known at compile time. It is
+ *   the caller's assertion: `taxonomy` is not checked against it.
  *
  * @example
  * ```typescript

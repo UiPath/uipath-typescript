@@ -68,14 +68,19 @@ export interface IXPTraceContext {
  */
 export interface IXPExtractionResult<TOutput = unknown> {
   /**
-   * The values, one property per field group of the taxonomy. An `array`
-   * group holds a list of rows, e.g. `output['Payslip'][0]['Net pay']`; an
-   * `object` group holds its fields directly, e.g. `output['Employer']['Name']`.
+   * The values, one property per top-level field group of the taxonomy. An
+   * `array` group holds a list of rows, e.g. `output['Payslip'][0]['Net pay']`;
+   * an `object` group holds its fields directly, e.g. `output['Employer']['Name']`.
+   * A nested group sits inside its parent the same way, e.g.
+   * `output['Invoice'][0]['Items'][2]['Quantity']`.
    */
   output: TOutput;
   /**
    * Per-value provenance keyed by RFC 6901 JSON Pointer into `output`, e.g.
-   * `'/Payslip/0/Net pay'`. Only field values have an entry, not groups or rows.
+   * `'/Payslip/0/Net pay'`, or `'/Invoice/0/Items/2/Quantity'` for a nested
+   * group. Each segment is a group name, a row index or a field name, with `~`
+   * written `~0` and `/` written `~1`: a field named `Date/Time` is
+   * `'/Payslip/0/Date~1Time'`. Only field values have an entry, not groups or rows.
    */
   attribution: Partial<Record<string, IXPAttribution>>;
   /** The trace context as the processor wrote it; the same ids are also in the processed document's `metadata`. */
