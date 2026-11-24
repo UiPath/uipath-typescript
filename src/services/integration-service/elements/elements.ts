@@ -41,7 +41,7 @@ function requireArg(value: string, name: string, method: string): void {
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Elements } from '@uipath/uipath-typescript/integration-service';
+ * import { Elements } from '@uipath/uipath-typescript/connections';
  *
  * const elements = new Elements(sdk);
  * const objects = await elements.getObjects('uipath-slack');

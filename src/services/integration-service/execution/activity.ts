@@ -209,7 +209,7 @@ function withPage(result: ExecuteActivityResult): ExecuteActivityResult {
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { executeActivity } from '@uipath/uipath-typescript/integration-service';
+ * import { executeActivity } from '@uipath/uipath-typescript/connections';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
@@ -342,7 +342,7 @@ export function executeActivity(
  * }
  *
  * // anywhere in the project
- * import { executeActivity } from '@uipath/uipath-typescript/integration-service';
+ * import { executeActivity } from '@uipath/uipath-typescript/connections';
  *
  * const result = await executeActivity(sdk, ProjectResources.helpdesk, 'tickets', 'GET');
  * ```

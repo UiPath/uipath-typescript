@@ -24,7 +24,7 @@ import { resolveConnectionTarget, withConnectionFolder } from '@/services/integr
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Connections } from '@uipath/uipath-typescript/integration-service';
+ * import { Connections } from '@uipath/uipath-typescript/connections';
  *
  * const connections = new Connections(sdk);
  * const allConnections = await connections.getAll();

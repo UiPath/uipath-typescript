@@ -1,6 +1,6 @@
 # Integration Service Execution
 
-Functions that run an operation through an Integration Service connection. Integration Service adds the connection's authentication, so the vendor's key or token stays out of your code. Import them from `@uipath/uipath-typescript/integration-service` and pass a `UiPath` instance as the first argument.
+Functions that run an operation through an Integration Service connection. Integration Service adds the connection's authentication, so the vendor's key or token stays out of your code. Import them from `@uipath/uipath-typescript/connections` and pass a `UiPath` instance as the first argument.
 
 | Function | Description |
 |----------|-------------|
@@ -18,7 +18,7 @@ Takes a connection, an object name, a method and optional [`ExecuteOptions`](/ui
 
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript/core';
-import { execute } from '@uipath/uipath-typescript/integration-service';
+import { execute } from '@uipath/uipath-typescript/connections';
 
 const sdk = new UiPath(config);
 await sdk.initialize();
@@ -39,7 +39,7 @@ if (result.ok) {
 Takes the same arguments with [`ExecuteActivityOptions`](/uipath-typescript/api/interfaces/ExecuteActivityOptions), and resolves to an [`ExecuteActivityResult`](/uipath-typescript/api/interfaces/ExecuteActivityResult).
 
 ```typescript
-import { executeActivity } from '@uipath/uipath-typescript/integration-service';
+import { executeActivity } from '@uipath/uipath-typescript/connections';
 
 const created = await executeActivity(sdk, '<connectionId>', 'issue', 'POST', {
   body: { 'fields.summary': 'Login fails', 'fields.labels[0]': 'urgent' },
