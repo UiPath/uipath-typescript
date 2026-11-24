@@ -11,7 +11,7 @@ import type { UiPathConfig } from '@/core/config/config';
 import type { ResolvedRetryOptions } from '@/models/common/http.internal-types';
 import type { IntegrationServiceFolderContextOptions } from '@/models/integration-service/integration-service.types';
 import type { ExecuteMethod, ExecuteOptions, ExecuteResult } from '@/models/integration-service/execution.types';
-import { readResponseBody } from './response-content';
+import { readResponseBody, readTextBody } from './response-content';
 
 /** HTTP methods that carry a request body. */
 export const BODY_METHODS = new Set<ExecuteMethod>(['POST', 'PUT', 'PATCH']);
@@ -67,6 +67,10 @@ export interface ConnectionRequest extends IntegrationServiceFolderContextOption
   form?: FormData;
   /** Read a 2xx response as bytes whatever its content type. */
   fileResponse?: boolean;
+  /** Always read the response as text, never as a file. */
+  textResponse?: boolean;
+  /** Method name used in the warning for a non-JSON body. Defaults to the resource type. */
+  label?: string;
   /** Retry policy, already resolved against the defaults. */
   retry: ResolvedRetryOptions;
   /** Timeout for a single attempt, in milliseconds. */
@@ -163,7 +167,10 @@ export abstract class ConnectionRequestService extends BaseService {
       flatHeaders[key] = value;
     });
 
-    const parsed = await readResponseBody(response, flatHeaders, request.fileResponse === true, resourceType);
+    const label = request.label ?? resourceType;
+    const parsed = request.textResponse
+      ? await readTextBody(response, label)
+      : await readResponseBody(response, flatHeaders, request.fileResponse === true, label);
 
     return {
       ok: response.ok,

@@ -9,6 +9,12 @@ export const NEXT_PAGE_TOKEN_HEADER = 'elements-next-page-token';
 /** Query parameter that requests the page a token points to. */
 export const NEXT_PAGE_PARAM = 'nextPage';
 
+/**
+ * Most pages one call follows after the first. A connector that never ends its list would
+ * otherwise keep a `maxRecords: -1` call running for ever.
+ */
+export const MAX_FOLLOWED_PAGES = 1000;
+
 /** `maxRecords` value that asks for every record. */
 const ALL_RECORDS = -1;
 /** Marker a connector puts in its page token once the list is exhausted. */

@@ -106,8 +106,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Function | OAuth Scope |
 |----------|-------------|
-| `execute()` | `IS.Connections.Read`, `OR.Folders`, `OR.Users` (plus any third-party scopes required by the underlying connection) |
-| `executeActivity()` | `IS.Connections.Read`, `OR.Folders`, `OR.Users` (plus any third-party scopes required by the underlying connection) |
+| `execute()` | `IS.Connections.Read`, `OR.Folders`, `OR.Users.Read` (plus any third-party scopes required by the underlying connection) |
+| `executeActivity()` | `IS.Connections.Read`, `OR.Folders`, `OR.Users.Read` (plus any third-party scopes required by the underlying connection) |
 
 ## Conversational Agent
 

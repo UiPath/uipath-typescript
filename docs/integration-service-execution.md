@@ -52,6 +52,8 @@ A top-level body key that contains `.` or `[` is a path: the call above sends `{
 
 Pass `maxRecords` to gather records across pages; `-1` fetches every record. Without it one page is returned, and `page` on the result holds the token of the next one when more records exist.
 
+When a `maxRecords` call stops with records left, `page` is set as well. Its token starts at the next page, so records cut from the last page read are skipped. A call follows at most 1000 pages and stops if the connector repeats a page token.
+
 ```typescript
 const tickets = await executeActivity(sdk, '<connectionId>', 'tickets', 'GET', {
   maxRecords: 200,

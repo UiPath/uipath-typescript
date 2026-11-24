@@ -100,7 +100,6 @@ plugins:
           - authentication.md: Authentication setup
           - pagination.md: Pagination guide
           - helpers.md: Helper methods guide
-          - integration-service-execution.md: Integration Service execution functions
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
           - api/interfaces/JobServiceModel.md: Job service methods
@@ -122,6 +121,7 @@ plugins:
           - api/interfaces/MessageServiceModel.md: Message service methods
           - api/interfaces/UserSettingsServiceModel.md: User settings service methods
           - api/interfaces/AgentServiceModel.md: Agents service methods
+          - integration-service-execution.md: Integration Service execution functions
           - api/interfaces/SessionStream.md: Real-time WebSocket session
           - api/interfaces/ExchangeStream.md: Exchange streaming events
           - api/interfaces/MessageStream.md: Message streaming events

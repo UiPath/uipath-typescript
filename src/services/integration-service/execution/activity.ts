@@ -18,7 +18,13 @@ import {
   resolveConnectorKey,
   type ConnectionRequest,
 } from './connection-request';
-import { NEXT_PAGE_PARAM, extractPage, resolveMaxRecords, stripPaginationHeaders } from './pagination';
+import {
+  MAX_FOLLOWED_PAGES,
+  NEXT_PAGE_PARAM,
+  extractPage,
+  resolveMaxRecords,
+  stripPaginationHeaders,
+} from './pagination';
 import { expandBodyPaths, isPlainRecord } from './body-paths';
 import { buildMultipartForm, validateFiles } from './multipart';
 import { encodeUrlInputs } from './url-input';
@@ -132,6 +138,10 @@ class ActivityExecution extends ConnectionRequestService {
   /**
    * Follows the connector's pages until `maxRecords` records are gathered or the list ends.
    * A page that fails is returned as the result, so the caller sees the failure.
+   *
+   * Stops early when the connector hands back a token it already issued, or after
+   * {@link MAX_FOLLOWED_PAGES} pages, so a connector that never ends its list cannot keep the
+   * call running. When records remain, `page` on the result holds the token to continue from.
    */
   private async collectPages(
     target: ResolvedConnection,
@@ -141,11 +151,24 @@ class ActivityExecution extends ConnectionRequestService {
     maxRecords: number,
   ): Promise<ExecuteActivityResult> {
     const records = [...firstRecords];
+    const seenTokens = new Set<string>();
     let last = first;
     let page = extractPage(first.headers, first.body);
-    let followed = false;
+    let followed = 0;
 
     while (page?.hasMore && records.length < maxRecords) {
+      if (seenTokens.has(page.nextPageToken)) {
+        console.warn('executeActivity: the connector repeated a page token, paging stopped');
+        // The token leads back to a page already read, so there is nothing to continue from
+        page = undefined;
+        break;
+      }
+      if (followed >= MAX_FOLLOWED_PAGES) {
+        console.warn(`executeActivity: paging stopped after ${MAX_FOLLOWED_PAGES} pages, continue from page.nextPageToken`);
+        break;
+      }
+      seenTokens.add(page.nextPageToken);
+
       const next = await this.send(
         target,
         { ...request, queryParams: { ...request.queryParams, [NEXT_PAGE_PARAM]: page.nextPageToken } },
@@ -153,19 +176,21 @@ class ActivityExecution extends ConnectionRequestService {
       );
       if (!next.ok) return next;
 
-      followed = true;
+      followed++;
       last = next;
       if (Array.isArray(next.body)) records.push(...next.body);
       page = extractPage(next.headers, next.body);
     }
 
-    if (!followed && records.length <= maxRecords) {
+    if (followed === 0 && records.length <= maxRecords) {
       return withPage(first);
     }
     return {
       ...last,
       body: records.slice(0, maxRecords),
       headers: stripPaginationHeaders(last.headers),
+      // More records exist past the ones returned: hand the caller the token to continue from
+      ...(page ? { page } : {}),
     };
   }
 }

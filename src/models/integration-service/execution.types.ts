@@ -91,7 +91,9 @@ export interface ExecutePage {
 export interface ExecuteActivityResult extends ExecuteResult {
   /**
    * Paging state of a list response. Absent when the response is not a paged list, when the
-   * connector reported its last page, or when `maxRecords` already gathered the pages.
+   * connector reported its last page, or when `maxRecords` gathered every page. Present after a
+   * `maxRecords` call that stopped with records left; continuing from `nextPageToken` starts at
+   * the next page, so records cut from the last page read are not returned again.
    */
   page?: ExecutePage;
 }
