@@ -6,6 +6,7 @@
 - [Authentication](https://uipath.github.io/uipath-typescript/authentication/index.md): Authentication setup
 - [Pagination](https://uipath.github.io/uipath-typescript/pagination/index.md): Pagination guide
 - [Helper Methods](https://uipath.github.io/uipath-typescript/helpers/index.md): Helper methods guide
+- [Execution](https://uipath.github.io/uipath-typescript/integration-service-execution/index.md): Integration Service execution functions
 
 ## API Reference
 
