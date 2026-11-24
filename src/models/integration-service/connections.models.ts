@@ -28,7 +28,7 @@ import type { ConnectionResource } from '@/resources';
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Connections } from '@uipath/uipath-typescript/integration-service';
+ * import { Connections } from '@uipath/uipath-typescript/connections';
  *
  * const connections = new Connections(sdk);
  * const allConnections = await connections.getAll();
@@ -58,7 +58,7 @@ export interface ConnectionsServiceModel {
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connections } from '@uipath/uipath-typescript/integration-service';
+   * import { Connections } from '@uipath/uipath-typescript/connections';
    *
    * const connections = new Connections(sdk);
    *
@@ -109,7 +109,7 @@ export interface ConnectionsServiceModel {
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connections } from '@uipath/uipath-typescript/integration-service';
+   * import { Connections } from '@uipath/uipath-typescript/connections';
    *
    * const connections = new Connections(sdk);
    *
@@ -161,7 +161,7 @@ export interface ConnectionsServiceModel {
    * }
    *
    * // anywhere in the project
-   * import { Connections } from '@uipath/uipath-typescript/integration-service';
+   * import { Connections } from '@uipath/uipath-typescript/connections';
    *
    * const connections = new Connections(sdk);
    * const conn = await connections.getById(ProjectResources.financeSlack);

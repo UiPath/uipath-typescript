@@ -52,7 +52,7 @@ An explicit `folderId`, `folderKey` or `folderPath` option still wins over the h
 A connection handle goes wherever a connection id does: `connections.getById()`, `execute()` and the `elements.getInstance*()` methods. When an admin mapped the connection to another one, the call goes to that connection in its own folder, even when you pass a folder option.
 
 ```typescript
-import { Connections, execute } from '@uipath/uipath-typescript/integration-service';
+import { Connections, execute } from '@uipath/uipath-typescript/connections';
 import { ProjectResources } from '../uipath_resources';
 
 const slack = await new Connections(sdk).getById(ProjectResources.financeSlack);

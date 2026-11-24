@@ -4,9 +4,6 @@
  * Provides access to UiPath Integration Service connectors, connections,
  * element metadata, and connector activity execution.
  *
- * Import it from `@uipath/uipath-typescript/integration-service`. The earlier path,
- * `@uipath/uipath-typescript/connections`, exports the same module and keeps working.
- *
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
@@ -17,7 +14,7 @@
  *   execute,
  *   executeActivity,
  *   executeHttp,
- * } from '@uipath/uipath-typescript/integration-service';
+ * } from '@uipath/uipath-typescript/connections';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();

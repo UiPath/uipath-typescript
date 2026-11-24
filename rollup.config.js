@@ -280,11 +280,6 @@ const serviceEntries = [
     output: 'connections/index'
   },
   {
-    name: 'integration-service',
-    input: 'src/services/integration-service/index.ts',
-    output: 'integration-service/index'
-  },
-  {
     name: 'roles',
     input: 'src/services/platform/roles/index.ts',
     output: 'roles/index'

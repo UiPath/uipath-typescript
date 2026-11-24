@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.9.0-preview.0",
+    "version": "1.8.5",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -314,16 +314,6 @@
             "require": {
                 "types": "./dist/connections/index.d.ts",
                 "default": "./dist/connections/index.cjs"
-            }
-        },
-        "./integration-service": {
-            "import": {
-                "types": "./dist/integration-service/index.d.ts",
-                "default": "./dist/integration-service/index.mjs"
-            },
-            "require": {
-                "types": "./dist/integration-service/index.d.ts",
-                "default": "./dist/integration-service/index.cjs"
             }
         },
         "./roles": {
