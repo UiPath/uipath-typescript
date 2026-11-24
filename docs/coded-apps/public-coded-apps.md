@@ -24,8 +24,8 @@ await sdk.initialize();   // no sign-in in public mode
 
 | Call | Notes |
 |---|---|
-| `processes.start(...)` | Starts one job as the app. |
-| `jobs.getOutput(jobKey)` | Only for jobs this session started, or of a process open to all. |
+| `processes.start(...)` | Starts one job as the app. The job key is `result[0].key`. |
+| `new Jobs(sdk).getOutput(jobKey)` | Only for jobs this session started, or of a process open to all. `Jobs` comes from `@uipath/uipath-typescript/jobs`. |
 | `entities.insertRecord({ name }, data)` | The record belongs to this session. |
 | `entities.getRecordByName(name, recordId)` | Only for records this session created, or of an entity open to all. |
 | `entities.getRecordsByName(name, options?)` | Only for an entity open to all. Supports `pageSize`, `jumpToPage` and `cursor`. |
@@ -52,7 +52,7 @@ Pass the same `name` the binding was declared with, plus its `folderPath` for pr
 
 ### Declaring the bindings
 
-Write `bindings_v2.json` at the app project root (in a solution, next to `source/`), one entry per resource the app uses:
+Write `bindings_v2.json` next to the app's `package.json`, or, for a project in a local solution, in the project folder next to `source/`. Add one entry per resource the app uses:
 
 ```json
 {
@@ -143,11 +143,54 @@ Set `UIPATH_PUBLIC_APP=false`, or remove it, to go back to signing in as yoursel
 
 ## Deploying
 
-A public app lives in a solution and is deployed with it. Pack and publish the solution with the preview CLI (`npm install -g @uipath/cli@preview`). At deploy, set the app's runtime auth mode to **Application**, pick a **confidential** external application with application scopes for everything the app calls, and enter its client secret. The same package deploys as a sign-in app with the auth mode set to **User**.
+A public app lives in a solution and is deployed with it. The same package deploys as a sign-in app when **Authentication** is left at **User sign-in**.
 
-From the CLI:
+### Before you deploy
+
+- **External application.** An organization admin creates a **confidential** external application with application scopes for everything the app calls, for example `OR.Execution OR.Jobs OR.Buckets DataFabric.Data.Read DataFabric.Data.Write`, and shares its client secret with you.
+- **Build output.** Run `npm run build`. Studio Web and `uip solution pack` package the built `dist` folder, so `uipath.json` has to be in it (Vite: `public/uipath.json`).
+- **Bindings.** `bindings_v2.json` lists every resource the app uses (see [Declaring the bindings](#declaring-the-bindings)).
+
+### Get the app into Studio Web
+
+Use the preview CLI: `npm install -g @uipath/cli@preview`.
+
+**Push the app.** From the app folder (the one with `package.json`), push the source and build output. On the first push the CLI creates the solution and the coded app project in Studio Web, saves the project id to `.env`, and adds the resources from `bindings_v2.json` to the solution:
 
 ```bash
+uip codedapp push --solution-name "<Solution>" --project-name "<App>" --build-dir dist
+```
+
+Run `uip codedapp push` again after each change.
+
+**Or upload a local solution.** When the app is a project in a local solution (`uip codedapp init` creates one around it), add its resources to the solution and upload the whole solution:
+
+```bash
+uip solution resources refresh --solution-folder <solution-folder>
+uip solution upload <solution-folder>
+```
+
+The first upload imports the solution and writes its Studio Web id into the `.uipx` file. Later uploads overwrite it.
+
+### Deploy from Studio Web
+
+1. Open the solution in Studio Web, select the arrow on **Deploy**, and then select **Deploy**.
+2. Check the version, the location and the solution folder name.
+3. Select the arrow on the **Deploy** button at the bottom, and then select **Customize**. Studio Web packs and publishes the solution, then opens the resource settings.
+4. Under **Apps**, select the coded app and set:
+    - **Routing name**: the path the app is served at.
+    - **Authentication**: **Public**. Set this before the next field: the **External application** list shows confidential applications only once **Public** is selected.
+    - **External application**: the confidential external application.
+    - **Client secret**: its secret.
+5. Select **Validate**, and then **Continue**.
+
+### Deploy from the CLI
+
+Pack and publish the solution, set the same four values in its deployment configuration, and deploy:
+
+```bash
+uip solution pack <solution-folder> ./output --version 1.0.0
+uip solution publish ./output/<Solution>_1.0.0.zip
 uip solution deploy config get "<Solution>" -d config.json
 uip solution deploy config set config.json <app> routingName <routing-name> --output-filter Property
 uip solution deploy config set config.json <app> externalClientId "<external app id>" --output-filter Property
@@ -157,6 +200,22 @@ uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-ve
   --folder-name "<Solution>" --parent-folder-path "Shared" --config-file config.json
 ```
 
-Keep `config.json` out of source control: it holds the secret. See [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution) for building, packing and publishing the solution.
+Keep `config.json` out of source control: it holds the secret. For a pipeline, see [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution).
 
-For Data Fabric entities, give the external app a role in the deployment folder with Entity Records View and Create, for example **Automation User**.
+### After the first deploy
+
+1. **Give the external application a role** in the folder the deployment created (`<location>/<solution folder>`): in Orchestrator, open the folder, select **Assign accounts/group/external app**, and assign a role such as **Automation User**. Data Fabric entities need **View** and **Create** on entity records.
+2. **Open the app** at `https://<org>.uipath.host/<routing-name>` in a private window. It opens without a sign-in.
+
+To upgrade, publish a new version and upgrade the deployment. The stored client secret and its scope are kept.
+
+## Troubleshooting
+
+| Symptom | Cause |
+|---|---|
+| `ValidationError`, no request sent | The call isn't supported in public mode. See [What a public app can call](#what-a-public-app-can-call). |
+| `403` on every call to a resource | The resource isn't in `bindings_v2.json`, or the code's name or folder doesn't match its entry. |
+| `403` `Missing permissions: EntityRecords.Create` | The external application has no role in the deployment folder. |
+| `403` on `getRecordsByName` | The entity is in `session` mode. |
+| `404` reading a record or job output | Another visitor created it, or the visitor started a new session. |
+| Access modes from `uipath.json` don't apply | `uipath.json` wasn't packed. It must be in `dist`. |
