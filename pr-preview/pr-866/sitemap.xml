@@ -29,6 +29,10 @@
          <lastmod>2026-11-24</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/integration-service-execution/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/integration-testing/</loc>
          <lastmod>2026-11-24</lastmod>
     </url>
@@ -1214,6 +1218,14 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/functions/createTaskWithMethods/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/functions/execute/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/functions/executeActivity/</loc>
          <lastmod>2026-11-24</lastmod>
     </url>
     <url>
@@ -2533,7 +2545,23 @@
          <lastmod>2026-11-24</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExecuteActivityOptions/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExecuteActivityResult/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExecuteFile/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExecuteOptions/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExecutePage/</loc>
          <lastmod>2026-11-24</lastmod>
     </url>
     <url>

@@ -1213,6 +1213,8 @@
       
         
       
+        
+      
     
     
     
@@ -1326,6 +1328,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -2603,6 +2633,78 @@
     <span class="md-ellipsis">
       
         Deploying
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deploying">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-you-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you deploy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-the-app-into-studio-web" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get the app into Studio Web
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deploy-from-studio-web" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy from Studio Web
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deploy-from-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy from the CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-the-first-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        After the first deploy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
       
     </span>
   </a>
@@ -4145,6 +4247,78 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Deploying">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-you-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you deploy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-the-app-into-studio-web" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get the app into Studio Web
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deploy-from-studio-web" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy from Studio Web
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deploy-from-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy from the CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-the-first-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        After the first deploy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
 </li>
       
     </ul>
@@ -4193,11 +4367,11 @@
 <tbody>
 <tr>
 <td><code>processes.start(...)</code></td>
-<td>Starts one job as the app.</td>
+<td>Starts one job as the app. The job key is <code>result[0].key</code>.</td>
 </tr>
 <tr>
-<td><code>jobs.getOutput(jobKey)</code></td>
-<td>Only for jobs this session started, or of a process open to all.</td>
+<td><code>new Jobs(sdk).getOutput(jobKey)</code></td>
+<td>Only for jobs this session started, or of a process open to all. <code>Jobs</code> comes from <code>@uipath/uipath-typescript/jobs</code>.</td>
 </tr>
 <tr>
 <td><code>entities.insertRecord({ name }, data)</code></td>
@@ -4231,7 +4405,7 @@
 </code></pre></div>
 <p>Pass the same <code>name</code> the binding was declared with, plus its <code>folderPath</code> for processes and buckets. <code>entities.getRecordByName</code> and <code>entities.getRecordsByName</code> take the entity name as a string. Solution overrides are applied by the service, so the code does not change when an admin points a binding at another resource.</p>
 <h3 id="declaring-the-bindings">Declaring the bindings<a class="headerlink" href="#declaring-the-bindings" title="Permanent link">&para;</a></h3>
-<p>Write <code>bindings_v2.json</code> at the app project root (in a solution, next to <code>source/</code>), one entry per resource the app uses:</p>
+<p>Write <code>bindings_v2.json</code> next to the app's <code>package.json</code>, or, for a project in a local solution, in the project folder next to <code>source/</code>. Add one entry per resource the app uses:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;resources&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -4301,18 +4475,92 @@
 </ul>
 <p>Set <code>UIPATH_PUBLIC_APP=false</code>, or remove it, to go back to signing in as yourself.</p>
 <h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link">&para;</a></h2>
-<p>A public app lives in a solution and is deployed with it. Pack and publish the solution with the preview CLI (<code>npm install -g @uipath/cli@preview</code>). At deploy, set the app's runtime auth mode to <strong>Application</strong>, pick a <strong>confidential</strong> external application with application scopes for everything the app calls, and enter its client secret. The same package deploys as a sign-in app with the auth mode set to <strong>User</strong>.</p>
-<p>From the CLI:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>-d<span class="w"> </span>config.json
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>routingName<span class="w"> </span>&lt;routing-name&gt;<span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>externalClientId<span class="w"> </span><span class="s2">&quot;&lt;external app id&gt;&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application<span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
+<p>A public app lives in a solution and is deployed with it. The same package deploys as a sign-in app when <strong>Authentication</strong> is left at <strong>User sign-in</strong>.</p>
+<h3 id="before-you-deploy">Before you deploy<a class="headerlink" href="#before-you-deploy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>External application.</strong> An organization admin creates a <strong>confidential</strong> external application with application scopes for everything the app calls, for example <code>OR.Execution OR.Jobs OR.Buckets DataFabric.Data.Read DataFabric.Data.Write</code>, and shares its client secret with you.</li>
+<li><strong>Build output.</strong> Run <code>npm run build</code>. Studio Web and <code>uip solution pack</code> package the built <code>dist</code> folder, so <code>uipath.json</code> has to be in it (Vite: <code>public/uipath.json</code>).</li>
+<li><strong>Bindings.</strong> <code>bindings_v2.json</code> lists every resource the app uses (see <a href="#declaring-the-bindings">Declaring the bindings</a>).</li>
+</ul>
+<h3 id="get-the-app-into-studio-web">Get the app into Studio Web<a class="headerlink" href="#get-the-app-into-studio-web" title="Permanent link">&para;</a></h3>
+<p>Use the preview CLI: <code>npm install -g @uipath/cli@preview</code>.</p>
+<p><strong>Push the app.</strong> From the app folder (the one with <code>package.json</code>), push the source and build output. On the first push the CLI creates the solution and the coded app project in Studio Web, saves the project id to <code>.env</code>, and adds the resources from <code>bindings_v2.json</code> to the solution:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>push<span class="w"> </span>--solution-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--project-name<span class="w"> </span><span class="s2">&quot;&lt;App&gt;&quot;</span><span class="w"> </span>--build-dir<span class="w"> </span>dist
 </code></pre></div>
-<p>Keep <code>config.json</code> out of source control: it holds the secret. See <a href="../ci-cd-github-actions/#coded-app-inside-solution">Coded App inside Solution</a> for building, packing and publishing the solution.</p>
-<p>For Data Fabric entities, give the external app a role in the deployment folder with Entity Records View and Create, for example <strong>Automation User</strong>.</p>
+<p>Run <code>uip codedapp push</code> again after each change.</p>
+<p><strong>Or upload a local solution.</strong> When the app is a project in a local solution (<code>uip codedapp init</code> creates one around it), add its resources to the solution and upload the whole solution:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>resources<span class="w"> </span>refresh<span class="w"> </span>--solution-folder<span class="w"> </span>&lt;solution-folder&gt;
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>upload<span class="w"> </span>&lt;solution-folder&gt;
+</code></pre></div>
+<p>The first upload imports the solution and writes its Studio Web id into the <code>.uipx</code> file. Later uploads overwrite it.</p>
+<h3 id="deploy-from-studio-web">Deploy from Studio Web<a class="headerlink" href="#deploy-from-studio-web" title="Permanent link">&para;</a></h3>
+<ol type="1">
+<li>Open the solution in Studio Web, select the arrow on <strong>Deploy</strong>, and then select <strong>Deploy</strong>.</li>
+<li>Check the version, the location and the solution folder name.</li>
+<li>Select the arrow on the <strong>Deploy</strong> button at the bottom, and then select <strong>Customize</strong>. Studio Web packs and publishes the solution, then opens the resource settings.</li>
+<li>Under <strong>Apps</strong>, select the coded app and set:<ul>
+<li><strong>Routing name</strong>: the path the app is served at.</li>
+<li><strong>Authentication</strong>: <strong>Public</strong>. Set this before the next field: the <strong>External application</strong> list shows confidential applications only once <strong>Public</strong> is selected.</li>
+<li><strong>External application</strong>: the confidential external application.</li>
+<li><strong>Client secret</strong>: its secret.</li>
+</ul>
+</li>
+<li>Select <strong>Validate</strong>, and then <strong>Continue</strong>.</li>
+</ol>
+<h3 id="deploy-from-the-cli">Deploy from the CLI<a class="headerlink" href="#deploy-from-the-cli" title="Permanent link">&para;</a></h3>
+<p>Pack and publish the solution, set the same four values in its deployment configuration, and deploy:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>pack<span class="w"> </span>&lt;solution-folder&gt;<span class="w"> </span>./output<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.0.0
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>publish<span class="w"> </span>./output/&lt;Solution&gt;_1.0.0.zip
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>-d<span class="w"> </span>config.json
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>routingName<span class="w"> </span>&lt;routing-name&gt;<span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>externalClientId<span class="w"> </span><span class="s2">&quot;&lt;external app id&gt;&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application<span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
+</code></pre></div>
+<p>Keep <code>config.json</code> out of source control: it holds the secret. For a pipeline, see <a href="../ci-cd-github-actions/#coded-app-inside-solution">Coded App inside Solution</a>.</p>
+<h3 id="after-the-first-deploy">After the first deploy<a class="headerlink" href="#after-the-first-deploy" title="Permanent link">&para;</a></h3>
+<ol type="1">
+<li><strong>Give the external application a role</strong> in the folder the deployment created (<code>&lt;location&gt;/&lt;solution folder&gt;</code>): in Orchestrator, open the folder, select <strong>Assign accounts/group/external app</strong>, and assign a role such as <strong>Automation User</strong>. Data Fabric entities need <strong>View</strong> and <strong>Create</strong> on entity records.</li>
+<li><strong>Open the app</strong> at <code>https://&lt;org&gt;.uipath.host/&lt;routing-name&gt;</code> in a private window. It opens without a sign-in.</li>
+</ol>
+<p>To upgrade, publish a new version and upgrade the deployment. The stored client secret and its scope are kept.</p>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValidationError</code>, no request sent</td>
+<td>The call isn't supported in public mode. See <a href="#what-a-public-app-can-call">What a public app can call</a>.</td>
+</tr>
+<tr>
+<td><code>403</code> on every call to a resource</td>
+<td>The resource isn't in <code>bindings_v2.json</code>, or the code's name or folder doesn't match its entry.</td>
+</tr>
+<tr>
+<td><code>403</code> <code>Missing permissions: EntityRecords.Create</code></td>
+<td>The external application has no role in the deployment folder.</td>
+</tr>
+<tr>
+<td><code>403</code> on <code>getRecordsByName</code></td>
+<td>The entity is in <code>session</code> mode.</td>
+</tr>
+<tr>
+<td><code>404</code> reading a record or job output</td>
+<td>Another visitor created it, or the visitor started a new session.</td>
+</tr>
+<tr>
+<td>Access modes from <code>uipath.json</code> don't apply</td>
+<td><code>uipath.json</code> wasn't packed. It must be in <code>dist</code>.</td>
+</tr>
+</tbody>
+</table>
 
 
 
