@@ -37,7 +37,7 @@ describe('executeHttp', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('posts the vendor request to the connection passthrough endpoint', async () => {

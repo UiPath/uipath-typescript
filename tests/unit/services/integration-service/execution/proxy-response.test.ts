@@ -82,6 +82,14 @@ describe('unwrapProxyResponse', () => {
     expect(result.headers).toEqual({ 'content-length': '42' });
   });
 
+  it('lowercases the vendor header names, as execute returns them', () => {
+    const result = unwrapProxyResponse(
+      carrier({ code: HTTP_TEST_CONSTANTS.STATUS_OK, headers: { 'Content-Type': 'text/plain', 'X-Request-Id': 'abc' } }),
+    );
+
+    expect(result.headers).toEqual({ 'content-type': 'text/plain', 'x-request-id': 'abc' });
+  });
+
   it('returns the Integration Service response when the call did not reach the vendor', () => {
     const failure: ExecuteResult = {
       ok: false,

@@ -4,12 +4,12 @@ import type {
 } from '@/models/integration-service/execution.types';
 import { isPlainRecord } from './body-paths';
 
-/** Keeps the string-valued entries of a header or query map. */
-function toStringRecord(value: unknown): Record<string, string> | undefined {
-  if (!isPlainRecord(value)) return undefined;
+/** The vendor's headers as a flat record with lowercase names, the way `execute` returns headers. */
+function toHeaderRecord(value: unknown): Record<string, string> {
   const result: Record<string, string> = {};
+  if (!isPlainRecord(value)) return result;
   for (const [key, entry] of Object.entries(value)) {
-    if (entry !== undefined && entry !== null) result[key] = String(entry);
+    if (entry !== undefined && entry !== null) result[key.toLowerCase()] = String(entry);
   }
   return result;
 }
@@ -39,7 +39,7 @@ export function unwrapProxyResponse(result: ExecuteResult): ExecuteHttpResult {
     statusText: typeof envelope.statusText === 'string' ? envelope.statusText : '',
     // The parsed body wins; `rawStringBody` carries a vendor body that is not JSON.
     body: envelope.body ?? envelope.rawStringBody,
-    headers: toStringRecord(envelope.headers) ?? {},
+    headers: toHeaderRecord(envelope.headers),
     isVendorError: !ok,
   };
 }

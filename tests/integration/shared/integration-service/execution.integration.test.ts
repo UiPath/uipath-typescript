@@ -108,10 +108,12 @@ describeIntegration('Integration Service Execute - Integration Tests', 'user', m
     it('should send the request to the vendor and return its response', async () => {
       const result = await retryTransient(() => executeHttp(sdk, connectionId, HTTP_PROBE_PATH, 'GET'));
 
-      // The vendor decides the status. A call that never reached it is not ok and not a vendor error.
-      expect(result.status).toBeGreaterThanOrEqual(200);
-      expect(result.status).toBeLessThan(600);
-      expect(result.isVendorError, `GET ${HTTP_PROBE_PATH} returned ${result.status}`).toBe(!result.ok);
+      // The probe path does not exist on the vendor, so the vendor's own refusal must come back.
+      // Integration Service answers 200 around it; a 4xx here proves the response was unwrapped.
+      expect(result.ok, `GET ${HTTP_PROBE_PATH} returned ${result.status}`).toBe(false);
+      expect(result.status).toBeGreaterThanOrEqual(400);
+      expect(result.status).toBeLessThan(500);
+      expect(result.isVendorError).toBe(true);
     });
 
     it('should reach the same connection from a resource.connection() handle', async () => {
