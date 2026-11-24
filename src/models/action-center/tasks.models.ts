@@ -398,7 +398,6 @@ export interface TaskServiceModel {
    *   console.log(schema.name, schema.schema);
    * }
    * ```
-   * @experimental
    */
   getSchemaByKey(key: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse>;
 
@@ -461,7 +460,6 @@ export interface TaskServiceModel {
    *   console.log(result.name, result.schema);
    * }
    * ```
-   * @experimental
    */
   getSchema(taskId: number, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null>;
 
@@ -598,7 +596,6 @@ export interface TaskMethods {
    *
    * @param options - Optional folder scope override (defaults to this task's folder)
    * @returns Promise resolving to a {@link TaskGetSchemaResponse}, or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
-   * @experimental
    */
   getSchema(options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null>;
 
