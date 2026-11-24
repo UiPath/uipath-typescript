@@ -27,7 +27,9 @@ export const LOCAL_APP_KEY = 'local-dev'
 const RESOURCES_FILE = 'uipath_resources.ts'
 const ROUTE_RE = /\/apps_\/default\/api\/v1\/default\/integrations\/codedapp\/([^?]*)/
 const SESSION_COOKIE = 'uipath_local_public_session'
-const SESSION_COOKIE_RE = new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([a-f0-9]+)`)
+const SESSION_ID_RE = /^[a-f0-9]{64}$/
+const PORT_RE = /:(\d+)$/
+const COOKIE_SEPARATOR_RE = /;\s*/
 // Keys a public deployment doesn't serve: no OAuth client, and the base URL is set in the page instead.
 const NON_PUBLIC_CONFIG_KEYS = new Set(['clientId', 'scope', 'redirectUri', 'baseUrl'])
 const TOKEN_REFRESH_MARGIN_SECONDS = 120
@@ -206,7 +208,11 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
     const body = await response.json().catch(() => ({})) as { access_token?: string; expires_in?: number; error?: string; error_description?: string }
     if (!response.ok || !body.access_token) {
       const reason = [body.error, body.error_description].filter(Boolean).join(': ')
-      throw new HttpError(500, { message: `Identity rejected the app's client credentials${reason ? ` (${reason})` : ''}` })
+      // The deployed app sends the same scope, so fix it in uipath.json rather than here.
+      const hint = body.error === 'invalid_scope'
+        ? ' Set `scope` in uipath.json to application scopes of the external application only (no openid or offline_access).'
+        : ''
+      throw new HttpError(500, { message: `Identity rejected the app's client credentials${reason ? ` (${reason})` : ''}.${hint}` })
     }
     token = { value: body.access_token, expiresAt: Date.now() + ((body.expires_in ?? 3600) - TOKEN_REFRESH_MARGIN_SECONDS) * 1000 }
     return token.value
@@ -280,7 +286,10 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       const owns = session.owned.has(jobKey)
       const openProcesses = readDeclaredResources(cwd).filter(item => item.kind === 'process' && isOpenToAll(access(), 'process', bindingKey(item)))
       if (!owns && openProcesses.length === 0) throw new HttpError(404)
-      const headers = session.jobFolders.get(jobKey) ?? folderHeaders(openProcesses[0])
+      // Orchestrator needs a folder header here but finds the job in any folder, so any declared folder will do.
+      const headers = session.jobFolders.get(jobKey)
+        ?? openProcesses.map(folderHeaders).find(candidate => Object.keys(candidate).length > 0)
+        ?? {}
       const response = await call('GET', `${tenantUrl}/orchestrator_/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier=${encodeURIComponent(jobKey)})?$expand=Release`, headers)
       const job = await response.json() as { Key?: string; FolderKey?: string; OrganizationUnitFullyQualifiedName?: string; Release?: { Name?: string } }
       if (!job.Key) throw new HttpError(404)
@@ -348,12 +357,13 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       if (bucketId === undefined) throw new HttpError(404, { message: `The "${bucket.name}" bucket wasn't found in its folder in Orchestrator.` })
       const writeQuery = new URLSearchParams({ path: filePath, contentType: type })
       const write = await (await call('GET', `${bucketsUrl}(${bucketId})/UiPath.Server.Configuration.OData.GetWriteUri?${writeQuery}`, headers)).json() as {
-        Uri: string; Verb: string; RequiresAuth: boolean; Headers: { Keys: string[]; Values: string[] }
+        Uri: string; Verb: string; RequiresAuth: boolean; Headers?: { Keys?: string[]; Values?: string[] } | null
       }
-      const uploadHeaders: Record<string, string> = Object.fromEntries(write.Headers.Keys.map((key, index) => [key, write.Headers.Values[index]]))
+      const uploadHeaders: Record<string, string> = Object.fromEntries((write.Headers?.Keys ?? []).map((key, index) => [key, write.Headers?.Values?.[index] ?? '']))
       if (write.RequiresAuth) Object.assign(uploadHeaders, headers, { Authorization: `Bearer ${await appToken()}` })
       const stored = await fetchImpl(write.Uri, { method: write.Verb, headers: { 'Content-Type': type, ...uploadHeaders }, body: body as BodyInit })
-      if (!stored.ok) throw new HttpError(stored.status >= 400 ? stored.status : 500, { message: `The file couldn't be saved to storage (storage returned ${stored.status}).` })
+      // A storage 401 would make the SDK open a new session and upload again, so it becomes a 500, like call().
+      if (!stored.ok) throw new HttpError(stored.status >= 400 && stored.status !== 401 ? stored.status : 500, { message: `The file couldn't be saved to storage (storage returned ${stored.status}).` })
       return { status: 200, data: { path: filePath } }
     }
 
@@ -386,12 +396,14 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
     req.on('data', (chunk: Buffer) => chunks.push(chunk))
     req.on('end', () => {
       const method = req.method ?? 'GET'
-      const sessionId = req.headers.cookie?.match(SESSION_COOKIE_RE)?.[1]
+      // Cookies on localhost are shared across ports, so each dev server gets its own cookie name.
+      const cookieName = `${SESSION_COOKIE}_${requestHost(req).match(PORT_RE)?.[1] ?? 'default'}`
+      const sessionId = readCookie(req.headers.cookie, cookieName)
 
       if (method === 'POST' && route === 'session') {
         const id = sessionId && sessions.has(sessionId) ? sessionId : randomBytes(32).toString('hex')
         if (!sessions.has(id)) sessions.set(id, { owned: new Set(), jobFolders: new Map() })
-        res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${id}; Path=/; HttpOnly; SameSite=Lax`)
+        res.setHeader('Set-Cookie', `${cookieName}=${id}; Path=/; HttpOnly; SameSite=Lax`)
         send(204)
         return
       }
@@ -418,8 +430,19 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
 }
 
 /** Host must be a loopback name, and a browser call must come from the same origin as the page. */
+/** HTTP/1.1 sends Host; HTTP/2 (Vite over HTTPS) sends :authority instead. */
+export function requestHost(req: Pick<IncomingMessage, 'headers'>): string {
+  const authority = (req.headers as Record<string, string | string[] | undefined>)[':authority']
+  return req.headers.host ?? (typeof authority === 'string' ? authority : '')
+}
+
+function readCookie(header: string | undefined, name: string): string | undefined {
+  const value = header?.split(COOKIE_SEPARATOR_RE).find(part => part.startsWith(`${name}=`))?.slice(name.length + 1)
+  return value && SESSION_ID_RE.test(value) ? value : undefined
+}
+
 export function isLocalRequest(req: Pick<IncomingMessage, 'headers'>): boolean {
-  const host = req.headers.host ?? ''
+  const host = requestHost(req)
   const hostname = host.replace(/:\d+$/, '').replace(/^\[|\]$/g, '')
   if (!LOCAL_HOST_RE.test(hostname)) return false
   if (req.headers['sec-fetch-site'] === 'cross-site') return false

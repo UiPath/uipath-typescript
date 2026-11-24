@@ -110,6 +110,8 @@ describe('declarations and access', () => {
     expect(isLocalRequest({ headers: { host: 'evil.example:5173', origin: 'http://evil.example:5173' } })).toBe(false)
     expect(isLocalRequest({ headers: { host: 'localhost:5173', origin: 'https://evil.example' } })).toBe(false)
     expect(isLocalRequest({ headers: { host: 'localhost:5173', 'sec-fetch-site': 'cross-site' } })).toBe(false)
+    // HTTP/2 (Vite over HTTPS) sends :authority instead of Host
+    expect(isLocalRequest({ headers: { ':authority': 'localhost:5173', origin: 'https://localhost:5173' } as never })).toBe(true)
   })
 })
 
@@ -119,31 +121,41 @@ interface Reply { status: number; headers: Record<string, string>; body?: unknow
 
 // Job GetByKey returns; tests set the process and folder it came from.
 let job: Record<string, unknown> = {}
+// What GetWriteUri returns as Headers, the storage status, and the token reply; tests override them.
+let writeHeaders: unknown = { Keys: ['x-ms-blob-type'], Values: ['BlockBlob'] }
+let storageStatus = 201
+let tokenReply: { status: number; body: unknown } = { status: 200, body: { access_token: 'app-token', expires_in: 3600 } }
+
+beforeEach(() => {
+  writeHeaders = { Keys: ['x-ms-blob-type'], Values: ['BlockBlob'] }
+  storageStatus = 201
+  tokenReply = { status: 200, body: { access_token: 'app-token', expires_in: 3600 } }
+})
 
 function fakeFetch() {
   const calls: { url: string; init: RequestInit }[] = []
   const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
     calls.push({ url, init })
     const ok = (body: unknown) => new Response(JSON.stringify(body), { status: 200 })
-    if (url.endsWith('/identity_/connect/token')) return ok({ access_token: 'app-token', expires_in: 3600 })
+    if (url.endsWith('/identity_/connect/token')) return new Response(JSON.stringify(tokenReply.body), { status: tokenReply.status })
     if (url.includes('StartJobs')) return ok({ value: [{ Key: 'job-1' }] })
     if (url.includes('/insert')) return ok({ Id: RECORD_ID.toUpperCase(), Name: 'x' })
     if (url.includes('/read')) return ok({ value: [] })
     if (url.includes('GetByKey')) return ok(job)
-    if (url.includes('GetWriteUri')) return ok({ Uri: 'https://storage.example/put', Verb: 'PUT', RequiresAuth: false, Headers: { Keys: ['x-ms-blob-type'], Values: ['BlockBlob'] } })
+    if (url.includes('GetWriteUri')) return ok({ Uri: 'https://storage.example/put', Verb: 'PUT', RequiresAuth: false, Headers: writeHeaders })
     if (url.includes('/odata/Buckets?')) return ok({ value: [{ Id: 7 }] })
-    if (url === 'https://storage.example/put') return new Response(null, { status: 201 })
+    if (url === 'https://storage.example/put') return new Response(null, { status: storageStatus })
     return new Response('{}', { status: 404 })
   })
   return { fetchImpl: fetchImpl as unknown as typeof fetch, calls }
 }
 
-function request(middleware: ReturnType<typeof createPublicDevMiddleware>, method: string, route: string, { body, cookie, raw }: { body?: unknown; cookie?: string; raw?: Buffer } = {}): Promise<Reply> {
+function request(middleware: ReturnType<typeof createPublicDevMiddleware>, method: string, route: string, { body, cookie, raw, host = 'localhost:5173' }: { body?: unknown; cookie?: string; raw?: Buffer; host?: string } = {}): Promise<Reply> {
   return new Promise((resolve) => {
     const req = Object.assign(new EventEmitter(), {
       method,
       url: API + route,
-      headers: { host: 'localhost:5173', cookie, 'content-type': 'application/json' } as Record<string, string | undefined>,
+      headers: { host, cookie, 'content-type': 'application/json' } as Record<string, string | undefined>,
     })
     const headers: Record<string, string> = {}
     const res = {
@@ -304,6 +316,40 @@ describe('createPublicDevMiddleware', () => {
       const cookie = await openSession(middleware)
       expect((await request(middleware, 'POST', 'orchestrator/buckets/Uploads.Shared%2FDocs/files', { cookie })).status).toBe(400)
       expect((await request(middleware, 'POST', 'orchestrator/buckets/Other.Shared/files?fileName=a.txt', { cookie })).status).toBe(403)
+    })
+  })
+
+  describe('review fixes', () => {
+    it('keeps a separate session per dev server port, since localhost cookies are shared across ports', async () => {
+      const { middleware } = setup()
+      const reply = await request(middleware, 'POST', 'session', { host: 'localhost:5174' })
+      expect(reply.headers['set-cookie']).toMatch(/^uipath_local_public_session_5174=[a-f0-9]{64};/)
+      const cookie = reply.headers['set-cookie'].split(';')[0]
+      // The 5173 server does not know the 5174 cookie
+      expect((await request(middleware, 'GET', 'datafabric/entities/EventFeedback/records', { cookie, host: 'localhost:5173' })).status).toBe(401)
+    })
+
+    it('uploads when GetWriteUri returns no headers', async () => {
+      writeHeaders = null
+      const { middleware } = setup()
+      const cookie = await openSession(middleware)
+      expect((await request(middleware, 'POST', 'orchestrator/buckets/Uploads.Shared%2FDocs/files?fileName=a.txt', { cookie, raw: Buffer.from('a') })).status).toBe(200)
+    })
+
+    it('turns a storage 401 into a 500, so the SDK does not start a new session and upload again', async () => {
+      storageStatus = 401
+      const { middleware } = setup()
+      const cookie = await openSession(middleware)
+      expect((await request(middleware, 'POST', 'orchestrator/buckets/Uploads.Shared%2FDocs/files?fileName=a.txt', { cookie, raw: Buffer.from('a') })).status).toBe(500)
+    })
+
+    it('explains an invalid_scope from Identity', async () => {
+      tokenReply = { status: 400, body: { error: 'invalid_scope' } }
+      const { middleware } = setup()
+      const cookie = await openSession(middleware)
+      const reply = await request(middleware, 'POST', 'orchestrator/processes/Summarize.Shared/jobs', { cookie, body: {} })
+      expect(reply.status).toBe(500)
+      expect((reply.body as { message: string }).message).toContain('offline_access')
     })
   })
 })
