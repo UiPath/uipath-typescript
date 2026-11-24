@@ -24,6 +24,7 @@ import {
     UNKNOWN,
     VERSION,
 } from './constants';
+import { isTelemetryDisabled } from './opt-out';
 import {
     TelemetryAttributes,
     TelemetryClientInitOptions,
@@ -212,6 +213,12 @@ export class TelemetryClient {
         this.telemetryContext = options.context;
 
         try {
+            // Checked before anything is built, so an opted-out host never
+            // creates the exporter and `track` stays a no-op.
+            if (isTelemetryDisabled()) {
+                return;
+            }
+
             // A consumer pointing at its own Application Insights resource
             // supplies its own string; the shared one is the default.
             const connectionString =

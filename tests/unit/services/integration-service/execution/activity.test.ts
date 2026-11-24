@@ -16,7 +16,11 @@ import {
   UIPATH_TRACEPARENT_ID,
 } from '@/utils/constants/headers';
 import { resource } from '@/resources';
-import { HAS_MORE_HEADER, NEXT_PAGE_TOKEN_HEADER } from '@/services/integration-service/execution/pagination';
+import {
+  HAS_MORE_HEADER,
+  MAX_FOLLOWED_PAGES,
+  NEXT_PAGE_TOKEN_HEADER,
+} from '@/services/integration-service/execution/pagination';
 import { OVERRIDE_TEST_CONSTANTS } from '@tests/utils/constants/overrides';
 
 const OBJECT_NAME = 'tickets';
@@ -735,7 +739,8 @@ describe('executeActivity', () => {
       expect(secondUrl.searchParams.get('nextPage')).toBe(IS_TEST_CONSTANTS.PAGE_TOKEN);
       expect(secondUrl.searchParams.get('status')).toBe('open');
       expect(result.body).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
-      expect(result.page).toBeUndefined();
+      // Records remain, so the caller gets the token of the page after the last one read
+      expect(result.page).toEqual({ hasMore: true, nextPageToken: IS_TEST_CONSTANTS.PAGE_TOKEN_2 });
       expect(result.headers[HAS_MORE_HEADER]).toBeUndefined();
       expect(result.headers[NEXT_PAGE_TOKEN_HEADER]).toBeUndefined();
     });
@@ -792,8 +797,55 @@ describe('executeActivity', () => {
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       expect(result.body).toEqual([{ id: 1 }, { id: 2 }]);
-      expect(result.page).toBeUndefined();
+      expect(result.page).toEqual({ hasMore: true, nextPageToken: IS_TEST_CONSTANTS.PAGE_TOKEN });
       expect(result.headers[NEXT_PAGE_TOKEN_HEADER]).toBeUndefined();
+    });
+
+    it('leaves page unset when maxRecords gathered every page', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy
+        .mockResolvedValueOnce(pageResponse([{ id: 1 }], IS_TEST_CONSTANTS.PAGE_TOKEN))
+        .mockResolvedValueOnce(pageResponse([{ id: 2 }], IS_TEST_CONSTANTS.PAGE_TOKEN_DONE));
+
+      const result = await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        maxRecords: -1,
+      });
+
+      expect(result.body).toEqual([{ id: 1 }, { id: 2 }]);
+      expect(result.page).toBeUndefined();
+    });
+
+    it('stops when the connector repeats a page token', async () => {
+      const { instance } = createServiceTestDependencies();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // A fresh response per call: the connector answers every page with the same token
+      fetchSpy.mockImplementation(async () => pageResponse([{ id: 1 }], IS_TEST_CONSTANTS.PAGE_TOKEN));
+
+      const result = await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        maxRecords: -1,
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(result.body).toEqual([{ id: 1 }, { id: 1 }]);
+      expect(result.page).toBeUndefined();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('repeated a page token'));
+      warn.mockRestore();
+    });
+
+    it('stops after the page cap and returns the token to continue from', async () => {
+      const { instance } = createServiceTestDependencies();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      let call = 0;
+      fetchSpy.mockImplementation(async () => pageResponse([{ id: call }], `token-${call++}`));
+
+      const result = await executeActivity(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        maxRecords: -1,
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(MAX_FOLLOWED_PAGES + 1);
+      expect(result.body).toHaveLength(MAX_FOLLOWED_PAGES + 1);
+      expect(result.page).toEqual({ hasMore: true, nextPageToken: `token-${MAX_FOLLOWED_PAGES}` });
+      warn.mockRestore();
     });
 
     it('returns the failing page when a later page fails', async () => {

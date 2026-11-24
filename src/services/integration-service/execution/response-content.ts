@@ -78,7 +78,18 @@ export async function readResponseBody(
   if ((asFile && response.ok) || isFileResponse(headers)) {
     return new Uint8Array(await response.arrayBuffer());
   }
+  return readTextBody(response, label);
+}
 
+/**
+ * Reads a response body as text: parsed JSON when the text is JSON, the text otherwise.
+ *
+ * @param response - The response to read
+ * @param label - Name of the calling method, used in the warning for a non-JSON body
+ * @returns The body
+ * @internal
+ */
+export async function readTextBody(response: Response, label: string): Promise<unknown> {
   const text = await response.text();
   if (!text) return text;
   try {

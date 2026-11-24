@@ -1,24 +1,18 @@
-import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
-import { SDKInternalsRegistry } from '../../../core/internals';
 import { ELEMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../utils/constants/headers';
-import { resolveFolderScope } from '../folder-scope';
 import type { ConnectionResource } from '@/resources';
-import { resolveConnectionTarget, withConnectionFolder } from '@/services/integration-service/connection-target';
-import { fetchWithRetry } from '../../../utils/http/fetch-with-retry';
+import { resolveConnectionTarget } from '@/services/integration-service/connection-target';
 import { resolveRetryOptions, DEFAULT_API_CLIENT_RETRY } from '../../../utils/http/retry-policy';
 import type { IUiPath } from '../../../core/types';
-import type { UiPathConfig } from '../../../core/config/config';
 import {
   ExecuteMethod,
   ExecuteOptions,
   ExecuteResult,
 } from '../../../models/integration-service/execution.types';
+import { ConnectionRequestService } from './connection-request';
 
-/** HTTP methods that carry a request body. */
-const BODY_METHODS = new Set<ExecuteMethod>(['POST', 'PUT', 'PATCH']);
+const RESOURCE_TYPE = 'Execution.execute';
 
 /**
  * Internal class so we can decorate `execute` with `@track`. Method decorators
@@ -26,20 +20,7 @@ const BODY_METHODS = new Set<ExecuteMethod>(['POST', 'PUT', 'PATCH']);
  *
  * @internal
  */
-class Execution extends BaseService {
-  private readonly execConfig: Pick<UiPathConfig, 'baseUrl' | 'orgName' | 'tenantName'>;
-
-  /**
-   * Creates an instance of the Execution service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-    const { config } = SDKInternalsRegistry.get(instance);
-    this.execConfig = config;
-  }
-
+class Execution extends ConnectionRequestService {
   @track('Execution.Execute')
   async execute(
     connection: string | ConnectionResource,
@@ -52,80 +33,27 @@ class Execution extends BaseService {
       throw new ValidationError({ message: 'objectName is required for execute' });
     }
 
-    const token = await this.getValidAuthToken();
-
-    const relativePath = ELEMENT_ENDPOINTS.INSTANCE.EXECUTE(target.id, objectName);
-    const baseSegment = `${this.execConfig.orgName}/${this.execConfig.tenantName}/`;
-    const url = new URL(baseSegment + relativePath, this.execConfig.baseUrl).toString();
-
-    let fullUrl = url;
-    if (options.queryParams && Object.keys(options.queryParams).length > 0) {
-      const qs = new URLSearchParams(options.queryParams).toString();
-      const sep = url.includes('?') ? '&' : '?';
-      fullUrl = `${url}${sep}${qs}`;
-    }
-
-    const traceId = crypto.randomUUID().replace(/-/g, '');
-    const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
-    const traceparentValue = `00-${traceId}-${spanId}-01`;
-
-    const { headers: folderHeaders } = resolveFolderScope(
-      withConnectionFolder(options, target),
-      'Execution.execute',
-      this.config.metaFolderKey,
-    );
-
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-      [TRACEPARENT]: traceparentValue,
-      [UIPATH_TRACEPARENT_ID]: traceparentValue,
-      ...folderHeaders,
-    };
-
-    const hasBody = options.body !== undefined && BODY_METHODS.has(method);
-    if (hasBody) {
-      headers['Content-Type'] = CONTENT_TYPES.JSON;
-    }
-
-    const response = await fetchWithRetry(
-      fullUrl,
+    return this.send(
+      target,
       {
+        path: ELEMENT_ENDPOINTS.INSTANCE.EXECUTE(target.id, objectName),
         method,
-        headers,
-        body: hasBody ? JSON.stringify(options.body) : undefined,
-      },
-      {
+        queryParams: options.queryParams,
+        body: options.body,
+        // `execute` has always returned text or parsed JSON, never bytes
+        textResponse: true,
+        label: 'execute',
         // Defaults to no retries, so an existing caller that supplies no `retry` keeps its
         // single-attempt behaviour
         retry: resolveRetryOptions(options.retry, DEFAULT_API_CLIENT_RETRY),
         timeoutMs: options.timeoutMs,
         signal: options.signal,
+        folderId: options.folderId,
+        folderKey: options.folderKey,
+        folderPath: options.folderPath,
       },
+      RESOURCE_TYPE,
     );
-
-    const text = await response.text();
-    let parsed: unknown = text;
-    if (text) {
-      try {
-        parsed = JSON.parse(text);
-      } catch (error) {
-        console.warn('execute: response body is not valid JSON, returning raw text', error);
-        parsed = text;
-      }
-    }
-
-    const flatHeaders: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      flatHeaders[key] = value;
-    });
-
-    return {
-      ok: response.ok,
-      status: response.status,
-      statusText: response.statusText,
-      body: parsed,
-      headers: flatHeaders,
-    };
   }
 }
 
