@@ -117,6 +117,9 @@ describe('declarations and access', () => {
 
 interface Reply { status: number; headers: Record<string, string>; body?: unknown }
 
+// Job GetByKey returns; tests set the process and folder it came from.
+let job: Record<string, unknown> = {}
+
 function fakeFetch() {
   const calls: { url: string; init: RequestInit }[] = []
   const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
@@ -126,12 +129,16 @@ function fakeFetch() {
     if (url.includes('StartJobs')) return ok({ value: [{ Key: 'job-1' }] })
     if (url.includes('/insert')) return ok({ Id: RECORD_ID.toUpperCase(), Name: 'x' })
     if (url.includes('/read')) return ok({ value: [] })
+    if (url.includes('GetByKey')) return ok(job)
+    if (url.includes('GetWriteUri')) return ok({ Uri: 'https://storage.example/put', Verb: 'PUT', RequiresAuth: false, Headers: { Keys: ['x-ms-blob-type'], Values: ['BlockBlob'] } })
+    if (url.includes('/odata/Buckets?')) return ok({ value: [{ Id: 7 }] })
+    if (url === 'https://storage.example/put') return new Response(null, { status: 201 })
     return new Response('{}', { status: 404 })
   })
   return { fetchImpl: fetchImpl as unknown as typeof fetch, calls }
 }
 
-function request(middleware: ReturnType<typeof createPublicDevMiddleware>, method: string, route: string, { body, cookie }: { body?: unknown; cookie?: string } = {}): Promise<Reply> {
+function request(middleware: ReturnType<typeof createPublicDevMiddleware>, method: string, route: string, { body, cookie, raw }: { body?: unknown; cookie?: string; raw?: Buffer } = {}): Promise<Reply> {
   return new Promise((resolve) => {
     const req = Object.assign(new EventEmitter(), {
       method,
@@ -145,6 +152,7 @@ function request(middleware: ReturnType<typeof createPublicDevMiddleware>, metho
       end: (text?: string) => resolve({ status: res.statusCode, headers, body: text ? JSON.parse(text) : undefined }),
     }
     middleware(req as never, res as never, () => resolve({ status: -1, headers }))
+    if (raw) req.emit('data', raw)
     if (body !== undefined) req.emit('data', Buffer.from(JSON.stringify(body)))
     req.emit('end')
   })
@@ -229,5 +237,69 @@ describe('createPublicDevMiddleware', () => {
     const reply = await request(middleware, 'GET', 'datafabric/entities/EventFeedback/records?start=0&limit=20', { cookie })
     expect(reply.status).toBe(200)
     expect(calls.at(-1)!.url).toBe('https://alpha.uipath.com/org/tenant/datafabric_/api/v3/entities/EventFeedback/read?expansionLevel=0&start=0&limit=20')
+  })
+
+  describe('job output', () => {
+    const output = (key: string) => `orchestrator/jobs/${key}/output`
+
+    it('lets the session that started the job read it', async () => {
+      writeAccess([{ resource: 'process', key: 'Summarize.Shared', mode: 'session' }])
+      job = { Key: 'job-1', Release: { Name: 'Summarize' }, OrganizationUnitFullyQualifiedName: 'Shared' }
+      const { middleware } = setup()
+      const owner = await openSession(middleware)
+      await request(middleware, 'POST', 'orchestrator/processes/Summarize.Shared/jobs', { cookie: owner, body: {} })
+      expect((await request(middleware, 'GET', output('job-1'), { cookie: owner })).status).toBe(200)
+    })
+
+    it('refuses another session without calling Orchestrator when no process is open to all', async () => {
+      writeAccess([{ resource: 'process', key: 'Summarize.Shared', mode: 'session' }])
+      const { middleware, calls } = setup()
+      const other = await openSession(middleware)
+      expect((await request(middleware, 'GET', output('job-1'), { cookie: other })).status).toBe(404)
+      expect(calls.some(call => call.url.includes('GetByKey'))).toBe(false)
+    })
+
+    it('lets any session read a job from a declared process that is open to all', async () => {
+      job = { Key: 'job-9', Release: { Name: 'Summarize' }, OrganizationUnitFullyQualifiedName: 'shared' }
+      const { middleware } = setup()
+      const other = await openSession(middleware)
+      expect((await request(middleware, 'GET', output('job-9'), { cookie: other })).status).toBe(200)
+    })
+
+    it('refuses a job from another folder or an undeclared process', async () => {
+      const { middleware } = setup()
+      const other = await openSession(middleware)
+      job = { Key: 'job-9', Release: { Name: 'Summarize' }, OrganizationUnitFullyQualifiedName: 'Finance' }
+      expect((await request(middleware, 'GET', output('job-9'), { cookie: other })).status).toBe(404)
+      job = { Key: 'job-9', Release: { Name: 'Payroll' }, OrganizationUnitFullyQualifiedName: 'Shared' }
+      expect((await request(middleware, 'GET', output('job-9'), { cookie: other })).status).toBe(404)
+    })
+  })
+
+  describe('bucket upload', () => {
+    it('stores the file under a path it picks, in the declared bucket and folder', async () => {
+      const { middleware, calls } = setup()
+      const cookie = await openSession(middleware)
+      const reply = await request(middleware, 'POST', 'orchestrator/buckets/Uploads.Shared%2FDocs/files?fileName=report.pdf', { cookie, raw: Buffer.from('pdf') })
+
+      expect(reply.status).toBe(200)
+      const { path: stored } = reply.body as { path: string }
+      expect(stored).toMatch(/^report_[0-9a-f]{32}\.pdf$/)
+      const lookup = calls.find(call => call.url.includes('/odata/Buckets?'))!
+      expect(new URL(lookup.url).searchParams.get('$filter')).toBe("Name eq 'Uploads'")
+      expect((lookup.init.headers as Record<string, string>)['X-UIPATH-FolderPath-Encoded']).toBe(Buffer.from('Shared/Docs', 'utf16le').toString('base64'))
+      expect(calls.find(call => call.url.includes('GetWriteUri'))!.url).toContain(`path=${encodeURIComponent(stored)}`)
+      const put = calls.find(call => call.url === 'https://storage.example/put')!
+      expect(put.init.method).toBe('PUT')
+      expect((put.init.headers as Record<string, string>)['x-ms-blob-type']).toBe('BlockBlob')
+      expect((put.init.headers as Record<string, string>).Authorization).toBeUndefined()
+    })
+
+    it('needs a file name and a declared bucket', async () => {
+      const { middleware } = setup()
+      const cookie = await openSession(middleware)
+      expect((await request(middleware, 'POST', 'orchestrator/buckets/Uploads.Shared%2FDocs/files', { cookie })).status).toBe(400)
+      expect((await request(middleware, 'POST', 'orchestrator/buckets/Other.Shared/files?fileName=a.txt', { cookie })).status).toBe(403)
+    })
   })
 })

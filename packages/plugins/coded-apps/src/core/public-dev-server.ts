@@ -27,6 +27,9 @@ export const LOCAL_APP_KEY = 'local-dev'
 const RESOURCES_FILE = 'uipath_resources.ts'
 const ROUTE_RE = /\/apps_\/default\/api\/v1\/default\/integrations\/codedapp\/([^?]*)/
 const SESSION_COOKIE = 'uipath_local_public_session'
+const SESSION_COOKIE_RE = new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([a-f0-9]+)`)
+// Keys a public deployment doesn't serve: no OAuth client, and the base URL is set in the page instead.
+const NON_PUBLIC_CONFIG_KEYS = new Set(['clientId', 'scope', 'redirectUri', 'baseUrl'])
 const TOKEN_REFRESH_MARGIN_SECONDS = 120
 // The proxy acts as the app's external application, so only the developer's own browser may call it: a page on
 // another site that rebinds its DNS to 127.0.0.1 still sends its own name as Host.
@@ -118,7 +121,7 @@ export function isOpenToAll(access: unknown, kind: Kind, key: string): boolean {
 export function toPublicConfig(config: UiPathConfig): UiPathConfig {
   const result: UiPathConfig = {}
   for (const [key, value] of Object.entries(config)) {
-    if (typeof value === 'string' && !['clientId', 'scope', 'redirectUri', 'baseUrl'].includes(key)) result[key] = value
+    if (typeof value === 'string' && !NON_PUBLIC_CONFIG_KEYS.has(key)) result[key] = value
   }
   return { ...result, appKey: LOCAL_APP_KEY }
 }
@@ -221,7 +224,8 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
   function access(): unknown {
     try {
       return JSON.parse(fs.readFileSync(path.resolve(cwd, 'uipath.json'), 'utf-8')).access
-    } catch {
+    } catch (error) {
+      console.warn(`[${PLUGIN_NAME}] Could not read access from uipath.json, so every resource is open to all:`, error instanceof Error ? error.message : error)
       return undefined
     }
   }
@@ -354,7 +358,7 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       }
       const uploadHeaders: Record<string, string> = Object.fromEntries(write.Headers.Keys.map((key, index) => [key, write.Headers.Values[index]]))
       if (write.RequiresAuth) Object.assign(uploadHeaders, headers, { Authorization: `Bearer ${await appToken()}` })
-      const stored = await fetchImpl(write.Uri, { method: write.Verb, headers: { 'Content-Type': type, ...uploadHeaders }, body: body as unknown as BodyInit })
+      const stored = await fetchImpl(write.Uri, { method: write.Verb, headers: { 'Content-Type': type, ...uploadHeaders }, body: body as BodyInit })
       if (!stored.ok) throw new HttpError(stored.status >= 400 ? stored.status : 500, { message: `The file couldn't be saved to storage (storage returned ${stored.status}).` })
       return { status: 200, data: { path: filePath } }
     }
@@ -388,7 +392,7 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
     req.on('data', (chunk: Buffer) => chunks.push(chunk))
     req.on('end', () => {
       const method = req.method ?? 'GET'
-      const sessionId = req.headers.cookie?.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([a-f0-9]+)`))?.[1]
+      const sessionId = req.headers.cookie?.match(SESSION_COOKIE_RE)?.[1]
 
       if (method === 'POST' && route === 'session') {
         const id = sessionId && sessions.has(sessionId) ? sessionId : randomBytes(32).toString('hex')
