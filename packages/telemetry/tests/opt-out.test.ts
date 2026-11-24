@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { UIPATH_ENV_GLOBAL } from '../../../src/core/env/env';
 import {
+    APPS_ENV_GLOBAL,
     APPS_TELEMETRY_DISABLED_ENV,
     TELEMETRY_DISABLED_ENV,
     isTelemetryDisabled,
@@ -20,7 +22,6 @@ vi.mock('@opentelemetry/sdk-logs', () => ({
     BatchLogRecordProcessor: mocks.BatchLogRecordProcessor,
 }));
 
-const APPS_ENV_GLOBAL = '__UIPATH_ENV__';
 const holder = globalThis as Record<string, unknown>;
 
 const OPTIONS: TelemetryClientInitOptions = {
@@ -37,6 +38,13 @@ async function freshClient() {
     return new TelemetryClient();
 }
 
+function setDeno(state: string, get: (name: string) => string | undefined) {
+    const querySync = vi.fn(() => ({ state }));
+    const envGet = vi.fn(get);
+    holder.Deno = { env: { get: envGet }, permissions: { querySync } };
+    return { querySync, envGet };
+}
+
 function setAppsEnv(table: unknown): void {
     holder[APPS_ENV_GLOBAL] = table;
 }
@@ -49,6 +57,8 @@ beforeEach(() => {
 afterEach(() => {
     vi.unstubAllEnvs();
     delete holder[APPS_ENV_GLOBAL];
+    delete holder.Deno;
+    vi.restoreAllMocks();
 });
 
 describe('isTelemetryDisabled', () => {
@@ -56,7 +66,7 @@ describe('isTelemetryDisabled', () => {
         expect(isTelemetryDisabled()).toBe(false);
     });
 
-    it.each(['1', 'true', 'TRUE', ' true '])(
+    it.each(['1', 'true'])(
         'opts out on %j in the process environment',
         (value) => {
             vi.stubEnv(TELEMETRY_DISABLED_ENV, value);
@@ -65,7 +75,7 @@ describe('isTelemetryDisabled', () => {
         }
     );
 
-    it.each(['', '0', 'false', 'yes'])(
+    it.each(['', '0', 'false', 'yes', 'TRUE', 'True', ' true '])(
         'leaves telemetry on for %j in the process environment',
         (value) => {
             vi.stubEnv(TELEMETRY_DISABLED_ENV, value);
@@ -113,8 +123,12 @@ describe('isTelemetryDisabled', () => {
         expect(isTelemetryDisabled()).toBe(false);
     });
 
-    it('warns and treats an environment that throws on read as not opted out', () => {
-        const denied = new Error('no env permission');
+    it('reads the same global the SDK reads coded app variables from', () => {
+        expect(APPS_ENV_GLOBAL).toBe(UIPATH_ENV_GLOBAL);
+    });
+
+    it('warns once and treats an environment that throws on read as not opted out', () => {
+        const denied = new Error('no env access');
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const original = Object.getOwnPropertyDescriptor(globalThis, 'process');
         Object.defineProperty(globalThis, 'process', {
@@ -126,31 +140,52 @@ describe('isTelemetryDisabled', () => {
 
         try {
             expect(isTelemetryDisabled()).toBe(false);
-            expect(warn).toHaveBeenCalledWith(denied);
         } finally {
             Object.defineProperty(globalThis, 'process', original!);
-            warn.mockRestore();
         }
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(denied);
     });
 
-    it('warns and treats a Deno environment that throws on read as not opted out', () => {
+    it('opts out under Deno when the variable is granted', () => {
+        const { querySync, envGet } = setDeno('granted', () => '1');
+
+        expect(isTelemetryDisabled()).toBe(true);
+        expect(querySync).toHaveBeenCalledWith({ name: 'env', variable: TELEMETRY_DISABLED_ENV });
+        expect(envGet).toHaveBeenCalledWith(TELEMETRY_DISABLED_ENV);
+    });
+
+    it.each(['prompt', 'denied'])(
+        'does not read the Deno environment when the permission is %j',
+        (state) => {
+            vi.stubEnv(TELEMETRY_DISABLED_ENV, '1');
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            const { envGet } = setDeno(state, () => '1');
+
+            expect(isTelemetryDisabled()).toBe(false);
+            expect(envGet).not.toHaveBeenCalled();
+            expect(warn).not.toHaveBeenCalled();
+        }
+    );
+
+    it('does not read the Deno environment when permissions cannot be queried', () => {
+        const envGet = vi.fn(() => '1');
+        holder.Deno = { env: { get: envGet } };
+
+        expect(isTelemetryDisabled()).toBe(false);
+        expect(envGet).not.toHaveBeenCalled();
+    });
+
+    it('warns once when the Deno read throws', () => {
         const denied = new Error('Requires env access');
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        holder.Deno = {
-            env: {
-                get() {
-                    throw denied;
-                },
-            },
-        };
+        setDeno('granted', () => {
+            throw denied;
+        });
 
-        try {
-            expect(isTelemetryDisabled()).toBe(false);
-            expect(warn).toHaveBeenCalledWith(denied);
-        } finally {
-            delete holder.Deno;
-            warn.mockRestore();
-        }
+        expect(isTelemetryDisabled()).toBe(false);
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(denied);
     });
 });
 

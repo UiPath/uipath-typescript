@@ -22,42 +22,45 @@ export const APPS_TELEMETRY_DISABLED_ENV = 'UIPATH_APPS_TELEMETRY_DISABLED';
  * Global a coded app deployment's `env.js` assigns before the app bundle
  * runs. Named here rather than imported so this package stays free of a
  * dependency on the SDK.
+ *
+ * @internal
  */
-const APPS_ENV_GLOBAL = '__UIPATH_ENV__';
+export const APPS_ENV_GLOBAL = '__UIPATH_ENV__';
+
+interface DenoGlobal {
+    env?: { get?(name: string): string | undefined };
+    permissions?: {
+        querySync?(descriptor: { name: 'env'; variable: string }): { state: string };
+    };
+}
 
 interface EnvCapableGlobal {
     process?: { env?: Record<string, string | undefined> };
-    Deno?: { env?: { get?(name: string): string | undefined } };
+    Deno?: DenoGlobal;
     [APPS_ENV_GLOBAL]?: unknown;
 }
 
+// Exact match, as the UiPath CLI does, so both agree on every value.
 function isOptOutValue(value: unknown): boolean {
-    if (typeof value !== 'string') {
-        return false;
-    }
-    const normalized = value.trim().toLowerCase();
-    return normalized === '1' || normalized === 'true';
+    return value === '1' || value === 'true';
+}
+
+// Reading a variable Deno has not granted prompts the user or throws, so
+// the permission is queried first.
+function readDenoEnv(deno: DenoGlobal, name: string): string | undefined {
+    const status = deno.permissions?.querySync?.({ name: 'env', variable: name });
+    return status?.state === 'granted' ? deno.env?.get?.(name) : undefined;
 }
 
 function readProcessEnv(name: string): string | undefined {
     const globals = globalThis as EnvCapableGlobal;
 
-    // Both reads are guarded: Deno throws without `--allow-env`, and its
-    // `process.env` shim proxies the same permission-gated accessor.
     try {
-        const fromNode = globals.process?.env?.[name];
-        if (fromNode) {
-            return fromNode;
-        }
+        // Deno's `process.env` shim is gated by the same permission.
+        return globals.Deno
+            ? readDenoEnv(globals.Deno, name)
+            : globals.process?.env?.[name];
     } catch (error) {
-        // No env permission; fall through to the Deno accessor.
-        console.warn(error);
-    }
-
-    try {
-        return globals.Deno?.env?.get?.(name);
-    } catch (error) {
-        // No env permission; treat the variable as absent.
         console.warn(error);
         return undefined;
     }
