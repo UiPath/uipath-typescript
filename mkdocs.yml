@@ -100,6 +100,7 @@ plugins:
           - authentication.md: Authentication setup
           - pagination.md: Pagination guide
           - helpers.md: Helper methods guide
+          - integration-service-execution.md: Integration Service execution functions
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
           - api/interfaces/JobServiceModel.md: Job service methods
@@ -217,6 +218,7 @@ nav:
             - Connectors: api/interfaces/ConnectorsServiceModel.md
             - Connections: api/interfaces/ConnectionsServiceModel.md
             - Elements: api/interfaces/ElementsServiceModel.md
+            - Execution: integration-service-execution.md
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
