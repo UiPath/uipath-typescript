@@ -4213,7 +4213,7 @@
 <p>A resource missing from <code>access</code> is open to all visitors, so list every resource the app reads and use <code>session</code> for anything personal. Writes are never shared: a visitor can add records and start jobs, but can't change or delete anything.</p>
 <p><code>scope</code> must list what the app calls and include <code>OR.Execution</code>.</p>
 <h2 id="running-it-locally">Running it locally<a class="headerlink" href="#running-it-locally" title="Permanent link">&para;</a></h2>
-<p>The <code>@uipath/coded-apps-dev</code> plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. Vite only.</p>
+<p>The <code>@uipath/coded-apps-dev</code> plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. It works with the Vite and webpack dev servers.</p>
 <p>Needs <code>@uipath/coded-apps-dev</code> <code>1.0.0-beta.2</code> or later.</p>
 <p>Put the confidential external application in <code>.env.local</code>, and keep that file out of source control:</p>
 <div class="highlight"><span class="filename">.env.local</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">UIPATH_PUBLIC_APP</span><span class="o">=</span><span class="nb">true</span>
