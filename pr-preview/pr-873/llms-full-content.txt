@@ -117,6 +117,8 @@ Set the `UIPATH_TELEMETRY_DISABLED` environment variable to `1` or `true` in the
 export UIPATH_TELEMETRY_DISABLED=1
 ```
 
+Under Deno, the SDK reads the variable only when the process is allowed to, for example with `--allow-env=UIPATH_TELEMETRY_DISABLED`. Without that permission the variable is ignored.
+
 ## **Vibe Coding**
 
 The SDK is designed for rapid prototyping and development, making it perfect for vibe coding. Here are three ways to get started:

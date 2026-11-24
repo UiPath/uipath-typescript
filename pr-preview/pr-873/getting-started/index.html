@@ -4376,6 +4376,7 @@
 <p>Set the <code>UIPATH_TELEMETRY_DISABLED</code> environment variable to <code>1</code> or <code>true</code> in the process environment. This is the same variable the <a href="https://github.com/UiPath/cli">UiPath CLI</a> reads, so disabling CLI telemetry also disables SDK telemetry for CLI commands.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">UIPATH_TELEMETRY_DISABLED</span><span class="o">=</span><span class="m">1</span>
 </code></pre></div>
+<p>Under Deno, the SDK reads the variable only when the process is allowed to, for example with <code>--allow-env=UIPATH_TELEMETRY_DISABLED</code>. Without that permission the variable is ignored.</p>
 </div>
 </div>
 </div>
