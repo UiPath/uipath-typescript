@@ -2557,6 +2557,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Naming resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#declaring-the-bindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring the bindings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4078,6 +4095,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Naming resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#declaring-the-bindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring the bindings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4189,22 +4223,49 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Binding &quot;Invoices&quot; scoped to folder &quot;Shared&quot; (key &quot;Invoices.Shared&quot; in bindings_v2.json)</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Invoices&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">inputArguments</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;{&quot;amount&quot;:12}&#39;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1">// Entity binding &quot;Orders&quot; (key &quot;Orders&quot;; `uip resources` keys entities by name only)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1">// Entity binding &quot;Orders&quot; (key &quot;Orders&quot;; entities are keyed by name only)</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">entities</span><span class="p">.</span><span class="nx">insertRecord</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Orders&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Title</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;First order&#39;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">entities</span><span class="p">.</span><span class="nx">getRecordsByName</span><span class="p">(</span><span class="s1">&#39;Orders&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">20</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Uploads&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;report.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<p>Pass the same <code>name</code> the binding was declared with, plus its <code>folderPath</code> for processes and buckets. A handle from <code>uipath_resources.ts</code> carries both: pass it to <code>processes.start</code>, <code>entities.insertRecord</code> and <code>buckets.uploadFile</code> as is, and pass its <code>.name</code> to <code>entities.getRecordByName</code> and <code>entities.getRecordsByName</code>, which take the entity name as a string. Solution overrides are applied by the service, so the code does not change when an admin points a binding at another resource.</p>
-<h2 id="who-can-read-what">Who can read what<a class="headerlink" href="#who-can-read-what" title="Permanent link">&para;</a></h2>
-<p>Set per resource in <code>uipath.json</code> who may read it, using the binding key:</p>
+<p>Pass the same <code>name</code> the binding was declared with, plus its <code>folderPath</code> for processes and buckets. <code>entities.getRecordByName</code> and <code>entities.getRecordsByName</code> take the entity name as a string. Solution overrides are applied by the service, so the code does not change when an admin points a binding at another resource.</p>
+<h3 id="declaring-the-bindings">Declaring the bindings<a class="headerlink" href="#declaring-the-bindings" title="Permanent link">&para;</a></h3>
+<p>Write <code>bindings_v2.json</code> at the app project root (in a solution, next to <code>source/</code>), one entry per resource the app uses:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;scope&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OR.Execution OR.Jobs DataFabric.Data.Read DataFabric.Data.Write&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;access&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;entity&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;session&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;process&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Invoices.Shared&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;all&quot;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="p">]</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;resources&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;process&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Invoices.Shared&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;defaultValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;isExpression&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;displayName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Name&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">        </span><span class="nt">&quot;folderPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;defaultValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;isExpression&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;displayName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Folder Path&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">      </span><span class="p">},</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;BindingsVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.2&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;entity&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Orders&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;defaultValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;isExpression&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;displayName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Name&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="nt">&quot;folderPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;defaultValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;.&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;isExpression&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;displayName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Folder Path&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">      </span><span class="p">},</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">      </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;BindingsVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.2&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>resource</code> is <code>process</code>, <code>entity</code> or <code>bucket</code>. <code>key</code> is <code>Name.FolderPath</code> for processes and buckets, and the name alone for entities. Run <code>uip solution resources refresh</code> from the solution root to add the resources to the solution; packing ships the file in the app package. A resource that isn't listed is refused with <code>403</code>.</p>
+<h2 id="who-can-read-what">Who can read what<a class="headerlink" href="#who-can-read-what" title="Permanent link">&para;</a></h2>
+<p>Set per resource in <code>uipath.json</code> who may read it, using the binding key. <code>uipath.json</code> must be in the build output so it is packed with the app (Vite: <code>public/uipath.json</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;scope&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OR.Execution OR.Jobs DataFabric.Data.Read DataFabric.Data.Write&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;access&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;entity&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;session&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;process&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Invoices.Shared&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;all&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
 </code></pre></div>
 <ul>
 <li><code>session</code>: only the visitor who created the record or started the job can read it.</li>
@@ -4216,25 +4277,25 @@
 <p>The <code>@uipath/coded-apps-dev</code> plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. It works with the Vite and webpack dev servers.</p>
 <p>Needs <code>@uipath/coded-apps-dev</code> <code>1.0.0-beta.2</code> or later.</p>
 <p>Put the confidential external application in <code>.env.local</code>, and keep that file out of source control:</p>
-<div class="highlight"><span class="filename">.env.local</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">UIPATH_PUBLIC_APP</span><span class="o">=</span><span class="nb">true</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">UIPATH_PUBLIC_APP_CLIENT_ID</span><span class="o">=</span>&lt;external<span class="w"> </span>app<span class="w"> </span>id&gt;
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nv">UIPATH_PUBLIC_APP_CLIENT_SECRET</span><span class="o">=</span>&lt;client<span class="w"> </span>secret&gt;
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Optional: the folder you deploy to, used for resources declared without a folder</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nv">UIPATH_PUBLIC_APP_FOLDER_KEY</span><span class="o">=</span>&lt;folder<span class="w"> </span>key&gt;
+<div class="highlight"><span class="filename">.env.local</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">UIPATH_PUBLIC_APP</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">UIPATH_PUBLIC_APP_CLIENT_ID</span><span class="o">=</span>&lt;external<span class="w"> </span>app<span class="w"> </span>id&gt;
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">UIPATH_PUBLIC_APP_CLIENT_SECRET</span><span class="o">=</span>&lt;client<span class="w"> </span>secret&gt;
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Optional: the folder you deploy to, used for resources declared without a folder</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nv">UIPATH_PUBLIC_APP_FOLDER_KEY</span><span class="o">=</span>&lt;folder<span class="w"> </span>key&gt;
 </code></pre></div>
 <p>Then start the dev server as usual:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>npm<span class="w"> </span>run<span class="w"> </span>dev
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>npm<span class="w"> </span>run<span class="w"> </span>dev
 </code></pre></div>
 <p>The page opens without a sign-in, and its calls go to the dev server instead of the Apps service. The dev server holds the secret, gets the external application's token with the <code>scope</code> from <code>uipath.json</code>, and applies the same rules as a deployed public app before it calls Orchestrator and Data Fabric:</p>
 <ul>
-<li>Only the resources declared in <code>uipath_resources.ts</code>. Anything else is refused with <code>403</code>.</li>
+<li>Only the resources listed in <code>bindings_v2.json</code>. Anything else is refused with <code>403</code>.</li>
 <li><code>session</code> and <code>all</code> from <code>uipath.json</code> <code>access</code>.</li>
 <li>Visitors can add records, start jobs and upload files, but can't change or delete anything.</li>
 </ul>
 <p>The secret and the token never reach the browser. To test as a second visitor, open the app in a private window.</p>
 <p>A local run differs from a deployed app in three ways:</p>
 <ul>
-<li>Resources use the name and folder declared in <code>uipath_resources.ts</code>. Solution overrides apply only after you deploy.</li>
+<li>Resources use the name and folder in <code>bindings_v2.json</code>. Solution overrides apply only after you deploy.</li>
 <li>Sessions live in the dev server's memory, so restarting it starts new sessions.</li>
 <li>The external application still needs a role in the folders that hold the resources, as it does after deploy.</li>
 </ul>
@@ -4242,13 +4303,13 @@
 <h2 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link">&para;</a></h2>
 <p>A public app lives in a solution and is deployed with it. Pack and publish the solution with the preview CLI (<code>npm install -g @uipath/cli@preview</code>). At deploy, set the app's runtime auth mode to <strong>Application</strong>, pick a <strong>confidential</strong> external application with application scopes for everything the app calls, and enter its client secret. The same package deploys as a sign-in app with the auth mode set to <strong>User</strong>.</p>
 <p>From the CLI:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>-d<span class="w"> </span>config.json
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>routingName<span class="w"> </span>&lt;routing-name&gt;<span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>externalClientId<span class="w"> </span><span class="s2">&quot;&lt;external app id&gt;&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application<span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>-d<span class="w"> </span>config.json
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>routingName<span class="w"> </span>&lt;routing-name&gt;<span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>externalClientId<span class="w"> </span><span class="s2">&quot;&lt;external app id&gt;&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application<span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;app&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
 </code></pre></div>
 <p>Keep <code>config.json</code> out of source control: it holds the secret. See <a href="../ci-cd-github-actions/#coded-app-inside-solution">Coded App inside Solution</a> for building, packing and publishing the solution.</p>
 <p>For Data Fabric entities, give the external app a role in the deployment folder with Entity Records View and Create, for example <strong>Automation User</strong>.</p>
