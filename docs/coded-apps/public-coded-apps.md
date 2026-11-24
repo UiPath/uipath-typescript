@@ -73,7 +73,7 @@ A resource missing from `access` is open to all visitors, so list every resource
 
 ## Running it locally
 
-The `@uipath/coded-apps-dev` plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. Vite only.
+The `@uipath/coded-apps-dev` plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. It works with the Vite and webpack dev servers.
 
 Needs `@uipath/coded-apps-dev` `1.0.0-beta.2` or later.
 
