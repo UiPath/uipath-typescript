@@ -244,28 +244,67 @@ const queue = await queues.getByKey('<queueKey>', { folderId: <folderId> });
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
 
 Gets a single queue by name
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Queue name (exact match)
-- `options?`: `QueueGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+| Parameter  | Type                    | Description                                                                |
+| ---------- | ----------------------- | -------------------------------------------------------------------------- |
+| `name`     | `string`                | Queue name (exact match)                                                   |
+| `options?` | `QueueGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options |
 
-#### Returns
+##### Returns
 
 `Promise`\<`QueueGetWithMethodsResponse`>
 
 Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
 
-#### Example
+##### Example
 
 ```
 const queue = await queues.getByName('<queueName>', { folderId: <folderId> });
 
 // Folder scoping also accepts a folder key or path
 const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' });
+```
+
+#### Call Signature
+
+> **getByName**(`queue`: `QueueResource`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Retrieves a single queue declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                    | Description                                                                       |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `queue`    | `QueueResource`         | Handle created with `resource.queue()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `QueueGetByNameOptions` | Optional folder override and query parameters                                     |
+
+##### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly queue = resource.queue({ name: 'InvoiceReview', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await queues.getByName(ProjectResources.queue);
 ```
 
 ### insertItemByName()

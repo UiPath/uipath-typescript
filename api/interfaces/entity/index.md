@@ -569,24 +569,28 @@ const batchResult = await entity.insertRecords([
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
 Gets entity metadata by entity name with attached operation methods.
 
 Sibling of [getById](#getbyid) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides that resolve resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
 
-#### Parameters
+##### Parameters
 
-- `entityName`: `string` — Name of the entity
-- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+| Parameter    | Type                     | Description                                                                                                           |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `entityName` | `string`                 | Name of the entity                                                                                                    |
+| `options?`   | `EntityGetByNameOptions` | Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**. |
 
-#### Returns
+##### Returns
 
 `Promise`\<`EntityGetResponse`>
 
 Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
-#### Example
+##### Example
 
 ```
 // Get entity metadata by name
@@ -597,6 +601,39 @@ const folderEntity = await entities.getByName("Customer", { folderKey: "<folderK
 
 // Call operations directly on the entity
 const records = await entity.getAllRecords();
+```
+
+#### Call Signature
+
+> **getByName**(`entity`: `EntityResource`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+
+Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`   | `EntityResource`         | Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`                                                     |
+| `options?` | `EntityGetByNameOptions` | Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**. |
+
+##### Returns
+
+`Promise`\<`EntityGetResponse`>
+
+Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetResponse/) entity metadata with operation methods
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly customers = resource.entity({ name: 'Customers' });
+}
+
+// anywhere in the project
+const customers = await entities.getByName(ProjectResources.customers);
 ```
 
 ### getCloneJob()
