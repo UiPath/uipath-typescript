@@ -3095,6 +3095,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#serve" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4062,6 +4073,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#serve" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4216,11 +4238,17 @@
 </tr>
 </tbody>
 </table>
-<p>Creates the project directory, scaffolds <code>uipath.json</code>, <code>package.json</code>, <code>tsconfig.json</code>, and (unless <code>--empty</code>) a hello world function. Then installs with npm, which writes the project's <code>package-lock.json</code>.</p>
+<p>Creates the project directory, scaffolds <code>uipath.json</code>, <code>project.uiproj</code>, <code>package.json</code>, <code>tsconfig.json</code>, and (unless <code>--empty</code>) a hello world function. Then installs with npm, which writes the project's <code>package-lock.json</code>.</p>
+<hr />
+<h2 id="init"><code>init</code><a class="headerlink" href="#init" title="Permanent link">&para;</a></h2>
+<p>Make the current folder a JS/TS Functions project.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>init
+</code></pre></div>
+<p>Writes <code>uipath.json</code> (<code>targetRuntime</code> <code>javascript</code>, functions map from <code>functions/</code>) and <code>project.uiproj</code> (<code>Name</code> from <code>package.json</code>, else the folder name). Files that already exist are kept as they are.</p>
 <hr />
 <h2 id="serve"><code>serve</code><a class="headerlink" href="#serve" title="Permanent link">&para;</a></h2>
 <p>Start local function server with hot reload.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>serve<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>serve<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -4252,7 +4280,7 @@
 <hr />
 <h2 id="run"><code>run</code><a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
 <p>Execute a single coded function once (one-shot job) and report the result. Unlike <code>serve</code>, this runs the function directly without a long-lived HTTP server — the same code path the platform uses to execute a job.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -4306,12 +4334,12 @@
 </tbody>
 </table>
 <p>Provide the target with exactly one of <code>--entrypoint</code> (path to the file) or <code>--function</code> (name resolved through <code>uipath.json</code>). The process exit code reflects the job outcome (non-zero on failure).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>run<span class="w"> </span>--function<span class="w"> </span>hello<span class="w"> </span>--input<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;world&quot;}&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>run<span class="w"> </span>--function<span class="w"> </span>hello<span class="w"> </span>--input<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;world&quot;}&#39;</span>
 </code></pre></div>
 <hr />
 <h2 id="invoke"><code>invoke</code><a class="headerlink" href="#invoke" title="Permanent link">&para;</a></h2>
 <p>Invoke a function against the local <code>serve</code> endpoint over HTTP (dev convenience). Requires <code>uip functions serve</code> to be running.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>invoke<span class="w"> </span>&lt;path&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>invoke<span class="w"> </span>&lt;path&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -4340,12 +4368,12 @@
 </tbody>
 </table>
 <p>Sends <code>POST http://localhost:&lt;port&gt;/&lt;path&gt;</code> with the JSON body and prints the response status and body. It always uses <code>POST</code>; for <code>GET</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code> routes use a tool like <code>curl</code>. Exits non-zero if the server is unreachable or the function returns a non-2xx status.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>invoke<span class="w"> </span>/hello<span class="w"> </span>--input<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;world&quot;}&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>invoke<span class="w"> </span>/hello<span class="w"> </span>--input<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;world&quot;}&#39;</span>
 </code></pre></div>
 <hr />
 <h2 id="pack"><code>pack</code><a class="headerlink" href="#pack" title="Permanent link">&para;</a></h2>
 <p>Pack the project into a <code>.nupkg</code> for deployment.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -4362,6 +4390,7 @@
 </tbody>
 </table>
 <p>Reads <code>name</code> and <code>version</code> from <code>package.json</code>. Writes <code>.uipath/&lt;name&gt;.&lt;version&gt;.nupkg</code>. Re-packing the same version overwrites the file.</p>
+<p>The package's default entry point is the function file <code>project.uiproj</code> names in <code>MainFile</code>, else the first function in <code>functions/</code>. A <code>MainFile</code> that names no function fails the pack.</p>
 <p>The project must be ready to package: <code>node_modules/</code> present and a current <code>package-lock.json</code>, as <a href="../deployment/#lockfile">Lockfile</a> sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, <code>pack</code> stops as well — reported as the check failing, not as a stale lock. <code>pack</code> never installs for you. Any other lock file (<code>yarn.lock</code>, <code>pnpm-lock.yaml</code>, <code>bun.lockb</code>) is dropped so the pod's installer cannot prefer it.</p>
 <p>Steps performed:
 1. Check the project is installed
@@ -4373,7 +4402,7 @@
 <hr />
 <h2 id="publish"><code>publish</code><a class="headerlink" href="#publish" title="Permanent link">&para;</a></h2>
 <p>Upload the packed <code>.nupkg</code> to an Orchestrator process feed.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -4415,7 +4444,7 @@
 <hr />
 <h2 id="push"><code>push</code><a class="headerlink" href="#push" title="Permanent link">&para;</a></h2>
 <p>Sync the local project to a Studio Web project.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>push<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>push<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -4460,10 +4489,10 @@
 <hr />
 <h2 id="setup-hidden"><code>setup</code> <em>(hidden)</em><a class="headerlink" href="#setup-hidden" title="Permanent link">&para;</a></h2>
 <p>Verify and cache the Node.js runtime.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>setup<span class="w"> </span><span class="o">[</span>--runtime<span class="w"> </span>node<span class="p">|</span>deno<span class="p">|</span>both<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>setup<span class="w"> </span><span class="o">[</span>--runtime<span class="w"> </span>node<span class="p">|</span>deno<span class="p">|</span>both<span class="o">]</span>
 </code></pre></div>
 <p>Called automatically by <code>new</code> as a prerequisite. Run explicitly to set up Deno:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>setup<span class="w"> </span>--runtime<span class="w"> </span>deno
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>setup<span class="w"> </span>--runtime<span class="w"> </span>deno
 </code></pre></div>
 <p>Requires Node.js v20+.</p>
 <hr />
