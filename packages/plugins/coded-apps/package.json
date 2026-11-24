@@ -1,6 +1,6 @@
 {
   "name": "@uipath/coded-apps-dev",
-  "version": "1.0.0-dev.1",
+  "version": "1.0.0",
   "description": "Universal bundler plugin for UiPath Coded Apps configuration injection",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -83,8 +83,5 @@
     "type": "git",
     "url": "git+https://github.com/UiPath/uipath-typescript.git",
     "directory": "packages/plugins/coded-apps"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
   }
 }

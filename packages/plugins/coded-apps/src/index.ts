@@ -13,6 +13,15 @@ import {
   generateEnvScriptForVite,
   injectEnvScriptHtml,
 } from './core/index'
+import {
+  PUBLIC_BASE_URL_SCRIPT,
+  addPublicDevMiddleware,
+  createPublicDevMiddleware,
+  injectPublicBaseUrlScriptHtml,
+  logPublicMode,
+  readPublicDevSettings,
+  toPublicConfig,
+} from './core/public-dev-server'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
   let isDev = false
@@ -21,6 +30,9 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
   // esbuild builds, `vite build --mode development` and unminified builds never get them.
   let isDevServer = false
   let cachedConfig: ReturnType<typeof readConfig> | null = null
+  // Set only by a Vite dev server started with UIPATH_PUBLIC_APP=true.
+  let publicMode = false
+  const getConfig = () => (cachedConfig ??= readConfig({ ...options, isDev }))
   const configPath = options.configPath ?? 'uipath.json'
 
   return {
@@ -46,14 +58,23 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
             server.ws.send({ type: 'full-reload' })
           }
         })
+
+        const settings = readPublicDevSettings()
+        if (settings) {
+          publicMode = true
+          server.middlewares.use(createPublicDevMiddleware({ settings, getConfig }))
+          logPublicMode(settings)
+        }
       },
       transformIndexHtml() {
-        if (!cachedConfig) {
-          cachedConfig = readConfig({ ...options, isDev })
-        }
-        const tags = generateMetaTagsForVite(cachedConfig)
+        const config = getConfig()
+        const tags = generateMetaTagsForVite(publicMode ? toPublicConfig(config) : config)
         const envValues = readDevEnvValues(isDevServer)
-        return envValues ? [...generateEnvScriptForVite(envValues), ...tags] : tags
+        const scripts = [
+          ...(envValues ? generateEnvScriptForVite(envValues) : []),
+          ...(publicMode ? [{ tag: 'script' as const, children: PUBLIC_BASE_URL_SCRIPT, injectTo: 'head-prepend' as const }] : []),
+        ]
+        return [...scripts, ...tags]
       },
     },
 
@@ -62,6 +83,18 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
       isDev = compiler.options.mode === DEV_MODE
       isDevServer = isWebpackServe()
 
+      const publicSettings = isDevServer ? readPublicDevSettings() : undefined
+      if (publicSettings) {
+        const webpackOptions = compiler.options as { devServer?: Parameters<typeof addPublicDevMiddleware>[0] | false }
+        if (webpackOptions.devServer === false) webpackOptions.devServer = {}
+        webpackOptions.devServer ??= {}
+        addPublicDevMiddleware(
+          webpackOptions.devServer,
+          createPublicDevMiddleware({ settings: publicSettings, getConfig: () => readConfig({ ...options, isDev }) })
+        )
+        logPublicMode(publicSettings)
+      }
+
       type Compilation = {
         assets: Record<string, { source: () => string | Buffer; size: () => number }>
       }
@@ -69,10 +102,10 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
       compiler.hooks.emit.tapAsync(PLUGIN_NAME, (compilation: Compilation, callback: (err?: Error) => void) => {
         try {
           const config = readConfig({ ...options, isDev })
-          const metaTagsHtml = generateMetaTagsHtml(config)
+          const metaTagsHtml = generateMetaTagsHtml(publicSettings ? toPublicConfig(config) : config)
           const envValues = readDevEnvValues(isDevServer)
 
-          if (!metaTagsHtml && !envValues) {
+          if (!metaTagsHtml && !envValues && !publicSettings) {
             callback()
             return
           }
@@ -83,6 +116,9 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
               const asset = compilation.assets[filename]
               const html = asset.source().toString()
               let modifiedHtml = envValues ? injectEnvScriptHtml(html, envValues) : html
+              if (publicSettings) {
+                modifiedHtml = injectPublicBaseUrlScriptHtml(modifiedHtml)
+              }
               if (metaTagsHtml) {
                 modifiedHtml = modifiedHtml.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
               }
