@@ -239,7 +239,7 @@ Finding a function reads the folder's HTTP triggers, which needs `OR.Jobs.Read`.
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `OR.Jobs.Read` |
-| `invoke()` | `OR.Jobs.Read`, `OR.Jobs.Write`, `OR.Folders.Read` |
+| `invoke()` | `OR.Jobs`, `OR.Folders.Read` |
 
 ## Governance
 

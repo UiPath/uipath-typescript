@@ -172,7 +172,7 @@ cannot keep a client secret.
 uip admin external-apps create "functions-app" \
   --non-confidential \
   --redirect-uri "http://localhost:5173" \
-  --user-scope "OR.Execution,OR.Folders.Read,OR.Jobs.Read,OR.Jobs.Write"
+  --user-scope "OR.Execution,OR.Folders.Read,OR.Jobs"
 ```
 
 Keep the returned client id. When you later deploy to a hosted URL, add that URL as a second
@@ -181,12 +181,11 @@ redirect URI:
 ```bash
 uip admin external-apps update <client-id> \
   --redirect-uri "http://localhost:5173,https://<org>.uipath.host/functions-app" \
-  --user-scope "OR.Execution,OR.Folders.Read,OR.Jobs.Read,OR.Jobs.Write"
+  --user-scope "OR.Execution,OR.Folders.Read,OR.Jobs"
 ```
 
-> `OR.Jobs.Read` and `OR.Jobs.Write` must be registered on the app and requested in the scope
-> string in `uipath.json`.
-> Without them, the function lookup and the HTTP trigger return 403.
+> `OR.Jobs` must be registered on the app and requested in the scope string in `uipath.json`.
+> Without it, the function lookup and the HTTP trigger return 403.
 
 ## 6. Configure and run locally
 
@@ -294,8 +293,8 @@ functions-app/
 **`Function '<name>' not found in folder`.** The registered name is package-prefixed
 (`functions-app-fn_quote`, not `quote`). The error lists what the folder actually exposes.
 
-**403 from the function lookup or the HTTP trigger.** `OR.Jobs.Read` or `OR.Jobs.Write` is
-missing from the scope string in `uipath.json` or is not registered on the external app.
+**403 from the function lookup or the HTTP trigger.** `OR.Jobs` is missing from the scope string
+in `uipath.json` or is not registered on the external app.
 
 **Every code is rejected.** Check the asset is `Secret`, has a value, and holds valid JSON. A
 malformed value is treated as "no codes are valid" rather than erroring, so the symptom is silent.
