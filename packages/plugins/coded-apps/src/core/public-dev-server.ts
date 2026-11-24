@@ -30,6 +30,17 @@ const SESSION_COOKIE = 'uipath_local_public_session'
 const SESSION_ID_RE = /^[a-f0-9]{64}$/
 const PORT_RE = /:(\d+)$/
 const COOKIE_SEPARATOR_RE = /;\s*/
+const NAME_FIELD_RE = /name\s*:\s*(['"`])(.*?)\1/
+const FOLDER_PATH_FIELD_RE = /folderPath\s*:\s*(['"`])(.*?)\1/
+const HEAD_OPEN_TAG_RE = /<head\b[^>]*>/i
+const TRAILING_SLASH_RE = /\/$/
+const DASH_RE = /-/g
+const SINGLE_QUOTE_RE = /'/g
+const IPV6_BRACKET_RE = /^\[|\]$/g
+const PROCESS_JOBS_RE = /^orchestrator\/processes\/([^/]+)\/jobs$/
+const JOB_OUTPUT_RE = /^orchestrator\/jobs\/([^/]+)\/output$/
+const ENTITY_RECORDS_RE = /^datafabric\/entities\/([^/]+)\/records(?:\/([^/]+))?$/
+const BUCKET_FILES_RE = /^orchestrator\/buckets\/([^/]+)\/files$/
 // Keys a public deployment doesn't serve: no OAuth client, and the base URL is set in the page instead.
 const NON_PUBLIC_CONFIG_KEYS = new Set(['clientId', 'scope', 'redirectUri', 'baseUrl'])
 const TOKEN_REFRESH_MARGIN_SECONDS = 120
@@ -99,10 +110,10 @@ export function readDeclaredResources(cwd: string = process.cwd()): DeclaredReso
   const fullPath = path.resolve(cwd, RESOURCES_FILE)
   if (!fs.existsSync(fullPath)) return []
   const text = fs.readFileSync(fullPath, 'utf-8')
-  const field = (body: string, key: string) => body.match(new RegExp(`${key}\\s*:\\s*(['"\`])(.*?)\\1`))?.[2]
+  const field = (body: string, fieldRe: RegExp) => body.match(fieldRe)?.[2]
   return [...text.matchAll(RESOURCE_RE)].flatMap(([, kind, body]) => {
-    const name = field(body, 'name')
-    return name ? [{ kind: kind as Kind, name, folderPath: kind === 'entity' ? undefined : field(body, 'folderPath') }] : []
+    const name = field(body, NAME_FIELD_RE)
+    return name ? [{ kind: kind as Kind, name, folderPath: kind === 'entity' ? undefined : field(body, FOLDER_PATH_FIELD_RE) }] : []
   })
 }
 
@@ -138,7 +149,7 @@ export const PUBLIC_BASE_URL_SCRIPT =
 
 /** Inject the base URL script directly after <head> (for webpack, which edits the emitted HTML). */
 export function injectPublicBaseUrlScriptHtml(html: string): string {
-  return html.replace(/<head\b[^>]*>/i, match => `${match}\n  <script>${PUBLIC_BASE_URL_SCRIPT}</script>`)
+  return html.replace(HEAD_OPEN_TAG_RE, match => `${match}\n  <script>${PUBLIC_BASE_URL_SCRIPT}</script>`)
 }
 
 export function logPublicMode(settings: PublicDevSettings, cwd: string = process.cwd()): void {
@@ -173,12 +184,15 @@ export function addPublicDevMiddleware(devServer: WebpackDevServerOptions, middl
 
 export type Middleware = (req: IncomingMessage, res: ServerResponse, next: () => void) => void
 
+/** The part of `fetch` the proxy uses, so tests can pass a plain function. */
+export type FetchLike = (url: string, init: RequestInit) => Promise<Response>
+
 export interface PublicDevServerOptions {
   settings: PublicDevSettings
   /** uipath.json as last read, so an edit applies on the next call. */
   getConfig: () => UiPathConfig
   cwd?: string
-  fetchImpl?: typeof fetch
+  fetchImpl?: FetchLike
 }
 
 class HttpError extends Error {
@@ -190,7 +204,7 @@ class HttpError extends Error {
 export function createPublicDevMiddleware({ settings, getConfig, cwd = process.cwd(), fetchImpl = fetch }: PublicDevServerOptions): Middleware {
   const sessions = new Map<string, Session>()
   let token: { value: string; expiresAt: number } | undefined
-  const baseUrl = () => (getConfig().baseUrl ?? '').replace(/\/$/, '')
+  const baseUrl = () => (getConfig().baseUrl ?? '').replace(TRAILING_SLASH_RE, '')
 
   async function appToken(): Promise<string> {
     if (token && Date.now() < token.expiresAt) return token.value
@@ -264,7 +278,7 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
     }
     let match: RegExpMatchArray | null
 
-    if (method === 'POST' && (match = route.match(/^orchestrator\/processes\/([^/]+)\/jobs$/))) {
+    if (method === 'POST' && (match = route.match(PROCESS_JOBS_RE))) {
       const process = declared('process', decodeURIComponent(match[1]))
       const inputArguments = readJson().inputArguments
       const startInfo: Record<string, unknown> = { ReleaseName: process.name, Source: 'Apps', Strategy: 'ModernJobsCount', JobsCount: 1 }
@@ -281,7 +295,7 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       return { status: 200, data: result }
     }
 
-    if (method === 'GET' && (match = route.match(/^orchestrator\/jobs\/([^/]+)\/output$/))) {
+    if (method === 'GET' && (match = route.match(JOB_OUTPUT_RE))) {
       const jobKey = decodeURIComponent(match[1])
       const owns = session.owned.has(jobKey)
       const openProcesses = readDeclaredResources(cwd).filter(item => item.kind === 'process' && isOpenToAll(access(), 'process', bindingKey(item)))
@@ -301,7 +315,7 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       return { status: 200, data: job }
     }
 
-    if ((match = route.match(/^datafabric\/entities\/([^/]+)\/records(?:\/([^/]+))?$/))) {
+    if ((match = route.match(ENTITY_RECORDS_RE))) {
       const entityKey = decodeURIComponent(match[1])
       const recordId = match[2] && decodeURIComponent(match[2])
       const entityUrl = (entity: DeclaredResource) => `${tenantUrl}/datafabric_/api/v3/entities/${encodeURIComponent(entity.name)}`
@@ -340,18 +354,18 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       }
     }
 
-    if (method === 'POST' && (match = route.match(/^orchestrator\/buckets\/([^/]+)\/files$/))) {
+    if (method === 'POST' && (match = route.match(BUCKET_FILES_RE))) {
       const fileName = url.searchParams.get('fileName')?.trim()
       if (!fileName) throw new HttpError(400, { message: 'A file name is required.' })
       const bucket = declared('bucket', decodeURIComponent(match[1]))
       // The service picks the path, so a visitor can only add files, never overwrite one.
-      const uploadId = randomUUID().replace(/-/g, '')
+      const uploadId = randomUUID().replace(DASH_RE, '')
       const dot = fileName.lastIndexOf('.')
       const filePath = dot > 0 ? `${fileName.slice(0, dot)}_${uploadId}${fileName.slice(dot)}` : `${fileName}_${uploadId}`
       const type = contentType || 'application/octet-stream'
       const headers = folderHeaders(bucket)
       const bucketsUrl = `${tenantUrl}/orchestrator_/odata/Buckets`
-      const filter = new URLSearchParams({ $filter: `Name eq '${bucket.name.replace(/'/g, "''")}'`, $select: 'Id' })
+      const filter = new URLSearchParams({ $filter: `Name eq '${bucket.name.replace(SINGLE_QUOTE_RE, "''")}'`, $select: 'Id' })
       const buckets = await (await call('GET', `${bucketsUrl}?${filter}`, headers)).json() as { value?: { Id?: unknown }[] }
       const bucketId = buckets.value?.[0]?.Id
       if (bucketId === undefined) throw new HttpError(404, { message: `The "${bucket.name}" bucket wasn't found in its folder in Orchestrator.` })
@@ -443,14 +457,15 @@ function readCookie(header: string | undefined, name: string): string | undefine
 
 export function isLocalRequest(req: Pick<IncomingMessage, 'headers'>): boolean {
   const host = requestHost(req)
-  const hostname = host.replace(/:\d+$/, '').replace(/^\[|\]$/g, '')
+  const hostname = host.replace(PORT_RE, '').replace(IPV6_BRACKET_RE, '')
   if (!LOCAL_HOST_RE.test(hostname)) return false
   if (req.headers['sec-fetch-site'] === 'cross-site') return false
   const origin = req.headers.origin
   if (!origin) return true
   try {
     return new URL(origin).host === host
-  } catch {
+  } catch (error) {
+    console.warn(`[${PLUGIN_NAME}] Could not parse the Origin header, so the call is refused:`, error instanceof Error ? error.message : error)
     return false
   }
 }

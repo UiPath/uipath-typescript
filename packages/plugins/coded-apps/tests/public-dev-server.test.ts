@@ -75,7 +75,7 @@ describe('declarations and access', () => {
   })
 
   it('serves public meta tags: no OAuth client and an app key; the base URL is set in the page', () => {
-    expect(toPublicConfig({ ...CONFIG, access: [] as unknown as string })).toEqual({
+    expect(toPublicConfig({ ...CONFIG, ...JSON.parse('{"access":[]}') })).toEqual({
       orgName: 'org',
       tenantName: 'tenant',
       appKey: 'local-dev',
@@ -86,10 +86,10 @@ describe('declarations and access', () => {
 
   it('puts the proxy first in webpack-dev-server, ahead of the app\'s own middlewares', () => {
     const own = vi.fn((middlewares: unknown[]) => [...middlewares, 'app'])
-    const devServer = { setupMiddlewares: own }
+    const devServer: Parameters<typeof addPublicDevMiddleware>[0] = { setupMiddlewares: own }
     const middleware = vi.fn()
     addPublicDevMiddleware(devServer, middleware)
-    const result = devServer.setupMiddlewares(['static'], {})
+    const result = devServer.setupMiddlewares!(['static'], {})
     expect(own).toHaveBeenCalled()
     expect(result).toEqual([{ name: 'coded-apps-public-app', middleware }, 'static', 'app'])
   })
@@ -124,11 +124,13 @@ let job: Record<string, unknown> = {}
 // What GetWriteUri returns as Headers, the storage status, and the token reply; tests override them.
 let writeHeaders: unknown = { Keys: ['x-ms-blob-type'], Values: ['BlockBlob'] }
 let storageStatus = 201
+let buckets: unknown[] = [{ Id: 7 }]
 let tokenReply: { status: number; body: unknown } = { status: 200, body: { access_token: 'app-token', expires_in: 3600 } }
 
 beforeEach(() => {
   writeHeaders = { Keys: ['x-ms-blob-type'], Values: ['BlockBlob'] }
   storageStatus = 201
+  buckets = [{ Id: 7 }]
   tokenReply = { status: 200, body: { access_token: 'app-token', expires_in: 3600 } }
 })
 
@@ -143,11 +145,11 @@ function fakeFetch() {
     if (url.includes('/read')) return ok({ value: [] })
     if (url.includes('GetByKey')) return ok(job)
     if (url.includes('GetWriteUri')) return ok({ Uri: 'https://storage.example/put', Verb: 'PUT', RequiresAuth: false, Headers: writeHeaders })
-    if (url.includes('/odata/Buckets?')) return ok({ value: [{ Id: 7 }] })
+    if (url.includes('/odata/Buckets?')) return ok({ value: buckets })
     if (url === 'https://storage.example/put') return new Response(null, { status: storageStatus })
     return new Response('{}', { status: 404 })
   })
-  return { fetchImpl: fetchImpl as unknown as typeof fetch, calls }
+  return { fetchImpl, calls }
 }
 
 function request(middleware: ReturnType<typeof createPublicDevMiddleware>, method: string, route: string, { body, cookie, raw, host = 'localhost:5173' }: { body?: unknown; cookie?: string; raw?: Buffer; host?: string } = {}): Promise<Reply> {
@@ -350,6 +352,26 @@ describe('createPublicDevMiddleware', () => {
       const reply = await request(middleware, 'POST', 'orchestrator/processes/Summarize.Shared/jobs', { cookie, body: {} })
       expect(reply.status).toBe(500)
       expect((reply.body as { message: string }).message).toContain('offline_access')
+    })
+  })
+
+  describe('bucket upload failures', () => {
+    it('answers 404 when the declared bucket is not in its folder', async () => {
+      buckets = []
+      const { middleware, calls } = setup()
+      const cookie = await openSession(middleware)
+      const reply = await request(middleware, 'POST', 'orchestrator/buckets/Uploads.Shared%2FDocs/files?fileName=a.txt', { cookie, raw: Buffer.from('a') })
+      expect(reply.status).toBe(404)
+      expect(calls.some(call => call.url.includes('GetWriteUri'))).toBe(false)
+    })
+
+    it('passes a storage error status on', async () => {
+      storageStatus = 403
+      const { middleware } = setup()
+      const cookie = await openSession(middleware)
+      const reply = await request(middleware, 'POST', 'orchestrator/buckets/Uploads.Shared%2FDocs/files?fileName=a.txt', { cookie, raw: Buffer.from('a') })
+      expect(reply.status).toBe(403)
+      expect((reply.body as { message: string }).message).toContain('storage returned 403')
     })
   })
 })
