@@ -169,6 +169,8 @@ When telemetry is disabled, the SDK sends no events at all.
     export UIPATH_TELEMETRY_DISABLED=1
     ```
 
+    Under Deno, the SDK reads the variable only when the process is allowed to, for example with `--allow-env=UIPATH_TELEMETRY_DISABLED`. Without that permission the variable is ignored.
+
 
 
 ## **Vibe Coding**
