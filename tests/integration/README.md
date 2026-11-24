@@ -411,6 +411,9 @@ passes `'both'` and runs under both.
 | `INTEGRATION_SERVICE_TEST_CONNECTION_ID` | Pre-existing connection id used by all four Integration Service suites; its folder also scopes the connection listings | (required for those suites) |
 | `INTEGRATION_SERVICE_TEST_OBJECT_NAME` | Object name that supports GET, used by the Elements and Execute tests | Required by Execute; Elements resolves one from the connector when unset |
 | `INTEGRATION_SERVICE_TEST_EVENT_OPERATION` | Event operation name for the Elements event tests | (required for the Elements suite) |
+| `INTEGRATION_SERVICE_TEST_V4_CONNECTOR_KEY` | Key of a connector that runs on the version 4 engine (e.g. `uipath-salesforce-slack`) | (required for the version 4 Execute tests) |
+| `INTEGRATION_SERVICE_TEST_V4_CONNECTION_ID` | Pre-existing connection id on that connector | (required for the version 4 Execute tests) |
+| `INTEGRATION_SERVICE_TEST_V4_SCRIPT_REF` | Script reference of a read-only activity on that connector (e.g. `ListChannels`) | (required for the version 4 Execute tests) |
 
 ## Test Data Management
 

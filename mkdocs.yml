@@ -121,6 +121,7 @@ plugins:
           - api/interfaces/MessageServiceModel.md: Message service methods
           - api/interfaces/UserSettingsServiceModel.md: User settings service methods
           - api/interfaces/AgentServiceModel.md: Agents service methods
+          - integration-service-execution.md: Integration Service execution functions
           - api/interfaces/SessionStream.md: Real-time WebSocket session
           - api/interfaces/ExchangeStream.md: Exchange streaming events
           - api/interfaces/MessageStream.md: Message streaming events
@@ -217,6 +218,7 @@ nav:
             - Connectors: api/interfaces/ConnectorsServiceModel.md
             - Connections: api/interfaces/ConnectionsServiceModel.md
             - Elements: api/interfaces/ElementsServiceModel.md
+            - Execution: integration-service-execution.md
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md

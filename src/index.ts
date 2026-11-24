@@ -36,6 +36,8 @@ export * from './utils/runtime';
 export { httpRequest } from './utils/http/http-request';
 export { wait } from './utils/http/fetch-with-retry';
 export { trace } from './utils/tracing/trace';
+export { execute } from './services/integration-service/execution/execution';
+export { executeActivity } from './services/integration-service/execution/activity';
 
 // Export telemetry
 export * from './core/telemetry';

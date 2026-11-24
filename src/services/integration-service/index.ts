@@ -12,6 +12,7 @@
  *   Connectors,
  *   Elements,
  *   execute,
+ *   executeActivity,
  * } from '@uipath/uipath-typescript/connections';
  *
  * const sdk = new UiPath(config);
@@ -37,6 +38,7 @@ export { ConnectorsService as Connectors, ConnectorsService } from './connectors
 export { ConnectionsService as Connections, ConnectionsService } from './connections/connections';
 export { ElementsService as Elements, ElementsService } from './elements/elements';
 export { execute } from './execution/execution';
+export { executeActivity } from './execution/activity';
 
 // Re-export service-specific types
 export * from '../../models/integration-service';
