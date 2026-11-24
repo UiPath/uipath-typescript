@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { UIPATH_ENV_GLOBAL } from '../../../src/core/env/env';
 import {
     APPS_ENV_GLOBAL,
     APPS_TELEMETRY_DISABLED_ENV,
@@ -123,8 +122,9 @@ describe('isTelemetryDisabled', () => {
         expect(isTelemetryDisabled()).toBe(false);
     });
 
-    it('reads the same global the SDK reads coded app variables from', () => {
-        expect(APPS_ENV_GLOBAL).toBe(UIPATH_ENV_GLOBAL);
+    // The SDK's env tests pin `UIPATH_ENV_GLOBAL` to the same name.
+    it('reads coded app variables from the `__UIPATH_ENV__` global', () => {
+        expect(APPS_ENV_GLOBAL).toBe('__UIPATH_ENV__');
     });
 
     it('warns once and treats an environment that throws on read as not opted out', () => {
