@@ -25,6 +25,8 @@ export const PUBLIC_ENV = {
 
 export const LOCAL_APP_KEY = 'local-dev'
 const RESOURCES_FILE = 'uipath_resources.ts'
+const BINDINGS_FILE = 'bindings_v2.json'
+const BINDING_KINDS = new Set(['process', 'entity', 'bucket'])
 const ROUTE_RE = /\/apps_\/default\/api\/v1\/default\/integrations\/codedapp\/([^?]*)/
 const SESSION_COOKIE = 'uipath_local_public_session'
 const SESSION_ID_RE = /^[a-f0-9]{64}$/
@@ -58,6 +60,8 @@ export interface DeclaredResource {
   kind: Kind
   name: string
   folderPath?: string
+  /** The binding key as written in bindings_v2.json; derived from name and folder when absent. */
+  key?: string
 }
 
 interface AccessEntry {
@@ -107,6 +111,13 @@ export function readPublicDevSettings(cwd: string = process.cwd()): PublicDevSet
 
 /** Read the declarations as text, like the CLI does when it writes bindings_v2.json. */
 export function readDeclaredResources(cwd: string = process.cwd()): DeclaredResource[] {
+  const declared = readResourceDeclarations(cwd)
+  // Same order as the packer: declarations go over a hand-written bindings_v2.json.
+  const seen = new Set(declared.map(item => `${item.kind}:${bindingKey(item)}`))
+  return [...declared, ...readBindingsFile(cwd).filter(item => !seen.has(`${item.kind}:${bindingKey(item)}`))]
+}
+
+function readResourceDeclarations(cwd: string): DeclaredResource[] {
   const fullPath = path.resolve(cwd, RESOURCES_FILE)
   if (!fs.existsSync(fullPath)) return []
   const text = fs.readFileSync(fullPath, 'utf-8')
@@ -117,9 +128,33 @@ export function readDeclaredResources(cwd: string = process.cwd()): DeclaredReso
   })
 }
 
+/**
+ * A hand-written bindings_v2.json, where the packer looks for one: next to package.json, or one level up when
+ * the app sits in a solution project's source/ folder.
+ */
+function readBindingsFile(cwd: string): DeclaredResource[] {
+  const fullPath = [path.resolve(cwd, BINDINGS_FILE), path.resolve(cwd, '..', BINDINGS_FILE)].find(candidate => fs.existsSync(candidate))
+  if (!fullPath) return []
+  let resources: unknown
+  try {
+    resources = JSON.parse(fs.readFileSync(fullPath, 'utf-8')).resources
+  } catch (error) {
+    console.warn(`[${PLUGIN_NAME}] Could not read ${fullPath}:`, error instanceof Error ? error.message : error)
+    return []
+  }
+  if (!Array.isArray(resources)) return []
+  return resources.flatMap((entry: { resource?: string; key?: string; value?: { name?: { defaultValue?: string }; folderPath?: { defaultValue?: string } } }) => {
+    const kind = entry.resource?.toLowerCase()
+    const name = entry.value?.name?.defaultValue
+    if (!kind || !BINDING_KINDS.has(kind) || !name || !entry.key) return []
+    const folder = entry.value?.folderPath?.defaultValue
+    return [{ kind: kind as Kind, name, folderPath: folder && folder !== '.' ? folder : undefined, key: entry.key }]
+  })
+}
+
 /** Same key the CLI writes into bindings_v2.json and the SDK sends: `Name.FolderPath`, entities by name only. */
 export function bindingKey(resource: DeclaredResource): string {
-  return resource.folderPath ? `${resource.name}.${resource.folderPath}` : resource.name
+  return resource.key ?? (resource.folderPath ? `${resource.name}.${resource.folderPath}` : resource.name)
 }
 
 /** uipath.json `access`; a resource without an entry is open to all. */
@@ -236,7 +271,7 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
   function declared(kind: Kind, key: string): DeclaredResource {
     const resource = readDeclaredResources(cwd).find(item => item.kind === kind && bindingKey(item) === key)
     if (!resource) {
-      throw new HttpError(403, { message: `This app isn't allowed to use the ${kind} "${key}". Declare it in ${RESOURCES_FILE}.` })
+      throw new HttpError(403, { message: `This app isn't allowed to use the ${kind} "${key}". Add it to ${BINDINGS_FILE}.` })
     }
     return resource
   }

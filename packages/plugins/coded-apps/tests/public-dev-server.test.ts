@@ -67,6 +67,35 @@ describe('declarations and access', () => {
     ])
   })
 
+  it('reads a hand-written bindings_v2.json one level up, as the packer does for a solution project', () => {
+    fs.rmSync(path.join(dir, 'uipath_resources.ts'))
+    const source = path.join(dir, 'source')
+    fs.mkdirSync(source)
+    const entry = (resource: string, key: string, name: string, folderPath: string) =>
+      ({ resource, key, value: { name: { defaultValue: name }, folderPath: { defaultValue: folderPath } } })
+    fs.writeFileSync(path.join(dir, 'bindings_v2.json'), JSON.stringify({
+      version: '2.0',
+      resources: [entry('entity', 'Orders', 'Orders', '.'), entry('process', 'Invoices.Shared', 'Invoices', 'Shared'), entry('asset', 'Rate.Shared', 'Rate', 'Shared')],
+    }))
+    expect(readDeclaredResources(source).map(item => `${item.kind}:${bindingKey(item)}:${item.folderPath ?? '-'}`)).toEqual([
+      'entity:Orders:-',
+      'process:Invoices.Shared:Shared',
+    ])
+  })
+
+  it('lets uipath_resources.ts win over a bindings_v2.json entry with the same key', () => {
+    fs.writeFileSync(path.join(dir, 'bindings_v2.json'), JSON.stringify({ version: '2.0', resources: [
+      { resource: 'entity', key: 'EventFeedback', value: { name: { defaultValue: 'EventFeedback' }, folderPath: { defaultValue: '.' } } },
+      { resource: 'bucket', key: 'Extra.Shared', value: { name: { defaultValue: 'Extra' }, folderPath: { defaultValue: 'Shared' } } },
+    ] }))
+    expect(readDeclaredResources(dir).map(item => `${item.kind}:${bindingKey(item)}`)).toEqual([
+      'entity:EventFeedback',
+      'process:Summarize.Shared',
+      'bucket:Uploads.Shared/Docs',
+      'bucket:Extra.Shared',
+    ])
+  })
+
   it('opens a resource to all unless access says session', () => {
     const access = [{ resource: 'entity', key: 'EventFeedback', mode: 'session' }]
     expect(isOpenToAll(access, 'entity', 'EventFeedback')).toBe(false)
