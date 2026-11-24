@@ -109,18 +109,57 @@ export function isOpenToAll(access: unknown, kind: Kind, key: string): boolean {
   return entry?.mode !== 'session'
 }
 
-/** The meta tags a public deployment serves: no OAuth client, an app key, and the dev server as the Apps service. */
-export function toPublicConfig(config: UiPathConfig, devOrigin: string): UiPathConfig {
+/** The meta tags a public deployment serves: no OAuth client and an app key. The base URL comes from PUBLIC_BASE_URL_SCRIPT. */
+export function toPublicConfig(config: UiPathConfig): UiPathConfig {
   const result: UiPathConfig = {}
   for (const [key, value] of Object.entries(config)) {
-    if (typeof value === 'string' && !['clientId', 'scope', 'redirectUri'].includes(key)) result[key] = value
+    if (typeof value === 'string' && !['clientId', 'scope', 'redirectUri', 'baseUrl'].includes(key)) result[key] = value
   }
-  return { ...result, baseUrl: devOrigin, appKey: LOCAL_APP_KEY }
+  return { ...result, appKey: LOCAL_APP_KEY }
+}
+
+/**
+ * Points the SDK at the dev server that served the page, as a deployed public app points it at the Apps service.
+ * Set in the page rather than at build time, so it holds for any port or host the dev server answers on.
+ * Runs inline in <head>, before the app's scripts read the meta tags.
+ */
+export const PUBLIC_BASE_URL_SCRIPT =
+  "document.head.appendChild(Object.assign(document.createElement('meta'),{name:'uipath:base-url',content:location.origin}));"
+
+/** Inject the base URL script directly after <head> (for webpack, which edits the emitted HTML). */
+export function injectPublicBaseUrlScriptHtml(html: string): string {
+  return html.replace(/<head\b[^>]*>/i, match => `${match}\n  <script>${PUBLIC_BASE_URL_SCRIPT}</script>`)
+}
+
+export function logPublicMode(settings: PublicDevSettings, cwd: string = process.cwd()): void {
+  const declared = readDeclaredResources(cwd).map(item => `${item.kind} ${bindingKey(item)}`)
+  console.log(
+    `[${PLUGIN_NAME}] Public mode: the app runs without sign-in, as external application ${settings.clientId}. ` +
+    `Declared resources: ${declared.length ? declared.join(', ') : 'none'}.`
+  )
+}
+
+type DevServerMiddlewares = unknown[]
+interface WebpackDevServerOptions {
+  setupMiddlewares?: (middlewares: DevServerMiddlewares, devServer: unknown) => DevServerMiddlewares
+}
+
+/**
+ * webpack-dev-server reads `devServer` from the compiler's options after plugins run, so the proxy goes first in its
+ * middleware list, ahead of the app's own `setupMiddlewares`.
+ */
+export function addPublicDevMiddleware(devServer: WebpackDevServerOptions, middleware: Middleware): void {
+  const existing = devServer.setupMiddlewares
+  devServer.setupMiddlewares = (middlewares, server) => {
+    const result = existing ? existing(middlewares, server) : middlewares
+    result.unshift({ name: `${PLUGIN_NAME}-public-app`, middleware })
+    return result
+  }
 }
 
 // ===== Server =====
 
-type Middleware = (req: IncomingMessage, res: ServerResponse, next: () => void) => void
+export type Middleware = (req: IncomingMessage, res: ServerResponse, next: () => void) => void
 
 export interface PublicDevServerOptions {
   settings: PublicDevSettings

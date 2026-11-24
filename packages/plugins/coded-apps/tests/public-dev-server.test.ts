@@ -4,7 +4,9 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import {
+  addPublicDevMiddleware,
   bindingKey,
+  injectPublicBaseUrlScriptHtml,
   createPublicDevMiddleware,
   isOpenToAll,
   readDeclaredResources,
@@ -71,13 +73,24 @@ describe('declarations and access', () => {
     expect(isOpenToAll(undefined, 'entity', 'EventFeedback')).toBe(true)
   })
 
-  it('serves public meta tags: no OAuth client, an app key, the dev server as base URL', () => {
-    expect(toPublicConfig({ ...CONFIG, access: [] as unknown as string }, 'http://localhost:5173')).toEqual({
-      baseUrl: 'http://localhost:5173',
+  it('serves public meta tags: no OAuth client and an app key; the base URL is set in the page', () => {
+    expect(toPublicConfig({ ...CONFIG, access: [] as unknown as string })).toEqual({
       orgName: 'org',
       tenantName: 'tenant',
       appKey: 'local-dev',
     })
+    const html = injectPublicBaseUrlScriptHtml('<html><head lang="en"><title>t</title></head></html>')
+    expect(html).toMatch(/^<html><head lang="en">\n  <script>.*location\.origin.*<\/script><title>/)
+  })
+
+  it('puts the proxy first in webpack-dev-server, ahead of the app\'s own middlewares', () => {
+    const own = vi.fn((middlewares: unknown[]) => [...middlewares, 'app'])
+    const devServer = { setupMiddlewares: own }
+    const middleware = vi.fn()
+    addPublicDevMiddleware(devServer, middleware)
+    const result = devServer.setupMiddlewares(['static'], {})
+    expect(own).toHaveBeenCalled()
+    expect(result).toEqual([{ name: 'coded-apps-public-app', middleware }, 'static', 'app'])
   })
 })
 

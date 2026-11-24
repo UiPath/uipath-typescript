@@ -14,11 +14,13 @@ import {
   injectEnvScriptHtml,
 } from './core/index'
 import {
+  PUBLIC_BASE_URL_SCRIPT,
+  addPublicDevMiddleware,
   createPublicDevMiddleware,
-  readDeclaredResources,
+  injectPublicBaseUrlScriptHtml,
+  logPublicMode,
   readPublicDevSettings,
   toPublicConfig,
-  bindingKey,
 } from './core/public-dev-server'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
@@ -61,19 +63,18 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         if (settings) {
           publicMode = true
           server.middlewares.use(createPublicDevMiddleware({ settings, getConfig }))
-          const declared = readDeclaredResources().map(item => `${item.kind} ${bindingKey(item)}`)
-          console.log(
-            `[${PLUGIN_NAME}] Public mode: the app runs without sign-in, as external application ${settings.clientId}. ` +
-            `Declared resources: ${declared.length ? declared.join(', ') : 'none'}.`
-          )
+          logPublicMode(settings)
         }
       },
-      transformIndexHtml(_html, ctx) {
+      transformIndexHtml() {
         const config = getConfig()
-        const devOrigin = publicMode ? resolveDevOrigin(ctx.server) : undefined
-        const tags = generateMetaTagsForVite(devOrigin ? toPublicConfig(config, devOrigin) : config)
+        const tags = generateMetaTagsForVite(publicMode ? toPublicConfig(config) : config)
         const envValues = readDevEnvValues(isDevServer)
-        return envValues ? [...generateEnvScriptForVite(envValues), ...tags] : tags
+        const scripts = [
+          ...(envValues ? generateEnvScriptForVite(envValues) : []),
+          ...(publicMode ? [{ tag: 'script' as const, children: PUBLIC_BASE_URL_SCRIPT, injectTo: 'head-prepend' as const }] : []),
+        ]
+        return [...scripts, ...tags]
       },
     },
 
@@ -82,6 +83,18 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
       isDev = compiler.options.mode === DEV_MODE
       isDevServer = isWebpackServe()
 
+      const publicSettings = isDevServer ? readPublicDevSettings() : undefined
+      if (publicSettings) {
+        const webpackOptions = compiler.options as { devServer?: Parameters<typeof addPublicDevMiddleware>[0] | false }
+        if (webpackOptions.devServer === false) webpackOptions.devServer = {}
+        webpackOptions.devServer ??= {}
+        addPublicDevMiddleware(
+          webpackOptions.devServer,
+          createPublicDevMiddleware({ settings: publicSettings, getConfig: () => readConfig({ ...options, isDev }) })
+        )
+        logPublicMode(publicSettings)
+      }
+
       type Compilation = {
         assets: Record<string, { source: () => string | Buffer; size: () => number }>
       }
@@ -89,10 +102,10 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
       compiler.hooks.emit.tapAsync(PLUGIN_NAME, (compilation: Compilation, callback: (err?: Error) => void) => {
         try {
           const config = readConfig({ ...options, isDev })
-          const metaTagsHtml = generateMetaTagsHtml(config)
+          const metaTagsHtml = generateMetaTagsHtml(publicSettings ? toPublicConfig(config) : config)
           const envValues = readDevEnvValues(isDevServer)
 
-          if (!metaTagsHtml && !envValues) {
+          if (!metaTagsHtml && !envValues && !publicSettings) {
             callback()
             return
           }
@@ -103,6 +116,9 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
               const asset = compilation.assets[filename]
               const html = asset.source().toString()
               let modifiedHtml = envValues ? injectEnvScriptHtml(html, envValues) : html
+              if (publicSettings) {
+                modifiedHtml = injectPublicBaseUrlScriptHtml(modifiedHtml)
+              }
               if (metaTagsHtml) {
                 modifiedHtml = modifiedHtml.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
               }
@@ -184,13 +200,6 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
       },
     },
   }
-}
-
-// The page calls the dev server it was served from, as a deployed public app calls the Apps service.
-function resolveDevOrigin(server?: { resolvedUrls?: { local: string[] } | null; config: { server: { port?: number; https?: unknown } } }): string {
-  const local = server?.resolvedUrls?.local[0]
-  if (local) return new URL(local).origin
-  return `${server?.config.server.https ? 'https' : 'http'}://localhost:${server?.config.server.port ?? 5173}`
 }
 
 export const unplugin: UnpluginInstance<Options | undefined, boolean> =
