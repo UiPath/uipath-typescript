@@ -416,6 +416,7 @@ describe('executeActivity', () => {
     });
 
     it.each([
+      ['files', { files: [{ name: IS_TEST_CONSTANTS.FILE_PART_NAME, content: new Uint8Array([1]) }] }],
       ['maxRecords', { maxRecords: 10 }],
       ['fileResponse', { fileResponse: true }],
       ['urlInputFields', { urlInputFields: ['link'] }],
