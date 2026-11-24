@@ -221,14 +221,8 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
     return resource
   }
 
-  function access(): unknown {
-    try {
-      return JSON.parse(fs.readFileSync(path.resolve(cwd, 'uipath.json'), 'utf-8')).access
-    } catch (error) {
-      console.warn(`[${PLUGIN_NAME}] Could not read access from uipath.json, so every resource is open to all:`, error instanceof Error ? error.message : error)
-      return undefined
-    }
-  }
+  // `access` comes from the same uipath.json the plugin reads (its `configPath`), as last read.
+  const access = (): unknown => (getConfig() as Record<string, unknown>).access
 
   // Orchestrator picks the folder by encoded path, then key; with neither, the deployment's folder.
   function folderHeaders(resource?: DeclaredResource): Record<string, string> {

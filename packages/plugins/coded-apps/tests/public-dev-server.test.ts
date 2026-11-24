@@ -168,7 +168,11 @@ function setup() {
   const { fetchImpl, calls } = fakeFetch()
   const middleware = createPublicDevMiddleware({
     settings: { clientId: 'ext-app', clientSecret: 's3cret' },
-    getConfig: () => CONFIG,
+    // Stands in for the plugin's readConfig: uipath.json from the project, here only `access`.
+    getConfig: () => {
+      const file = path.join(dir, 'uipath.json')
+      return { ...CONFIG, ...(fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf-8')) : {}) }
+    },
     cwd: dir,
     fetchImpl,
   })
