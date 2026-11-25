@@ -66,6 +66,37 @@ describe('unwrapProxyResponse', () => {
     expect(result.body).toEqual({ id: 1 });
   });
 
+  it('keeps a vendor body that is JSON null', () => {
+    const result = unwrapProxyResponse(carrier({ code: HTTP_TEST_CONSTANTS.STATUS_OK, body: null }));
+
+    expect(result.body).toBeNull();
+  });
+
+  it('falls back to the raw string body when the parsed body is null', () => {
+    const result = unwrapProxyResponse(
+      carrier({ code: HTTP_TEST_CONSTANTS.STATUS_OK, body: null, rawStringBody: 'plain text' }),
+    );
+
+    expect(result.body).toBe('plain text');
+  });
+
+  it('joins a header the vendor sent more than once', () => {
+    const result = unwrapProxyResponse(
+      carrier({ code: HTTP_TEST_CONSTANTS.STATUS_OK, headers: { 'Set-Cookie': ['a=1', 'b=2'] } }),
+    );
+
+    expect(result.headers).toEqual({ 'set-cookie': 'a=1, b=2' });
+  });
+
+  it.each([[0], [42], [600], [200.5]])(
+    'returns the Integration Service response when code %s is not an HTTP status',
+    (code) => {
+      const answer = carrier({ code, message: 'not a vendor response' });
+
+      expect(unwrapProxyResponse(answer)).toEqual({ ...answer, isVendorError: false });
+    },
+  );
+
   it('defaults the status text and headers the vendor response lacks', () => {
     const result = unwrapProxyResponse(carrier({ code: HTTP_TEST_CONSTANTS.STATUS_NO_CONTENT }));
 

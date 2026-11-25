@@ -110,6 +110,33 @@ describe('executeHttp', () => {
     expect(sentBody().body).toBe('subject=New');
   });
 
+  it('sends URLSearchParams as URL-encoded text', async () => {
+    const { instance } = createServiceTestDependencies();
+    fetchSpy.mockResolvedValue(carrierResponse(vendorSuccess()));
+
+    await executeHttp(instance, IS_TEST_CONSTANTS.CONNECTION_ID, IS_TEST_CONSTANTS.VENDOR_PATH, 'POST', {
+      body: new URLSearchParams({ subject: 'New ticket' }),
+    });
+
+    expect(sentBody().body).toBe('subject=New+ticket');
+  });
+
+  it.each([
+    ['a Uint8Array', () => new Uint8Array([1, 2, 3])],
+    ['an ArrayBuffer', () => new ArrayBuffer(4)],
+    ['a Blob', () => new Blob(['bytes'])],
+    ['a FormData', () => new FormData()],
+  ])('throws ValidationError for %s body before sending anything', async (_name, makeBody) => {
+    const { instance } = createServiceTestDependencies();
+
+    await expect(
+      executeHttp(instance, IS_TEST_CONSTANTS.CONNECTION_ID, IS_TEST_CONSTANTS.VENDOR_PATH, 'POST', {
+        body: makeBody(),
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('returns a vendor error without throwing', async () => {
     const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(

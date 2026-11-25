@@ -14,6 +14,31 @@ import { unwrapProxyResponse } from './proxy-response';
 
 const RESOURCE_TYPE = 'Execution.executeHttp';
 
+/** True for bytes or a form, which JSON cannot carry: serialized, they reach the vendor as `{}` or an index map. */
+function isBinaryBody(body: unknown): boolean {
+  return (
+    body instanceof ArrayBuffer ||
+    ArrayBuffer.isView(body) ||
+    (typeof Blob !== 'undefined' && body instanceof Blob) ||
+    (typeof FormData !== 'undefined' && body instanceof FormData)
+  );
+}
+
+/**
+ * The vendor body as the string Integration Service takes: a string as is, URL-encoded form
+ * parameters as their encoded text, anything else as JSON.
+ */
+function serializeVendorBody(body: unknown): string | undefined {
+  if (body === undefined || typeof body === 'string') return body;
+  if (isBinaryBody(body)) {
+    throw new ValidationError({
+      message: 'executeHttp cannot send a binary or form body; pass a string, or a value to send as JSON',
+    });
+  }
+  if (body instanceof URLSearchParams) return body.toString();
+  return JSON.stringify(body);
+}
+
 /**
  * Internal class so we can decorate `executeHttp` with `@track`. Method decorators
  * cannot be applied to free functions directly.
@@ -32,6 +57,7 @@ class HttpRequestExecution extends ConnectionRequestService {
     if (!url) {
       throw new ValidationError({ message: 'url is required for executeHttp' });
     }
+    const vendorBody = serializeVendorBody(options.body);
 
     const result = await this.send(
       target,
@@ -50,11 +76,7 @@ class HttpRequestExecution extends ConnectionRequestService {
           url,
           headers: options.headers,
           query: options.queryParams,
-          // Integration Service takes the vendor body as a string
-          body:
-            options.body === undefined || typeof options.body === 'string'
-              ? options.body
-              : JSON.stringify(options.body),
+          body: vendorBody,
         },
       },
       RESOURCE_TYPE,
@@ -80,6 +102,9 @@ class HttpRequestExecution extends ConnectionRequestService {
  * The result describes the vendor's response: `status`, `headers` and `body` are the vendor's.
  * **This does not throw on non-2xx responses** — check `ok`, and `isVendorError` to tell a
  * vendor error from a call that never reached the vendor.
+ *
+ * A vendor error status, a 429 or 5xx included, is returned as the result and is not retried:
+ * `retry` covers only a failure of the Integration Service call that carries the request.
  *
  * When an admin remapped this connection id at deployment, the call targets the
  * connection it was mapped to.

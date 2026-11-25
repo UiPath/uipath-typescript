@@ -114,3 +114,7 @@ if (result.ok) {
 ```
 
 `status`, `headers` and `body` on the result are the vendor's. `isVendorError` is `true` when the vendor answered with a non-2xx status, and `false` when the call failed before reaching the vendor.
+
+An object `body` is sent as JSON. For any other format, pass a string (or a `URLSearchParams` for URL-encoded form parameters) and set the matching `Content-Type` header. Bytes, a `Blob` and a `FormData` are refused with a `ValidationError`.
+
+A vendor error status is returned as the result and is not retried, a 429 or 5xx included. `retry` covers only a failure of the Integration Service call that carries the request.
