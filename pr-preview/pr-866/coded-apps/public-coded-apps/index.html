@@ -4345,7 +4345,7 @@
 <p>A <strong>public</strong> coded app opens without a sign-in. The visitor has no UiPath account and no token: the Apps service holds the app's identity (its confidential external application) and makes each call on the app's behalf, limited to the resources the app declares in its bindings.</p>
 <div class="admonition warning">
 <p class="admonition-title">Preview</p>
-<p>Public coded apps are in preview. They are built and deployed through Solutions only, and need <code>@uipath/uipath-typescript</code> <code>1.9.0-preview.0</code> or later. For the product overview, see <a href="https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps">Public coded apps</a>.</p>
+<p>Public coded apps are in preview. They are built and deployed through Solutions only, and need <code>@uipath/uipath-typescript</code> <code>1.8.5</code> or later. For the product overview, see <a href="https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps">Public coded apps</a>.</p>
 </div>
 <hr />
 <h2 id="turning-it-on">Turning it on<a class="headerlink" href="#turning-it-on" title="Permanent link">&para;</a></h2>
@@ -4449,7 +4449,7 @@
 <p><code>scope</code> must list what the app calls and include <code>OR.Execution</code>.</p>
 <h2 id="running-it-locally">Running it locally<a class="headerlink" href="#running-it-locally" title="Permanent link">&para;</a></h2>
 <p>The <code>@uipath/coded-apps-dev</code> plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. It works with the Vite and webpack dev servers.</p>
-<p>Needs <code>@uipath/coded-apps-dev</code> <code>1.0.0-beta.2</code> or later.</p>
+<p>Needs <code>@uipath/coded-apps-dev</code> <code>1.0.0</code> or later.</p>
 <p>Put the confidential external application in <code>.env.local</code>, and keep that file out of source control:</p>
 <div class="highlight"><span class="filename">.env.local</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">UIPATH_PUBLIC_APP</span><span class="o">=</span><span class="nb">true</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">UIPATH_PUBLIC_APP_CLIENT_ID</span><span class="o">=</span>&lt;external<span class="w"> </span>app<span class="w"> </span>id&gt;
@@ -4483,7 +4483,7 @@
 <li><strong>Bindings.</strong> <code>bindings_v2.json</code> lists every resource the app uses (see <a href="#declaring-the-bindings">Declaring the bindings</a>).</li>
 </ul>
 <h3 id="get-the-app-into-studio-web">Get the app into Studio Web<a class="headerlink" href="#get-the-app-into-studio-web" title="Permanent link">&para;</a></h3>
-<p>Use the preview CLI: <code>npm install -g @uipath/cli@preview</code>.</p>
+<p>Use the UiPath CLI <code>1.206.0</code> or later: <code>npm install -g @uipath/cli</code>.</p>
 <p><strong>Push the app.</strong> From the app folder (the one with <code>package.json</code>), push the source and build output. On the first push the CLI creates the solution and the coded app project in Studio Web, saves the project id to <code>.env</code>, and adds the resources from <code>bindings_v2.json</code> to the solution:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>push<span class="w"> </span>--solution-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--project-name<span class="w"> </span><span class="s2">&quot;&lt;App&gt;&quot;</span><span class="w"> </span>--build-dir<span class="w"> </span>dist
 </code></pre></div>
