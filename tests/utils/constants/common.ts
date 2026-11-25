@@ -53,6 +53,7 @@ export const TEST_CONSTANTS = {
   BASE_URL_NOT_A_URL: 'not a url',
   CLIENT_ID: 'test-client-id',
   CLIENT_SECRET: 'test-client-secret',
+  APP_KEY: 'uapp_test-app-key',
   ORGANIZATION_ID: 'test-org-id',
   GUID_ORG_ID: '550e8400-e29b-41d4-a716-446655440000',
   INVALID_GUID_ORG_ID: '550e840-e29b-41d4-a716-446655440000',

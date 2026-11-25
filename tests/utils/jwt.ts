@@ -22,13 +22,17 @@ export const TEST_USER_CLAIMS = {
 /** `sub_type` values Identity issues on application, machine and robot tokens. */
 export const TEST_NON_USER_SUBJECT_TYPES = ['service.external', 'service.internal', 'machine', 'robot.user'];
 
+/** A display name outside Latin-1, to check the payload is decoded as UTF-8. */
+export const TEST_UNICODE_NAME = 'José Müller 山田';
+
 const BASE64_PLUS_RE = /\+/g;
 const BASE64_SLASH_RE = /\//g;
 const BASE64_PADDING_RE = /=+$/;
 
-/** Encodes a claims object as an unpadded base64url JWT segment. */
+/** Encodes a claims object as an unpadded base64url JWT segment, UTF-8 like a real token. */
 export function encodeJwtSegment(value: Record<string, unknown>): string {
-  return btoa(JSON.stringify(value))
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  return btoa(String.fromCharCode(...bytes))
     .replace(BASE64_PLUS_RE, '-')
     .replace(BASE64_SLASH_RE, '_')
     .replace(BASE64_PADDING_RE, '');

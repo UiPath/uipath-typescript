@@ -82,10 +82,13 @@ export interface IUiPath {
    * access token rather than requested from an API. Inside Action Center or another UiPath
    * host, the SDK first gets the user's token from the host; an expired OAuth token is refreshed.
    *
-   * Only user sign-ins carry these details: OAuth, or the user token a UiPath host passes
-   * to the app. The promise rejects with an `AuthenticationError` when the SDK is not
-   * authenticated, or when the token is a personal access token or was issued to an
-   * application, machine or robot.
+   * Only a user's access token carries these details: from OAuth, from a UiPath host, or
+   * passed as `secret`. Profile fields the user's profile has no value for are left off.
+   *
+   * The promise rejects with a `ValidationError` for a personal access token, for a token
+   * issued to an application, machine or robot, and in a public app, which runs without a
+   * sign-in. It rejects with an `AuthenticationError` when there is no valid token or the
+   * token has expired.
    *
    * The token's signature is not verified, so use these details for display, not for access
    * decisions. A server that receives tokens from its callers must verify them before

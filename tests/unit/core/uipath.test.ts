@@ -10,14 +10,14 @@ import { AuthService } from '../../../src/core/auth/service';
 import { ApiClient } from '../../../src/core/http/api-client';
 import { MemoryStore } from '../../../src/utils/storage/memory-store';
 import type { TokenInfo } from '../../../src/core/auth/types';
-import { AuthenticationError } from '@/core/errors';
+import { AuthenticationError, ValidationError } from '@/core/errors';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../utils/constants/jobs';
 import { DEBUG_JOB_KEY_QUERY_PARAM } from '../../../src/utils/runtime/constants';
 import { functionContext } from '../../utils/function-context';
-import { AuthenticationError } from '@/core/errors';
 import { UiPathEnvVars } from '@/core/config/environment';
+import { PUBLIC_APP_UNSUPPORTED_CALL } from '@/core/http/api-client';
 import { TEST_OPAQUE_TOKEN, TEST_USER_CLAIMS, TEST_USER_ID, createTestJwt } from '@tests/utils/jwt';
 
 // ===== MOCKING =====
@@ -465,8 +465,11 @@ describe('UiPath Core', () => {
       secret: TEST_CONSTANTS.CLIENT_SECRET
     });
 
-    afterEach(() => {
+    beforeEach(() => {
       mockGetValidToken.mockReset();
+    });
+
+    afterEach(() => {
       vi.unstubAllEnvs();
     });
 
@@ -487,10 +490,25 @@ describe('UiPath Core', () => {
       });
     });
 
-    it('should reject with AuthenticationError for a personal access token', async () => {
+    it('should reject with ValidationError for a personal access token', async () => {
       mockGetValidToken.mockResolvedValue(TEST_OPAQUE_TOKEN);
 
-      await expect(createSdk().getAuthenticatedUser()).rejects.toBeInstanceOf(AuthenticationError);
+      await expect(createSdk().getAuthenticatedUser()).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it('should reject with the public-app ValidationError in a public app', async () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        appKey: TEST_CONSTANTS.APP_KEY
+      });
+
+      const result = sdk.getAuthenticatedUser();
+
+      await expect(result).rejects.toBeInstanceOf(ValidationError);
+      await expect(result).rejects.toThrow(PUBLIC_APP_UNSUPPORTED_CALL);
+      expect(mockGetValidToken).not.toHaveBeenCalled();
     });
 
     it('should propagate the error when no valid token can be obtained', async () => {
@@ -500,15 +518,18 @@ describe('UiPath Core', () => {
       await expect(createSdk().getAuthenticatedUser()).rejects.toBe(error);
     });
 
-    it('should reject with AuthenticationError when the SDK is not configured', async () => {
+    it('should reject with the configuration error initialize() gives when the SDK is not configured', async () => {
       vi.stubEnv(UiPathEnvVars.ACCESS_TOKEN, '');
       const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID
       });
+      let initializeMessage = '';
+      await sdk.initialize().catch((error: Error) => { initializeMessage = error.message; });
 
-      await expect(sdk.getAuthenticatedUser()).rejects.toBeInstanceOf(AuthenticationError);
+      expect(initializeMessage).not.toBe('');
+      await expect(sdk.getAuthenticatedUser()).rejects.toThrow(initializeMessage);
       expect(mockGetValidToken).not.toHaveBeenCalled();
     });
   });

@@ -4,7 +4,7 @@ import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions, AuthenticatedUser } from './auth/types';
 import { NO_TOKEN_MESSAGE } from './auth/constants';
 import { authenticatedUserFromToken } from './auth/authenticated-user';
-import { AuthenticationError } from './errors';
+import { AuthenticationError, ValidationError } from './errors';
 import type { DebugContext } from '../models/common/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig, isPublicMode } from './config/sdk-config';
 import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage, hasRequiredBaseFields } from './config/config-utils';
@@ -25,7 +25,7 @@ import { isBrowser, isInActionCenter } from '../utils/platform';
 import { GUID_REGEX } from '../utils/validation/guid';
 import { DEBUG_JOB_KEY_QUERY_PARAM } from '../utils/runtime/constants';
 import { SessionLicense } from './licensing/session-license';
-import { ApiClient } from './http/api-client';
+import { ApiClient, PUBLIC_APP_UNSUPPORTED_CALL } from './http/api-client';
 import { SessionStore } from '../utils/storage/session-store';
 import { MemoryStore } from '../utils/storage/memory-store';
 import { hostEmbeddingOrigin } from './auth/host-token-request';
@@ -99,6 +99,8 @@ export class UiPath implements IUiPath {
   #authService?: AuthService;
   #initialized: boolean = false;
   #partialConfig?: PartialUiPathConfig;
+  // Why the constructor found no usable configuration.
+  #unconfiguredReason?: string;
   // Folder key from `<meta name="uipath:folder-key">` (coded-app deployments).
   // Not a configuration field; lives here so the SDK can flow it through to
   // BaseService.config without polluting BaseConfig.
@@ -169,7 +171,8 @@ export class UiPath implements IUiPath {
       }
       // Coded functions never call initialize(), so the service constructor is where they learn
       // what is missing; recording it here gives that path the same message initialize() throws.
-      SDKInternalsRegistry.setUnconfigured(this, missingConfigMessage(mergedConfig, this.#functionContext));
+      this.#unconfiguredReason = missingConfigMessage(mergedConfig, this.#functionContext);
+      SDKInternalsRegistry.setUnconfigured(this, this.#unconfiguredReason);
     }
   }
 
@@ -450,10 +453,13 @@ export class UiPath implements IUiPath {
   }
 
   public async getAuthenticatedUser(): Promise<AuthenticatedUser> {
-    if (!this.#authService) {
-      throw new AuthenticationError({
-        message: 'The SDK is not configured. Call initialize() before getAuthenticatedUser().'
-      });
+    if (!this.#authService || !this.#config) {
+      throw new Error(this.#unconfiguredReason ?? missingConfigMessage());
+    }
+
+    // A public app runs without a sign-in, so there is no user to read.
+    if (isPublicMode(this.#config)) {
+      throw new ValidationError({ message: PUBLIC_APP_UNSUPPORTED_CALL });
     }
 
     const token = await this.#authService.getTokenManager().getValidToken();
