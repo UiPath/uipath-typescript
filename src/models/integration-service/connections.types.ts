@@ -130,6 +130,7 @@ export interface ConnectionGetByIdOptions extends IntegrationServiceFolderContex
  *
  * @example
  * ```typescript
+ * import { UiPath } from '@uipath/uipath-typescript';
  * import { executeHttp, type Connection } from '@uipath/uipath-typescript/integration-service';
  *
  * interface ListTicketsInput {

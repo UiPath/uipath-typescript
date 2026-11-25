@@ -62,13 +62,16 @@ const result = await execute(sdk, ProjectResources.financeSlack, 'channels', 'GE
 A handle fixes the connection when you write the code. When the caller picks the connection, as with a coded function input, type the input as `Connection<'<connectorKey>'>` instead. The value is a plain connection id, and the connector key in the type tells tools which connector's connections to offer.
 
 ```typescript
+import { UiPath } from '@uipath/uipath-typescript';
 import { executeHttp, type Connection } from '@uipath/uipath-typescript/integration-service';
 
 interface ListChannelsInput {
   slack: Connection<'uipath-salesforce-slack'>;
 }
 
-const result = await executeHttp(sdk, input.slack, '/conversations.list');
+async function listChannels(sdk: UiPath, input: ListChannelsInput) {
+  return executeHttp(sdk, input.slack, '/conversations.list');
+}
 ```
 
 ### What the handle resolves to
