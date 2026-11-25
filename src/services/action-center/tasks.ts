@@ -319,7 +319,6 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     return this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_KEY, { taskKey: key }, headers);
   }
 
-  /** @experimental */
   @track('Tasks.GetSchemaByKey')
   async getSchemaByKey(key: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse> {
     if (!key) {
@@ -341,7 +340,6 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
     return { ...withStatus, data: (userPayload ?? null) as Record<string, unknown> | null };
   }
 
-  /** @experimental */
   @track('Tasks.GetSchema')
   async getSchema(taskId: number, options?: FolderScopedOptions): Promise<TaskGetSchemaResponse | null> {
     return this.readSchema({ id: taskId }, options);
