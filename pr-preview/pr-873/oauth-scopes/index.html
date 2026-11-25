@@ -1772,6 +1772,8 @@
       
         
       
+        
+      
     
     
     
@@ -1885,6 +1887,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -5312,7 +5342,11 @@
 <tbody>
 <tr>
 <td><code>execute()</code></td>
-<td><code>IS.Connections.Read</code> (plus any third-party scopes required by the underlying connection)</td>
+<td><code>IS.Connections.Read</code>, <code>OR.Folders</code>, <code>OR.Users.Read</code> (plus any third-party scopes required by the underlying connection)</td>
+</tr>
+<tr>
+<td><code>executeActivity()</code></td>
+<td><code>IS.Connections.Read</code>, <code>OR.Folders</code>, <code>OR.Users.Read</code> (plus any third-party scopes required by the underlying connection)</td>
 </tr>
 </tbody>
 </table>
@@ -5674,7 +5708,7 @@
 </tbody>
 </table>
 <h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h2>
-<p>Coded functions are invoked through their HTTP endpoint, which requires the <a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes"><code>OR.Default</code></a> scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.</p>
+<p><code>getAll()</code> reads the folder's HTTP triggers, which needs <code>OR.Jobs.Read</code>. <code>invoke()</code> reads the triggers to find the function and then calls its HTTP endpoint, which also needs <code>OR.Jobs.Write</code>, so it needs <code>OR.Jobs</code>.</p>
 <table>
 <thead>
 <tr>
@@ -5685,11 +5719,11 @@
 <tbody>
 <tr>
 <td><code>getAll()</code></td>
-<td><code>OR.Default</code></td>
+<td><code>OR.Jobs.Read</code></td>
 </tr>
 <tr>
 <td><code>invoke()</code></td>
-<td><code>OR.Default</code>, <code>OR.Folders</code> or <code>OR.Folders.Read</code></td>
+<td><code>OR.Jobs</code>, <code>OR.Folders.Read</code></td>
 </tr>
 </tbody>
 </table>
