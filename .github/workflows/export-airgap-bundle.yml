@@ -49,10 +49,14 @@ jobs:
       # The release tag IS the SDK version (bare-version tags, e.g. 1.5.5).
       # It reaches the script via env only; the script regex-validates it
       # before any npm command. coded-action-app defaults to latest.
+      #
+      # Safe-chain on the runner hides npm versions under 12 h old, so exempt
+      # the just-published SDK. Other dependencies keep the check.
       - name: Build bundle
         env:
           OUT_DIR: ${{ github.workspace }}/airgap-bundle
           SDK_VERSION: ${{ github.event.release.tag_name }}
+          SAFE_CHAIN_MINIMUM_PACKAGE_AGE_EXCLUSIONS: '@uipath/uipath-typescript'
         run: node scripts/airgap/build-airgap-bundle.mjs
 
       - name: Resolve bundle metadata
