@@ -153,7 +153,7 @@ When telemetry is disabled, the SDK sends no events at all.
 
 === "Coded apps"
 
-    Set the `UIPATH_APPS_TELEMETRY_DISABLED` environment variable to `1` or `true` in the [deployment's environment variables](coded-apps/ci-cd-github-actions.md#coded-app-inside-solution).
+    Set the `UIPATH_APPS_TELEMETRY_DISABLED` environment variable to `1` or `true` in the [deployment's environment variables](coded-apps/ci-cd-github-actions.md#coded-app-inside-solution). To disable telemetry under the dev server too, add it to `.env.local`; this needs `@uipath/coded-apps-dev` 1.0.0 or later.
 
     ```bash
     UIPATH_APPS_TELEMETRY_DISABLED=true
