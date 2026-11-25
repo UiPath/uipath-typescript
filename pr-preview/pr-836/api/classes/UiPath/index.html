@@ -4437,21 +4437,23 @@ Cancels any in-flight token-refresh request. Call this when the coded app is unm
 <hr />
 <h3 id="getauthenticateduser"><del>getAuthenticatedUser()</del><a class="headerlink" href="#getauthenticateduser" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getAuthenticatedUser</strong>(): <code>Promise</code>&lt;<code>AuthenticatedUser</code>&gt;</p>
+<p><strong>getAuthenticatedUser</strong>(): <code>Promise</code>&lt;<a href="../../interfaces/AuthenticatedUser/"><code>AuthenticatedUser</code></a>&gt;</p>
 </blockquote>
 <p>Gets the signed-in user's ID, name and email, read from the claims of the current
 access token rather than requested from an API. Inside Action Center or another UiPath
 host, the SDK first gets the user's token from the host; an expired OAuth token is refreshed.</p>
-<p>Only user sign-ins carry these details: OAuth, or the user token a UiPath host passes
-to the app. The promise rejects with an <code>AuthenticationError</code> when the SDK is not
-authenticated, or when the token is a personal access token or was issued to an
-application, machine or robot.</p>
+<p>Only a user's access token carries these details: from OAuth, from a UiPath host, or
+passed as <code>secret</code>. Profile fields the user's profile has no value for are left off.</p>
+<p>The promise rejects with a <code>ValidationError</code> for a personal access token, for a token
+issued to an application, machine or robot, and in a public app, which runs without a
+sign-in. It rejects with an <code>AuthenticationError</code> when there is no valid token or the
+token has expired.</p>
 <p>The token's signature is not verified, so use these details for display, not for access
 decisions. A server that receives tokens from its callers must verify them before
 trusting the user they name.</p>
 <h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>AuthenticatedUser</code>&gt;</p>
-<p>Promise resolving to the AuthenticatedUser</p>
+<p><code>Promise</code>&lt;<a href="../../interfaces/AuthenticatedUser/"><code>AuthenticatedUser</code></a>&gt;</p>
+<p>Promise resolving to the <a href="../../interfaces/AuthenticatedUser/">AuthenticatedUser</a></p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
