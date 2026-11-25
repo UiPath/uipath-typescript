@@ -37,6 +37,11 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
+const entry = (resource: string, key: string, name: string, folderPath: string) =>
+  ({ resource, key, value: { name: { defaultValue: name }, folderPath: { defaultValue: folderPath } } })
+const ok = (body: unknown) => new Response(JSON.stringify(body), { status: 200 })
+const output = (key: string) => `orchestrator/jobs/${key}/output`
+
 function writeAccess(access: unknown): void {
   fs.writeFileSync(path.join(dir, 'uipath.json'), JSON.stringify({ access }))
 }
@@ -71,8 +76,6 @@ describe('declarations and access', () => {
     fs.rmSync(path.join(dir, 'uipath_resources.ts'))
     const source = path.join(dir, 'source')
     fs.mkdirSync(source)
-    const entry = (resource: string, key: string, name: string, folderPath: string) =>
-      ({ resource, key, value: { name: { defaultValue: name }, folderPath: { defaultValue: folderPath } } })
     fs.writeFileSync(path.join(dir, 'bindings_v2.json'), JSON.stringify({
       version: '2.0',
       resources: [entry('entity', 'Orders', 'Orders', '.'), entry('process', 'Invoices.Shared', 'Invoices', 'Shared'), entry('asset', 'Rate.Shared', 'Rate', 'Shared')],
@@ -167,7 +170,6 @@ function fakeFetch() {
   const calls: { url: string; init: RequestInit }[] = []
   const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
     calls.push({ url, init })
-    const ok = (body: unknown) => new Response(JSON.stringify(body), { status: 200 })
     if (url.endsWith('/identity_/connect/token')) return new Response(JSON.stringify(tokenReply.body), { status: tokenReply.status })
     if (url.includes('StartJobs')) return ok({ value: [{ Key: 'job-1' }] })
     if (url.includes('/insert')) return ok({ Id: RECORD_ID.toUpperCase(), Name: 'x' })
@@ -287,8 +289,6 @@ describe('createPublicDevMiddleware', () => {
   })
 
   describe('job output', () => {
-    const output = (key: string) => `orchestrator/jobs/${key}/output`
-
     it('lets the session that started the job read it', async () => {
       writeAccess([{ resource: 'process', key: 'Summarize.Shared', mode: 'session' }])
       job = { Key: 'job-1', Release: { Name: 'Summarize' }, OrganizationUnitFullyQualifiedName: 'Shared' }

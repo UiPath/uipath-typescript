@@ -117,11 +117,12 @@ export function readDeclaredResources(cwd: string = process.cwd()): DeclaredReso
   return [...declared, ...readBindingsFile(cwd).filter(item => !seen.has(`${item.kind}:${bindingKey(item)}`))]
 }
 
+const field = (body: string, fieldRe: RegExp) => body.match(fieldRe)?.[2]
+
 function readResourceDeclarations(cwd: string): DeclaredResource[] {
   const fullPath = path.resolve(cwd, RESOURCES_FILE)
   if (!fs.existsSync(fullPath)) return []
   const text = fs.readFileSync(fullPath, 'utf-8')
-  const field = (body: string, fieldRe: RegExp) => body.match(fieldRe)?.[2]
   return [...text.matchAll(RESOURCE_RE)].flatMap(([, kind, body]) => {
     const name = field(body, NAME_FIELD_RE)
     return name ? [{ kind: kind as Kind, name, folderPath: kind === 'entity' ? undefined : field(body, FOLDER_PATH_FIELD_RE) }] : []
@@ -236,6 +237,8 @@ class HttpError extends Error {
   }
 }
 
+const same = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase()
+
 export function createPublicDevMiddleware({ settings, getConfig, cwd = process.cwd(), fetchImpl = fetch }: PublicDevServerOptions): Middleware {
   const sessions = new Map<string, Session>()
   let token: { value: string; expiresAt: number } | undefined
@@ -342,7 +345,6 @@ export function createPublicDevMiddleware({ settings, getConfig, cwd = process.c
       const response = await call('GET', `${tenantUrl}/orchestrator_/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier=${encodeURIComponent(jobKey)})?$expand=Release`, headers)
       const job = await response.json() as { Key?: string; FolderKey?: string; OrganizationUnitFullyQualifiedName?: string; Release?: { Name?: string } }
       if (!job.Key) throw new HttpError(404)
-      const same = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase()
       const fromOpenProcess = openProcesses.some(item =>
         item.name === job.Release?.Name &&
         (item.folderPath ? same(job.OrganizationUnitFullyQualifiedName, item.folderPath) : same(job.FolderKey, settings.folderKey)))
