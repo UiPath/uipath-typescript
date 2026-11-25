@@ -4062,6 +4062,8 @@ activity, use <a href="../executeActivity/">executeActivity</a>.</p>
 <p>The result describes the vendor's response: <code>status</code>, <code>headers</code> and <code>body</code> are the vendor's.
 <strong>This does not throw on non-2xx responses</strong> — check <code>ok</code>, and <code>isVendorError</code> to tell a
 vendor error from a call that never reached the vendor.</p>
+<p>A vendor error status, a 429 or 5xx included, is returned as the result and is not retried:
+<code>retry</code> covers only a failure of the Integration Service call that carries the request.</p>
 <p>When an admin remapped this connection id at deployment, the call targets the
 connection it was mapped to.</p>
 <h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>

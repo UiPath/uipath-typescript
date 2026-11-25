@@ -4265,6 +4265,8 @@
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="p">}</span>
 </code></pre></div>
 <p><code>status</code>, <code>headers</code> and <code>body</code> on the result are the vendor's. <code>isVendorError</code> is <code>true</code> when the vendor answered with a non-2xx status, and <code>false</code> when the call failed before reaching the vendor.</p>
+<p>An object <code>body</code> is sent as JSON. For any other format, pass a string (or a <code>URLSearchParams</code> for URL-encoded form parameters) and set the matching <code>Content-Type</code> header. Bytes, a <code>Blob</code> and a <code>FormData</code> are refused with a <code>ValidationError</code>.</p>
+<p>A vendor error status is returned as the result and is not retried, a 429 or 5xx included. <code>retry</code> covers only a failure of the Integration Service call that carries the request.</p>
 
 
 

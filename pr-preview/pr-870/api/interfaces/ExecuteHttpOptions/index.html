@@ -3986,7 +3986,7 @@
 <tr>
 <td><a id="body"></a> <code>body?</code></td>
 <td><code>unknown</code></td>
-<td>Body to send to the vendor. A string is sent as is; anything else is serialized as JSON.</td>
+<td>Body to send to the vendor. A string is sent as is, a <code>URLSearchParams</code> as URL-encoded text, and any other value as JSON. For a body that is not JSON, pass a string and set the matching <code>Content-Type</code> header. Bytes, a <code>Blob</code> and a <code>FormData</code> are refused with a <code>ValidationError</code>.</td>
 </tr>
 <tr>
 <td><a id="folderid"></a> <code>folderId?</code></td>
