@@ -155,3 +155,44 @@ export interface ExecuteActivityOptions extends ExecuteOptions {
   /** Headers the activity's script reads from the call. Refused without a version 4 connector. */
   headers?: Record<string, string>;
 }
+
+/**
+ * Result returned by {@link executeHttp}.
+ *
+ * `ok`, `status`, `statusText`, `headers` and `body` describe the vendor's response, not the
+ * Integration Service call that carried it. Like {@link execute}, this does not throw on
+ * non-2xx responses.
+ *
+ * Header names are lowercase. A header the vendor sent more than once is one value, joined
+ * with `, `.
+ */
+export interface ExecuteHttpResult extends ExecuteResult {
+  /**
+   * True when the vendor answered with a non-2xx status. False when the call failed before
+   * reaching the vendor, in which case the fields describe the Integration Service response.
+   */
+  isVendorError: boolean;
+}
+
+/**
+ * Options accepted by {@link executeHttp}.
+ */
+export interface ExecuteHttpOptions extends ExecuteOptions {
+  /** Headers to send to the vendor. The connection's authentication is added for you. */
+  headers?: Record<string, string>;
+  /**
+   * Body to send to the vendor. A string is sent as is, a `URLSearchParams` as URL-encoded
+   * text, and any other value as JSON. For a body that is not JSON, pass a string and set the
+   * matching `Content-Type` header. Bytes, a `Blob` and a `FormData` are refused with a
+   * `ValidationError`.
+   */
+  body?: unknown;
+  /**
+   * Retry and backoff behavior for this call. Retrying is off unless `maxRetries` is set.
+   *
+   * `retryMethods` is matched against the method sent to the vendor, so by default a `GET`
+   * is retried and a `POST` is not. Only a failure of the Integration Service call itself is
+   * retried; a vendor error status is returned as the result.
+   */
+  retry?: RetryOptions;
+}

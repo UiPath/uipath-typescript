@@ -70,6 +70,9 @@ export const ELEMENT_ENDPOINTS = {
         .split('/')
         .map(encodeURIComponent)
         .join('/')}`,
+    /** Sends a raw HTTP request to the vendor with the connection's authentication applied. */
+    HTTP_REQUEST: (connectionId: string) =>
+      `${ELEMENTS_BASE}/instances/${encodeURIComponent(connectionId)}/http-request`,
   },
 } as const;
 
