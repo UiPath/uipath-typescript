@@ -1213,6 +1213,8 @@
       
         
       
+        
+      
     
     
     
@@ -1326,6 +1328,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -4351,8 +4381,8 @@
 </tbody>
 </table>
 <h3 id="lockfile">Lockfile<a class="headerlink" href="#lockfile" title="Permanent link">&para;</a></h3>
-<p>A project is locked with npm's <code>package-lock.json</code>. That lock ships in the <code>.nupkg</code>, and the production worker installs from it with bun. Run <code>npm install</code> after any <code>package.json</code> change, then pack.</p>
-<p>On your machine the CLI holds every project to that lock. <code>new</code> installs with npm. <code>serve</code>, <code>run</code>, <code>debug</code>, <code>pack</code>, <code>push</code> and <code>uip solution pack</code> stop on a <code>bun.lock</code>, including one next to <code>package-lock.json</code>, since bun installs from <code>bun.lock</code> first: delete <code>bun.lock</code> and run <code>npm install</code>. <code>pack</code>, <code>push</code> and <code>uip solution pack</code> also stop when <code>package-lock.json</code> is missing or <code>npm ci --dry-run</code> reports that it differs from <code>package.json</code>. <code>publish</code> requires a lock in the package.</p>
+<p>Install your project before you serve, run, debug or pack it. These commands need its <code>node_modules/</code>.</p>
+<p><code>pack</code>, <code>push</code> and <code>uip solution pack</code> write <code>package-lock.json</code> with npm before they build, so npm must be on PATH and able to reach your registry. The lock pins the versions in your <code>node_modules/</code>, and your functions run with those versions in production. Commit <code>package-lock.json</code> beside your own lock. The package carries only <code>package-lock.json</code>, and <code>publish</code> requires one.</p>
 <p>Install every dependency from a registry. <code>pack</code>, <code>push</code> and <code>uip solution pack</code> stop on a dependency that <code>package-lock.json</code> takes from a git repository, transitive ones included, and name it: replace it with a registry version, then pack again.</p>
 <hr />
 <h2 id="publish">Publish<a class="headerlink" href="#publish" title="Permanent link">&para;</a></h2>

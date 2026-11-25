@@ -1211,6 +1211,8 @@
       
         
       
+        
+      
     
     
     
@@ -1324,6 +1326,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -4360,8 +4390,8 @@
 <ul>
 <li>Version number is updated in <code>package.json</code></li>
 <li><code>release-metadata.json</code> is regenerated and committed onto the version-bump PR automatically — do not hand-edit it (see <a href="../release-metadata/"><code>release-metadata.md</code></a>)</li>
-<li>Release notes are prepared</li>
-<li>Package is published to npm</li>
+<li>Package is published to npm (<code>Publish SDK package</code> workflow)</li>
+<li>Release notes are published as a GitHub release, only after the npm publish finishes. This attaches the air-gapped bundle.</li>
 <li>Documentation is updated</li>
 </ul>
 </li>

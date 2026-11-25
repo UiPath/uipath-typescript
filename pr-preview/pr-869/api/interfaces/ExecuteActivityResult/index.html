@@ -1209,6 +1209,8 @@
       
         
       
+        
+      
     
     
     
@@ -1322,6 +1324,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -3938,7 +3968,7 @@
 
   <h1>ExecuteActivityResult</h1>
 
-<p>Result envelope returned by executeActivity.</p>
+<p>Result envelope returned by <a href="../../functions/executeActivity/">executeActivity</a>.</p>
 <p><code>body</code> is the parsed JSON when the response is JSON and the raw text otherwise. A file response
 (a binary content type, or an attachment that is not JSON, XML, CSV or plain text) is a
 <code>Uint8Array</code>.</p>
@@ -3974,7 +4004,7 @@
 <tr>
 <td><a id="page"></a> <code>page?</code></td>
 <td><a href="../ExecutePage/"><code>ExecutePage</code></a></td>
-<td>Paging state of a list response. Absent when the response is not a paged list, when the connector reported its last page, or when <code>maxRecords</code> already gathered the pages.</td>
+<td>Paging state of a list response. Absent when the response is not a paged list, when the connector reported its last page, or when <code>maxRecords</code> gathered every page. Present after a <code>maxRecords</code> call that stopped with records left; continuing from <code>nextPageToken</code> starts at the next page, so records cut from the last page read are not returned again.</td>
 </tr>
 <tr>
 <td><a id="status"></a> <code>status</code></td>

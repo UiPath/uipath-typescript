@@ -1209,6 +1209,8 @@
       
         
       
+        
+      
     
     
     
@@ -1322,6 +1324,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -3938,10 +3968,12 @@
 
   <h1>ExecuteHttpResult</h1>
 
-<p>Result returned by executeHttp.</p>
+<p>Result returned by <a href="../../functions/executeHttp/">executeHttp</a>.</p>
 <p><code>ok</code>, <code>status</code>, <code>statusText</code>, <code>headers</code> and <code>body</code> describe the vendor's response, not the
-Integration Service call that carried it. Like execute, this does not throw on
+Integration Service call that carried it. Like <a href="../../functions/execute/">execute</a>, this does not throw on
 non-2xx responses.</p>
+<p>Header names are lowercase. A header the vendor sent more than once is one value, joined
+with <code>,</code>.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../ExecuteResult/"><code>ExecuteResult</code></a></li>

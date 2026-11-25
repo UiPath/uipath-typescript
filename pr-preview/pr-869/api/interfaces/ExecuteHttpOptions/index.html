@@ -1209,6 +1209,8 @@
       
         
       
+        
+      
     
     
     
@@ -1322,6 +1324,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -3938,10 +3968,10 @@
 
   <h1>ExecuteHttpOptions</h1>
 
-<p>Options accepted by executeHttp.</p>
+<p>Options accepted by <a href="../../functions/executeHttp/">executeHttp</a>.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../IntegrationServiceFolderContextOptions/"><code>IntegrationServiceFolderContextOptions</code></a></li>
+<li><a href="../ExecuteOptions/"><code>ExecuteOptions</code></a></li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -3956,22 +3986,7 @@
 <tr>
 <td><a id="body"></a> <code>body?</code></td>
 <td><code>unknown</code></td>
-<td>Body to send to the vendor. A string is sent as is; anything else is serialized as JSON.</td>
-</tr>
-<tr>
-<td><a id="connectorkey"></a> <code>connectorKey?</code></td>
-<td><code>string</code></td>
-<td>Key of the connector behind the connection, e.g. <code>uipath-zendesk</code>. Used on the version 4 engine. Taken from the handle when the connection is a <code>resource.connection()</code> handle.</td>
-</tr>
-<tr>
-<td><a id="connectorversion"></a> <code>connectorVersion?</code></td>
-<td><code>string</code></td>
-<td>Version of the connector behind the connection, e.g. <code>4.0.0</code>. A connector of version 4 or later runs on the version 4 engine, and the call is sent there; without a version, or with an earlier one, the call uses the version 3 engine. On the version 4 engine <code>url</code> must be a full URL, and a vendor file or large body comes back as a <code>Uint8Array</code>.</td>
-</tr>
-<tr>
-<td><a id="file"></a> <code>file?</code></td>
-<td><a href="../ExecuteFile/"><code>ExecuteFile</code></a></td>
-<td>A file to send as the whole body of the vendor request. Needs a version 4 connector, and cannot be combined with <code>body</code>.</td>
+<td>Body to send to the vendor. A string is sent as is, a <code>URLSearchParams</code> as URL-encoded text, and any other value as JSON. For a body that is not JSON, pass a string and set the matching <code>Content-Type</code> header. Bytes, a <code>Blob</code> and a <code>FormData</code> are refused with a <code>ValidationError</code>.</td>
 </tr>
 <tr>
 <td><a id="folderid"></a> <code>folderId?</code></td>
@@ -3996,7 +4011,7 @@
 <tr>
 <td><a id="queryparams"></a> <code>queryParams?</code></td>
 <td><code>Record</code>&lt;<code>string</code>, <code>string</code>&gt;</td>
-<td>Query string parameters to send to the vendor.</td>
+<td>Query string parameters.</td>
 </tr>
 <tr>
 <td><a id="retry"></a> <code>retry?</code></td>

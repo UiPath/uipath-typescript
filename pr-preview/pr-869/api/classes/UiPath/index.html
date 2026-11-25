@@ -1209,6 +1209,8 @@
       
         
       
+        
+      
     
     
     
@@ -1322,6 +1324,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -4238,7 +4268,7 @@ Use the modular pattern with <code>@uipath/uipath-typescript/core</code> instead
 <h2 id="constructors">Constructors<a class="headerlink" href="#constructors" title="Permanent link">&para;</a></h2>
 <h3 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code>&gt; | <code>CodedFunctionContext</code>): <code>UiPath</code></p>
+<p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code> &amp; <code>PublicModeFields</code>&gt; | <code>CodedFunctionContext</code>): <code>UiPath</code></p>
 </blockquote>
 <p>Creates a UiPath SDK instance.</p>
 <p>Precedence is per field: the constructor argument wins, then meta tags, then
@@ -4256,7 +4286,7 @@ fields; <code>secret</code> beside a complete OAuth set is a fatal configuration
 <tbody>
 <tr>
 <td><code>config?</code></td>
-<td><code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code>&gt; | <code>CodedFunctionContext</code></td>
+<td><code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code> &amp; <code>PublicModeFields</code>&gt; | <code>CodedFunctionContext</code></td>
 <td>Optional SDK configuration, or the execution context a coded function receives; when omitted, configuration is loaded from meta tags or the environment</td>
 </tr>
 </tbody>

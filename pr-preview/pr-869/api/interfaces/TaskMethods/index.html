@@ -1209,6 +1209,8 @@
       
         
       
+        
+      
     
     
     
@@ -1322,6 +1324,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -3962,6 +3992,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#getschema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        getSchema()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#reassign" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4183,12 +4224,41 @@
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to either a <a href="../NonPaginatedResponse/">NonPaginatedResponse</a> or <a href="../PaginatedResponse/">PaginatedResponse</a> of <a href="../TaskCommentGetResponse/">TaskCommentGetResponse</a> items, paginated when pagination options are used.</p>
 <hr />
+<h3 id="getschema">getSchema()<a class="headerlink" href="#getschema" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getSchema</strong>(<code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
+</blockquote>
+<p>Gets this task's schema: the fields it holds and the outcomes it can be completed with.</p>
+<p>Supported for App tasks and QuickForm tasks; the <code>type</code> of the response tells which shape <code>schema</code> has.
+An App task's schema has no fields and no outcomes when the caller cannot view apps in the task's folder, when the token lacks the <code>Apps</code> or <code>Apps.Read</code> scope, or when the task's app is no longer deployed there.
+Other task types return null. A Form task's form definition is its <code>formLayout</code>, returned by <code>getById()</code>.</p>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
+<td>Optional folder scope override (defaults to this task's folder)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
+<p>Promise resolving to a <a href="../../type-aliases/TaskGetSchemaResponse/">TaskGetSchemaResponse</a>, or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).</p>
+<hr />
 <h3 id="reassign">reassign()<a class="headerlink" href="#reassign" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>reassign</strong>(<code>options</code>: <a href="../../type-aliases/TaskAssignOptions/"><code>TaskAssignOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a>[] | <a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[]&gt;&gt;</p>
 </blockquote>
 <p>Reassigns this task to a new user</p>
-<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4205,7 +4275,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
+<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a>[] | <a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[]&gt;&gt;</p>
 <p>Promise resolving to task assignment results</p>
 <hr />
@@ -4214,7 +4284,7 @@
 <p><strong>saveData</strong>(<code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Saves this task's data (form/task payload), replacing the existing payload.</p>
-<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4236,7 +4306,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
+<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving once the save completes</p>
 <hr />
@@ -4245,7 +4315,7 @@
 <p><strong>saveTags</strong>(<code>tags</code>: <a href="../Tag/"><code>Tag</code></a>[], <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Saves the tags on this task, replacing any existing tags.</p>
-<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4267,7 +4337,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
+<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving once the save completes</p>
 <hr />
@@ -4276,7 +4346,7 @@
 <p><strong>unassign</strong>(): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[] | { <code>taskId</code>: <code>number</code>; }[]&gt;&gt;</p>
 </blockquote>
 <p>Unassigns this task (removes current assignee)</p>
-<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
+<h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[] | { <code>taskId</code>: <code>number</code>; }[]&gt;&gt;</p>
 <p>Promise resolving to task assignment results</p>
 
