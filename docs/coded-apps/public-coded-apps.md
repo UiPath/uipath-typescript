@@ -3,7 +3,7 @@
 A **public** coded app opens without a sign-in. The visitor has no UiPath account and no token: the Apps service holds the app's identity (its confidential external application) and makes each call on the app's behalf, limited to the resources the app declares in its bindings.
 
 !!! warning "Preview"
-    Public coded apps are in preview. They are built and deployed through Solutions only, and need `@uipath/uipath-typescript` `1.9.0-preview.0` or later. For the product overview, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
+    Public coded apps are in preview. They are built and deployed through Solutions only, and need `@uipath/uipath-typescript` `1.8.5` or later. For the product overview, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
 
 ---
 
@@ -107,7 +107,7 @@ A resource missing from `access` is open to all visitors, so list every resource
 
 The `@uipath/coded-apps-dev` plugin can run the app as a public app on your machine, so you can test it the way a visitor uses it before you deploy. It works with the Vite and webpack dev servers.
 
-Needs `@uipath/coded-apps-dev` `1.0.0-beta.2` or later.
+Needs `@uipath/coded-apps-dev` `1.0.0` or later.
 
 Put the confidential external application in `.env.local`, and keep that file out of source control:
 
@@ -153,7 +153,7 @@ A public app lives in a solution and is deployed with it. The same package deplo
 
 ### Get the app into Studio Web
 
-Use the preview CLI: `npm install -g @uipath/cli@preview`.
+Use the UiPath CLI `1.206.0` or later: `npm install -g @uipath/cli`.
 
 **Push the app.** From the app folder (the one with `package.json`), push the source and build output. On the first push the CLI creates the solution and the coded app project in Studio Web, saves the project id to `.env`, and adds the resources from `bindings_v2.json` to the solution:
 
