@@ -333,7 +333,12 @@ An upgrade keeps the public app's stored client secret and its scope.
 
 A public coded app opens without a login. For the product overview, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
 
-Requires `@uipath/uipath-typescript` `1.8.5` or later.
+Requires:
+
+- `@uipath/uipath-typescript` `1.8.5` or later
+- UiPath CLI (`@uipath/cli`) `1.206.0` or later
+- `@uipath/coded-apps-dev` `1.0.0` or later, to run the app locally
+- For AI coding agents, the UiPath skills (`@uipath/skills`) `1.207.0` or later. Until `1.207.0` is released, use the preview: `npm install @uipath/skills@preview`.
 
 You don't change any code to make an app public. Initialize the SDK as usual:
 
