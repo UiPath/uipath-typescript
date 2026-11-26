@@ -4802,19 +4802,19 @@
 <h2 id="deploy-with-solutions">Deploy with Solutions<a class="headerlink" href="#deploy-with-solutions" title="Permanent link">&para;</a></h2>
 <p>A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as an internal app or a public app: you choose with the <strong>Authentication</strong> setting at deploy time. <a href="#public-coded-apps-preview">Public coded apps</a> deploy only this way.</p>
 <h3 id="get-the-app-into-a-solution">Get the app into a solution<a class="headerlink" href="#get-the-app-into-a-solution" title="Permanent link">&para;</a></h3>
-<p><strong>Push the app to Studio Web.</strong> From the app folder (the one with <code>package.json</code>):</p>
+<p><strong>Push the app to a cloud solution.</strong> From the app folder (the one with <code>package.json</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>push<span class="w"> </span>--solution-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--project-name<span class="w"> </span><span class="s2">&quot;&lt;App&gt;&quot;</span><span class="w"> </span>--build-dir<span class="w"> </span>dist
 </code></pre></div>
-<p>The first push creates the solution and the coded app project in Studio Web.</p>
-<p><strong>Or build the app inside a local solution:</strong></p>
+<p>The first push creates the solution and the coded app project in the Studio Web <strong>Cloud Workspace</strong>.</p>
+<p><strong>Or build the app in a local solution</strong>, a solution stored on your machine (see <a href="https://docs.uipath.com/studio-web/automation-cloud/latest/user-guide/solutions-in-the-local-workspace">Solutions in the Local Workspace</a>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>init<span class="w"> </span>&lt;Solution&gt;
 <a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="nb">cd</span><span class="w"> </span>&lt;Solution&gt;
 <a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>init<span class="w"> </span>&lt;App&gt;
 <a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># develop in &lt;App&gt;/source and build into &lt;App&gt;/source/dist</span>
 <a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>uip<span class="w"> </span>solution<span class="w"> </span>resources<span class="w"> </span>refresh<span class="w">        </span><span class="c1"># adds the resources in bindings_v2.json, if any</span>
-<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>upload<span class="w"> </span>.<span class="w">                 </span><span class="c1"># only needed to deploy from Studio Web</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>upload<span class="w"> </span>.<span class="w">                 </span><span class="c1"># saves it to the Cloud Workspace, to deploy from Studio Web</span>
 </code></pre></div>
-<p>The first upload imports the solution into Studio Web. Later uploads overwrite it.</p>
+<p>The first upload adds the solution to the Cloud Workspace. Later uploads overwrite it. To deploy with the CLI, skip the upload.</p>
 <h3 id="deploy-from-studio-web">Deploy from Studio Web<a class="headerlink" href="#deploy-from-studio-web" title="Permanent link">&para;</a></h3>
 <ol type="1">
 <li>Open the solution in Studio Web, select the arrow on <strong>Deploy</strong>, and then select <strong>Deploy</strong>.</li>
