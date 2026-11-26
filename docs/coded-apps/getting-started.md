@@ -310,7 +310,7 @@ For the commands, see [CLI Reference: Deploy with a solution](cli-reference.md#d
 
     | Setting | Internal app | Public app (preview) |
     |---|---|---|
-    | **Routing name** | The path the app is served at | The path the app is served at |
+    | **Path name** | The path the app is served at | The path the app is served at |
     | **Authentication** | **User sign-in** | **Public**. Set it before **External application**. |
     | **External application** | The non-confidential external application users log in with | A confidential external application. The list shows these only once **Public** is selected. |
     | **Client secret** | Not used | The external application's secret |
@@ -324,7 +324,7 @@ Pack, publish and deploy the solution with `uip solution`, setting the same valu
 
 ### After deploying
 
-The app is served at `https://<org>.uipath.host/<routing-name>`.
+The app is served at `https://<org>.uipath.host/<path-name>`.
 
 For a public app:
 

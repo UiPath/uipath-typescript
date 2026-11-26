@@ -394,7 +394,7 @@ To deploy from Studio Web instead of the CLI, upload the solution to the Cloud W
 uip solution pack <solution-folder> ./output --version 1.0.0
 uip solution publish ./output/<Solution>_1.0.0.zip --wait
 uip solution deploy config get "<Solution>" --package-version 1.0.0 -d config.json
-uip solution deploy config set config.json <App> routingName <routing-name>
+uip solution deploy config set config.json <App> routingName <path-name>
 uip solution deploy config set config.json <App> externalClientId "<external app id>"
 uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-version 1.0.0 \
   --folder-name "<Solution>" --parent-folder-path "Shared" --config-file config.json
