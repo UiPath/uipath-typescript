@@ -4800,7 +4800,7 @@
 </div>
 <p>To deploy the app as part of a solution instead, see <a href="#deploy-with-solutions">Deploy with Solutions</a>.</p>
 <h2 id="deploy-with-solutions">Deploy with Solutions<a class="headerlink" href="#deploy-with-solutions" title="Permanent link">&para;</a></h2>
-<p>A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as a public app or not: you choose with the <strong>Authentication</strong> setting at deploy time. <a href="#public-coded-apps-preview">Public coded apps</a> deploy only this way.</p>
+<p>A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as an internal app or a public app: you choose with the <strong>Authentication</strong> setting at deploy time. <a href="#public-coded-apps-preview">Public coded apps</a> deploy only this way.</p>
 <p>Use the UiPath CLI <code>1.206.0</code> or later (<code>npm install -g @uipath/cli</code>), and run <code>npm run build</code> first so the build output is packed.</p>
 <h3 id="get-the-app-into-a-solution">Get the app into a solution<a class="headerlink" href="#get-the-app-into-a-solution" title="Permanent link">&para;</a></h3>
 <p><strong>Push the app to Studio Web.</strong> From the app folder (the one with <code>package.json</code>):</p>
@@ -4827,8 +4827,8 @@
 <thead>
 <tr>
 <th>Setting</th>
-<th>Coded app</th>
-<th>Public coded app (preview)</th>
+<th>Internal app</th>
+<th>Public app (preview)</th>
 </tr>
 </thead>
 <tbody>
@@ -4874,7 +4874,7 @@
 <a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
 </code></pre></div>
-<p>For a coded app that isn't public, <code>externalClientId</code> is the non-confidential external application users log in with. For a public app, use the confidential external application and add two settings before <code>deploy run</code>:</p>
+<p>For an internal app, <code>externalClientId</code> is the non-confidential external application users log in with. For a public app, use the confidential external application and add two settings before <code>deploy run</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application
 <a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
 </code></pre></div>
