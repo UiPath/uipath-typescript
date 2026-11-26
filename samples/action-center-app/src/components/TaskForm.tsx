@@ -107,6 +107,8 @@ function coerce(field: TaskFormField, value: unknown): unknown {
   }
 }
 
+const pad = (n: number) => String(n).padStart(2, '0')
+
 /**
  * Date-ish values arrive as ISO strings; the inputs need `YYYY-MM-DD` /
  * `YYYY-MM-DDTHH:mm`. A date-only string is passed through verbatim — running it
@@ -119,7 +121,6 @@ function toDateInput(value: unknown, withTime: boolean): string {
   if (dateOnly) return withTime ? `${dateOnly[1]}T00:00` : dateOnly[1]
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return ''
-  const pad = (n: number) => String(n).padStart(2, '0')
   const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
   return withTime ? `${date}T${pad(d.getHours())}:${pad(d.getMinutes())}` : date
 }
