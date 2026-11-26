@@ -282,6 +282,9 @@ $ uip codedapp delete --display-name <name> --yes [options]
 !!! warning
     Deletion cannot be undone.
 
+!!! note "Deleting the published package"
+    `delete` removes only the deployment. To delete the published package, run `uip or packages delete "<PackageId>:<Version>" --yes` (requires the Orchestrator tool; add `--folder-key <key>` for a Personal Workspace package). The matching published app version is removed with it. Existing deployments are not removed, so delete them first.
+
 **Examples**
 
 <!-- termynal -->
