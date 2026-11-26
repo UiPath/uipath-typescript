@@ -360,7 +360,7 @@ When the app is deployed as public, the platform adds a `uipath:app-key` meta ta
 | `new Jobs(sdk).getOutput(jobKey)` | `Jobs` comes from `@uipath/uipath-typescript/jobs`. |
 | `entities.insertRecord({ name }, data)` | |
 | `entities.getRecordByName(name, recordId)` | |
-| `entities.getRecordsByName(name, options?)` | Supports `pageSize`, `jumpToPage` and `cursor`. |
+| `entities.getRecordsByName(name, options?)` | Supports `pageSize`, and either `jumpToPage` or `cursor`, not both. |
 | `buckets.uploadFile({ name }, fileName, content, options?)` | Returns the stored `path`. |
 
 Any other call throws a `ValidationError`. For anything else, start a process that does it.
@@ -392,7 +392,9 @@ List every resource the app uses in `bindings_v2.json`, next to `package.json` (
 In code, pass the same name and folder. A resource that isn't listed is refused with `403`.
 
 ```typescript
-await sdk.processes.start({ name: 'Invoices' }, { folderPath: 'Shared' });
+import { Processes } from '@uipath/uipath-typescript/processes';
+
+await new Processes(sdk).start({ name: 'Invoices' }, { folderPath: 'Shared' });
 ```
 
 ### Who can read what
@@ -403,8 +405,7 @@ Set an access mode per resource in `uipath.json`, by binding key. `uipath.json` 
 {
   "scope": "<scopes>",
   "access": [
-    { "resource": "entity", "key": "Orders", "mode": "session" },
-    { "resource": "process", "key": "Invoices.Shared", "mode": "all" }
+    { "resource": "process", "key": "Invoices.Shared", "mode": "session" }
   ]
 }
 ```
