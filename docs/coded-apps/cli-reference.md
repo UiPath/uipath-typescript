@@ -408,10 +408,12 @@ uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-ve
 | `clientSecret` | Not used | The external application's secret |
 | `environmentVariables` | Optional: this deployment's `UIPATH_APPS_*` values, one `NAME=value` per line | Same |
 
-For a public app, set the two extra keys before `deploy run`:
+For a public app, before `deploy run`, turn on public mode and set the external application's client secret:
 
 ```bash
+# Public mode
 uip solution deploy config set config.json <App> runtimeAuthMode application
+# Client secret of the confidential external application
 uip solution deploy config set config.json <App> clientSecret "$APP_CLIENT_SECRET" --output-filter Property
 ```
 
