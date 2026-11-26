@@ -4800,7 +4800,7 @@
 </div>
 <p>To deploy the app as part of a solution instead, see <a href="#deploy-with-solutions">Deploy with Solutions</a>.</p>
 <h2 id="deploy-with-solutions">Deploy with Solutions<a class="headerlink" href="#deploy-with-solutions" title="Permanent link">&para;</a></h2>
-<p>A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package deploys as a sign-in app or as a public app: you choose at deploy time. <a href="#public-coded-apps-preview">Public coded apps</a> deploy only this way.</p>
+<p>A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as a public app or not: you choose with the <strong>Authentication</strong> setting at deploy time. <a href="#public-coded-apps-preview">Public coded apps</a> deploy only this way.</p>
 <p>Use the UiPath CLI <code>1.206.0</code> or later (<code>npm install -g @uipath/cli</code>), and run <code>npm run build</code> first so the build output is packed.</p>
 <h3 id="get-the-app-into-a-solution">Get the app into a solution<a class="headerlink" href="#get-the-app-into-a-solution" title="Permanent link">&para;</a></h3>
 <p><strong>Push the app to Studio Web.</strong> From the app folder (the one with <code>package.json</code>):</p>
@@ -4827,8 +4827,8 @@
 <thead>
 <tr>
 <th>Setting</th>
-<th>Sign-in app</th>
-<th>Public app (preview)</th>
+<th>Coded app</th>
+<th>Public coded app (preview)</th>
 </tr>
 </thead>
 <tbody>
@@ -4844,7 +4844,7 @@
 </tr>
 <tr>
 <td><strong>External application</strong></td>
-<td>The non-confidential external application users sign in with</td>
+<td>The non-confidential external application users log in with</td>
 <td>A confidential external application. The list shows these only once <strong>Public</strong> is selected.</td>
 </tr>
 <tr>
@@ -4874,7 +4874,7 @@
 <a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>run<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--package-version<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">  </span>--folder-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--parent-folder-path<span class="w"> </span><span class="s2">&quot;Shared&quot;</span><span class="w"> </span>--config-file<span class="w"> </span>config.json
 </code></pre></div>
-<p>For a sign-in app, <code>externalClientId</code> is the non-confidential external application users sign in with. For a public app, use the confidential external application and add two settings before <code>deploy run</code>:</p>
+<p>For a coded app that isn't public, <code>externalClientId</code> is the non-confidential external application users log in with. For a public app, use the confidential external application and add two settings before <code>deploy run</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application
 <a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
 </code></pre></div>
@@ -4885,11 +4885,11 @@
 <p>For a public app:</p>
 <ol type="1">
 <li><strong>Give the external application a role</strong> in the folder the deployment created (<code>&lt;location&gt;/&lt;solution folder&gt;</code>): in Orchestrator, open the folder, select <strong>Assign accounts/group/external app</strong>, and assign a role such as <strong>Automation User</strong>. Data Fabric entities need <strong>View</strong> and <strong>Create</strong> on entity records.</li>
-<li><strong>Open the app</strong> in a private window. It opens without a sign-in.</li>
+<li><strong>Open the app</strong> in a private window. It opens without a login.</li>
 </ol>
 <p>An upgrade keeps the public app's stored client secret and its scope.</p>
 <h2 id="public-coded-apps-preview">Public coded apps (preview)<a class="headerlink" href="#public-coded-apps-preview" title="Permanent link">&para;</a></h2>
-<p>A public coded app opens without a sign-in. The Apps service calls UiPath as the app's confidential external application, and only for the resources the app declares. For setup and deployment, see <a href="https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps">Public coded apps</a>.</p>
+<p>A public coded app opens without a login. The Apps service calls UiPath as the app's confidential external application, and only for the resources the app declares. For setup and deployment, see <a href="https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps">Public coded apps</a>.</p>
 <p>Needs <code>@uipath/uipath-typescript</code> <code>1.8.5</code> or later. The SDK setup doesn't change: when the app is deployed as public, <code>initialize()</code> opens a visitor session instead of signing in.</p>
 <h3 id="supported-calls">Supported calls<a class="headerlink" href="#supported-calls" title="Permanent link">&para;</a></h3>
 <table>
@@ -4981,7 +4981,7 @@
 <a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1"># Optional: folder used for resources declared without a folder</span>
 <a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="nv">UIPATH_PUBLIC_APP_FOLDER_KEY</span><span class="o">=</span>&lt;folder<span class="w"> </span>key&gt;
 </code></pre></div>
-<p>Run <code>npm run dev</code>. The page opens without a sign-in, and the dev server applies the same bindings and access modes as a deployed app. The secret never reaches the browser. Solution overrides apply only after you deploy.</p>
+<p>Run <code>npm run dev</code>. The page opens without a login, and the dev server applies the same bindings and access modes as a deployed app. The secret never reaches the browser. Solution overrides apply only after you deploy.</p>
 <h3 id="deploying">Deploying<a class="headerlink" href="#deploying" title="Permanent link">&para;</a></h3>
 <p>Public apps deploy only through Solutions, with <strong>Authentication</strong> set to <strong>Public</strong>. See <a href="#deploy-with-solutions">Deploy with Solutions</a>.</p>
 <h2 id="network-requirements">Network requirements<a class="headerlink" href="#network-requirements" title="Permanent link">&para;</a></h2>
