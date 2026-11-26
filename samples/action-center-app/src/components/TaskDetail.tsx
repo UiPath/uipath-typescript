@@ -190,12 +190,16 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
             </SheetTitle>
             {task && (
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <Badge variant={statusBadge(task.status).variant}>
-                  {statusBadge(task.status).label}
-                </Badge>
-                <Badge variant={priorityBadge(task.priority).variant}>
-                  {priorityBadge(task.priority).label}
-                </Badge>
+                {(() => {
+                  const sb = statusBadge(task.status)
+                  const pb = priorityBadge(task.priority)
+                  return (
+                    <>
+                      <Badge variant={sb.variant}>{sb.label}</Badge>
+                      <Badge variant={pb.variant}>{pb.label}</Badge>
+                    </>
+                  )
+                })()}
                 <Badge variant="secondary">{taskTypeLabel(task.type)}</Badge>
                 {(() => {
                   const sla = slaBadge(task.taskSlaDetail?.status)

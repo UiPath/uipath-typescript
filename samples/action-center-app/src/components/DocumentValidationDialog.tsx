@@ -121,12 +121,16 @@ export function DocumentValidationDialog({
             <DialogTitle className="truncate">{task?.title ?? title}</DialogTitle>
             {task && (
               <div className="flex shrink-0 items-center gap-1.5">
-                <Badge variant={statusBadge(task.status).variant}>
-                  {statusBadge(task.status).label}
-                </Badge>
-                <Badge variant={priorityBadge(task.priority).variant}>
-                  {priorityBadge(task.priority).label}
-                </Badge>
+                {(() => {
+                  const sb = statusBadge(task.status)
+                  const pb = priorityBadge(task.priority)
+                  return (
+                    <>
+                      <Badge variant={sb.variant}>{sb.label}</Badge>
+                      <Badge variant={pb.variant}>{pb.label}</Badge>
+                    </>
+                  )
+                })()}
               </div>
             )}
           </div>

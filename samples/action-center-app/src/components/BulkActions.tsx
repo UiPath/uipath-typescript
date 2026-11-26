@@ -29,8 +29,7 @@ import {
 import { toast } from '@uipath/apollo-wind/components/ui/sonner'
 import { useAuth } from '../context/AuthContext'
 import { useTaskUsers } from '../hooks/useTasks'
-import { assignedToGroup } from '../taskUtils'
-import { formatAssignmentErrors } from '../taskUtils'
+import { assignedToGroup, formatAssignmentErrors } from '../taskUtils'
 
 /**
  * Bulk actions on Manage Tasks. Enable/disable mirrors what the server
