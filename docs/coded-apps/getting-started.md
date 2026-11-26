@@ -322,11 +322,7 @@ For the commands, see [CLI Reference: Deploy with a solution](cli-reference.md#d
 
 Pack, publish and deploy the solution with `uip solution`, setting the same values as in the table above. See [CLI Reference: Deploy with a solution](cli-reference.md#deploy-with-a-solution). For a pipeline, see [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution).
 
-### After deploying
-
-The app is served at `https://<org>.uipath.host/<path-name>`.
-
-For a public app:
+### After deploying a public app
 
 1. **Give the external application a role** in the folder the deployment created (`<location>/<solution folder>`): in Orchestrator, open the folder, select **Assign accounts/group/external app**, and assign a role such as **Automation User**. Data Fabric entities need **View** and **Create** on entity records.
 2. **Open the app** in a private window. It opens without a login.
@@ -335,9 +331,22 @@ An upgrade keeps the public app's stored client secret and its scope.
 
 ## Public coded apps (preview)
 
-A public coded app opens without a login. The Apps service calls UiPath as the app's confidential external application, and only for the resources the app declares. For setup and deployment, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
+A public coded app opens without a login. For the product overview, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
 
-Needs `@uipath/uipath-typescript` `1.8.5` or later. The SDK setup doesn't change: when the app is deployed as public, `initialize()` opens a visitor session instead of signing in.
+Requires `@uipath/uipath-typescript` `1.8.5` or later.
+
+You don't change any code to make an app public. Initialize the SDK as usual:
+
+```typescript
+const sdk = new UiPath();
+await sdk.initialize();
+```
+
+When the app is deployed as public, the platform adds a `uipath:app-key` meta tag to the page. The SDK reads it and switches to public mode:
+
+- `initialize()` starts a session for the visitor instead of redirecting to the UiPath login.
+- Each call goes to the Apps service, which makes it as the app's confidential external application, and only for the resources the app declares.
+- When the session expires, the SDK starts a new one.
 
 ### Supported calls
 
