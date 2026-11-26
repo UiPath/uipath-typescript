@@ -4812,7 +4812,7 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>Routing name</strong></td>
+<td><strong>Path name</strong></td>
 <td>The path the app is served at</td>
 <td>The path the app is served at</td>
 </tr>
@@ -4846,7 +4846,7 @@
 <h3 id="deploy-from-the-cli">Deploy from the CLI<a class="headerlink" href="#deploy-from-the-cli" title="Permanent link">&para;</a></h3>
 <p>Pack, publish and deploy the solution with <code>uip solution</code>, setting the same values as in the table above. See <a href="../cli-reference/#deploy-with-a-solution">CLI Reference: Deploy with a solution</a>. For a pipeline, see <a href="../ci-cd-github-actions/#coded-app-inside-solution">Coded App inside Solution</a>.</p>
 <h3 id="after-deploying">After deploying<a class="headerlink" href="#after-deploying" title="Permanent link">&para;</a></h3>
-<p>The app is served at <code>https://&lt;org&gt;.uipath.host/&lt;routing-name&gt;</code>.</p>
+<p>The app is served at <code>https://&lt;org&gt;.uipath.host/&lt;path-name&gt;</code>.</p>
 <p>For a public app:</p>
 <ol type="1">
 <li><strong>Give the external application a role</strong> in the folder the deployment created (<code>&lt;location&gt;/&lt;solution folder&gt;</code>): in Orchestrator, open the folder, select <strong>Assign accounts/group/external app</strong>, and assign a role such as <strong>Automation User</strong>. Data Fabric entities need <strong>View</strong> and <strong>Create</strong> on entity records.</li>
