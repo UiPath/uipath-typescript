@@ -344,7 +344,8 @@ export async function getCaseStageSla(sdk: UiPath, instanceId: string): Promise<
       slaDueTime: s.slaDueTime || null,
       slaStatus: mapSlaStatus(s.slaStatus),
     }));
-  } catch {
+  } catch (e: unknown) {
+    console.warn('getCaseStageSla failed:', e);
     return [];
   }
 }
