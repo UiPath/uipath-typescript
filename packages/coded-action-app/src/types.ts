@@ -35,6 +35,8 @@ export type Task = {
   jobKey: string | null;
   /** UI theme that Action Center is currently using. */
   theme: Theme;
+  /** Cloud user id of the signed-in reviewer, when Action Center provides it. */
+  reviewerId?: string;
 };
 
 /** UI theme applied to Action Center, passed to the coded action app on load. */

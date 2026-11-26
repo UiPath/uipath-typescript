@@ -123,7 +123,7 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
 
         const task = event.data?.content as TaskWithCloudUserId;
         telemetryClient.setUserId(task?.cloudUserId ?? '');
-        resolve(task);
+        resolve(task?.cloudUserId ? { ...task, reviewerId: task.cloudUserId } : task);
       };
 
       const timer = setTimeout(() => {
