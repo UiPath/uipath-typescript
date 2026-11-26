@@ -15,7 +15,7 @@ system via [`@uipath/apollo-wind`](https://www.npmjs.com/package/@uipath/apollo-
 
 ## Preview
 
-![Action Center Manager listing tasks with folder, status and priority filters](./screenshots/preview.jpg)
+![Action Center Manager filtering tasks, completing one through its schema-rendered form, and selecting tasks for bulk actions](./screenshots/preview.gif)
 
 ## What it demonstrates
 
