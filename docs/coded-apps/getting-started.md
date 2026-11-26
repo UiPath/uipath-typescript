@@ -315,15 +315,15 @@ A coded app can live in a solution and be deployed with it, from Studio Web or w
 
 ### Get the app into a solution
 
-**Push the app to Studio Web.** From the app folder (the one with `package.json`):
+**Push the app to a cloud solution.** From the app folder (the one with `package.json`):
 
 ```bash
 uip codedapp push --solution-name "<Solution>" --project-name "<App>" --build-dir dist
 ```
 
-The first push creates the solution and the coded app project in Studio Web.
+The first push creates the solution and the coded app project in the Studio Web **Cloud Workspace**.
 
-**Or build the app inside a local solution:**
+**Or build the app in a local solution**, a solution stored on your machine (see [Solutions in the Local Workspace](https://docs.uipath.com/studio-web/automation-cloud/latest/user-guide/solutions-in-the-local-workspace)):
 
 ```bash
 uip solution init <Solution>
@@ -331,10 +331,10 @@ cd <Solution>
 uip codedapp init <App>
 # develop in <App>/source and build into <App>/source/dist
 uip solution resources refresh        # adds the resources in bindings_v2.json, if any
-uip solution upload .                 # only needed to deploy from Studio Web
+uip solution upload .                 # saves it to the Cloud Workspace, to deploy from Studio Web
 ```
 
-The first upload imports the solution into Studio Web. Later uploads overwrite it.
+The first upload adds the solution to the Cloud Workspace. Later uploads overwrite it. To deploy with the CLI, skip the upload.
 
 ### Deploy from Studio Web
 
