@@ -84,7 +84,7 @@ Two things to know about the app-task schema:
 ```bash
 npm install
 uip login      # populates .uipath/ (org/tenant/base URL)
-npm run dev    # http://localhost:5173
+npm run dev    # http://localhost:3000
 ```
 
 ## Deploy

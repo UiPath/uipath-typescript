@@ -4,5 +4,5 @@
   "orgName": "<your-org>",
   "tenantName": "<your-tenant>",
   "baseUrl": "https://cloud.uipath.com",
-  "redirectUri": "http://localhost:5173"
+  "redirectUri": "http://localhost:3000"
 }
