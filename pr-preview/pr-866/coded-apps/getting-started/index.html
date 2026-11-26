@@ -4831,11 +4831,6 @@
 <td>Not used</td>
 <td>The external application's secret</td>
 </tr>
-<tr>
-<td><strong>Environment variables</strong></td>
-<td>Optional: this deployment's <code>UIPATH_APPS_*</code> values</td>
-<td>Optional: this deployment's <code>UIPATH_APPS_*</code> values</td>
-</tr>
 </tbody>
 </table>
 </li>
@@ -4850,7 +4845,7 @@
 <li><strong>Give the external application a role</strong> in the folder the deployment created (<code>&lt;location&gt;/&lt;solution folder&gt;</code>): in Orchestrator, open the folder, select <strong>Assign accounts/group/external app</strong>, and assign a role such as <strong>Automation User</strong>. Data Fabric entities need <strong>View</strong> and <strong>Create</strong> on entity records.</li>
 <li><strong>Open the app</strong> in a private window. It opens without a login.</li>
 </ol>
-<p>An upgrade keeps the public app's stored client secret and its scope.</p>
+<p>An upgrade keeps the public app's client secret and the scope bound to it. To apply a changed <code>scope</code> from <code>uipath.json</code>, enter the client secret again when you upgrade.</p>
 <h2 id="public-coded-apps-preview">Public coded apps (preview)<a class="headerlink" href="#public-coded-apps-preview" title="Permanent link">&para;</a></h2>
 <p>A public coded app opens without a login. For the product overview, see <a href="https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps">Public coded apps</a>.</p>
 <p>Requires:</p>
@@ -4948,7 +4943,7 @@
 <p class="admonition-title">Note</p>
 <p>A visitor is identified by their browser session. Opening the app in another browser or a private window, or clearing cookies, starts a new session, and a new session cannot read what an earlier session added.</p>
 </div>
-<p><code>scope</code> must list what the app calls and include <code>OR.Execution</code>.</p>
+<p><code>scope</code> must list only application scopes of the external application, for what the app calls, and include <code>OR.Execution</code>. Don't add <code>openid</code> or <code>offline_access</code>.</p>
 <h3 id="running-it-locally">Running it locally<a class="headerlink" href="#running-it-locally" title="Permanent link">&para;</a></h3>
 <p>With <code>@uipath/coded-apps-dev</code> <code>1.0.0</code> or later, the dev server runs the app as a public app. Add the external application to <code>.env.local</code> and keep that file out of source control:</p>
 <div class="highlight"><span class="filename">.env.local</span><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nv">UIPATH_PUBLIC_APP</span><span class="o">=</span><span class="nb">true</span>
