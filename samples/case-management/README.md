@@ -14,6 +14,10 @@ The app is scoped to **one** Maestro case (set by `processKey`) and provides:
 - **Case detail** — Overview, Case details, Stages, Actions, History (actor-classified
   execution timeline), and Variables tabs
 
+## Preview
+
+![Case Management console showing the case dashboard, a case's stages and history, an Action Center task form, and analytics](./screenshots/preview.gif)
+
 ## SDK surface used
 
 | Area | SDK |
