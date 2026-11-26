@@ -12,6 +12,8 @@ import type { ActionTask, CaseInstance } from '@/lib/types';
 
 type Row = ActionTask & { _case: CaseInstance };
 
+const rowKey = (t: Row) => `${t._case.instanceId}:${t.id}`;
+
 export function ActionsPage() {
   const { sdk } = useAuth();
   const navigate = useNavigate();
@@ -39,7 +41,6 @@ export function ActionsPage() {
   }, [tasksQ.data]);
 
   const list = tab === 'Open' ? open : completed;
-  const rowKey = (t: Row) => `${t._case.instanceId}:${t.id}`;
   const active = list.find((t) => rowKey(t) === selectedId) ?? list[0] ?? null;
 
   if (pageLoading && items.length === 0) return <Loading label="Loading cases…" />;

@@ -18,6 +18,11 @@ const NAV = [
   { to: '/analytics', label: 'Analytics', Icon: AnalyticsIcon },
 ];
 
+const navClass = (isActive: boolean) =>
+  `flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition ${
+    isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+  }`;
+
 export function Layout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
   const { caseDefinition } = useCases();
@@ -32,11 +37,6 @@ export function Layout({ children }: { children: ReactNode }) {
     window.addEventListener('recent-cases-changed', h);
     return () => window.removeEventListener('recent-cases-changed', h);
   }, []);
-
-  const navClass = (isActive: boolean) =>
-    `flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition ${
-      isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-    }`;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">

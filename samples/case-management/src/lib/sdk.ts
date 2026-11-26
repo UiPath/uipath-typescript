@@ -199,7 +199,7 @@ export async function enrichCase(sdk: UiPath, inst: CaseInstance): Promise<CaseE
     });
     const current =
       active ??
-      [...stages].reverse().find((s) => s.status.toLowerCase().includes('progress')) ??
+      stages.findLast((s) => s.status.toLowerCase().includes('progress')) ??
       stages.find((s) => s.status.toLowerCase() !== 'completed');
     if (current) {
       enrichment.currentStage = current.name;
@@ -518,6 +518,12 @@ function actorOfElement(el: ElementExecution): ActorType {
   return 'system';
 }
 
+/** Start time in ms for sorting; missing or invalid times sort last. */
+const ts = (s?: string | null) => {
+  const t = s ? new Date(s).getTime() : NaN;
+  return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
+};
+
 /**
  * Group execution history by PARENT ELEMENT (`parentElementId`).
  *
@@ -543,11 +549,6 @@ export function buildHistoryGroups(
     first: number;
   }
   const groups = new Map<string, G>();
-  const ts = (s?: string | null) => {
-    const t = s ? new Date(s).getTime() : NaN;
-    return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
-  };
-
   for (const el of elements) {
     if (isNoiseElement(el)) continue;
     const label = sanitizeElementName(el.elementName, el.elementId);

@@ -54,7 +54,7 @@ function fmtMs(ms: number): string {
 function BarChartCard({ data, loading, format }: { data: Datum[]; loading?: boolean; format?: (n: number) => string }) {
   const height = Math.max(150, data.length * 46);
   if (loading) return <Skeleton className="w-full rounded-lg" style={{ height }} />;
-  if (data.length === 0 || data.every((d) => d.value === 0)) {
+  if (data.every((d) => d.value === 0)) {
     return (
       <div className="flex items-center justify-center py-10 text-sm text-muted-foreground" style={{ minHeight: 120 }}>
         No data for this period
