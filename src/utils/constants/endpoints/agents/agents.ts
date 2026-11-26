@@ -2,7 +2,7 @@
  * Agent Service Endpoints
  */
 
-import { INSIGHTS_RTM_BASE } from '../base';
+import { INSIGHTS_RTM_BASE, LLMOPS_BASE } from '../base';
 
 export const AGENTS_ENDPOINTS = {
   /** Paginated list of agents with consumption and health metadata. */
@@ -25,4 +25,6 @@ export const AGENTS_ENDPOINTS = {
   GET_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary`,
   /** Aggregate Agent Units and Platform Units consumption per agent over the requested window. */
   GET_UNIT_CONSUMPTION_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary/unit-consumption`,
+  /** Agent job counts, error rate and durations over the requested window, optionally bucketed by hour or day. */
+  GET_RUNS_TIMELINE: `${LLMOPS_BASE}/api/AgentSummary/runs-timeline`,
 } as const;

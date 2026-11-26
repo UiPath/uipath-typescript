@@ -50,4 +50,9 @@ export const AGENT_TEST_CONSTANTS = {
   GOV_PACK_NAME: 'ISO/IEC 42001:2023 Runtime',
   GOV_REASON: 'Prompt injection was detected with a probability of 0.',
   GOV_AGENT_NAME: 'customer-care-assistant-for-acmecare',
+  RUNS_TIMELINE_DEFAULT_ZONE: 'UTC',
+  RUNS_TIMELINE_ZONE: 'Asia/Kolkata',
+  RUNS_TIMELINE_ZONE_OFFSET: '+05:30',
+  RUNS_TIMELINE_BUCKET_START: '2025-05-01T00:00:00+05:30',
+  RUNS_TIMELINE_ERROR: 'Agent runs timeline is not available in this environment.',
 } as const;
