@@ -13,6 +13,10 @@ widget so a reviewer can validate the extracted document data inline.
 Built on UiPath's [Apollo Vertex](https://apollo-vertex.vercel.app/) design
 system via [`@uipath/apollo-wind`](https://www.npmjs.com/package/@uipath/apollo-wind).
 
+## Preview
+
+![Action Center Manager listing tasks with folder, status and priority filters](./screenshots/preview.jpg)
+
 ## What it demonstrates
 
 The task-centric methods on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/api/interfaces/TaskServiceModel/):
