@@ -331,6 +331,8 @@ $ uip codedapp push --project-id <projectId> --build-dir build
 $ uip codedapp push --solution-name "Product Announcements" --project-name "Announcements Portal"
 ```
 
+The first push also adds the resources listed in `bindings_v2.json` to the solution; `--ignore-resources` skips that. To deploy the pushed solution, including as a public app, see [Deploy with Solutions](getting-started.md#deploy-with-solutions).
+
 The first push saves the new project ID to `.env` as `UIPATH_PROJECT_ID`, and later pushes use it. `--solution-name` and `--project-name` only apply when no project ID is set. If one is set by `--project-id`, `UIPATH_PROJECT_ID`, or `.env`, push fails instead of pushing into that project, so running the same command with these flags a second time fails.
 
 ---
