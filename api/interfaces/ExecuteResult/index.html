@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extended-by" class="md-skip">
           Skip to content
         </a>
       
@@ -1209,6 +1209,8 @@
       
         
       
+        
+      
     
     
     
@@ -1322,6 +1324,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -3895,6 +3925,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extended-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended by
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3927,12 +3968,17 @@
 
   <h1>ExecuteResult</h1>
 
-<p>Result envelope returned by execute.</p>
+<p>Result envelope returned by <a href="../../functions/execute/">execute</a>.</p>
 <p>Unlike most SDK methods this <em>does not</em> throw on non-2xx responses — the
 caller inspects <code>ok</code> / <code>status</code> and <code>body</code> to handle connector-specific
 errors. This is required because the underlying Integration Service API
 proxies arbitrary third-party HTTP calls, and the body carries vendor
 error details that callers need to surface.</p>
+<h2 id="extended-by">Extended by<a class="headerlink" href="#extended-by" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../ExecuteActivityResult/"><code>ExecuteActivityResult</code></a></li>
+<li><a href="../ExecuteHttpResult/"><code>ExecuteHttpResult</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

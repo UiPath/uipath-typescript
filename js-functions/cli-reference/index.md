@@ -125,11 +125,11 @@ Reads `name` and `version` from `package.json`. Writes `.uipath/<name>.<version>
 
 The package's default entry point is the function file `project.uiproj` names in `MainFile`, else the first function in `functions/`. A `MainFile` that names no function fails the pack.
 
-The project must be ready to package: `node_modules/` present and a current `package-lock.json`, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it.
+The project must be installed: `node_modules/` present. `pack` then writes `package-lock.json` with npm and ships it, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot write it, because the registry is unreachable or unauthenticated, `pack` stops and quotes npm. `pack` ignores other lock files.
 
 Steps performed:
 
-1. Check the project is installed
+1. Check the project is installed and write `package-lock.json`
 1. Sync `uipath.json` functions map
 1. Generate aggregator
 1. Extract function manifest → `entry-points.json`, `bindings_v2.json`

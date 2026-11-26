@@ -393,6 +393,25 @@ useEffect(() => {
 }, []);
 ```
 
+### Using the token in your own requests
+
+For requests your app makes outside the SDK, get the token from `sdk.getValidToken()`. It resolves with an access token that is valid right now and renews it first when needed, exactly as the SDK does for its own calls:
+
+```
+const token = await sdk.getValidToken();
+const { baseUrl, orgName, tenantName } = sdk.config;
+
+const response = await fetch(`${baseUrl}/${orgName}/${tenantName}/<servicePath>`, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+```
+
+Call it before each request instead of keeping the result. It answers from memory until a renewal is due, and calls made at the same time share one renewal. `sdk.getToken()` only reads the token the SDK holds and never renews it, so a token read from it can expire while your app still holds it.
+
+The SDK renews the tokens of its own OAuth sign-in. A token you passed as `secret` is returned as it is: the SDK does not know when it expires and cannot renew it.
+
+`getValidToken()` rejects with an `AuthenticationError` when it cannot return a token, for example before sign-in or when the renewal failed. A renewal can fail for a temporary reason such as a network error, so retry before calling `sdk.initialize()` to sign in again.
+
 ### Available Auth Methods
 
 - `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
@@ -403,6 +422,7 @@ useEffect(() => {
 - `sdk.getToken()` - Get the logged-in user's access token
 - `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
+- `sdk.getValidToken()` - Get an access token that is valid right now, renewing it first when needed. Use it for requests your app makes outside the SDK
 - `sdk.setDebugContext()` - Attach a parent job key to the jobs the app starts so Orchestrator links them to it and, when that parent is a debug run, routes them as debug sub-jobs. Studio Web debug sessions and Action Center debug tasks hand the key to the SDK themselves; call this only when another host runs the app inside a job
 
 ## Quick Test Script
@@ -2980,8 +3000,6 @@ console.log(task.data);
 
 > **getSchema**(`taskId`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
 
-**`Experimental`**
-
 Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.
 
 Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape it has:
@@ -3052,8 +3070,6 @@ if (result?.type === TaskType.QuickForm) {
 ### getSchemaByKey()
 
 > **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
-
-**`Experimental`**
 
 Gets the schema a QuickForm task was created with.
 
@@ -8897,6 +8913,128 @@ const result = await agents.getUnitConsumptionSummary(
   },
 );
 ```
+
+# Integration Service Execution
+
+Functions that run an operation through an Integration Service connection. Integration Service adds the connection's authentication, so the vendor's key or token stays out of your code. Import them from `@uipath/uipath-typescript/connections` and pass a `UiPath` instance as the first argument.
+
+| Function            | Description                                                                      |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `execute()`         | Calls one object of a connector with the given method                            |
+| `executeActivity()` | Runs a connector activity, with body paths, file upload and download, and paging |
+| `executeHttp()`     | Sends one HTTP request to the vendor behind a connection                         |
+
+Preview
+
+These functions are experimental and may change or be removed in future releases.
+
+Each function takes a connection id, or a handle created with `resource.connection()` (see [Resource Declarations](../resources/)). A status the vendor returned does not throw, even a 4xx or 5xx, so check `ok` on the result.
+
+## execute()
+
+Takes a connection, an object name, a method and optional `ExecuteOptions`, and resolves to an `ExecuteResult`.
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { execute } from '@uipath/uipath-typescript/connections';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+
+const result = await execute(sdk, '<connectionId>', 'tickets', 'GET', {
+  queryParams: { status: 'open' },
+});
+
+if (result.ok) {
+  console.log(result.body);
+} else {
+  console.log('Request failed with status', result.status);
+}
+```
+
+## executeActivity()
+
+Takes the same arguments with `ExecuteActivityOptions`, and resolves to an `ExecuteActivityResult`.
+
+```
+import { executeActivity } from '@uipath/uipath-typescript/connections';
+
+const created = await executeActivity(sdk, '<connectionId>', 'issue', 'POST', {
+  body: { 'fields.summary': 'Login fails', 'fields.labels[0]': 'urgent' },
+});
+```
+
+A top-level body key that contains `.` or `[` is a path: the call above sends `{ fields: { summary: 'Login fails', labels: ['urgent'] } }`.
+
+### Paging
+
+Pass `maxRecords` to gather records across pages; `-1` fetches every record. Without it one page is returned, and `page` on the result holds the token of the next one when more records exist.
+
+When a `maxRecords` call stops with records left, `page` is set as well. Its token starts at the next page, so records cut from the last page read are skipped. A call follows at most 1000 pages and stops if the connector repeats a page token.
+
+```
+const tickets = await executeActivity(sdk, '<connectionId>', 'tickets', 'GET', {
+  maxRecords: 200,
+});
+```
+
+### Files
+
+Pass `files` to send the call as a multipart form. A file the vendor returns arrives as a `Uint8Array` in `body`; `fileResponse: true` reads any successful response that way.
+
+```
+import { readFile } from 'node:fs/promises';
+
+const uploaded = await executeActivity(sdk, '<connectionId>', 'files', 'POST', {
+  files: [{ name: 'file', content: await readFile('<path-to-file>'), fileName: 'report.pdf' }],
+  body: { folder: 'reports' },
+});
+```
+
+### Version 4 Connectors
+
+A connector of version 4 or later runs its activities on the version 4 engine. Pass `connectorVersion` and `connectorKey`; the object name is then the activity's script reference. A `resource.connection()` handle supplies the connector key.
+
+```
+const sent = await executeActivity(sdk, '<connectionId>', 'SendMessageToChannel', 'POST', {
+  connectorVersion: '4.0.0',
+  connectorKey: 'uipath-salesforce-slack',
+  body: { channel: '<channelId>', messageToSend: 'Hello' },
+});
+```
+
+Each engine takes its own options, and passing one to the other engine throws a `ValidationError`:
+
+| Engine    | Options                                                                 |
+| --------- | ----------------------------------------------------------------------- |
+| Version 3 | `files`, `bodyPartName`, `urlInputFields`, `fileResponse`, `maxRecords` |
+| Version 4 | `scriptRef`, `headers`                                                  |
+
+## executeHttp()
+
+Takes a connection, a vendor URL, a method and optional `ExecuteHttpOptions`, and resolves to an `ExecuteHttpResult`. Use it for a vendor endpoint the connector has no object for. A path such as `/v2/tickets` is resolved against the connection's base URL.
+
+```
+import { executeHttp } from '@uipath/uipath-typescript/connections';
+
+const result = await executeHttp(sdk, '<connectionId>', '/v2/tickets', 'POST', {
+  headers: { 'X-Request-Source': 'my-app' },
+  queryParams: { notify: 'true' },
+  body: { subject: 'New ticket', priority: 'high' },
+});
+
+if (result.ok) {
+  console.log(result.body);
+} else if (result.isVendorError) {
+  console.log('Vendor returned status', result.status);
+}
+```
+
+`status`, `headers` and `body` on the result are the vendor's. `isVendorError` is `true` when the vendor answered with a non-2xx status, and `false` when the call failed before reaching the vendor.
+
+An object `body` is sent as JSON. For any other format, pass a string (or a `URLSearchParams` for URL-encoded form parameters) and set the matching `Content-Type` header. Bytes, a `Blob` and a `FormData` are refused with a `ValidationError`.
+
+A vendor error status is returned as the result and is not retried, a 429 or 5xx included. `retry` covers only a failure of the Integration Service call that carries the request.
 
 Real-time WebSocket session for two-way communication within a [Conversation](../ConversationServiceModel/).
 

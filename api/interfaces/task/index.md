@@ -384,8 +384,6 @@ console.log(task.data);
 
 > **getSchema**(`taskId`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
 
-**`Experimental`**
-
 Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.
 
 Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape it has:
@@ -456,8 +454,6 @@ if (result?.type === TaskType.QuickForm) {
 ### getSchemaByKey()
 
 > **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
-
-**`Experimental`**
 
 Gets the schema a QuickForm task was created with.
 

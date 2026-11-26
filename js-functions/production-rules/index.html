@@ -1213,6 +1213,8 @@
       
         
       
+        
+      
     
     
     
@@ -1326,6 +1328,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -4349,8 +4379,8 @@ a query value, <code>z.coerce.number()</code> accepts and converts it.</p>
 </code></pre></div>
 <hr />
 <h2 id="regenerate-the-lockfile-after-any-dependency-change">Regenerate the lockfile after any dependency change<a class="headerlink" href="#regenerate-the-lockfile-after-any-dependency-change" title="Permanent link">&para;</a></h2>
-<p>The <code>.nupkg</code> ships the project's <code>package-lock.json</code>, and the production worker installs from it (<a href="../deployment/#lockfile">Lockfile</a>). A stale lockfile fails the production install with errorCode 4801 on all routes, so <code>pack</code> checks that the lock matches <code>package.json</code> before it builds.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>npm<span class="w"> </span>install<span class="w">   </span><span class="c1"># always run this before pack after any package.json change</span>
+<p>The <code>.nupkg</code> ships a <code>package-lock.json</code> that <code>pack</code> writes from your installed <code>node_modules/</code>, and your functions run with the versions it pins (<a href="../deployment/#lockfile">Lockfile</a>). Install after any <code>package.json</code> change, so the lock matches it; a lock that misses a declared dependency fails the production install with errorCode 4801 on all routes.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>npm<span class="w"> </span>install
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack
 </code></pre></div>
 <hr />

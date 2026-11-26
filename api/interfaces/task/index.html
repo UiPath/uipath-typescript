@@ -1217,6 +1217,8 @@
       
         
       
+        
+      
     
     
     
@@ -1330,6 +1332,34 @@
     
   
     Elements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration-service-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
   
 
     
@@ -4657,7 +4687,6 @@ created in the same call. Schema keys are unique per tenant.</p>
 <blockquote>
 <p><strong>getSchema</strong>(<code>taskId</code>: <code>number</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>null</code> | <a href="../../type-aliases/TaskGetSchemaResponse/"><code>TaskGetSchemaResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.</p>
 <p>Supported for App tasks and QuickForm tasks. The <code>type</code> of the response tells which shape it has:
 - <code>TaskType.App</code>: <code>schema</code> has <code>inputs</code> (read-only), <code>outputs</code> (filled in by the user), <code>inOuts</code> (pre-filled, editable) and <code>outcomes</code>. A property's <code>name</code> is its key in the task's <code>data</code>, and an outcome's <code>name</code> is the <code>action</code> to pass to <code>complete()</code>.
@@ -4731,7 +4760,6 @@ created in the same call. Schema keys are unique per tenant.</p>
 <blockquote>
 <p><strong>getSchemaByKey</strong>(<code>key</code>: <code>string</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskSchemaGetResponse/"><code>TaskSchemaGetResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Gets the schema a QuickForm task was created with.</p>
 <p>The key is the <code>taskSchemaKey</code> of a QuickForm task, returned by <code>getAll()</code>,
 <code>getById()</code>, <code>getDataById()</code> and <code>getDataByKey()</code>.
