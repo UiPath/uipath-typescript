@@ -5,7 +5,11 @@ import {
   TaskSlaStatus,
   TaskAssignmentCriteria,
 } from '@uipath/uipath-typescript/tasks'
-import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks'
+import type {
+  TaskAssignmentOptions,
+  TaskAssignmentResponse,
+  TaskGetResponse,
+} from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import type { BadgeProps } from '@uipath/apollo-wind/components/ui/badge'
 
@@ -97,15 +101,14 @@ export interface TaskFilters {
 }
 
 /**
- * Builds an OData `$filter` string from the active filters, or `undefined`
- * when none are set. Field names use the API's PascalCase property names
- * (OData is case-insensitive server-side; matches the Action Center docs).
+ * Builds the `filter` string from the active filters, or `undefined` when
+ * none are set. Field names are the ones on the SDK's task objects.
  */
 export function buildTaskFilter(filters: TaskFilters): string | undefined {
   const clauses: string[] = []
-  if (filters.status && filters.status !== 'all') clauses.push(`Status eq '${filters.status}'`)
+  if (filters.status && filters.status !== 'all') clauses.push(`status eq '${filters.status}'`)
   if (filters.priority && filters.priority !== 'all')
-    clauses.push(`Priority eq '${filters.priority}'`)
+    clauses.push(`priority eq '${filters.priority}'`)
   return clauses.length ? clauses.join(' and ') : undefined
 }
 
@@ -138,4 +141,34 @@ export function extractServerMessage(err: unknown): string | null {
     if (typeof c === 'string' && c.trim()) return c.trim()
   }
   return null
+}
+
+/**
+ * First distinct error from a failed (re)assign batch + count of additional
+ * issues. "first + N more" is the standard compact pattern for batch errors;
+ * the alert stays short, and the user still knows more failures exist.
+ */
+export function formatAssignmentErrors(
+  data: TaskAssignmentOptions[] | TaskAssignmentResponse[] | unknown,
+): string {
+  if (!Array.isArray(data) || data.length === 0) {
+    return 'The assignment did not complete successfully'
+  }
+  const messages = Array.from(
+    new Set(
+      data
+        .map((item) =>
+          item && typeof item === 'object' && 'errorMessage' in item
+            ? String((item as { errorMessage?: string }).errorMessage ?? '').trim()
+            : '',
+        )
+        .filter((m) => m.length > 0),
+    ),
+  )
+  if (messages.length === 0) {
+    return 'The assignment did not complete successfully'
+  }
+  const [first, ...rest] = messages
+  if (rest.length === 0) return first
+  return `${first} (+${rest.length} other ${rest.length === 1 ? 'issue' : 'issues'})`
 }

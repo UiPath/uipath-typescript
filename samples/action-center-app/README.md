@@ -30,7 +30,7 @@ The task-centric methods on [`TaskServiceModel`](https://uipath.github.io/uipath
 | `Tasks.getById(id, { taskType: TaskType.DocumentValidation }, folderId)` + `task.complete({ type: TaskType.DocumentValidation, … })` | `components/DocumentValidationDialog.tsx` — loads the validation payload and submits it |
 
 By default the app lists tasks across **all folders** you can view/edit. The
-toolbar's **Folder** dropdown (populated from `/odata/Folders`) lets you scope
+toolbar's **Folder** dropdown (populated by `Folders.getAll`) lets you scope
 the list to one folder; the choice is persisted to `localStorage`. Per-task
 actions (assign, complete) use each task's own folder, propagated from the
 row; creating a task picks the target folder from the same dropdown.
@@ -41,11 +41,15 @@ row; creating a task picks the target folder from the same dropdown.
 src/
   main.tsx            App.tsx            index.css
   taskUtils.ts        — badges, filter builder, complete-options builder, formatting
-  taskSchema.ts       — task schema fetch + normalization (App tasks, Quick Forms), completion/draft helpers
+  taskSchema.ts       — task schema (`task.getSchema()`) normalization for App tasks and Quick Forms, completion helper
   taskUrl.ts          — Action Center task / embed URL construction
   context/AuthContext.tsx — OAuth/PKCE via the SDK (Coded Apps template)
   hooks/useTasks.ts   — useTasks + useTask + useTaskUsers + useFolders
-  components/Theme.tsx, TaskList.tsx, TaskDetail.tsx
+  components/Theme.tsx, SignIn.tsx, TaskList.tsx, TaskDetail.tsx
+  components/FolderPicker.tsx, AssigneeFilter.tsx, FilterSelect.tsx — list toolbar filters
+  components/BulkActions.tsx — bulk assign / reassign / unassign on Manage Tasks
+  components/CreateForm.tsx — create-task dialog
+  components/TaskTableSkeleton.tsx — loading placeholder for the table
   components/TaskForm.tsx — schema-driven form renderer (inputs read-only, inOuts/outputs editable, outcomes)
   components/DocumentValidationDialog.tsx — validation-station host for Document Validation tasks
 ```
@@ -55,11 +59,10 @@ src/
 - Node.js 20+
 - A UiPath OAuth External Application (client ID) with **`OR.Tasks`**,
   **`OR.Folders.Read`**, **`OR.Buckets`**, and **`Apps.Read`** scopes.
-  `OR.Folders.Read` powers the folder dropdown (the SDK doesn't expose a Folders
-  service yet, so the app calls `/odata/Folders` directly with the SDK's access
-  token); `OR.Buckets` lets the validation-station widget fetch the document
-  binary referenced by a Document Validation task; `Apps.Read` lets Action
-  Center return an action app's schema (see *Rendering tasks* below). Grant the
+  `OR.Folders.Read` powers the folder dropdown (`Folders.getAll`); `OR.Buckets`
+  lets the validation-station widget fetch the document binary referenced by a
+  Document Validation task; `Apps.Read` is needed to read an action app's
+  schema (see *Rendering tasks* below). Grant the
   scopes on the External Application in Admin **and** list them in `uipath.json`.
 - An Orchestrator folder that contains Action Center tasks (only needed for
   testing — leaving the filter on "All folders" still works)

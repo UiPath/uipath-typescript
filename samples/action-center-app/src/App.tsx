@@ -1,16 +1,9 @@
-import { ListChecks, LogOut, ShieldCheck } from 'lucide-react'
-import { Alert, AlertDescription } from '@uipath/apollo-wind/components/ui/alert'
+import { ListChecks, LogOut } from 'lucide-react'
 import { Button } from '@uipath/apollo-wind/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@uipath/apollo-wind/components/ui/card'
 import { Spinner } from '@uipath/apollo-wind/components/ui/spinner'
 import { Toaster } from '@uipath/apollo-wind/components/ui/sonner'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { SignIn } from './components/SignIn'
 import { TaskList } from './components/TaskList'
 import { ThemeToggle } from './components/Theme'
 
@@ -26,31 +19,7 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-sm">
-          <CardHeader className="items-center text-center">
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-            <CardTitle>Action Center Manager</CardTitle>
-            <CardDescription>
-              Triage UiPath Action Center tasks — list, assign, complete, and create them.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <Button onClick={login} className="w-full">
-              Sign in with UiPath
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    return <SignIn error={error} onSignIn={login} />
   }
 
   return (

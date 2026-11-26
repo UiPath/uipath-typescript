@@ -6,12 +6,15 @@ import type {
   TaskType,
   UserLoginInfo,
 } from '@uipath/uipath-typescript/tasks'
+import { Folders } from '@uipath/uipath-typescript/folders'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import { useAuth } from '../context/AuthContext'
 import { buildTaskFilter } from '../taskUtils'
 import type { TaskFilters } from '../taskUtils'
 
 /** Hooks wrapping each method on `TaskServiceModel`, plus `useFolders`. */
+
+const FOLDER_PAGE_SIZE = 100
 
 // Human-assignable principals only.
 const ASSIGNABLE_TYPES = new Set<TaskUserType>([
@@ -66,8 +69,7 @@ export function useTasks(
       const result = await svc.getAll({
         pageSize,
         jumpToPage: page,
-        // Raw server name — `createdTime` (SDK alias) would 400.
-        orderby: 'CreationTime desc',
+        orderby: 'createdTime desc',
         ...(folderId != null ? { folderId } : {}),
         ...(filter ? { filter } : {}),
         ...(asTaskAdmin ? { asTaskAdmin: true } : {}),
@@ -154,10 +156,10 @@ export interface FolderSummary {
 }
 
 /**
- * Lists folders via `/odata/Folders` (raw fetch — SDK has no Folders
- * service). May include folders the user can view but not act in;
- * downstream task ops surface the actual server error if so. Requires
- * `OR.Folders.Read`.
+ * Lists the folders the signed-in user can access, via `Folders.getAll`,
+ * paging until every folder is loaded. May include folders the user can view
+ * but not act in; downstream task ops surface the actual server error if so.
+ * Requires `OR.Folders.Read`.
  */
 export function useFolders(): UseFoldersResult {
   const { sdk } = useAuth()
@@ -171,26 +173,22 @@ export function useFolders(): UseFoldersResult {
       setLoading(true)
       setError(null)
       try {
-        const { baseUrl, orgName, tenantName } = sdk.config
-        const token = sdk.getToken()
-        if (!token) throw new Error('Not authenticated')
-        const url =
-          `${baseUrl}/${orgName}/${tenantName}/orchestrator_/odata/Folders` +
-          `?$select=Id,DisplayName,FullyQualifiedName&$orderby=FullyQualifiedName`
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        })
-        if (!res.ok) throw new Error(`Folders fetch failed: ${res.status} ${res.statusText}`)
-        const body = (await res.json()) as {
-          value: Array<{ Id: number; DisplayName: string; FullyQualifiedName: string }>
+        const svc = new Folders(sdk)
+        let page = await svc.getAll({ pageSize: FOLDER_PAGE_SIZE })
+        const all = [...page.items]
+        while (page.hasNextPage && page.nextCursor) {
+          page = await svc.getAll({ cursor: page.nextCursor })
+          all.push(...page.items)
         }
         if (cancelled) return
         setFolders(
-          body.value.map((f) => ({
-            id: f.Id,
-            displayName: f.DisplayName,
-            fullyQualifiedName: f.FullyQualifiedName,
-          })),
+          all
+            .map((f) => ({
+              id: f.id,
+              displayName: f.displayName,
+              fullyQualifiedName: f.fullyQualifiedName,
+            }))
+            .sort((x, y) => x.fullyQualifiedName.localeCompare(y.fullyQualifiedName)),
         )
       } catch (err) {
         if (cancelled) return
