@@ -263,7 +263,7 @@ $ uip codedapp deploy --name MyApp
 $ uip codedapp deploy --name my-app --display-name "My App" --path-name my-app
 ```
 
-`uip codedapp deploy` deploys an app on its own. To deploy an app that lives in a solution, from Studio Web or with `uip solution`, including as a public app, see [Deploy with Solutions](getting-started.md#deploy-with-solutions).
+`uip codedapp deploy` deploys an app on its own. To deploy an app that lives in a solution, from Studio Web or with `uip solution`, including as a public app, see [Deploy with a solution](#deploy-with-a-solution).
 
 ---
 
@@ -333,7 +333,7 @@ $ uip codedapp push --project-id <projectId> --build-dir build
 $ uip codedapp push --solution-name "Product Announcements" --project-name "Announcements Portal"
 ```
 
-The first push also adds the resources listed in `bindings_v2.json` to the solution; `--ignore-resources` skips that. To deploy the pushed solution, including as a public app, see [Deploy with Solutions](getting-started.md#deploy-with-solutions).
+The first push also adds the resources listed in `bindings_v2.json` to the solution; `--ignore-resources` skips that. To deploy the pushed solution, including as a public app, see [Deploy with a solution](#deploy-with-a-solution).
 
 The first push saves the new project ID to `.env` as `UIPATH_PROJECT_ID`, and later pushes use it. `--solution-name` and `--project-name` only apply when no project ID is set. If one is set by `--project-id`, `UIPATH_PROJECT_ID`, or `.env`, push fails instead of pushing into that project, so running the same command with these flags a second time fails.
 
@@ -367,6 +367,57 @@ $ uip codedapp pull --project-id <projectId>
 
 $ uip codedapp pull --project-id <projectId> --target-dir ./my-app --overwrite
 ```
+
+---
+
+## Deploy with a solution
+
+Deploy a coded app that lives in a solution with the `uip solution` commands. For the Studio Web steps and the deployment settings, see [Deploy with Solutions](getting-started.md#deploy-with-solutions).
+
+**1. Create a local solution with the app in it** (skip this if you used `uip codedapp push`):
+
+<!-- termynal -->
+```bash
+uip solution init <Solution>
+cd <Solution>
+uip codedapp init <App>
+# develop in <App>/source and build into <App>/source/dist
+uip solution resources refresh        # adds the resources in bindings_v2.json, if any
+```
+
+To deploy from Studio Web instead of the CLI, upload the solution to the Cloud Workspace with `uip solution upload .`. The first upload adds it; later uploads overwrite it.
+
+**2. Pack, publish and deploy:**
+
+<!-- termynal -->
+```bash
+uip solution pack <solution-folder> ./output --version 1.0.0
+uip solution publish ./output/<Solution>_1.0.0.zip --wait
+uip solution deploy config get "<Solution>" --package-version 1.0.0 -d config.json
+uip solution deploy config set config.json <App> routingName <routing-name>
+uip solution deploy config set config.json <App> externalClientId "<external app id>"
+uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-version 1.0.0 \
+  --folder-name "<Solution>" --parent-folder-path "Shared" --config-file config.json
+```
+
+| Config key | Internal app | Public app (preview) |
+|---|---|---|
+| `routingName` | The path the app is served at | The path the app is served at |
+| `externalClientId` | The non-confidential external application users log in with | A confidential external application |
+| `runtimeAuthMode` | `user` (default) | `application` |
+| `clientSecret` | Not used | The external application's secret |
+| `environmentVariables` | Optional: this deployment's `UIPATH_APPS_*` values, one `NAME=value` per line | Same |
+
+For a public app, set the two extra keys before `deploy run`:
+
+```bash
+uip solution deploy config set config.json <App> runtimeAuthMode application
+uip solution deploy config set config.json <App> clientSecret "$APP_CLIENT_SECRET" --output-filter Property
+```
+
+`--output-filter Property` keeps the secret out of the command output. Keep `config.json` out of source control when it holds a secret.
+
+`deploy run` installs the solution the first time. To upgrade, pack and publish a new version and run `deploy run` again: it upgrades the deployment in place.
 
 ---
 

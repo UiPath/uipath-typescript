@@ -22,26 +22,7 @@ $ npm install -g @uipath/cli
 $ uip tools install codedapp
 ```
 
-!!! info "Minimum versions"
-    Coded Apps requires **CLI version >= 0.9.0** and **codedapp tool version >= 0.9.0**. The `validate` and `delete` commands require **codedapp tool version >= 1.202.2**.
-
-    Check your installed CLI version:
-
-    ```bash
-    uip --version
-    ```
-
-    Check your installed codedapp tool version:
-
-    ```bash
-    uip tools list
-    ```
-
-    To update the codedapp tool to the latest version:
-
-    ```bash
-    uip tools update
-    ```
+For minimum versions and updates, see [CLI Reference](cli-reference.md#installation).
 
 ---
 
@@ -315,26 +296,10 @@ A coded app can live in a solution and be deployed with it, from Studio Web or w
 
 ### Get the app into a solution
 
-**Push the app to a cloud solution.** From the app folder (the one with `package.json`):
+- **Cloud solution:** run `uip codedapp push --solution-name "<Solution>" --project-name "<App>"` from the app folder. The first push creates the solution and the coded app project in the Studio Web **Cloud Workspace**.
+- **Local solution**, a solution stored on your machine (see [Solutions in the Local Workspace](https://docs.uipath.com/studio-web/automation-cloud/latest/user-guide/solutions-in-the-local-workspace)): create it with `uip solution init` and `uip codedapp init`. Upload it to the Cloud Workspace to deploy from Studio Web, or deploy it with the CLI.
 
-```bash
-uip codedapp push --solution-name "<Solution>" --project-name "<App>" --build-dir dist
-```
-
-The first push creates the solution and the coded app project in the Studio Web **Cloud Workspace**.
-
-**Or build the app in a local solution**, a solution stored on your machine (see [Solutions in the Local Workspace](https://docs.uipath.com/studio-web/automation-cloud/latest/user-guide/solutions-in-the-local-workspace)):
-
-```bash
-uip solution init <Solution>
-cd <Solution>
-uip codedapp init <App>
-# develop in <App>/source and build into <App>/source/dist
-uip solution resources refresh        # adds the resources in bindings_v2.json, if any
-uip solution upload .                 # saves it to the Cloud Workspace, to deploy from Studio Web
-```
-
-The first upload adds the solution to the Cloud Workspace. Later uploads overwrite it. To deploy with the CLI, skip the upload.
+For the commands, see [CLI Reference: Deploy with a solution](cli-reference.md#deploy-with-a-solution).
 
 ### Deploy from Studio Web
 
@@ -355,28 +320,7 @@ The first upload adds the solution to the Cloud Workspace. Later uploads overwri
 
 ### Deploy from the CLI
 
-Pack and publish the solution, set the app's deployment settings, and deploy:
-
-```bash
-uip solution pack <solution-folder> ./output --version 1.0.0
-uip solution publish ./output/<Solution>_1.0.0.zip --wait
-uip solution deploy config get "<Solution>" --package-version 1.0.0 -d config.json
-uip solution deploy config set config.json <App> routingName <routing-name>
-uip solution deploy config set config.json <App> externalClientId "<external app id>"
-uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-version 1.0.0 \
-  --folder-name "<Solution>" --parent-folder-path "Shared" --config-file config.json
-```
-
-For an internal app, `externalClientId` is the non-confidential external application users log in with. For a public app, use the confidential external application and add two settings before `deploy run`:
-
-```bash
-uip solution deploy config set config.json <App> runtimeAuthMode application
-uip solution deploy config set config.json <App> clientSecret "$APP_CLIENT_SECRET" --output-filter Property
-```
-
-`--output-filter Property` keeps the secret out of the command output. Keep `config.json` out of source control when it holds a secret.
-
-`deploy run` installs the solution the first time and upgrades the deployment in place when you run it again with a new version. For a pipeline, see [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution).
+Pack, publish and deploy the solution with `uip solution`, setting the same values as in the table above. See [CLI Reference: Deploy with a solution](cli-reference.md#deploy-with-a-solution). For a pipeline, see [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution).
 
 ### After deploying
 
