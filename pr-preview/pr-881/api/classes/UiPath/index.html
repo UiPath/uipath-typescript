@@ -4136,6 +4136,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#getvalidtoken" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        getValidToken()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#initialize" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4434,6 +4445,34 @@ Cancels any in-flight token-refresh request. Call this when the coded app is unm
 <h4 id="inherited-from_3">Inherited from<a class="headerlink" href="#inherited-from_3" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.getToken</code></p>
 <hr />
+<h3 id="getvalidtoken"><del>getValidToken()</del><a class="headerlink" href="#getvalidtoken" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getValidToken</strong>(): <code>Promise</code>&lt;<code>string</code>&gt;</p>
+</blockquote>
+<p>Returns an access token that is valid right now, renewing it first when it has expired or is about to.</p>
+<p>Use it for requests your app makes outside the SDK, so they carry the same token as the SDK's own
+calls. Call it before each request instead of keeping the result: it answers from memory until a
+renewal is due, and calls made at the same time share one renewal. <code>getToken()</code> only reads the
+token the SDK holds and never renews it.</p>
+<p>The SDK renews the tokens of its own OAuth sign-in. A token passed as <code>secret</code> is returned as it
+is, and an app embedded in a UiPath host such as Action Center gets its token from the host.</p>
+<p>Rejects with an <code>AuthenticationError</code> when it cannot return a token: the SDK is not signed in, or
+the renewal failed. A renewal can fail for a temporary reason such as a network error, so retry
+before calling <code>initialize()</code> to sign in again.</p>
+<h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>string</code>&gt;</p>
+<p>Promise resolving to a valid access token</p>
+<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">getValidToken</span><span class="p">();</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgName</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantName</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">config</span><span class="p">;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">baseUrl</span><span class="si">}</span><span class="sb">/</span><span class="si">${</span><span class="nx">orgName</span><span class="si">}</span><span class="sb">/</span><span class="si">${</span><span class="nx">tenantName</span><span class="si">}</span><span class="sb">/&lt;servicePath&gt;`</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Authorization</span><span class="o">:</span><span class="w"> </span><span class="sb">`Bearer </span><span class="si">${</span><span class="nx">token</span><span class="si">}</span><span class="sb">`</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">});</span>
+</code></pre></div>
+<h4 id="inherited-from_4">Inherited from<a class="headerlink" href="#inherited-from_4" title="Permanent link">&para;</a></h4>
+<p><code>UiPathCore.getValidToken</code></p>
+<hr />
 <h3 id="initialize"><del>initialize()</del><a class="headerlink" href="#initialize" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>initialize</strong>(): <code>Promise</code>&lt;<code>void</code>&gt;</p>
@@ -4443,9 +4482,9 @@ This method handles both OAuth flow initiation and completion automatically.
 For secret-based authentication, initialization is automatic and this returns immediately.
 If no config was provided in constructor, loads from meta tags in the browser,
 or from the execution-context environment contract outside it.</p>
-<h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
+<h4 id="returns_12">Returns<a class="headerlink" href="#returns_12" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
-<h4 id="inherited-from_4">Inherited from<a class="headerlink" href="#inherited-from_4" title="Permanent link">&para;</a></h4>
+<h4 id="inherited-from_5">Inherited from<a class="headerlink" href="#inherited-from_5" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.initialize</code></p>
 <hr />
 <h3 id="isauthenticated"><del>isAuthenticated()</del><a class="headerlink" href="#isauthenticated" title="Permanent link">&para;</a></h3>
@@ -4453,9 +4492,9 @@ or from the execution-context environment contract outside it.</p>
 <p><strong>isAuthenticated</strong>(): <code>boolean</code></p>
 </blockquote>
 <p>Check if the user is authenticated (has valid token)</p>
-<h4 id="returns_12">Returns<a class="headerlink" href="#returns_12" title="Permanent link">&para;</a></h4>
+<h4 id="returns_13">Returns<a class="headerlink" href="#returns_13" title="Permanent link">&para;</a></h4>
 <p><code>boolean</code></p>
-<h4 id="inherited-from_5">Inherited from<a class="headerlink" href="#inherited-from_5" title="Permanent link">&para;</a></h4>
+<h4 id="inherited-from_6">Inherited from<a class="headerlink" href="#inherited-from_6" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.isAuthenticated</code></p>
 <hr />
 <h3 id="isinitialized"><del>isInitialized()</del><a class="headerlink" href="#isinitialized" title="Permanent link">&para;</a></h3>
@@ -4463,9 +4502,9 @@ or from the execution-context environment contract outside it.</p>
 <p><strong>isInitialized</strong>(): <code>boolean</code></p>
 </blockquote>
 <p>Check if the SDK has been initialized</p>
-<h4 id="returns_13">Returns<a class="headerlink" href="#returns_13" title="Permanent link">&para;</a></h4>
+<h4 id="returns_14">Returns<a class="headerlink" href="#returns_14" title="Permanent link">&para;</a></h4>
 <p><code>boolean</code></p>
-<h4 id="inherited-from_6">Inherited from<a class="headerlink" href="#inherited-from_6" title="Permanent link">&para;</a></h4>
+<h4 id="inherited-from_7">Inherited from<a class="headerlink" href="#inherited-from_7" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.isInitialized</code></p>
 <hr />
 <h3 id="isinoauthcallback"><del>isInOAuthCallback()</del><a class="headerlink" href="#isinoauthcallback" title="Permanent link">&para;</a></h3>
@@ -4473,9 +4512,9 @@ or from the execution-context environment contract outside it.</p>
 <p><strong>isInOAuthCallback</strong>(): <code>boolean</code></p>
 </blockquote>
 <p>Check if we're in an OAuth callback state</p>
-<h4 id="returns_14">Returns<a class="headerlink" href="#returns_14" title="Permanent link">&para;</a></h4>
+<h4 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h4>
 <p><code>boolean</code></p>
-<h4 id="inherited-from_7">Inherited from<a class="headerlink" href="#inherited-from_7" title="Permanent link">&para;</a></h4>
+<h4 id="inherited-from_8">Inherited from<a class="headerlink" href="#inherited-from_8" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.isInOAuthCallback</code></p>
 <hr />
 <h3 id="logout"><del>logout()</del><a class="headerlink" href="#logout" title="Permanent link">&para;</a></h3>
@@ -4506,16 +4545,16 @@ login screen appearing twice.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h4>
+<h4 id="returns_16">Returns<a class="headerlink" href="#returns_16" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Local logout only (default)</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also end the UiPath session</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Local logout only (default)</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Also end the UiPath session</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<h4 id="inherited-from_8">Inherited from<a class="headerlink" href="#inherited-from_8" title="Permanent link">&para;</a></h4>
+<h4 id="inherited-from_9">Inherited from<a class="headerlink" href="#inherited-from_9" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.logout</code></p>
 <hr />
 <h3 id="setdebugcontext"><del>setDebugContext()</del><a class="headerlink" href="#setdebugcontext" title="Permanent link">&para;</a></h3>
@@ -4547,12 +4586,12 @@ is configured.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_16">Returns<a class="headerlink" href="#returns_16" title="Permanent link">&para;</a></h4>
+<h4 id="returns_17">Returns<a class="headerlink" href="#returns_17" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">setDebugContext</span><span class="p">({</span><span class="w"> </span><span class="nx">jobKey</span><span class="o">:</span><span class="w"> </span><span class="kt">hostJobKey</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">setDebugContext</span><span class="p">({</span><span class="w"> </span><span class="nx">jobKey</span><span class="o">:</span><span class="w"> </span><span class="kt">hostJobKey</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<h4 id="inherited-from_9">Inherited from<a class="headerlink" href="#inherited-from_9" title="Permanent link">&para;</a></h4>
+<h4 id="inherited-from_10">Inherited from<a class="headerlink" href="#inherited-from_10" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.setDebugContext</code></p>
 <hr />
 <h3 id="updatetoken"><del>updateToken()</del><a class="headerlink" href="#updatetoken" title="Permanent link">&para;</a></h3>
@@ -4578,9 +4617,9 @@ Use this to inject or refresh a token externally.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_17">Returns<a class="headerlink" href="#returns_17" title="Permanent link">&para;</a></h4>
+<h4 id="returns_18">Returns<a class="headerlink" href="#returns_18" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
-<h4 id="inherited-from_10">Inherited from<a class="headerlink" href="#inherited-from_10" title="Permanent link">&para;</a></h4>
+<h4 id="inherited-from_11">Inherited from<a class="headerlink" href="#inherited-from_11" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.updateToken</code></p>
 
 
