@@ -31,6 +31,7 @@ const mockTokenManager = {
 
 const mockLogout = vi.fn();
 const mockAuthenticate = vi.fn().mockResolvedValue(true);
+const mockAnnounceRestoredUrl = vi.fn();
 
 vi.mock('../../../src/core/auth/service', () => {
   const AuthService: any = vi.fn().mockImplementation(function () { return ({
@@ -39,6 +40,7 @@ vi.mock('../../../src/core/auth/service', () => {
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
     authenticate: mockAuthenticate,
+    announceRestoredUrl: mockAnnounceRestoredUrl,
     logout: mockLogout
   }); });
 
@@ -726,6 +728,25 @@ describe('UiPath Core', () => {
       await expect(sdk.completeOAuth()).resolves.toBe(true);
 
       expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('announces the restored URL to routers only once the SDK is initialized and the jobKey applied', async () => {
+      const page = openPage(callbackSearch, DEBUG_SOURCE);
+      vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
+      mockAuthenticate.mockImplementationOnce(async () => {
+        page.location.search = debugSearch;
+        return true;
+      });
+      const sdk = new UiPath(oauthConfig);
+      // What a router's guard or loader would see when it runs in response to the announcement.
+      let seenByRouter: { initialized: boolean; debugContext: unknown } | undefined;
+      mockAnnounceRestoredUrl.mockImplementationOnce(() => {
+        seenByRouter = { initialized: sdk.isInitialized(), debugContext: getContext(sdk).get(DEBUG_CONTEXT_KEY) };
+      });
+
+      await sdk.completeOAuth();
+
+      expect(seenByRouter).toEqual({ initialized: true, debugContext: { jobKey: JOB_TEST_CONSTANTS.JOB_KEY } });
     });
 
     it('leaves the debug context unset when the sign-in restores no jobKey to the URL', async () => {

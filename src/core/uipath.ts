@@ -417,6 +417,8 @@ export class UiPath implements IUiPath {
       const success = await this.#authService!.authenticate(this.#config!);
       if (success && this.isAuthenticated()) {
         this.#markInitialized();
+        // After marking initialized: routers react to this at once, with code that asks the SDK whether it is ready.
+        this.#authService!.announceRestoredUrl();
         return true;
       }
       return false;

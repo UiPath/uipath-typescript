@@ -13,10 +13,14 @@ import { GUID_REGEX } from '../../utils/validation/guid';
 
 const store: KeyValueStore = SessionStore.open() ?? NO_OP_STORE;
 const TRAILING_SLASHES_REGEX = /\/+$/;
+/** Query parameters Identity adds to the redirect URI when it returns from sign-in. */
+const OAUTH_RESPONSE_PARAMS = ['code', 'state', 'scope', 'session_state', 'iss'] as const;
 
 export class AuthService {
   private config: Config;
   private tokenManager: TokenManager;
+  // Set when the sign-in callback changed the address bar and routers have not been told yet.
+  private addressBarRestored = false;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Only use stored OAuth context when completing an active callback (URL has ?code=).
@@ -281,6 +285,25 @@ export class AuthService {
   }
 
   /**
+   * Tells client-side routers that the sign-in callback changed the address bar. A router created
+   * before the sign-in completed only re-reads the address bar on popstate. Kept apart from the
+   * restore itself, so the caller can first make the SDK ready for the code routers run in response.
+   */
+  public announceRestoredUrl(): void {
+    if (!this.addressBarRestored) {
+      return;
+    }
+    this.addressBarRestored = false;
+
+    try {
+      // The event carries no state, which is what makes Vue Router rebuild its bookkeeping for the restored URL.
+      window.dispatchEvent(new window.PopStateEvent('popstate'));
+    } catch (error) {
+      console.warn('[UiPath SDK] Could not announce the restored page URL', error);
+    }
+  }
+
+  /**
    * Generates a random code verifier for PKCE
    */
   generateCodeVerifier(): string {
@@ -477,26 +500,55 @@ export class AuthService {
     // Clear OAuth context after successful token exchange
     store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
 
-    window.history.replaceState({}, '', AuthService._postSignInUrl(context.returnTo));
+    this.addressBarRestored = AuthService._restoreAddressBar(context.returnTo);
+  }
+
+  /**
+   * Puts the page the sign-in started from back in the address bar, without a reload. The history
+   * state is kept because routers store their bookkeeping in it. Never fails the sign-in: by now the
+   * token is stored, and this step is cosmetic.
+   * @returns Whether the address bar was updated
+   */
+  private static _restoreAddressBar(returnTo: string | undefined): boolean {
+    try {
+      window.history.replaceState(window.history.state, '', AuthService._postSignInUrl(returnTo));
+      return true;
+    } catch (error) {
+      console.warn('[UiPath SDK] Could not restore the page URL after sign-in', error);
+      return false;
+    }
   }
 
   private static _postSignInUrl(returnTo: string | undefined): string {
-    const url = AuthService._parseReturnTo(returnTo) ?? new URL(window.location.href);
-    url.searchParams.delete('code');
-    url.searchParams.delete('state');
+    const callbackUrl = new URL(window.location.href);
+    const startUrl = AuthService._parseReturnTo(returnTo, callbackUrl);
+
+    // Built on the callback URL, so that nothing but path, query and hash can come from returnTo.
+    const url = new URL(callbackUrl.href);
+    if (startUrl) {
+      url.pathname = startUrl.pathname;
+      url.search = startUrl.search;
+      url.hash = startUrl.hash;
+    }
+
+    // Identity's parameters sit on the callback URL, and on a returnTo that is itself a leftover callback
+    // URL. Any other page is restored exactly as it was left, so its own query string survives.
+    const isLeftoverCallback = startUrl !== undefined
+      && startUrl.searchParams.has('code')
+      && startUrl.pathname.replace(TRAILING_SLASHES_REGEX, '') === callbackUrl.pathname.replace(TRAILING_SLASHES_REGEX, '');
+    if (!startUrl || isLeftoverCallback) {
+      OAUTH_RESPONSE_PARAMS.forEach((param) => url.searchParams.delete(param));
+    }
     return url.toString();
   }
 
-  // returnTo is read back from sessionStorage, which page scripts can tamper with, and replaceState throws
-  // on a cross-origin URL once the token is already stored: only the page the sign-in left from is restored.
-  private static _parseReturnTo(returnTo: string | undefined): URL | undefined {
+  // returnTo is read back from sessionStorage, which page scripts can tamper with: only a URL of this
+  // page's own scheme and host is restored.
+  private static _parseReturnTo(returnTo: string | undefined, callbackUrl: URL): URL | undefined {
     if (!returnTo) return undefined;
     try {
       const url = new URL(returnTo);
-      const current = new URL(window.location.href);
-      const samePage = url.origin === current.origin
-        && url.pathname.replace(TRAILING_SLASHES_REGEX, '') === current.pathname.replace(TRAILING_SLASHES_REGEX, '');
-      return samePage ? url : undefined;
+      return url.protocol === callbackUrl.protocol && url.host === callbackUrl.host ? url : undefined;
     } catch (error) {
       console.warn(error);
       return undefined;
