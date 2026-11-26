@@ -9,7 +9,11 @@ import {
 
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Traces - Integration Tests', 'both', modes, () => {
+// The CI PAT gets 503 TracePiiMaskingUnavailable from llmopstenant_ whenever
+// getById has spans to return, while a user token passes, so this suite
+// authenticates with a user token and skips when one is not configured.
+// Switch back to 'both' once the PAT can read spans.
+describeIntegration('Traces - Integration Tests', 'user', modes, () => {
   let traces!: Traces;
   let existingTraceId!: string;
   let existingSpanId!: string;
