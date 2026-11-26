@@ -4801,12 +4801,11 @@
 <p>To deploy the app as part of a solution instead, see <a href="#deploy-with-solutions">Deploy with Solutions</a>.</p>
 <h2 id="deploy-with-solutions">Deploy with Solutions<a class="headerlink" href="#deploy-with-solutions" title="Permanent link">&para;</a></h2>
 <p>A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as an internal app or a public app: you choose with the <strong>Authentication</strong> setting at deploy time. <a href="#public-coded-apps-preview">Public coded apps</a> deploy only this way.</p>
-<p>Use the UiPath CLI <code>1.206.0</code> or later (<code>npm install -g @uipath/cli</code>), and run <code>npm run build</code> first so the build output is packed.</p>
 <h3 id="get-the-app-into-a-solution">Get the app into a solution<a class="headerlink" href="#get-the-app-into-a-solution" title="Permanent link">&para;</a></h3>
 <p><strong>Push the app to Studio Web.</strong> From the app folder (the one with <code>package.json</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>push<span class="w"> </span>--solution-name<span class="w"> </span><span class="s2">&quot;&lt;Solution&gt;&quot;</span><span class="w"> </span>--project-name<span class="w"> </span><span class="s2">&quot;&lt;App&gt;&quot;</span><span class="w"> </span>--build-dir<span class="w"> </span>dist
 </code></pre></div>
-<p>The first push creates the solution and the coded app project in Studio Web, saves the project ID to <code>.env</code>, and adds the resources listed in <code>bindings_v2.json</code> to the solution. After each change, run <code>uip codedapp push</code> again without the name flags.</p>
+<p>The first push creates the solution and the coded app project in Studio Web.</p>
 <p><strong>Or build the app inside a local solution:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>init<span class="w"> </span>&lt;Solution&gt;
 <a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="nb">cd</span><span class="w"> </span>&lt;Solution&gt;
