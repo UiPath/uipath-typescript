@@ -313,8 +313,6 @@ To deploy the app as part of a solution instead, see [Deploy with Solutions](#de
 
 A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as an internal app or a public app: you choose with the **Authentication** setting at deploy time. [Public coded apps](#public-coded-apps-preview) deploy only this way.
 
-Use the UiPath CLI `1.206.0` or later (`npm install -g @uipath/cli`), and run `npm run build` first so the build output is packed.
-
 ### Get the app into a solution
 
 **Push the app to Studio Web.** From the app folder (the one with `package.json`):
