@@ -321,7 +321,7 @@ A coded app can live in a solution and be deployed with it, from Studio Web or w
 uip codedapp push --solution-name "<Solution>" --project-name "<App>" --build-dir dist
 ```
 
-The first push creates the solution and the coded app project in Studio Web, saves the project ID to `.env`, and adds the resources listed in `bindings_v2.json` to the solution. After each change, run `uip codedapp push` again without the name flags.
+The first push creates the solution and the coded app project in Studio Web.
 
 **Or build the app inside a local solution:**
 
