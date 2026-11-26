@@ -37,6 +37,19 @@ describeIntegration('SDK Initialization - Smoke Tests', 'both', modes, () => {
       const { sdk } = getServices();
       expect(sdk.isAuthenticated()).toBe(true);
     });
+
+    it('should return a valid token that authenticates a request made outside the SDK', async () => {
+      const { sdk } = getServices();
+      const config = getTestConfig();
+
+      const token = await sdk.getValidToken();
+      const response = await fetch(
+        `${config.baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_/odata/Folders?$top=1`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      expect(response.status).toBe(200);
+    });
   });
 
   describe('Service Instantiation', () => {

@@ -10,6 +10,7 @@ import { AuthService } from '../../../src/core/auth/service';
 import { ApiClient } from '../../../src/core/http/api-client';
 import { MemoryStore } from '../../../src/utils/storage/memory-store';
 import type { TokenInfo } from '../../../src/core/auth/types';
+import { AuthenticationError } from '@/core/errors';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../utils/constants/jobs';
@@ -18,8 +19,10 @@ import { functionContext } from '../../utils/function-context';
 
 // ===== MOCKING =====
 const mockTokenManagerDestroy = vi.fn();
+const mockGetValidToken = vi.fn();
 const mockTokenManager = {
   getToken: () => 'mock-access-token',
+  getValidToken: mockGetValidToken,
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
   onTokenChange: vi.fn(),
@@ -412,6 +415,42 @@ describe('UiPath Core', () => {
 
       expect(secretSdk.isInitialized()).toBe(true);
       expect(oauthSdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('getValidToken()', () => {
+    beforeEach(() => {
+      mockGetValidToken.mockReset();
+    });
+
+    it('should resolve with the token the token manager returns', async () => {
+      mockGetValidToken.mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+        scope: TEST_CONSTANTS.OAUTH_SCOPE
+      });
+
+      await expect(sdk.getValidToken()).resolves.toBe(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
+      expect(mockGetValidToken).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reject with the error the token manager raises', async () => {
+      const refreshRejected = new AuthenticationError({ message: TEST_CONSTANTS.ERROR_MESSAGE });
+      mockGetValidToken.mockRejectedValue(refreshRejected);
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+        scope: TEST_CONSTANTS.OAUTH_SCOPE
+      });
+
+      await expect(sdk.getValidToken()).rejects.toBe(refreshRejected);
     });
   });
 
