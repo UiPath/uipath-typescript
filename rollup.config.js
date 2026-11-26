@@ -14,14 +14,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Custom plugin to rewrite import paths in .d.ts files
-// This normalizes core import paths to '../core/index' for cleaner output
+// This normalizes core import paths to the package's own `core` entry.
+// A self-referencing specifier keeps consumers' `tsc` (skipLibCheck: false)
+// working under Node16 resolution too, where extension-less relative paths
+// (TS2835) or paths escaping dist/ (TS2307) would fail.
 function rewriteDtsImports() {
   return {
     name: 'rewrite-dts-imports',
     renderChunk(code) {
       return code.replace(
-        /from ['"](?:(?:\.\.\/)+|@\/)core\/(?:types|uipath|index)['"]/g,
-        "from '../core/index'"
+        /from ['"](?:(?:\.\.\/)+|@\/)core\/(?:types|uipath|index|http\/public-app-client)['"]/g,
+        "from '@uipath/uipath-typescript/core'"
       );
     }
   };

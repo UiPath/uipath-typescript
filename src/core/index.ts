@@ -43,6 +43,8 @@
  */
 
 export { UiPath } from './uipath';
+export { PublicAppClient } from './http/public-app-client';
+export type { IUiPath } from './types';
 export type {
   UiPathSDKConfig,
   PartialUiPathConfig,
