@@ -393,7 +393,7 @@ await sdk.processes.start({ name: 'Invoices' }, { folderPath: 'Shared' });
 
 ### Who can read what
 
-Set an access mode per resource in `uipath.json`, by binding key. `uipath.json` must be in the build output (Vite: `public/uipath.json`):
+Set an access mode per resource in `uipath.json`, by binding key. `uipath.json` must be in the build output:
 
 ```json
 {
