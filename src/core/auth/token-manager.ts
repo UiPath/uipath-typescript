@@ -8,12 +8,30 @@ import { AUTH_STORAGE_KEYS, NO_TOKEN_MESSAGE, TOKEN_EXPIRY_BUFFER_MS } from './c
 import { getExpiryMs } from './token-expiry';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
-import { AuthenticationError, HttpStatus } from '../errors';
+import { AuthenticationError, HttpStatus, NetworkError, RateLimitError, ServerError, UiPathError } from '@/core/errors';
+import { ErrorFactory } from '@/core/errors/error-factory';
+import { parseRetryAfter } from '@/utils/http/retry-policy';
 import { ActionCenterTokenManager } from './action-center-token-manager';
 import { EmbeddedTokenManager } from './embedded-token-manager';
 import { hostEmbeddingOrigin } from './host-token-request';
 import { telemetryClient } from '../telemetry';
 import { extractUserIdFromToken } from '../../utils/encoding';
+
+/** OAuth error code Identity answers with when the refresh token itself can no longer be used. */
+const INVALID_GRANT = 'invalid_grant';
+const SESSION_KEPT_NOTE = 'The session is still active, so the request can be retried.';
+/** How long a renewal that failed without ending the session is left alone, unless Identity names a wait itself. */
+const REFRESH_RETRY_PAUSE_MS = 5_000;
+/** Longest wait named by Identity that is followed, so a single answer cannot hold renewals back for long. */
+const REFRESH_RETRY_MAX_PAUSE_MS = 60_000;
+
+/** Whether a rejected refresh means the session is over, rather than that this attempt failed. */
+function isRefreshTokenRejected(status: number, errorData: unknown): boolean {
+  return status === HttpStatus.BAD_REQUEST
+    && typeof errorData === 'object'
+    && errorData !== null
+    && (errorData as { error?: unknown }).error === INVALID_GRANT;
+}
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -24,6 +42,10 @@ import { extractUserIdFromToken } from '../../utils/encoding';
 export class TokenManager {
   private currentToken?: TokenInfo;
   private refreshPromise: Promise<AuthToken> | null = null;
+  // The last renewal failure that left the session in place and until when renewing is not tried again,
+  // so a rate-limited or unreachable Identity is not asked once per request. Tied to the refresh token it
+  // was sent with, which makes it lapse as soon as the session changes.
+  private refreshPause?: { error: UiPathError; until: number; refreshToken: string };
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
   private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
@@ -75,7 +97,8 @@ export class TokenManager {
    * This is the single source of truth for token validation and refresh logic.
    *
    * @returns The valid token string
-   * @throws AuthenticationError if no token available or refresh fails
+   * @throws AuthenticationError if no token is available or the refresh token is rejected; a refresh that
+   *   fails for a temporary reason throws the matching NetworkError, RateLimitError or ServerError
    */
   public async getValidToken(): Promise<string> {
     const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
@@ -108,17 +131,35 @@ export class TokenManager {
       return tokenInfo.token;
     }
 
-    // Token is expired, refresh it
-    try {
-      const newToken = await this.refreshAccessToken();
-      return newToken.access_token;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new AuthenticationError({
-        message: `Token refresh failed: ${message}. Please re-authenticate.`,
-        statusCode: HttpStatus.UNAUTHORIZED
-      });
+    // Token is expired, refresh it, unless a renewal just failed and is still paused
+    let failure: unknown = this._pausedRefreshFailure();
+    if (!failure) {
+      try {
+        const newToken = await this.refreshAccessToken();
+        return newToken.access_token;
+      } catch (error: unknown) {
+        failure = error;
+        if (this.hasValidToken()) {
+          console.warn('[UiPath SDK] Token refresh failed; using the current token until it expires', error);
+        }
+      }
     }
+
+    // A renewal ahead of expiry that failed with the session intact must not fail a request the current token can still serve.
+    const current = this.getTokenInfo();
+    if (current && !this.isTokenExpired(current)) {
+      return current.token;
+    }
+
+    if (failure instanceof UiPathError) {
+      throw failure;
+    }
+
+    const message = failure instanceof Error ? failure.message : 'Unknown error';
+    throw new AuthenticationError({
+      message: `Token refresh failed: ${message}. Please re-authenticate.`,
+      statusCode: HttpStatus.UNAUTHORIZED
+    });
   }
 
   /**
@@ -329,20 +370,28 @@ export class TokenManager {
       refresh_token: tokenInfo.refreshToken
     });
 
-    const response = await fetch(`${baseUrl}/${orgName}/identity_/connect/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: body.toString()
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${baseUrl}/${orgName}/identity_/connect/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body.toString()
+      });
+    } catch (error: unknown) {
+      // No answer from Identity, so nothing says the session is over.
+      const reason = ErrorFactory.createNetworkError(error).message;
+      throw this._pauseRefresh(
+        new NetworkError({ message: `Token refresh failed: ${reason}. ${SESSION_KEPT_NOTE}` }),
+        tokenInfo.refreshToken
+      );
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }));
       console.error("Token refresh error:", errorData);
-      // Clear the invalid token to prevent further failed requests
-      this.clearToken();
-      throw new Error(`Failed to refresh access token: ${JSON.stringify(errorData)}`);
+      throw this._toRefreshError(response, errorData, tokenInfo.refreshToken);
     }
 
     const token = await response.json() as AuthToken;
@@ -355,5 +404,51 @@ export class TokenManager {
       idToken: token.id_token ?? tokenInfo.idToken
     });
     return token;
+  }
+
+  /**
+   * The error to raise for a refresh Identity answered with a failure. Only `invalid_grant` says the
+   * refresh token is dead, so only it ends the session. A rate limit, a server error or any other
+   * answer leaves the session in place, and renewing is tried again after a pause.
+   */
+  private _toRefreshError(response: Response, errorData: unknown, refreshToken: string): UiPathError {
+    const { status } = response;
+    const detail = `Failed to refresh access token: ${JSON.stringify(errorData)}`;
+
+    if (isRefreshTokenRejected(status, errorData)) {
+      // Clear the invalid token to prevent further failed requests
+      this.clearToken();
+      return new AuthenticationError({ message: `Token refresh failed: ${detail}. Please re-authenticate.` });
+    }
+
+    const pauseMs = parseRetryAfter(response.headers.get('retry-after'));
+    if (status === HttpStatus.TOO_MANY_REQUESTS) {
+      const message = `Token refresh failed: ${detail} (HTTP ${status}). ${SESSION_KEPT_NOTE}`;
+      return this._pauseRefresh(new RateLimitError({ message }), refreshToken, pauseMs);
+    }
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const message = `Token refresh failed: ${detail} (HTTP ${status}). ${SESSION_KEPT_NOTE}`;
+      return this._pauseRefresh(new ServerError({ message, statusCode: status }), refreshToken, pauseMs);
+    }
+
+    // Always a 401, whatever Identity answered: the session license reads a 400 or a 403 as "no license
+    // to be had" and stops asking for one.
+    const message = `Token refresh failed: ${detail} (HTTP ${status}). The session was not ended.`;
+    return this._pauseRefresh(new AuthenticationError({ message }), refreshToken, pauseMs);
+  }
+
+  /** Records a renewal failure that left the session in place, so the next attempt waits; returns the error. */
+  private _pauseRefresh(error: UiPathError, refreshToken: string, pauseMs: number = REFRESH_RETRY_PAUSE_MS): UiPathError {
+    this.refreshPause = { error, refreshToken, until: Date.now() + Math.min(pauseMs, REFRESH_RETRY_MAX_PAUSE_MS) };
+    return error;
+  }
+
+  /** The failure of the last renewal while its pause lasts and the session is still the one it was sent for. */
+  private _pausedRefreshFailure(): UiPathError | undefined {
+    const pause = this.refreshPause;
+    if (!pause || Date.now() >= pause.until || pause.refreshToken !== this.currentToken?.refreshToken) {
+      return undefined;
+    }
+    return pause.error;
   }
 }
