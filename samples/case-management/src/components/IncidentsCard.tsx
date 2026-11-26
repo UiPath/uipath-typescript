@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useAsync } from '@/hooks/useAsync';
-import { getCaseIncidents, sanitizeElementName } from '@/lib/sdk';
+import { getCaseIncidents, orFallback, sanitizeElementName } from '@/lib/sdk';
 import { Card, Badge } from '@/components/ui';
 import { formatDate, humanize } from '@/lib/format';
 import { AlertIcon } from '@/components/icons';
@@ -29,7 +29,7 @@ export function IncidentsCard({
 }) {
   const { sdk } = useAuth();
   const { data, loading } = useAsync(
-    () => getCaseIncidents(sdk, instanceId, folderKey).catch(() => [] as CaseIncident[]),
+    () => getCaseIncidents(sdk, instanceId, folderKey).catch(orFallback('getCaseIncidents', [] as CaseIncident[])),
     [instanceId, folderKey],
   );
 

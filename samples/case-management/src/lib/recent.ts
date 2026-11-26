@@ -13,7 +13,8 @@ export function getRecentCases(): RecentCase[] {
   try {
     const raw = localStorage.getItem(KEY);
     return raw ? (JSON.parse(raw) as RecentCase[]) : [];
-  } catch {
+  } catch (e: unknown) {
+    console.warn('getRecentCases failed:', e);
     return [];
   }
 }
@@ -24,7 +25,7 @@ export function addRecentCase(c: Omit<RecentCase, 'at'>): void {
     list.unshift({ ...c, at: Date.now() });
     localStorage.setItem(KEY, JSON.stringify(list.slice(0, 8)));
     window.dispatchEvent(new Event('recent-cases-changed'));
-  } catch {
-    /* ignore */
+  } catch (e: unknown) {
+    console.warn('addRecentCase failed:', e);
   }
 }

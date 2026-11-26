@@ -13,6 +13,7 @@ import {
   getSlaSummaryAll,
   sanitizeElementName,
   listCaseInstancesPage,
+  orFallback,
 } from '@/lib/sdk';
 import { tenantMetrics, slaCounts } from '@/lib/metrics';
 import { Card, PageHeader, Loading, ErrorState, Kpi, Badge } from '@/components/ui';
@@ -116,27 +117,28 @@ export function Analytics() {
   const failing = useAsync(async () => {
     try {
       return { available: true, rows: await insightsTopElementFailed(sdk, range.start, range.end, caseProcessKey) };
-    } catch {
+    } catch (e: unknown) {
+      console.warn('Top failing steps query failed:', e);
       return { available: false, rows: [] as TopElementFailed[] };
     }
   }, [caseProcessKey, range]);
 
-  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(() => [] as CaseSla[]), []);
+  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(orFallback('getSlaSummaryAll', [] as CaseSla[])), []);
 
   const timeline = useAsync(
-    () => insightsStatusTimeline(sdk, range.start, range.end).catch(() => []),
+    () => insightsStatusTimeline(sdk, range.start, range.end).catch(orFallback('insightsStatusTimeline', [])),
     [range],
   );
 
-  const topRuns = useAsync(() => insightsTopRunCount(sdk, range.start, range.end).catch(() => []), [range]);
-  const topFaults = useAsync(() => insightsTopFaultedCount(sdk, range.start, range.end).catch(() => []), [range]);
-  const topDuration = useAsync(() => insightsTopDuration(sdk, range.start, range.end).catch(() => []), [range]);
+  const topRuns = useAsync(() => insightsTopRunCount(sdk, range.start, range.end).catch(orFallback('insightsTopRunCount', [])), [range]);
+  const topFaults = useAsync(() => insightsTopFaultedCount(sdk, range.start, range.end).catch(orFallback('insightsTopFaultedCount', [])), [range]);
+  const topDuration = useAsync(() => insightsTopDuration(sdk, range.start, range.end).catch(orFallback('insightsTopDuration', [])), [range]);
 
   // Resolve the package id + version from a RECENT instance of this case — the
   // version that actually executed (the definition's packageVersions[0] is often
   // an older version with no stats in the window).
   const pkg = useAsync(async () => {
-    const page = await listCaseInstancesPage(sdk, { pageSize: 20, processKey: caseProcessKey }).catch(() => null);
+    const page = await listCaseInstancesPage(sdk, { pageSize: 20, processKey: caseProcessKey }).catch(orFallback('listCaseInstancesPage', null));
     const inst = page?.items?.[0];
     return {
       packageId: inst?.packageId || caseDefinition?.packageId || '',

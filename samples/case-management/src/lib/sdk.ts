@@ -26,6 +26,14 @@ import type {
   ElementStat,
 } from '@/lib/types';
 
+/** For best-effort calls: log the failure and resolve to a fallback instead. */
+export function orFallback<T>(label: string, fallback: T): (e: unknown) => T {
+  return (e) => {
+    console.warn(`${label} failed:`, e);
+    return fallback;
+  };
+}
+
 // ---- thin wrappers around the SDK (all data is live from the tenant) ----
 
 export async function listCaseInstances(sdk: UiPath, pageSize = 100): Promise<CaseInstance[]> {

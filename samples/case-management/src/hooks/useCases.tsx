@@ -9,7 +9,8 @@ const SELECTED_KEY = 'uipath_selected_case_processkey';
 function loadStoredKey(): string {
   try {
     return localStorage.getItem(SELECTED_KEY) ?? '';
-  } catch {
+  } catch (e: unknown) {
+    console.warn('loadStoredKey failed:', e);
     return '';
   }
 }
@@ -51,8 +52,8 @@ export const CasesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setCaseProcessKey(processKey);
     try {
       localStorage.setItem(SELECTED_KEY, processKey);
-    } catch {
-      /* ignore */
+    } catch (e: unknown) {
+      console.warn('selectCase localStorage.setItem failed:', e);
     }
   }, []);
 

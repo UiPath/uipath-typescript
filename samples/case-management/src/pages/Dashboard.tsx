@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAsync } from '@/hooks/useAsync';
 import { useCases } from '@/hooks/useCases';
-import { getSlaSummaryAll } from '@/lib/sdk';
+import { getSlaSummaryAll, orFallback } from '@/lib/sdk';
 import { slaCounts, slaUrgency } from '@/lib/metrics';
 import { getRecentCases } from '@/lib/recent';
 import { Card, Kpi, PageHeader, Button, Loading, ErrorState, Spinner, SlaBadge } from '@/components/ui';
@@ -34,7 +34,7 @@ export function Dashboard() {
   const navigate = useNavigate();
 
   // SLA summary: a single lazy aggregate query, scoped to this case's instances.
-  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(() => [] as CaseSla[]), []);
+  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(orFallback('getSlaSummaryAll', [] as CaseSla[])), []);
   const slaRows = useMemo(
     () => (slaQ.data ?? []).filter((r) => r.processKey === caseProcessKey),
     [slaQ.data, caseProcessKey],

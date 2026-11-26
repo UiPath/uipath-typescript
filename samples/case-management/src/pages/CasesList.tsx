@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAsync } from '@/hooks/useAsync';
 import { useCases } from '@/hooks/useCases';
 import { useInstancePages } from '@/hooks/useInstancePages';
-import { caseLabel, getSlaSummaryAll } from '@/lib/sdk';
+import { caseLabel, getSlaSummaryAll, orFallback } from '@/lib/sdk';
 import { Card, Badge, PageHeader, Loading, ErrorState, Spinner, SlaBadge, CursorPagination } from '@/components/ui';
 import { Input } from '@uipath/apollo-wind/components/ui/input';
 import { Button } from '@uipath/apollo-wind/components/ui/button';
@@ -32,7 +32,7 @@ export function CasesList() {
 
   // SLA summary is one lazy aggregate query (only when this page is open) used to
   // annotate the rows; it is NOT a per-case detail fetch.
-  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(() => [] as CaseSla[]), []);
+  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(orFallback('getSlaSummaryAll', [] as CaseSla[])), []);
   const sla = useMemo(() => new Map((slaQ.data ?? []).map((r) => [r.caseInstanceId, r])), [slaQ.data]);
 
   const rows = useMemo(() => {
