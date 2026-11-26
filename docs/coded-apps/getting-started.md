@@ -311,7 +311,7 @@ To deploy the app as part of a solution instead, see [Deploy with Solutions](#de
 
 ## Deploy with Solutions
 
-A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package deploys as a sign-in app or as a public app: you choose at deploy time. [Public coded apps](#public-coded-apps-preview) deploy only this way.
+A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as a public app or not: you choose with the **Authentication** setting at deploy time. [Public coded apps](#public-coded-apps-preview) deploy only this way.
 
 Use the UiPath CLI `1.206.0` or later (`npm install -g @uipath/cli`), and run `npm run build` first so the build output is packed.
 
@@ -345,11 +345,11 @@ The first upload imports the solution into Studio Web. Later uploads overwrite i
 3. Select the arrow on the **Deploy** button at the bottom, and then select **Customize**. Studio Web packs and publishes the solution, then opens the resource settings.
 4. Under **Apps**, select the coded app and set:
 
-    | Setting | Sign-in app | Public app (preview) |
+    | Setting | Coded app | Public coded app (preview) |
     |---|---|---|
     | **Routing name** | The path the app is served at | The path the app is served at |
     | **Authentication** | **User sign-in** | **Public**. Set it before **External application**. |
-    | **External application** | The non-confidential external application users sign in with | A confidential external application. The list shows these only once **Public** is selected. |
+    | **External application** | The non-confidential external application users log in with | A confidential external application. The list shows these only once **Public** is selected. |
     | **Client secret** | Not used | The external application's secret |
     | **Environment variables** | Optional: this deployment's `UIPATH_APPS_*` values | Optional: this deployment's `UIPATH_APPS_*` values |
 
@@ -369,7 +369,7 @@ uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-ve
   --folder-name "<Solution>" --parent-folder-path "Shared" --config-file config.json
 ```
 
-For a sign-in app, `externalClientId` is the non-confidential external application users sign in with. For a public app, use the confidential external application and add two settings before `deploy run`:
+For a coded app that isn't public, `externalClientId` is the non-confidential external application users log in with. For a public app, use the confidential external application and add two settings before `deploy run`:
 
 ```bash
 uip solution deploy config set config.json <App> runtimeAuthMode application
@@ -387,13 +387,13 @@ The app is served at `https://<org>.uipath.host/<routing-name>`.
 For a public app:
 
 1. **Give the external application a role** in the folder the deployment created (`<location>/<solution folder>`): in Orchestrator, open the folder, select **Assign accounts/group/external app**, and assign a role such as **Automation User**. Data Fabric entities need **View** and **Create** on entity records.
-2. **Open the app** in a private window. It opens without a sign-in.
+2. **Open the app** in a private window. It opens without a login.
 
 An upgrade keeps the public app's stored client secret and its scope.
 
 ## Public coded apps (preview)
 
-A public coded app opens without a sign-in. The Apps service calls UiPath as the app's confidential external application, and only for the resources the app declares. For setup and deployment, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
+A public coded app opens without a login. The Apps service calls UiPath as the app's confidential external application, and only for the resources the app declares. For setup and deployment, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
 
 Needs `@uipath/uipath-typescript` `1.8.5` or later. The SDK setup doesn't change: when the app is deployed as public, `initialize()` opens a visitor session instead of signing in.
 
@@ -479,7 +479,7 @@ UIPATH_PUBLIC_APP_CLIENT_SECRET=<client secret>
 UIPATH_PUBLIC_APP_FOLDER_KEY=<folder key>
 ```
 
-Run `npm run dev`. The page opens without a sign-in, and the dev server applies the same bindings and access modes as a deployed app. The secret never reaches the browser. Solution overrides apply only after you deploy.
+Run `npm run dev`. The page opens without a login, and the dev server applies the same bindings and access modes as a deployed app. The secret never reaches the browser. Solution overrides apply only after you deploy.
 
 ### Deploying
 
