@@ -363,13 +363,7 @@ Any other call throws a `ValidationError`. For anything else, start a process th
 
 ### Declaring resources
 
-Name each resource by its binding in `bindings_v2.json`, next to `package.json`:
-
-```typescript
-await sdk.processes.start({ name: 'Invoices' }, { folderPath: 'Shared', inputArguments: '{"amount":12}' });
-await sdk.entities.insertRecord({ name: 'Orders' }, { Title: 'First order' });
-const { path } = await sdk.buckets.uploadFile({ name: 'Uploads' }, 'report.pdf', file, { folderPath: 'Shared' });
-```
+List every resource the app uses in `bindings_v2.json`, next to `package.json` (in a local solution, in the app's project folder next to `source/`). Today you write this file by hand; generating it from your code is coming soon.
 
 ```json
 {
@@ -383,21 +377,19 @@ const { path } = await sdk.buckets.uploadFile({ name: 'Uploads' }, 'report.pdf',
         "folderPath": { "defaultValue": "Shared", "isExpression": false, "displayName": "Folder Path" }
       },
       "metadata": { "BindingsVersion": "2.2" }
-    },
-    {
-      "resource": "entity",
-      "key": "Orders",
-      "value": {
-        "name": { "defaultValue": "Orders", "isExpression": false, "displayName": "Name" },
-        "folderPath": { "defaultValue": ".", "isExpression": false, "displayName": "Folder Path" }
-      },
-      "metadata": { "BindingsVersion": "2.2" }
     }
   ]
 }
 ```
 
-`resource` is `process`, `entity` or `bucket`. `key` is `Name.FolderPath` for processes and buckets, and the name alone for entities. A resource that isn't listed is refused with `403`.
+- `resource`: `process`, `entity` or `bucket`.
+- `key`: `Name.FolderPath`. For an entity, the name alone, with folder path `"."`.
+
+In code, pass the same name and folder. A resource that isn't listed is refused with `403`.
+
+```typescript
+await sdk.processes.start({ name: 'Invoices' }, { folderPath: 'Shared' });
+```
 
 ### Who can read what
 
