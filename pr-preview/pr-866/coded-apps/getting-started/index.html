@@ -4853,7 +4853,13 @@
 <p>An upgrade keeps the public app's stored client secret and its scope.</p>
 <h2 id="public-coded-apps-preview">Public coded apps (preview)<a class="headerlink" href="#public-coded-apps-preview" title="Permanent link">&para;</a></h2>
 <p>A public coded app opens without a login. For the product overview, see <a href="https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps">Public coded apps</a>.</p>
-<p>Requires <code>@uipath/uipath-typescript</code> <code>1.8.5</code> or later.</p>
+<p>Requires:</p>
+<ul>
+<li><code>@uipath/uipath-typescript</code> <code>1.8.5</code> or later</li>
+<li>UiPath CLI (<code>@uipath/cli</code>) <code>1.206.0</code> or later</li>
+<li><code>@uipath/coded-apps-dev</code> <code>1.0.0</code> or later, to run the app locally</li>
+<li>For AI coding agents, the UiPath skills (<code>@uipath/skills</code>) <code>1.207.0</code> or later. Until <code>1.207.0</code> is released, use the preview: <code>npm install @uipath/skills@preview</code>.</li>
+</ul>
 <p>You don't change any code to make an app public. Initialize the SDK as usual:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">();</span>
 <a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
