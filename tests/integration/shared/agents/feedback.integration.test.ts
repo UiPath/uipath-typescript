@@ -245,21 +245,21 @@ describeIntegration('Agent Feedback - Integration Tests', 'both', modes, () => {
     let folderKey!: string;
     const createdIds: string[] = [];
 
-    beforeAll(async () => {
-      feedback = getServices().feedback!;
+    beforeAll(() => {
       const configuredFolderKey = getTestConfig().folderKey;
       if (!configuredFolderKey) {
         throw new Error('INTEGRATION_TEST_FOLDER_KEY is not configured — cannot run submit/update/delete tests.');
       }
 
-      const result = await feedback.getAll({ pageSize: 1 });
-      if (result.items.length === 0) {
-        throw new Error('No existing feedback — need at least one entry to obtain a valid traceId');
+      // Pinned to a configured trace: Decisions writes land in the feedback list on
+      // trace IDs that have no spans, so the newest entry is not a usable source.
+      const configuredTraceId = getTestConfig().tracesTestTraceId;
+      if (!configuredTraceId) {
+        throw new Error('TRACES_TEST_TRACE_ID is not configured — cannot run submit/update/delete tests.');
       }
 
-      // Only the traceId has to come from an existing entry; write the new ones
-      // into the folder these tests own, so they stay accessible afterwards.
-      traceId = result.items[0].traceId;
+      traceId = configuredTraceId;
+      // New entries go into the folder these tests own, so they stay accessible afterwards.
       folderKey = configuredFolderKey;
     });
 

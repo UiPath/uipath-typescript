@@ -252,7 +252,7 @@ A suite declares what it *needs* from a credential:
 | Requirement | Runs under | Declared by |
 |-------------|-----------|-------------|
 | `both` | **Every configured credential** — both, when both are set | Every suite unless noted below |
-| `user` | The user token only | Agents, Agent Memory, Agent Traces, Governance, AgentHub, Notifications, Subscriptions, CAS Connections, Integration Service (Connections, Connectors, Elements, Execute) |
+| `user` | The user token only | Agents, Agent Memory, Agent Traces, Traces, Governance, AgentHub, Notifications, Subscriptions, CAS Connections, Integration Service (Connections, Connectors, Elements, Execute) |
 | `pat` | The PAT only | None currently — `auth-errors` builds its own SDK instances directly |
 
 `resolveAuthModes(requirement)` returns the list, and `describeIntegration` expands the

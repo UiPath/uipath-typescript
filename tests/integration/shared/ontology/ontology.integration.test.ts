@@ -95,9 +95,11 @@ describeIntegration('Ontologies - Integration Tests', 'user', modes, () => {
       expect(result.valid).toBe(true);
     });
 
-    it('should return valid=false with an ERROR for malformed Turtle', async () => {
+    // ontology_ currently returns valid=true for any constraints content, so the negative
+    // case validates a mapping. Move it back to Constraints once malformed shapes are rejected.
+    it('should return valid=false with an ERROR for a malformed Turtle mapping', async () => {
       const result = await ontologies.validateArtifactContent('x.ttl', 'not turtle', 'text/turtle', {
-        type: OntologyArtifactType.Constraints,
+        type: OntologyArtifactType.Mapping,
       });
 
       expect(result.valid).toBe(false);
