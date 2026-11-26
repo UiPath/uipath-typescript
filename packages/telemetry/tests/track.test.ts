@@ -1,7 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createTrack, createTrackEvent } from '../src/track';
+import { createTrack, createTrackEvent, failureCategoryOf, FailureCategory } from '../src/track';
 import type { TelemetryClient } from '../src/client';
+
+/** Outcome attributes every tracked call now carries when it succeeds. */
+const SUCCESS_OUTCOME = expect.objectContaining({ Result: 'Success', DurationMs: expect.any(Number) });
 
 interface FakeClient {
     track: ReturnType<typeof vi.fn>;
@@ -69,7 +72,7 @@ describe('createTrack — method decorator', () => {
 
         expect(result).toBe(42);
         expect(fake.track).toHaveBeenCalledTimes(1);
-        expect(fake.track).toHaveBeenCalledWith('Tasks.Create', 'Default.Run', undefined);
+        expect(fake.track).toHaveBeenCalledWith('Tasks.Create', 'Default.Run', SUCCESS_OUTCOME);
     });
 
     it('falls back to the property key when no name string is given', () => {
@@ -84,7 +87,7 @@ describe('createTrack — method decorator', () => {
 
         new Service().someMethod();
 
-        expect(fake.track).toHaveBeenCalledWith('someMethod', 'Default.Run', undefined);
+        expect(fake.track).toHaveBeenCalledWith('someMethod', 'Default.Run', SUCCESS_OUTCOME);
     });
 
     it('passes through extra attributes from TrackOptions', () => {
@@ -99,9 +102,11 @@ describe('createTrack — method decorator', () => {
 
         new Service().create();
 
-        expect(fake.track).toHaveBeenCalledWith('Tasks.Create', 'Default.Run', {
-            Source: 'unit-test',
-        });
+        expect(fake.track).toHaveBeenCalledWith(
+            'Tasks.Create',
+            'Default.Run',
+            expect.objectContaining({ Source: 'unit-test', Result: 'Success' })
+        );
     });
 
     it('does not call client.track when condition is the static literal false, but still runs the method', () => {
@@ -135,7 +140,7 @@ describe('createTrack — method decorator', () => {
         new Service().create();
 
         expect(fake.track).toHaveBeenCalledTimes(1);
-        expect(fake.track).toHaveBeenCalledWith('Tasks.Create', 'Default.Run', undefined);
+        expect(fake.track).toHaveBeenCalledWith('Tasks.Create', 'Default.Run', SUCCESS_OUTCOME);
     });
 
     it('evaluates a condition callback against the call args', () => {
@@ -214,7 +219,7 @@ describe('createTrack — method decorator', () => {
         new Service().create();
 
         expect(fake.getDefaultEventName).toHaveBeenCalled();
-        expect(fake.track).toHaveBeenCalledWith('Tasks.Create', 'Sdk.Run', undefined);
+        expect(fake.track).toHaveBeenCalledWith('Tasks.Create', 'Sdk.Run', SUCCESS_OUTCOME);
     });
 });
 
@@ -229,7 +234,7 @@ describe('createTrack — function wrapper form', () => {
 
         expect(result).toBe(12);
         expect(fake.track).toHaveBeenCalledTimes(1);
-        expect(fake.track).toHaveBeenCalledWith('Math.Multiply', 'Default.Run', undefined);
+        expect(fake.track).toHaveBeenCalledWith('Math.Multiply', 'Default.Run', SUCCESS_OUTCOME);
     });
 
     it('falls back to the function name when no name string is given', () => {
@@ -239,7 +244,7 @@ describe('createTrack — function wrapper form', () => {
         const tracked = track()(namedFn);
         tracked();
 
-        expect(fake.track).toHaveBeenCalledWith('namedFn', 'Default.Run', undefined);
+        expect(fake.track).toHaveBeenCalledWith('namedFn', 'Default.Run', SUCCESS_OUTCOME);
     });
 
     it('uses "unknown_function" as the fallback for an anonymous function with no name', () => {
@@ -249,7 +254,7 @@ describe('createTrack — function wrapper form', () => {
         const tracked = track()(anonFn);
         tracked();
 
-        expect(fake.track).toHaveBeenCalledWith('unknown_function', 'Default.Run', undefined);
+        expect(fake.track).toHaveBeenCalledWith('unknown_function', 'Default.Run', SUCCESS_OUTCOME);
     });
 
     it('respects condition when used as a function wrapper', () => {
@@ -301,5 +306,177 @@ describe('createTrackEvent', () => {
         expect(a.fake.track).not.toHaveBeenCalledWith('B.Event', undefined, undefined);
         expect(b.fake.track).toHaveBeenCalledWith('B.Event', undefined, undefined);
         expect(b.fake.track).not.toHaveBeenCalledWith('A.Event', undefined, undefined);
+    });
+});
+
+/** Minimal stand-in for the SDK's `UiPathError` shape (`type`, `statusCode`). */
+class FakeUiPathError extends Error {
+    public readonly type: string;
+    public readonly statusCode?: number;
+
+    constructor(type: string, statusCode?: number) {
+        super(type);
+        this.type = type;
+        this.statusCode = statusCode;
+    }
+}
+
+describe('createTrack — call outcome', () => {
+    let client: TelemetryClient;
+    let fake: FakeClient;
+
+    beforeEach(() => {
+        ({ client, fake } = makeClient());
+    });
+
+    it('emits Result Success and DurationMs after an async call resolves', async () => {
+        const track = createTrack(client);
+        const call = track('Tasks.GetAll')(async () => 'ok');
+
+        const pending = call();
+        expect(fake.track).not.toHaveBeenCalled();
+        await expect(pending).resolves.toBe('ok');
+        await Promise.resolve();
+
+        expect(fake.track).toHaveBeenCalledTimes(1);
+        expect(fake.track).toHaveBeenCalledWith('Tasks.GetAll', 'Default.Run', {
+            Result: 'Success',
+            DurationMs: expect.any(Number),
+        });
+    });
+
+    it('emits Result Failed with FailureCategory and HttpStatus when an async call rejects, and the caller still gets the original error', async () => {
+        const track = createTrack(client);
+        const error = new FakeUiPathError('AuthorizationError', 403);
+        const call = track('Queues.GetAll')(async () => {
+            throw error;
+        });
+
+        await expect(call()).rejects.toBe(error);
+        await Promise.resolve();
+
+        expect(fake.track).toHaveBeenCalledWith('Queues.GetAll', 'Default.Run', {
+            Result: 'Failed',
+            DurationMs: expect.any(Number),
+            FailureCategory: FailureCategory.PERMISSION,
+            HttpStatus: 403,
+        });
+    });
+
+    it('emits Result Failed and rethrows when a sync call throws', () => {
+        const track = createTrack(client);
+        const call = track('Assets.Get')(() => {
+            throw new FakeUiPathError('ValidationError');
+        });
+
+        expect(call).toThrow(FakeUiPathError);
+        expect(fake.track).toHaveBeenCalledWith(
+            'Assets.Get',
+            'Default.Run',
+            expect.objectContaining({ Result: 'Failed', FailureCategory: FailureCategory.VALIDATION })
+        );
+    });
+
+    it('returns the same promise the wrapped function returned', () => {
+        const track = createTrack(client);
+        const original = Promise.resolve(1);
+        const call = track('Buckets.Get')(() => original);
+
+        expect(call()).toBe(original);
+    });
+
+    it('lets TrackOptions attributes sit alongside the outcome attributes', async () => {
+        const track = createTrack(client);
+        const call = track('Tasks.Create', { attributes: { Source: 'unit-test' } })(async () => undefined);
+
+        await call();
+        await Promise.resolve();
+
+        expect(fake.track).toHaveBeenCalledWith(
+            'Tasks.Create',
+            'Default.Run',
+            expect.objectContaining({ Source: 'unit-test', Result: 'Success' })
+        );
+    });
+});
+
+describe('createTrack — telemetry failures never reach the caller', () => {
+    let client: TelemetryClient;
+    let fake: FakeClient;
+
+    beforeEach(() => {
+        ({ client, fake } = makeClient());
+        fake.track.mockImplementation(() => {
+            throw new Error('telemetry down');
+        });
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('returns the sync result when emitting throws', () => {
+        const track = createTrack(client);
+
+        expect(track('Assets.Get')(() => 7)()).toBe(7);
+        expect(console.warn).toHaveBeenCalled();
+    });
+
+    it('rethrows the original sync error, not the telemetry error, when emitting throws', () => {
+        const track = createTrack(client);
+        const error = new FakeUiPathError('NotFoundError', 404);
+
+        expect(
+            track('Assets.Get')(() => {
+                throw error;
+            })
+        ).toThrow(error);
+    });
+
+    it('resolves normally and raises no unhandled rejection when emitting throws after an async call', async () => {
+        const track = createTrack(client);
+        const unhandled = vi.fn();
+        process.on('unhandledRejection', unhandled);
+
+        await expect(track('Queues.GetAll')(async () => 'ok')()).resolves.toBe('ok');
+        await new Promise(resolve => setTimeout(resolve));
+
+        process.off('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+        expect(console.warn).toHaveBeenCalled();
+    });
+});
+
+describe('failureCategoryOf', () => {
+    it.each([
+        ['AuthenticationError', FailureCategory.AUTH],
+        ['AuthorizationError', FailureCategory.PERMISSION],
+        ['NotFoundError', FailureCategory.NOT_FOUND],
+        ['ValidationError', FailureCategory.VALIDATION],
+        ['RateLimitError', FailureCategory.THROTTLED],
+        ['NetworkError', FailureCategory.NETWORK],
+        ['ServerError', FailureCategory.SERVICE_ERROR],
+    ])('maps the SDK error type %s to %s', (type, category) => {
+        expect(failureCategoryOf(new FakeUiPathError(type))).toBe(category);
+    });
+
+    it.each([
+        [401, FailureCategory.AUTH],
+        [403, FailureCategory.PERMISSION],
+        [404, FailureCategory.NOT_FOUND],
+        [409, FailureCategory.VALIDATION],
+        [429, FailureCategory.THROTTLED],
+        [503, FailureCategory.SERVICE_ERROR],
+    ])('falls back to the HTTP status %i for an unrecognised error type', (status, category) => {
+        expect(failureCategoryOf(new FakeUiPathError('SomethingElse', status))).toBe(category);
+    });
+
+    it('maps a fetch TypeError (request never reached the server) to Network', () => {
+        expect(failureCategoryOf(new TypeError('Failed to fetch'))).toBe(FailureCategory.NETWORK);
+    });
+
+    it('maps anything else to Unknown', () => {
+        expect(failureCategoryOf('boom')).toBe(FailureCategory.UNKNOWN);
     });
 });
