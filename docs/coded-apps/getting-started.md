@@ -311,7 +311,7 @@ To deploy the app as part of a solution instead, see [Deploy with Solutions](#de
 
 ## Deploy with Solutions
 
-A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as a public app or not: you choose with the **Authentication** setting at deploy time. [Public coded apps](#public-coded-apps-preview) deploy only this way.
+A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as an internal app or a public app: you choose with the **Authentication** setting at deploy time. [Public coded apps](#public-coded-apps-preview) deploy only this way.
 
 Use the UiPath CLI `1.206.0` or later (`npm install -g @uipath/cli`), and run `npm run build` first so the build output is packed.
 
@@ -345,7 +345,7 @@ The first upload imports the solution into Studio Web. Later uploads overwrite i
 3. Select the arrow on the **Deploy** button at the bottom, and then select **Customize**. Studio Web packs and publishes the solution, then opens the resource settings.
 4. Under **Apps**, select the coded app and set:
 
-    | Setting | Coded app | Public coded app (preview) |
+    | Setting | Internal app | Public app (preview) |
     |---|---|---|
     | **Routing name** | The path the app is served at | The path the app is served at |
     | **Authentication** | **User sign-in** | **Public**. Set it before **External application**. |
@@ -369,7 +369,7 @@ uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-ve
   --folder-name "<Solution>" --parent-folder-path "Shared" --config-file config.json
 ```
 
-For a coded app that isn't public, `externalClientId` is the non-confidential external application users log in with. For a public app, use the confidential external application and add two settings before `deploy run`:
+For an internal app, `externalClientId` is the non-confidential external application users log in with. For a public app, use the confidential external application and add two settings before `deploy run`:
 
 ```bash
 uip solution deploy config set config.json <App> runtimeAuthMode application
