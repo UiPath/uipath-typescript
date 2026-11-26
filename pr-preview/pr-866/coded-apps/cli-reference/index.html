@@ -5114,9 +5114,11 @@ This will create the <code>dist</code> (or build) folder.</p>
 </tr>
 </tbody>
 </table>
-<p>For a public app, set the two extra keys before <code>deploy run</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+<p>For a public app, before <code>deploy run</code>, turn on public mode and set the external application's client secret:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Public mode</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1"># Client secret of the confidential external application</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
 </code></pre></div>
 <p><code>--output-filter Property</code> keeps the secret out of the command output. Keep <code>config.json</code> out of source control when it holds a secret.</p>
 <p><code>deploy run</code> installs the solution the first time. To upgrade, pack and publish a new version and run <code>deploy run</code> again: it upgrades the deployment in place.</p>
