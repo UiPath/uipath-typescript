@@ -397,7 +397,7 @@ Set an access mode per resource in `uipath.json`, by binding key. `uipath.json` 
 
 ```json
 {
-  "scope": "OR.Execution OR.Jobs DataFabric.Data.Read DataFabric.Data.Write",
+  "scope": "<scopes>",
   "access": [
     { "resource": "entity", "key": "Orders", "mode": "session" },
     { "resource": "process", "key": "Invoices.Shared", "mode": "all" }
@@ -405,8 +405,11 @@ Set an access mode per resource in `uipath.json`, by binding key. `uipath.json` 
 }
 ```
 
-- `session`: only the visitor who added the record or started the job can read it.
-- `all`: every visitor can read it. This is the default for a resource not listed.
+- `session`: a visitor can read only the data they added in their own session.
+- `all`: the data in the declared resource is shared with every visitor. This is the default.
+
+!!! note
+    A visitor is identified by their browser session. Opening the app in another browser or a private window, or clearing cookies, starts a new session, and a new session cannot read what an earlier session added.
 
 `scope` must list what the app calls and include `OR.Execution`.
 
