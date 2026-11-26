@@ -263,6 +263,8 @@ $ uip codedapp deploy --name MyApp
 $ uip codedapp deploy --name my-app --display-name "My App" --path-name my-app
 ```
 
+`uip codedapp deploy` deploys an app on its own. To deploy an app that lives in a solution, from Studio Web or with `uip solution`, including as a public app, see [Deploy with Solutions](getting-started.md#deploy-with-solutions).
+
 ---
 
 ## delete
