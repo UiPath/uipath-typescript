@@ -406,7 +406,6 @@ uip solution deploy run -n "<Solution>" --package-name "<Solution>" --package-ve
 | `externalClientId` | The non-confidential external application users log in with | A confidential external application |
 | `runtimeAuthMode` | `user` (default) | `application` |
 | `clientSecret` | Not used | The external application's secret |
-| `environmentVariables` | Optional: this deployment's `UIPATH_APPS_*` values, one `NAME=value` per line | Same |
 
 For a public app, before `deploy run`, turn on public mode and set the external application's client secret:
 

@@ -314,7 +314,6 @@ For the commands, see [CLI Reference: Deploy with a solution](cli-reference.md#d
     | **Authentication** | **User sign-in** | **Public**. Set it before **External application**. |
     | **External application** | The non-confidential external application users log in with | A confidential external application. The list shows these only once **Public** is selected. |
     | **Client secret** | Not used | The external application's secret |
-    | **Environment variables** | Optional: this deployment's `UIPATH_APPS_*` values | Optional: this deployment's `UIPATH_APPS_*` values |
 
 5. Select **Validate**, and then **Continue**.
 
@@ -327,7 +326,7 @@ Pack, publish and deploy the solution with `uip solution`, setting the same valu
 1. **Give the external application a role** in the folder the deployment created (`<location>/<solution folder>`): in Orchestrator, open the folder, select **Assign accounts/group/external app**, and assign a role such as **Automation User**. Data Fabric entities need **View** and **Create** on entity records.
 2. **Open the app** in a private window. It opens without a login.
 
-An upgrade keeps the public app's stored client secret and its scope.
+An upgrade keeps the public app's client secret and the scope bound to it. To apply a changed `scope` from `uipath.json`, enter the client secret again when you upgrade.
 
 ## Public coded apps (preview)
 
@@ -416,7 +415,7 @@ Set an access mode per resource in `uipath.json`, by binding key. `uipath.json` 
 !!! note
     A visitor is identified by their browser session. Opening the app in another browser or a private window, or clearing cookies, starts a new session, and a new session cannot read what an earlier session added.
 
-`scope` must list what the app calls and include `OR.Execution`.
+`scope` must list only application scopes of the external application, for what the app calls, and include `OR.Execution`. Don't add `openid` or `offline_access`.
 
 ### Running it locally
 
