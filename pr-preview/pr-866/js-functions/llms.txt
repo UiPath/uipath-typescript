@@ -860,10 +860,10 @@ ______________________________________________________________________
 
 ## Regenerate the lockfile after any dependency change
 
-The `.nupkg` ships the project's `package-lock.json`, and the production worker installs from it ([Lockfile](../deployment/#lockfile)). A stale lockfile fails the production install with errorCode 4801 on all routes, so `pack` checks that the lock matches `package.json` before it builds.
+The `.nupkg` ships a `package-lock.json` that `pack` writes from your installed `node_modules/`, and your functions run with the versions it pins ([Lockfile](../deployment/#lockfile)). Install after any `package.json` change, so the lock matches it; a lock that misses a declared dependency fails the production install with errorCode 4801 on all routes.
 
 ```
-npm install   # always run this before pack after any package.json change
+npm install
 uip functions pack
 ```
 
@@ -1070,9 +1070,9 @@ Calling mode is always **Sync (long-polling)**. Account is always **Run as HTTP 
 
 ### Lockfile
 
-A project is locked with npm's `package-lock.json`. That lock ships in the `.nupkg`, and the production worker installs from it with bun. Run `npm install` after any `package.json` change, then pack.
+Install your project before you serve, run, debug or pack it. These commands need its `node_modules/`.
 
-On your machine the CLI holds every project to that lock. `new` installs with npm. `serve`, `run`, `debug`, `pack`, `push` and `uip solution pack` stop on a `bun.lock`, including one next to `package-lock.json`, since bun installs from `bun.lock` first: delete `bun.lock` and run `npm install`. `pack`, `push` and `uip solution pack` also stop when `package-lock.json` is missing or `npm ci --dry-run` reports that it differs from `package.json`. `publish` requires a lock in the package.
+`pack`, `push` and `uip solution pack` write `package-lock.json` with npm before they build, so npm must be on PATH and able to reach your registry. The lock pins the versions in your `node_modules/`, and your functions run with those versions in production. Commit `package-lock.json` beside your own lock. The package carries only `package-lock.json`, and `publish` requires one.
 
 Install every dependency from a registry. `pack`, `push` and `uip solution pack` stop on a dependency that `package-lock.json` takes from a git repository, transitive ones included, and name it: replace it with a registry version, then pack again.
 
@@ -1297,11 +1297,11 @@ Reads `name` and `version` from `package.json`. Writes `.uipath/<name>.<version>
 
 The package's default entry point is the function file `project.uiproj` names in `MainFile`, else the first function in `functions/`. A `MainFile` that names no function fails the pack.
 
-The project must be ready to package: `node_modules/` present and a current `package-lock.json`, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it.
+The project must be installed: `node_modules/` present. `pack` then writes `package-lock.json` with npm and ships it, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot write it, because the registry is unreachable or unauthenticated, `pack` stops and quotes npm. `pack` ignores other lock files.
 
 Steps performed:
 
-1. Check the project is installed
+1. Check the project is installed and write `package-lock.json`
 1. Sync `uipath.json` functions map
 1. Generate aggregator
 1. Extract function manifest → `entry-points.json`, `bindings_v2.json`
