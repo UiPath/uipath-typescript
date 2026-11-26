@@ -22,26 +22,7 @@ $ npm install -g @uipath/cli
 $ uip tools install codedapp
 ```
 
-!!! info "Minimum versions"
-    Coded Apps requires **CLI version >= 0.9.0** and **codedapp tool version >= 0.9.0**. The `validate` and `delete` commands require **codedapp tool version >= 1.202.2**.
-
-    Check your installed CLI version:
-
-    ```bash
-    uip --version
-    ```
-
-    Check your installed codedapp tool version:
-
-    ```bash
-    uip tools list
-    ```
-
-    To update the codedapp tool to the latest version:
-
-    ```bash
-    uip tools update
-    ```
+For minimum versions and updates, see [CLI Reference](cli-reference.md#installation).
 
 ---
 
@@ -306,6 +287,154 @@ Refer to [CLI Reference](cli-reference.md) for details.
 
     - Separation of concerns: Coded Apps publishes static HTML/CSS/JS from your package and exposes it at a dedicated site URL under uipath.host rather than the UiPath product domain.
     - Site types and naming: Coded app sites are published under `https://<orgname>.uipath.host/<appname>`. This provides a predictable, account-scoped URL scheme.
+
+To deploy the app as part of a solution instead, see [Deploy with Solutions](#deploy-with-solutions).
+
+## Deploy with Solutions
+
+A coded app can live in a solution and be deployed with it, from Studio Web or with the CLI. The same package can be deployed as an internal app or a public app: you choose with the **Authentication** setting at deploy time. [Public coded apps](#public-coded-apps-preview) deploy only this way.
+
+### Get the app into a solution
+
+- **Cloud solution:** run `uip codedapp push --solution-name "<Solution>" --project-name "<App>"` from the app folder. The first push creates the solution and the coded app project in the Studio Web **Cloud Workspace**.
+- **Local solution**, a solution stored on your machine (see [Solutions in the Local Workspace](https://docs.uipath.com/studio-web/automation-cloud/latest/user-guide/solutions-in-the-local-workspace)): create it with `uip solution init` and `uip codedapp init`. Upload it to the Cloud Workspace to deploy from Studio Web, or deploy it with the CLI.
+
+For the commands, see [CLI Reference: Deploy with a solution](cli-reference.md#deploy-with-a-solution).
+
+### Deploy from Studio Web
+
+1. Open the solution in Studio Web, select the arrow on **Deploy**, and then select **Deploy**.
+2. Check the version, the location and the solution folder name.
+3. Select the arrow on the **Deploy** button at the bottom, and then select **Customize**. Studio Web packs and publishes the solution, then opens the resource settings.
+4. Under **Apps**, select the coded app and set:
+
+    | Setting | Internal app | Public app (preview) |
+    |---|---|---|
+    | **Path name** | The path the app is served at | The path the app is served at |
+    | **Authentication** | **User sign-in** | **Public**. Set it before **External application**. |
+    | **External application** | The non-confidential external application users log in with | A confidential external application. The list shows these only once **Public** is selected. |
+    | **Client secret** | Not used | The external application's secret |
+
+5. Select **Validate**, and then **Continue**.
+
+### Deploy from the CLI
+
+Pack, publish and deploy the solution with `uip solution`, setting the same values as in the table above. See [CLI Reference: Deploy with a solution](cli-reference.md#deploy-with-a-solution). For a pipeline, see [Coded App inside Solution](ci-cd-github-actions.md#coded-app-inside-solution).
+
+### After deploying a public app
+
+1. **Give the external application a role** in the folder the deployment created (`<location>/<solution folder>`): in Orchestrator, open the folder, select **Assign accounts/group/external app**, and assign a role such as **Automation User**. Data Fabric entities need **View** and **Create** on entity records.
+2. **Open the app** in a private window. It opens without a login.
+
+An upgrade keeps the public app's client secret and the scope bound to it. To apply a changed `scope` from `uipath.json`, enter the client secret again when you upgrade.
+
+## Public coded apps (preview)
+
+A public coded app opens without a login. For the product overview, see [Public coded apps](https://docs.uipath.com/apps/automation-cloud/latest/user-guide-ca/public-coded-apps).
+
+Requires:
+
+- `@uipath/uipath-typescript` `1.8.5` or later
+- UiPath CLI (`@uipath/cli`) `1.206.0` or later
+- `@uipath/coded-apps-dev` `1.0.0` or later, to run the app locally
+- For AI coding agents, the UiPath skills (`@uipath/skills`) `1.207.0` or later. Until `1.207.0` is released, use the preview: `npm install @uipath/skills@preview`.
+
+You don't change any code to make an app public. Initialize the SDK as usual:
+
+```typescript
+const sdk = new UiPath();
+await sdk.initialize();
+```
+
+When the app is deployed as public, the platform adds a `uipath:app-key` meta tag to the page. The SDK reads it and switches to public mode:
+
+- `initialize()` starts a session for the visitor instead of redirecting to the UiPath login.
+- Each call goes to the Apps service, which makes it as the app's confidential external application, and only for the resources the app declares.
+- When the session expires, the SDK starts a new one.
+
+### Supported calls
+
+| Call | Notes |
+|---|---|
+| `processes.start(...)` | Starts a job. The job key is `result[0].key`. |
+| `new Jobs(sdk).getOutput(jobKey)` | `Jobs` comes from `@uipath/uipath-typescript/jobs`. |
+| `entities.insertRecord({ name }, data)` | |
+| `entities.getRecordByName(name, recordId)` | |
+| `entities.getRecordsByName(name, options?)` | Supports `pageSize`, and either `jumpToPage` or `cursor`, not both. |
+| `buckets.uploadFile({ name }, fileName, content, options?)` | Returns the stored `path`. |
+
+Any other call throws a `ValidationError`. For anything else, start a process that does it.
+
+### Declaring resources
+
+List every resource the app uses in `bindings_v2.json`, next to `package.json` (in a local solution, in the app's project folder next to `source/`). Today you write this file by hand; generating it from your code is coming soon.
+
+```json
+{
+  "version": "2.0",
+  "resources": [
+    {
+      "resource": "process",
+      "key": "Invoices.Shared",
+      "value": {
+        "name": { "defaultValue": "Invoices", "isExpression": false, "displayName": "Name" },
+        "folderPath": { "defaultValue": "Shared", "isExpression": false, "displayName": "Folder Path" }
+      },
+      "metadata": { "BindingsVersion": "2.2" }
+    }
+  ]
+}
+```
+
+- `resource`: `process`, `entity` or `bucket`.
+- `key`: `Name.FolderPath`. For an entity, the name alone, with folder path `"."`.
+
+In code, pass the same name and folder. A resource that isn't listed is refused with `403`.
+
+```typescript
+import { Processes } from '@uipath/uipath-typescript/processes';
+
+await new Processes(sdk).start({ name: 'Invoices' }, { folderPath: 'Shared' });
+```
+
+### Who can read what
+
+Set an access mode per resource in `uipath.json`, by binding key. `uipath.json` must be in the build output:
+
+```json
+{
+  "scope": "<scopes>",
+  "access": [
+    { "resource": "process", "key": "Invoices.Shared", "mode": "session" }
+  ]
+}
+```
+
+- `session`: a visitor can read only the data they added in their own session.
+- `all`: the data in the declared resource is shared with every visitor. This is the default.
+
+!!! note
+    A visitor is identified by their browser session. Opening the app in another browser or a private window, or clearing cookies, starts a new session, and a new session cannot read what an earlier session added.
+
+`scope` must list only application scopes of the external application, for what the app calls, and include `OR.Execution`. Don't add `openid` or `offline_access`.
+
+### Running it locally
+
+With `@uipath/coded-apps-dev` `1.0.0` or later, the dev server runs the app as a public app. Add the external application to `.env.local` and keep that file out of source control:
+
+```bash title=".env.local"
+UIPATH_PUBLIC_APP=true
+UIPATH_PUBLIC_APP_CLIENT_ID=<external app id>
+UIPATH_PUBLIC_APP_CLIENT_SECRET=<client secret>
+# Optional: folder used for resources declared without a folder
+UIPATH_PUBLIC_APP_FOLDER_KEY=<folder key>
+```
+
+Run `npm run dev`. The page opens without a login, and the dev server applies the same bindings and access modes as a deployed app. The secret never reaches the browser. Solution overrides apply only after you deploy.
+
+### Deploying
+
+Public apps deploy only through Solutions, with **Authentication** set to **Public**. See [Deploy with Solutions](#deploy-with-solutions).
 
 ## Network requirements
 
