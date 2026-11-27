@@ -4348,6 +4348,7 @@
 </code></pre></div>
 <h4 id="accesstoken_1"><code>accessToken</code><a class="headerlink" href="#accesstoken_1" title="Permanent link">&para;</a></h4>
 <p>A platform-issued RS256 JWT (<code>sub_type: robot.user</code>, ~24h TTL) for the function's service account. Use for Secret Vault pattern — reads assets without requiring the caller to have folder access.</p>
+<p>In a long job, read <code>ctx.robot.accessToken</code> right before each outbound call. The runtime renews the token before it expires and puts the new one in the property. A value your code assigns to the property stays there for the rest of the run.</p>
 <p><strong>Availability:</strong></p>
 <table>
 <thead>
