@@ -22,8 +22,8 @@ export interface LogoutOptions {
    * Cloud or Automation Suite — so the next sign-in prompts for credentials;
    * the browser returns to the configured `redirectUri` afterwards.
    * Browser-only. The SDK requests the `openid` scope automatically; a
-   * session signed in without it falls back to local-only logout with a
-   * warning. Defaults to false (local-only logout).
+   * session signed in without it falls back to signing out of the app only,
+   * with a warning. Defaults to false (the UiPath session stays active).
    */
   endSession?: boolean;
 }

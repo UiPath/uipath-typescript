@@ -123,6 +123,20 @@ describe('AuthService', () => {
       const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
       expect(() => service.logout()).not.toThrow();
     });
+
+    it('should revoke the refresh token outside the browser as well', () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(null, { status: 200 }));
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
+      // A token the app injected: the SDK redeems its refresh token, so logout revokes it too.
+      service.updateToken({ token: 'access-token', type: 'oauth', refreshToken: 'injected-refresh-token' });
+
+      service.logout();
+
+      const [url, init] = fetchSpy.mock.calls[0];
+      expect(String(url)).toContain(IDENTITY_ENDPOINTS.REVOCATION);
+      expect(new URLSearchParams(String(init?.body)).get('token')).toBe('injected-refresh-token');
+      fetchSpy.mockRestore();
+    });
   });
 
   describe('exchangeCode', () => {
