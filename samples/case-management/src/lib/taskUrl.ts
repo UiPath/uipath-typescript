@@ -13,7 +13,8 @@ export function apiToCloudUrl(apiBaseUrl: string): string {
     let cloudHost = url.hostname.replace('api.uipath.com', 'uipath.com');
     if (cloudHost === 'uipath.com') cloudHost = 'cloud.uipath.com';
     return `${url.protocol}//${cloudHost}`;
-  } catch {
+  } catch (e) {
+    console.warn('apiToCloudUrl: invalid URL', apiBaseUrl, e);
     return apiBaseUrl;
   }
 }
@@ -38,7 +39,8 @@ export function getEmbedTaskUrl(taskUrl: string): string {
     const tenant = parts[2];
     const taskId = parts[parts.length - 1];
     return `${url.origin}/embed_/${org}/${tenant}/actions_/current-task/tasks/${taskId}`;
-  } catch {
+  } catch (e) {
+    console.warn('getEmbedTaskUrl: failed to parse task URL', taskUrl, e);
     return taskUrl;
   }
 }
