@@ -7,11 +7,15 @@ describe('IXP contracts exports', () => {
     expect(documentUnderstanding.ProcessedDocumentType).toEqual({ Extraction: 'Extraction' });
     expect(documentUnderstanding.IXPReferenceKind).toEqual({ Word: 'word', Area: 'area' });
     expect(documentUnderstanding.IXPFieldGroupType).toEqual({ Array: 'array', Object: 'object' });
+    expect(documentUnderstanding.isIXPTaxonomyFieldGroup).toBeTypeOf('function');
+    expect(documentUnderstanding.getIXPFieldGroupRecord).toBeTypeOf('function');
   });
 
   it('should keep the IXP contracts off the top-level barrel', () => {
     expect(sdk).not.toHaveProperty('ProcessedDocumentType');
     expect(sdk).not.toHaveProperty('IXPReferenceKind');
     expect(sdk).not.toHaveProperty('IXPFieldGroupType');
+    expect(sdk).not.toHaveProperty('isIXPTaxonomyFieldGroup');
+    expect(sdk).not.toHaveProperty('getIXPFieldGroupRecord');
   });
 });

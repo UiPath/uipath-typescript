@@ -30,6 +30,11 @@ export default defineConfig({
           globals: true,
           environment: 'node',
           include: ['tests/unit/**/*.test.ts'],
+          typecheck: {
+            enabled: true,
+            include: ['tests/unit/**/*.test-d.ts'],
+            tsconfig: './tests/tsconfig.typecheck.json',
+          },
         },
       },
     ],
