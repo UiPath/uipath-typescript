@@ -14,7 +14,8 @@ export function apiToCloudUrl(apiBaseUrl: string): string {
     let cloudHost = url.hostname.replace('api.uipath.com', 'uipath.com')
     if (cloudHost === 'uipath.com') cloudHost = 'cloud.uipath.com'
     return `${url.protocol}//${cloudHost}`
-  } catch {
+  } catch (e) {
+    console.warn('apiToCloudUrl: invalid URL', apiBaseUrl, e)
     return apiBaseUrl
   }
 }

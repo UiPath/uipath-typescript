@@ -43,6 +43,7 @@ import {
   formatDateTime,
   taskTypeLabel,
   extractServerMessage,
+  formatAssignmentErrors,
 } from '../taskUtils'
 import { buildCompletion, loadTaskForm } from '../taskSchema'
 import type { TaskFormBundle, TaskFormOutcome } from '../taskSchema'
@@ -491,25 +492,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-/** First server message from a failed assign payload. */
-function extractAssignError(data: unknown): string {
-  if (Array.isArray(data)) {
-    for (const item of data) {
-      if (item && typeof item === 'object' && 'errorMessage' in item) {
-        const msg = String((item as { errorMessage?: string }).errorMessage ?? '').trim()
-        if (msg) return msg
-      }
-    }
-  }
-  return 'The assignment did not complete successfully'
-}
-
 function renderValue(value: unknown): string {
   if (value === null || value === undefined) return '—'
   if (typeof value === 'object') {
     try {
       return JSON.stringify(value)
-    } catch {
+    } catch (e) {
+      console.warn('renderValue: JSON.stringify failed:', e)
       return String(value)
     }
   }
@@ -554,7 +543,7 @@ function AssignForm({
         onClose()
       } else {
         // Server-supplied error (e.g. "Already assigned to another user").
-        setSubmitError(extractAssignError(result.data))
+        setSubmitError(formatAssignmentErrors(result.data))
       }
     } catch (err) {
       setSubmitError(extractServerMessage(err) ?? 'Assignment failed')
@@ -575,7 +564,7 @@ function AssignForm({
             <div className="flex justify-center py-4">
               <Spinner label="Loading users…" showLabel />
             </div>
-          ) : error && !task ? (
+          ) : error ? (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
