@@ -1,0 +1,28 @@
+{
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "input1": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "output1": {
+        "type": "string"
+      }
+    }
+  },
+  "inOuts": {
+    "type": "object",
+    "properties": {}
+  },
+  "outcomes": {
+    "type": "object",
+    "properties": {
+      "Done": {}
+    }
+  }
+}

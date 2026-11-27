@@ -401,7 +401,9 @@ await entities.deleteRecordsById('entity-uuid', ['record-id-1', 'record-id-2']);
 
 Check out the [`/samples`](./samples) folder to see sample applications built using the SDK:
 
-- **[process-app](./samples/process-app)**: A Maestro process management application demonstrating OAuth authentication and SDK usage
+- **[react-vite-starter](./samples/react-vite-starter)**: A bare React + Vite coded app with only the SDK installed, to start your own app from
+- **[coded-action-apps/react-vite-starter](./samples/coded-action-apps/react-vite-starter)**: A bare React + Vite coded action app that loads its Action Center task, to start your own action app from
+- **[process-app-v1](./samples/process-app-v1)**: A Maestro process management application demonstrating OAuth authentication and SDK usage
 - **[conversational-agent-app](./samples/conversational-agent-app)**: A Conversational Agent chat application with real-time streaming, conversation management, file attachments, tool call visualization, and feedback
 - **[dashboards/agent-runtime-compliance](./samples/dashboards/agent-runtime-compliance)**: An Agent Runtime Compliance dashboard showing failed compliance checks, enforcement outcomes, failure reasons, and per-run compliance reports via the Agent Traces governance APIs
 

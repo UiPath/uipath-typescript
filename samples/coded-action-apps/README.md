@@ -1,13 +1,14 @@
 # Coded Action App Samples
 
-A collection of UiPath **Coded Action App** samples, built with the `@uipath/coded-action-app` and `@uipath/uipath-typescript` SDKs. Every sample implements the same **Loan Application Review** action — a reviewer assesses an applicant and completes the task with an **Approve** or **Reject** decision — and each one demonstrates a different way of bringing the supporting document or data into the app.
+A collection of UiPath **Coded Action App** samples, built with the `@uipath/coded-action-app` and `@uipath/uipath-typescript` SDKs. The starter is a bare template to build your own app from. Every other sample implements the same **Loan Application Review** action — a reviewer assesses an applicant and completes the task with an **Approve** or **Reject** decision — and each one demonstrates a different way of bringing the supporting document or data into the app.
 
-Pick the sample that matches how your document/data is delivered, then open its folder and follow that README to set up and deploy.
+Start from the starter for a blank app, or pick the sample that matches how your document/data is delivered, then open its folder and follow that README to set up and deploy.
 
 ## Choose a sample
 
 | Sample | Use it when… | Demonstrates | OAuth scopes |
 |--------|--------------|--------------|--------------------|
+| [`react-vite-starter`](./react-vite-starter) | You want a **blank app** with only the SDKs installed | Loading the task with `getTask()`, plus a placeholder `action-schema.json` | _None_ |
 | [`action-app-with-document`](./action-app-with-document) | The document ships **with the app** as a bundled asset | Rendering a bundled PDF alongside the review form | _None_ |
 | [`action-app-with-image`](./action-app-with-image) | You need to show a **bundled image** instead of a PDF | Rendering a bundled image alongside the review form | _None_ |
 | [`action-app-with-file-attachment-document`](./action-app-with-file-attachment-document) | The document arrives as a **direct file attachment** on the task, or the reviewer needs to attach a file back | Previewing a task file attachment via `Attachments`, and uploading one bound to the job with `attachments.create({ jobKey })` | `OR.Folders.Read`, `OR.Folders.Write` |

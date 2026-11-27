@@ -8,6 +8,9 @@
 !!! tip "Communicating with Action Center"
     To exchange task data with Action Center from within your app (receive the task, notify of changes, complete the task), use the [`@uipath/coded-action-app` SDK](../coded-action-app-sdk/getting-started.md).
 
+!!! tip "Start from a template"
+    The [Coded Action App starter](https://github.com/UiPath/uipath-typescript/tree/main/samples/coded-action-apps/react-vite-starter) is a blank React + Vite app with both SDKs installed, the task already loaded with `getTask()`, and a placeholder `action-schema.json`. Copy it with `npx degit UiPath/uipath-typescript/samples/coded-action-apps/react-vite-starter my-action-app`.
+
 ---
 
 ## Prerequisites
