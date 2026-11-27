@@ -5,6 +5,9 @@
 !!! warning "Static builds only"
     Coded Apps hosts static builds only. You can use any framework that builds to static HTML, CSS, and JavaScript files, and the build output must include an `index.html` file at its root. Server-side rendering (SSR) frameworks are not supported (Next.js, Nuxt, Remix, etc.).
 
+!!! tip "Start from a template"
+    The [React + Vite starter](https://github.com/UiPath/uipath-typescript/tree/main/samples/react-vite-starter) is a blank coded app with the SDK and `@uipath/coded-apps-dev` installed, relative asset paths set, and the SDK instance created. Copy it with `npx degit UiPath/uipath-typescript/samples/react-vite-starter my-app`.
+
 ---
 
 ## Prerequisites
