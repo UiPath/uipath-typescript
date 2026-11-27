@@ -336,10 +336,10 @@ Creating a validation action and polling its result both go through the [Documen
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `DataFabric.Schema.Read OR.Folders.Read` |
-| `getById()` | `DataFabric.Schema.Read OR.Folders.Read` |
-| `getByName()` | `DataFabric.Schema.Read OR.Folders.Read` |
-| `validateArtifactContent()` | `DataFabric.Schema.Read` |
+| `getAll()` | `Ontology.Definition.Read OR.Folders.Read` |
+| `getById()` | `Ontology.Definition.Read OR.Folders.Read` |
+| `getByName()` | `Ontology.Definition.Read OR.Folders.Read` |
+| `validateArtifactContent()` | `Ontology.Definition.Read` |
 
 ## Orchestrator Users
 
