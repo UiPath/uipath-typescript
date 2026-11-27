@@ -1,10 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
   describeIntegration,
   InitMode,
 } from '../config/unified-setup';
+import type { AuthenticatedUser } from '@/core';
+import { GUID_REGEX } from '@/utils/validation/guid';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -106,5 +108,30 @@ describeIntegration('SDK Initialization - Smoke Tests', 'both', modes, () => {
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     }, 60_000);
+  });
+});
+
+// The user is read from the token's claims, so only a user's token has one; a PAT is opaque.
+describeIntegration('SDK Initialization - Authenticated User', 'user', modes, () => {
+  let user!: AuthenticatedUser;
+
+  beforeAll(async () => {
+    user = await getServices().sdk.getAuthenticatedUser();
+  });
+
+  it('should read the signed-in user from the access token', () => {
+    expect(user.id).toMatch(GUID_REGEX);
+    // The CI user's profile fills these; other users may lack them, hence optional in the type.
+    expect(user.name).toBeTruthy();
+    expect(user.email).toBeTruthy();
+    expect(user.preferredUsername).toBeTruthy();
+  });
+
+  it('should return camelCase fields without the raw token claims', () => {
+    expect(user).not.toHaveProperty('sub');
+    expect(user).not.toHaveProperty('sub_type');
+    expect(user).not.toHaveProperty('preferred_username');
+    expect(user).not.toHaveProperty('first_name');
+    expect(user).not.toHaveProperty('last_name');
   });
 });

@@ -10,12 +10,15 @@ import { AuthService } from '../../../src/core/auth/service';
 import { ApiClient } from '../../../src/core/http/api-client';
 import { MemoryStore } from '../../../src/utils/storage/memory-store';
 import type { TokenInfo } from '../../../src/core/auth/types';
-import { AuthenticationError } from '@/core/errors';
+import { AuthenticationError, ValidationError } from '@/core/errors';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../utils/constants/jobs';
 import { DEBUG_JOB_KEY_QUERY_PARAM } from '../../../src/utils/runtime/constants';
 import { functionContext } from '../../utils/function-context';
+import { UiPathEnvVars } from '@/core/config/environment';
+import { PUBLIC_APP_UNSUPPORTED_CALL } from '@/core/http/api-client';
+import { TEST_OPAQUE_TOKEN, TEST_USER_CLAIMS, TEST_USER_ID, createTestJwt } from '@tests/utils/jwt';
 
 // ===== MOCKING =====
 const mockTokenManagerDestroy = vi.fn();
@@ -451,6 +454,83 @@ describe('UiPath Core', () => {
       });
 
       await expect(sdk.getValidToken()).rejects.toBe(refreshRejected);
+    });
+  });
+
+  describe('getAuthenticatedUser', () => {
+    const createSdk = () => new UiPath({
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      secret: TEST_CONSTANTS.CLIENT_SECRET
+    });
+
+    beforeEach(() => {
+      mockGetValidToken.mockReset();
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('should return the user read from the token getValidToken resolves', async () => {
+      mockGetValidToken.mockResolvedValue(createTestJwt(TEST_USER_CLAIMS));
+
+      const user = await createSdk().getAuthenticatedUser();
+
+      // getValidToken is what fetches the token from a UiPath host and refreshes an expired one
+      expect(mockGetValidToken).toHaveBeenCalledTimes(1);
+      expect(user).toEqual({
+        id: TEST_USER_ID,
+        name: TEST_USER_CLAIMS.name,
+        email: TEST_USER_CLAIMS.email,
+        preferredUsername: TEST_USER_CLAIMS.preferred_username,
+        firstName: TEST_USER_CLAIMS.first_name,
+        lastName: TEST_USER_CLAIMS.last_name
+      });
+    });
+
+    it('should reject with ValidationError for a personal access token', async () => {
+      mockGetValidToken.mockResolvedValue(TEST_OPAQUE_TOKEN);
+
+      await expect(createSdk().getAuthenticatedUser()).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it('should reject with the public-app ValidationError in a public app', async () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        appKey: TEST_CONSTANTS.APP_KEY
+      });
+
+      const result = sdk.getAuthenticatedUser();
+
+      await expect(result).rejects.toBeInstanceOf(ValidationError);
+      await expect(result).rejects.toThrow(PUBLIC_APP_UNSUPPORTED_CALL);
+      expect(mockGetValidToken).not.toHaveBeenCalled();
+    });
+
+    it('should propagate the error when no valid token can be obtained', async () => {
+      const error = new AuthenticationError({ message: TEST_CONSTANTS.ERROR_MESSAGE });
+      mockGetValidToken.mockRejectedValue(error);
+
+      await expect(createSdk().getAuthenticatedUser()).rejects.toBe(error);
+    });
+
+    it('should reject with the configuration error initialize() gives when the SDK is not configured', async () => {
+      vi.stubEnv(UiPathEnvVars.ACCESS_TOKEN, '');
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID
+      });
+      let initializeMessage = '';
+      await sdk.initialize().catch((error: Error) => { initializeMessage = error.message; });
+
+      expect(initializeMessage).not.toBe('');
+      await expect(sdk.getAuthenticatedUser()).rejects.toThrow(initializeMessage);
+      expect(mockGetValidToken).not.toHaveBeenCalled();
     });
   });
 
