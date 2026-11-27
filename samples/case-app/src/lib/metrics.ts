@@ -1,19 +1,5 @@
 import type { CaseDefinition, CaseSla } from '@/lib/types';
 
-const RUNNING = ['running', 'in progress', 'inprogress', 'active', 'resuming', 'pausing', 'retrying'];
-const DONE = ['completed', 'closed', 'done', 'resolved'];
-
-export function isRunning(status?: string) {
-  return RUNNING.includes((status || '').toLowerCase());
-}
-export function isDone(status?: string) {
-  return DONE.includes((status || '').toLowerCase());
-}
-export function isFaulted(status?: string) {
-  const s = (status || '').toLowerCase();
-  return s === 'faulted' || s === 'failed';
-}
-
 export interface TenantMetrics {
   types: number;
   total: number;

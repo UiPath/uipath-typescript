@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useAsync } from '@/hooks/useAsync';
 import { useCases } from '@/hooks/useCases';
 import { useInstancePages } from '@/hooks/useInstancePages';
-import { caseLabel, getSlaSummaryAll, orFallback } from '@/lib/sdk';
+import { caseLabel } from '@/lib/sdk';
 import { Card, Badge, PageHeader, Loading, ErrorState, Spinner, SlaBadge, CursorPagination } from '@/components/ui';
 import { Input } from '@uipath/apollo-wind/components/ui/input';
 import { Button } from '@uipath/apollo-wind/components/ui/button';
@@ -18,22 +16,20 @@ import {
 } from '@uipath/apollo-wind/components/ui/table';
 import { formatDate, humanize, statusTone } from '@/lib/format';
 import { SearchIcon } from '@/components/icons';
-import type { CaseInstance, CaseSla } from '@/lib/types';
+import type { CaseInstance } from '@/lib/types';
 
 const STATUS_FILTERS = ['All', 'Running', 'Completed', 'Paused', 'Faulted'] as const;
 
 export function CasesList() {
-  const { sdk } = useAuth();
   const navigate = useNavigate();
-  const { caseProcessKey, caseDefinition } = useCases();
+  const { caseProcessKey, caseDefinition, slaSummary, slaLoading } = useCases();
   const { items, page, setPage, hasNext, loading, error } = useInstancePages(25, caseProcessKey);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<string>('All');
 
-  // SLA summary is one lazy aggregate query (only when this page is open) used to
-  // annotate the rows; it is NOT a per-case detail fetch.
-  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(orFallback('getSlaSummaryAll', [] as CaseSla[])), []);
-  const sla = useMemo(() => new Map((slaQ.data ?? []).map((r) => [r.caseInstanceId, r])), [slaQ.data]);
+  // SLA summary is loaded once by CasesProvider and used to annotate the rows;
+  // it is NOT a per-case detail fetch.
+  const sla = useMemo(() => new Map(slaSummary.map((r) => [r.caseInstanceId, r])), [slaSummary]);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -82,7 +78,7 @@ export function CasesList() {
             </Button>
           ))}
         </div>
-        {(loading || slaQ.loading) && (
+        {(loading || slaLoading) && (
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Spinner className="h-3.5 w-3.5" /> loading…
           </span>

@@ -16,28 +16,6 @@ export interface TaskField {
   type?: string;
 }
 
-/** Friendly label for a TaskType enum value. */
-export function taskTypeLabel(type: string | undefined): string {
-  switch (type) {
-    case 'FormTask':
-      return 'Form';
-    case 'QuickFormTask':
-      return 'Quick Form';
-    case 'AppTask':
-      return 'Action App';
-    case 'ExternalTask':
-      return 'External';
-    case 'DocumentValidationTask':
-      return 'Document validation';
-    case 'DocumentClassificationTask':
-      return 'Document classification';
-    case 'DataLabelingTask':
-      return 'Data labeling';
-    default:
-      return type ? humanize(type) : 'Task';
-  }
-}
-
 const KEY_PROPS = ['key', 'name', 'id', 'field', 'dataPath'];
 const LABEL_PROPS = ['label', 'title', 'text', 'displayName', 'header'];
 const TYPE_PROPS = ['type', 'widget', 'component', 'controlType', 'fieldType'];

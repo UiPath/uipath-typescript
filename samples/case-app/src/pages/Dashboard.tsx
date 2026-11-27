@@ -1,15 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useAsync } from '@/hooks/useAsync';
 import { useCases } from '@/hooks/useCases';
-import { getSlaSummaryAll, orFallback } from '@/lib/sdk';
 import { slaCounts, slaUrgency } from '@/lib/metrics';
 import { getRecentCases } from '@/lib/recent';
 import { Card, Kpi, PageHeader, Button, Loading, ErrorState, Spinner, SlaBadge } from '@/components/ui';
 import { formatDate, relativeTime } from '@/lib/format';
 import { ActionsIcon, AnalyticsIcon, CasesIcon, ChevronRight, AlertIcon, ClockIcon } from '@/components/icons';
-import type { CaseSla } from '@/lib/types';
 
 function bar(value: number, total: number, color: string) {
   const pct = total ? (value / total) * 100 : 0;
@@ -29,15 +25,13 @@ function StatRow({ label, value, dot }: { label: string; value: number; dot: str
 }
 
 export function Dashboard() {
-  const { sdk } = useAuth();
-  const { caseDefinition: def, caseProcessKey, loading, error, refresh } = useCases();
+  const { caseDefinition: def, caseProcessKey, loading, error, slaSummary, slaLoading, refresh } = useCases();
   const navigate = useNavigate();
 
-  // SLA summary: a single lazy aggregate query, scoped to this case's instances.
-  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(orFallback('getSlaSummaryAll', [] as CaseSla[])), []);
+  // SLA summary: loaded once by CasesProvider, scoped here to this case's instances.
   const slaRows = useMemo(
-    () => (slaQ.data ?? []).filter((r) => r.processKey === caseProcessKey),
-    [slaQ.data, caseProcessKey],
+    () => slaSummary.filter((r) => r.processKey === caseProcessKey),
+    [slaSummary, caseProcessKey],
   );
   const sla = useMemo(() => slaCounts(slaRows), [slaRows]);
   const attention = useMemo(
@@ -92,7 +86,7 @@ export function Dashboard() {
         <Kpi label="Completed" value={def.completedCount} tone="green" />
         <Kpi
           label="SLA overdue"
-          value={slaQ.loading ? '…' : slaRows.length ? sla.breached : '—'}
+          value={slaLoading ? '…' : slaRows.length ? sla.breached : '—'}
           tone={sla.breached ? 'red' : undefined}
         />
         <Kpi
@@ -139,12 +133,12 @@ export function Dashboard() {
           <Card>
             <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold">
               <AlertIcon width={16} height={16} className="text-destructive" /> SLA needs attention
-              {slaQ.loading && <Spinner className="ml-auto h-3.5 w-3.5" />}
+              {slaLoading && <Spinner className="ml-auto h-3.5 w-3.5" />}
             </div>
-            {!slaQ.loading && slaRows.length === 0 && (
+            {!slaLoading && slaRows.length === 0 && (
               <p className="text-sm text-muted-foreground">SLA insights unavailable for this tenant.</p>
             )}
-            {!slaQ.loading && slaRows.length > 0 && attention.length === 0 && (
+            {!slaLoading && slaRows.length > 0 && attention.length === 0 && (
               <p className="text-sm text-muted-foreground">All instances on track.</p>
             )}
             <div className="space-y-2">

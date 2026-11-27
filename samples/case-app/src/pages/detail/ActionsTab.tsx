@@ -5,13 +5,12 @@ import { getCaseActionTasks } from '@/lib/sdk';
 import { Card, Badge, Loading, ErrorState, EmptyState } from '@/components/ui';
 import { TaskDetail } from '@/components/TaskDetail';
 import { formatDate, priorityTone } from '@/lib/format';
-import type { ActionTask } from '@/lib/types';
 
 export function ActionsTab({ instanceId }: { instanceId: string }) {
   const { sdk } = useAuth();
   const { data, loading, error, reload } = useAsync(() => getCaseActionTasks(sdk, instanceId), [instanceId]);
   const [filter, setFilter] = useState<'Open' | 'Completed'>('Open');
-  const [selected, setSelected] = useState<ActionTask | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const { open, completed } = useMemo(() => {
     const all = data ?? [];
@@ -21,13 +20,16 @@ export function ActionsTab({ instanceId }: { instanceId: string }) {
     };
   }, [data]);
 
-  if (loading) return <Loading label="Loading action tasks…" />;
+  // Only the first load replaces the tab: a refresh keeps the open task mounted.
+  if (loading && !data) return <Loading label="Loading action tasks…" />;
   if (error) return <ErrorState message={error} />;
   if (!data || data.length === 0)
     return <EmptyState title="No action tasks" hint="No Action Center tasks are linked to this case." />;
 
   const list = filter === 'Open' ? open : completed;
-  const active = selected ?? list[0] ?? null;
+  // A picked task is looked up in the fresh data, so it stays open (with its new
+  // status) after it is completed and leaves the Open list.
+  const active = data.find((t) => t.id === selectedId) ?? list[0] ?? null;
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
@@ -38,7 +40,7 @@ export function ActionsTab({ instanceId }: { instanceId: string }) {
               key={f}
               onClick={() => {
                 setFilter(f);
-                setSelected(null);
+                setSelectedId(null);
               }}
               className={`-mb-px border-b-2 px-1 pb-2 text-sm font-medium ${
                 filter === f ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -54,7 +56,7 @@ export function ActionsTab({ instanceId }: { instanceId: string }) {
             return (
               <button
                 key={t.id}
-                onClick={() => setSelected(t)}
+                onClick={() => setSelectedId(t.id)}
                 className={`w-full rounded-lg border p-3 text-left transition ${
                   isActive ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/20' : 'hover:bg-muted'
                 }`}
@@ -75,7 +77,14 @@ export function ActionsTab({ instanceId }: { instanceId: string }) {
       </div>
 
       {active ? (
-        <TaskDetail key={active.id} task={active} onChanged={reload} />
+        <TaskDetail
+          key={active.id}
+          task={active}
+          onChanged={() => {
+            setSelectedId(active.id);
+            reload();
+          }}
+        />
       ) : (
         <Card>
           <div className="py-16 text-center text-sm text-muted-foreground">Select a task to open it</div>

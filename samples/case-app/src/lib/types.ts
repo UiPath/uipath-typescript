@@ -2,21 +2,23 @@
 //
 // Where the SDK already exports a response type, we alias it (no re-declaration)
 // so the sample stays in lockstep with the SDK's real shapes. Everything else
-// is an app-level derived/normalized type (enrichment, SLA buckets, history
-// grouping).
+// is an app-level derived/normalized type (SLA buckets, history grouping).
 
 import type {
   CaseInstanceGetResponse,
   CaseGetAllResponse,
   CaseGetStageResponse,
-  CaseAppConfig as SdkCaseAppConfig,
   StageTask as SdkStageTask,
   CaseGetTopRunCountResponse,
   CaseGetTopFaultedCountResponse,
   CaseGetTopDurationResponse,
   InstanceStatusTimelineResponse,
   CaseInstanceExecutionHistoryResponse,
+  CaseInstanceGetVariablesResponse,
   ElementExecutionMetadata,
+  ElementGetTopFailedCountResponse,
+  ElementStats,
+  GlobalVariableMetaData,
 } from '@uipath/uipath-typescript/cases';
 import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks';
 
@@ -25,12 +27,15 @@ export type CaseInstance = CaseInstanceGetResponse;
 export type CaseDefinition = CaseGetAllResponse;
 export type CaseStage = CaseGetStageResponse;
 export type StageTask = SdkStageTask;
-export type CaseAppConfig = SdkCaseAppConfig;
 export type ActionTask = TaskGetResponse;
 export type TopRunCount = CaseGetTopRunCountResponse;
 export type TopFaultedCount = CaseGetTopFaultedCountResponse;
 export type TopDuration = CaseGetTopDurationResponse;
 export type StatusTimelinePoint = InstanceStatusTimelineResponse;
+export type TopElementFailed = ElementGetTopFailedCountResponse;
+export type ElementStat = ElementStats;
+export type CaseVariables = CaseInstanceGetVariablesResponse;
+export type GlobalVariable = GlobalVariableMetaData;
 
 // ---- Execution history ----
 // `elementType` is the BPMN type (Task, ServiceTask, UserTask, *Gateway, *Event,
@@ -39,20 +44,10 @@ export type StatusTimelinePoint = InstanceStatusTimelineResponse;
 export type ElementExecution = ElementExecutionMetadata;
 export type ExecutionHistory = CaseInstanceExecutionHistoryResponse;
 
-// ---- Enrichment derived from getStages + getActionTasks for one instance ----
-export interface CaseEnrichment {
-  currentStage?: string;
-  currentStageStatus?: string;
-  slaTime?: string | null;
-  slaStatus?: 'breached' | 'at-risk' | 'on-track' | null;
-  priority?: string | null;
-  openTasks: number;
-}
-
-export type EnrichedCase = CaseInstance & { enrichment?: CaseEnrichment };
-
 // ---- SLA summary (normalized from getSlaSummary / getStagesSlaSummary) ----
 export type SlaStatus = 'on-track' | 'at-risk' | 'breached' | 'completed' | 'unknown';
+/** SLA state of a single task, worked out from its due time. */
+export type TaskSlaStatus = 'on-track' | 'at-risk' | 'breached';
 
 export interface CaseSla {
   caseInstanceId: string;
@@ -72,30 +67,6 @@ export interface StageSla {
   slaStatus: SlaStatus;
 }
 
-export interface TopElementFailed {
-  elementName: string;
-  elementType: string;
-  processKey: string;
-  failedCount: number;
-}
-
-// Per-element execution stats for a process version (Cases.getElementStats).
-// The SDK's ElementStats type is internal (not exported); this mirrors it.
-export interface ElementStat {
-  elementId: string;
-  successCount: number;
-  failCount: number;
-  terminatedCount: number;
-  pausedCount: number;
-  inProgressCount: number;
-  minDurationMs: number;
-  maxDurationMs: number;
-  avgDurationMs: number;
-  p50DurationMs: number;
-  p95DurationMs: number;
-  p99DurationMs: number;
-}
-
 // ---- actor classification for execution history ----
 export type ActorType = 'agent' | 'automation' | 'human' | 'api' | 'system';
 
@@ -109,12 +80,6 @@ export interface HistoryStageGroup {
   stage: string;
   status?: string;
   events: HistoryEvent[];
-}
-
-// ---- aggregated agent output surfaced as the case overview ----
-export interface AgentOutput {
-  elementName: string;
-  text: string;
 }
 
 // ---- incidents (normalized from ProcessInstances.getIncidents) ----

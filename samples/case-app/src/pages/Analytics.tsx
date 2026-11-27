@@ -10,7 +10,6 @@ import {
   insightsTopDuration,
   insightsStatusTimeline,
   insightsElementStats,
-  getSlaSummaryAll,
   sanitizeElementName,
   listCaseInstancesPage,
   orFallback,
@@ -27,7 +26,7 @@ import {
   TableRow,
 } from '@uipath/apollo-wind/components/ui/table';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@uipath/apollo-wind/components/ui/chart';
-import type { CaseSla, TopElementFailed, ElementStat } from '@/lib/types';
+import type { TopElementFailed, ElementStat } from '@/lib/types';
 
 interface Datum {
   label: string;
@@ -105,7 +104,7 @@ interface TimelinePoint {
 
 export function Analytics() {
   const { sdk } = useAuth();
-  const { definitions, caseProcessKey, caseDefinition, loading: casesLoading, error: casesError } = useCases();
+  const { definitions, caseProcessKey, caseDefinition, loading: casesLoading, error: casesError, slaSummary, slaLoading } = useCases();
 
   const range = useMemo(() => {
     const end = new Date();
@@ -122,8 +121,6 @@ export function Analytics() {
       return { available: false, rows: [] as TopElementFailed[] };
     }
   }, [caseProcessKey, range]);
-
-  const slaQ = useAsync(() => getSlaSummaryAll(sdk).catch(orFallback('getSlaSummaryAll', [] as CaseSla[])), []);
 
   const timeline = useAsync(
     () => insightsStatusTimeline(sdk, range.start, range.end).catch(orFallback('insightsStatusTimeline', [])),
@@ -161,8 +158,8 @@ export function Analytics() {
 
   // --- Derived datasets ---
   const scopedSla = useMemo(
-    () => (slaQ.data ?? []).filter((r) => r.processKey === caseProcessKey),
-    [slaQ.data, caseProcessKey],
+    () => slaSummary.filter((r) => r.processKey === caseProcessKey),
+    [slaSummary, caseProcessKey],
   );
   const metrics = useMemo(() => tenantMetrics(definitions), [definitions]);
   const sla = useMemo(() => slaCounts(scopedSla), [scopedSla]);
@@ -253,7 +250,7 @@ export function Analytics() {
         <Kpi label="Completed" value={metrics.completed} tone="green" />
         <Kpi
           label="SLA compliance"
-          value={slaQ.loading ? '…' : sla.compliance === null ? '—' : `${Math.round(sla.compliance)}%`}
+          value={slaLoading ? '…' : sla.compliance === null ? '—' : `${Math.round(sla.compliance)}%`}
           tone="green"
         />
       </div>
@@ -265,7 +262,7 @@ export function Analytics() {
         </Card>
         <Card>
           <h3 className="mb-4 text-[15px] font-semibold">SLA distribution</h3>
-          <BarChartCard data={slaDist} loading={slaQ.loading} />
+          <BarChartCard data={slaDist} loading={slaLoading} />
         </Card>
 
         {/* Case instances over time — getInstanceStatusTimeline (tenant-wide) */}

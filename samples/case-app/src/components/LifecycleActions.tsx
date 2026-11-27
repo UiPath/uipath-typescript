@@ -23,8 +23,9 @@ import {
   AlertDialogTrigger,
 } from '@uipath/apollo-wind/components/ui/alert-dialog';
 import { toast } from '@uipath/apollo-wind/components/ui/sonner';
+import { InstanceStatus } from '@uipath/uipath-typescript/cases';
 import { useAuth } from '@/hooks/useAuth';
-import { runLifecycle, type LifecycleAction } from '@/lib/sdk';
+import { reopenCase, runLifecycle, type LifecycleAction } from '@/lib/sdk';
 import type { CaseStage } from '@/lib/types';
 
 const COPY: Record<LifecycleAction, { label: string; title: string; body: string; icon: React.ReactNode; destructive?: boolean }> = {
@@ -36,20 +37,24 @@ const COPY: Record<LifecycleAction, { label: string; title: string; body: string
 
 const PAST: Record<LifecycleAction, string> = { pause: 'paused', resume: 'resumed', reopen: 'reopened', close: 'closed' };
 
-/** Decide which lifecycle actions apply to the instance's current status. */
-function availableActions(status: string): LifecycleAction[] {
-  const s = (status || '').toLowerCase();
-  const closed = ['completed', 'closed', 'done', 'cancelled', 'canceled'].includes(s);
-  const faulted = s === 'faulted' || s === 'failed';
-  const paused = s.includes('paus');
-  const running = ['running', 'in progress', 'inprogress', 'active', 'resuming', 'retrying'].includes(s);
+/**
+ * Lifecycle actions offered for each instance status. A status that is not
+ * listed (Canceling, Upgrading, or one the backend has not set yet) offers none.
+ */
+const ACTIONS_BY_STATUS: Partial<Record<InstanceStatus, LifecycleAction[]>> = {
+  [InstanceStatus.PENDING]: ['close'],
+  [InstanceStatus.RUNNING]: ['pause', 'close'],
+  [InstanceStatus.RESUMING]: ['pause', 'close'],
+  [InstanceStatus.RETRYING]: ['pause', 'close'],
+  [InstanceStatus.PAUSING]: ['resume', 'close'],
+  [InstanceStatus.PAUSED]: ['resume', 'close'],
+  [InstanceStatus.FAULTED]: ['reopen', 'close'],
+  [InstanceStatus.COMPLETED]: ['reopen'],
+  [InstanceStatus.CANCELLED]: ['reopen'],
+};
 
-  const actions: LifecycleAction[] = [];
-  if (running) actions.push('pause');
-  if (paused) actions.push('resume');
-  if (closed || faulted) actions.push('reopen');
-  if (!closed) actions.push('close');
-  return actions;
+function availableActions(status: string): LifecycleAction[] {
+  return ACTIONS_BY_STATUS[status as InstanceStatus] ?? [];
 }
 
 export function LifecycleActions({
@@ -102,10 +107,11 @@ function ActionButton({
   const confirm = async () => {
     setBusy(true);
     try {
-      const ok = await runLifecycle(sdk, action, instanceId, folderKey, {
-        comment: comment.trim() || undefined,
-        stageId: stageId || undefined,
-      });
+      const note = comment.trim() || undefined;
+      const ok =
+        action === 'reopen'
+          ? await reopenCase(sdk, instanceId, folderKey, stageId, note)
+          : await runLifecycle(sdk, action, instanceId, folderKey, note);
       if (ok) {
         toast.success(`Case ${PAST[action]}.`);
         setOpen(false);

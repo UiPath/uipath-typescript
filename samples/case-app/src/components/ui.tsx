@@ -3,7 +3,6 @@
 // what the pages consume, so swapping the custom implementation for apollo-wind
 // is transparent to call sites. `tone` is the app's status vocabulary; it maps
 // to apollo Badge/StatsCard variants here.
-import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Badge as AwBadge } from '@uipath/apollo-wind/components/ui/badge';
 import { Button as AwButton } from '@uipath/apollo-wind/components/ui/button';
@@ -62,26 +61,6 @@ export function Card({
   padded?: boolean;
 }) {
   return <AwCard className={`${padded ? 'p-5' : ''} ${className}`}>{children}</AwCard>;
-}
-
-export function SectionTitle({
-  title,
-  meta,
-  right,
-}: {
-  title: ReactNode;
-  meta?: ReactNode;
-  right?: ReactNode;
-}) {
-  return (
-    <div className="mb-3 flex items-center justify-between">
-      <div className="flex items-baseline gap-2">
-        <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
-        {meta && <span className="text-xs text-muted-foreground">{meta}</span>}
-      </div>
-      {right}
-    </div>
-  );
 }
 
 export function Avatar({ name, className = '' }: { name?: string | null; className?: string }) {
@@ -213,50 +192,6 @@ export function ActorBadge({ actor }: { actor: ActorType }) {
 }
 
 // ---- pagination ----
-/** Client-side paginator over an already-loaded array. */
-export function usePaged<T>(items: T[], pageSize = 25) {
-  const [page, setPage] = useState(0);
-  const pages = Math.max(1, Math.ceil(items.length / pageSize));
-  const clamped = Math.min(page, pages - 1);
-  const slice = items.slice(clamped * pageSize, (clamped + 1) * pageSize);
-  return { slice, page: clamped, setPage, total: items.length, pageSize, pages };
-}
-
-export function Pagination({
-  page,
-  pageSize,
-  total,
-  onPage,
-}: {
-  page: number;
-  pageSize: number;
-  total: number;
-  onPage: (p: number) => void;
-}) {
-  const pages = Math.max(1, Math.ceil(total / pageSize));
-  if (total === 0) return null;
-  const from = page * pageSize + 1;
-  const to = Math.min(total, (page + 1) * pageSize);
-  return (
-    <div className="flex items-center justify-between border-t px-5 py-3 text-xs text-muted-foreground">
-      <span>
-        Showing {from}–{to} of {total}
-      </span>
-      <div className="flex items-center gap-2">
-        <AwButton variant="outline" size="xs" disabled={page <= 0} onClick={() => onPage(page - 1)}>
-          Prev
-        </AwButton>
-        <span>
-          Page {page + 1} of {pages}
-        </span>
-        <AwButton variant="outline" size="xs" disabled={page >= pages - 1} onClick={() => onPage(page + 1)}>
-          Next
-        </AwButton>
-      </div>
-    </div>
-  );
-}
-
 /** Prev/Next pager for server-side cursor pagination (no known total). */
 export function CursorPagination({
   page,

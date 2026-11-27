@@ -11,7 +11,8 @@ import type {
   ElementExecution,
   ActionTask,
   CaseDefinition,
-  CaseEnrichment,
+  CaseVariables,
+  TaskSlaStatus,
   CaseSla,
   StageSla,
   SlaStatus,
@@ -36,12 +37,6 @@ export function orFallback<T>(label: string, fallback: T): (e: unknown) => T {
 
 // ---- thin wrappers around the SDK (all data is live from the tenant) ----
 
-export async function listCaseInstances(sdk: UiPath, pageSize = 100): Promise<CaseInstance[]> {
-  const ci = new CaseInstances(sdk);
-  const res = await ci.getAll({ pageSize });
-  return res.items;
-}
-
 export async function listCaseDefinitions(sdk: UiPath): Promise<CaseDefinition[]> {
   const cases = new Cases(sdk);
   return cases.getAll();
@@ -65,10 +60,27 @@ export async function getCaseStages(
   return ci.getStages(instanceId, folderKey);
 }
 
+/**
+ * Action tasks of one case instance. The admin list covers every task in the
+ * folders where the user can assign tasks; the plain list covers what the user
+ * can work on without that permission. Both are read and merged, so a folder
+ * admin sees the whole case and a reviewer still sees their own tasks.
+ */
 export async function getCaseActionTasks(sdk: UiPath, instanceId: string): Promise<ActionTask[]> {
   const ci = new CaseInstances(sdk);
-  const res = await ci.getActionTasks(instanceId, { pageSize: 100, asTaskAdmin: true });
-  return res.items;
+  const results = await Promise.allSettled([
+    ci.getActionTasks(instanceId, { pageSize: 100, asTaskAdmin: true }),
+    ci.getActionTasks(instanceId, { pageSize: 100 }),
+  ]);
+  const byId = new Map<number, ActionTask>();
+  const failures: unknown[] = [];
+  for (const r of results) {
+    if (r.status === 'rejected') failures.push(r.reason);
+    else for (const t of r.value.items) if (!byId.has(t.id)) byId.set(t.id, t);
+  }
+  if (failures.length === results.length) throw failures[0];
+  for (const f of failures) console.warn('getCaseActionTasks: one task list failed:', f);
+  return [...byId.values()];
 }
 
 /**
@@ -139,113 +151,23 @@ export async function getCaseHistory(
   return ci.getExecutionHistory(instanceId, folderKey);
 }
 
-export interface GlobalVariable {
-  id: string;
-  name: string;
-  type: string;
-  source?: string;
-  value: unknown;
-}
-
-export interface ElementVariables {
-  elementId: string;
-  inputs?: Record<string, unknown>;
-  outputs?: Record<string, unknown>;
-}
-
-export interface CaseVariables {
-  globalVariables: GlobalVariable[];
-  elements: ElementVariables[];
-}
-
 export async function getCaseVariables(
   sdk: UiPath,
   instanceId: string,
   folderKey: string,
 ): Promise<CaseVariables> {
-  // A Maestro case instance is a process instance; variables live there.
-  const pi = new ProcessInstances(sdk);
-  const res = await pi.getVariables(instanceId, folderKey);
-  return { globalVariables: res.globalVariables ?? [], elements: res.elements ?? [] };
+  const ci = new CaseInstances(sdk);
+  return ci.getVariables(instanceId, folderKey);
 }
 
 // ---- derived signals (computed from real data, never invented) ----
 
-const PRIORITY_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
-
-export function slaStatusOf(expiry?: string | null): CaseEnrichment['slaStatus'] {
+export function slaStatusOf(expiry?: string | null): TaskSlaStatus | null {
   const h = hoursUntil(expiry);
   if (h === null) return null;
   if (h < 0) return 'breached';
   if (h <= 24) return 'at-risk';
   return 'on-track';
-}
-
-/** Compute the current stage + nearest SLA + highest open-task priority for one case. */
-export async function enrichCase(sdk: UiPath, inst: CaseInstance): Promise<CaseEnrichment> {
-  const [stagesR, tasksR] = await Promise.allSettled([
-    getCaseStages(sdk, inst.instanceId, inst.folderKey),
-    getCaseActionTasks(sdk, inst.instanceId),
-  ]);
-
-  const enrichment: CaseEnrichment = { openTasks: 0 };
-
-  if (stagesR.status === 'fulfilled') {
-    const stages = stagesR.value;
-    // Current stage = first non-completed stage, else the last stage.
-    const active = stages.find((s) => {
-      const st = s.status.toLowerCase();
-      return st !== 'completed' && st !== 'complete' && st !== 'not started' && st !== 'notstarted';
-    });
-    const current =
-      active ??
-      stages.findLast((s) => s.status.toLowerCase().includes('progress')) ??
-      stages.find((s) => s.status.toLowerCase() !== 'completed');
-    if (current) {
-      enrichment.currentStage = current.name;
-      enrichment.currentStageStatus = current.status;
-    } else if (stages.length) {
-      enrichment.currentStage = stages[stages.length - 1].name;
-      enrichment.currentStageStatus = stages[stages.length - 1].status;
-    }
-  }
-
-  if (tasksR.status === 'fulfilled') {
-    const open = tasksR.value.filter((t) => String(t.status || '').toLowerCase() !== 'completed');
-    enrichment.openTasks = open.length;
-    let bestRank = 0;
-    let nearest: string | null = null;
-    for (const t of open) {
-      const rank = PRIORITY_RANK[String(t.priority || '').toLowerCase()] ?? 0;
-      if (rank > bestRank) {
-        bestRank = rank;
-        enrichment.priority = String(t.priority);
-      }
-      const exp = t.taskSlaDetail?.expiryTime;
-      if (exp) {
-        if (nearest === null || new Date(exp).getTime() < new Date(nearest).getTime()) {
-          nearest = exp;
-        }
-      }
-    }
-    enrichment.slaTime = nearest;
-    enrichment.slaStatus = slaStatusOf(nearest);
-  }
-
-  return enrichment;
-}
-
-/** Enrich a batch of instances in parallel (used by dashboard + cases list). */
-export async function enrichCases(
-  sdk: UiPath,
-  instances: CaseInstance[],
-): Promise<Map<string, CaseEnrichment>> {
-  const results = await Promise.allSettled(instances.map((inst) => enrichCase(sdk, inst)));
-  const map = new Map<string, CaseEnrichment>();
-  results.forEach((r, i) => {
-    if (r.status === 'fulfilled') map.set(instances[i].instanceId, r.value);
-  });
-  return map;
 }
 
 export function caseLabel(inst: CaseInstance): string {
@@ -278,23 +200,6 @@ export async function listCaseInstancesPage(
     hasNextPage: res.hasNextPage,
     totalCount: res.totalCount,
   };
-}
-
-/** Load every case instance by looping the cursor (bounded for safety). */
-export async function listAllCaseInstances(
-  sdk: UiPath,
-  processKey?: string,
-  max = 1000,
-): Promise<CaseInstance[]> {
-  const out: CaseInstance[] = [];
-  let cursor: PaginationCursor | undefined;
-  for (let i = 0; i < 40 && out.length < max; i++) {
-    const page = await listCaseInstancesPage(sdk, { pageSize: 100, cursor, processKey });
-    out.push(...page.items);
-    if (!page.hasNextPage || !page.nextCursor) break;
-    cursor = page.nextCursor;
-  }
-  return out;
 }
 
 // ============================================================
@@ -421,16 +326,16 @@ export async function insightsElementStats(
 // ============================================================
 export type LifecycleAction = 'pause' | 'resume' | 'close' | 'reopen';
 
-/** Run a lifecycle operation on a case instance. Returns whether it succeeded. */
+/** Pause, resume or close a case instance. Returns whether it succeeded. */
 export async function runLifecycle(
   sdk: UiPath,
-  action: LifecycleAction,
+  action: Exclude<LifecycleAction, 'reopen'>,
   instanceId: string,
   folderKey: string,
-  options: { comment?: string; stageId?: string } = {},
+  comment?: string,
 ): Promise<boolean> {
   const ci = new CaseInstances(sdk);
-  const opts = options.comment ? { comment: options.comment } : undefined;
+  const opts = comment ? { comment } : undefined;
   switch (action) {
     case 'pause':
       return (await ci.pause(instanceId, folderKey, opts)).success;
@@ -438,9 +343,19 @@ export async function runLifecycle(
       return (await ci.resume(instanceId, folderKey, opts)).success;
     case 'close':
       return (await ci.close(instanceId, folderKey, opts)).success;
-    case 'reopen':
-      return (await ci.reopen(instanceId, folderKey, { stageId: options.stageId ?? '', comment: options.comment })).success;
   }
+}
+
+/** Reopen a case instance from the given stage. Returns whether it succeeded. */
+export async function reopenCase(
+  sdk: UiPath,
+  instanceId: string,
+  folderKey: string,
+  stageId: string,
+  comment?: string,
+): Promise<boolean> {
+  const ci = new CaseInstances(sdk);
+  return (await ci.reopen(instanceId, folderKey, { stageId, comment })).success;
 }
 
 // ============================================================

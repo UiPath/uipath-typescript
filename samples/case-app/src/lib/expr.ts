@@ -2,7 +2,7 @@
 // Templates look like:  =vars.response.customerName
 //                       =string.Format("{0}{1}{2}", vars.a, vars.b, vars.c)
 // and overview "details" are JSON blobs whose values are such expressions.
-import type { CaseVariables } from '@/lib/sdk';
+import type { CaseVariables } from '@/lib/types';
 
 export type VarContext = Record<string, unknown>;
 

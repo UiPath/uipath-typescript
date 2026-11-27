@@ -2,8 +2,8 @@ import React, { createContext, useContext, useCallback, useEffect, useMemo, useS
 import type { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { reportError } from '@/lib/errors';
-import { listCaseDefinitions } from '@/lib/sdk';
-import type { CaseDefinition } from '@/lib/types';
+import { getSlaSummaryAll, listCaseDefinitions, orFallback } from '@/lib/sdk';
+import type { CaseDefinition, CaseSla } from '@/lib/types';
 
 const SELECTED_KEY = 'uipath_selected_case_processkey';
 
@@ -32,6 +32,9 @@ interface CasesContextValue {
   allDefinitions: CaseDefinition[];
   loading: boolean;
   error: string | null;
+  /** SLA summary rows for every case instance, loaded once and shared by the pages. Empty when Insights is unavailable. */
+  slaSummary: CaseSla[];
+  slaLoading: boolean;
   refresh: () => void;
   /** Select (and persist) the case this session is scoped to. */
   selectCase: (processKey: string) => void;
@@ -45,6 +48,8 @@ export const CasesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [caseProcessKey, setCaseProcessKey] = useState<string>(loadStoredKey());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [slaSummary, setSlaSummary] = useState<CaseSla[]>([]);
+  const [slaLoading, setSlaLoading] = useState(true);
   const [tick, setTick] = useState(0);
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
@@ -88,6 +93,24 @@ export const CasesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, [sdk, isAuthenticated, tick]);
 
+  // The SLA summary pages through the whole tenant, so it loads here once
+  // instead of on every visit to a page that shows it.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let alive = true;
+    setSlaLoading(true);
+    void getSlaSummaryAll(sdk)
+      .catch(orFallback('getSlaSummaryAll', [] as CaseSla[]))
+      .then((rows) => {
+        if (!alive) return;
+        setSlaSummary(rows);
+        setSlaLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [sdk, isAuthenticated, tick]);
+
   const caseDefinition = useMemo(
     () => allDefinitions.find((d) => d.processKey === caseProcessKey),
     [allDefinitions, caseProcessKey],
@@ -96,7 +119,7 @@ export const CasesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   return (
     <CasesContext.Provider
-      value={{ caseProcessKey, caseDefinition, definitions, allDefinitions, loading, error, refresh, selectCase }}
+      value={{ caseProcessKey, caseDefinition, definitions, allDefinitions, loading, error, slaSummary, slaLoading, refresh, selectCase }}
     >
       {children}
     </CasesContext.Provider>

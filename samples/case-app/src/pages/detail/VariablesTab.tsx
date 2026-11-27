@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@uipath/apollo-wind/components/ui/table';
 import { SearchIcon } from '@/components/icons';
-import type { GlobalVariable } from '@/lib/sdk';
+import type { GlobalVariable } from '@/lib/types';
 
 function renderValue(v: unknown): string {
   if (v == null) return '—';

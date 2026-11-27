@@ -41,7 +41,9 @@ export function ActionsPage() {
   }, [tasksQ.data]);
 
   const list = tab === 'Open' ? open : completed;
-  const active = list.find((t) => rowKey(t) === selectedId) ?? list[0] ?? null;
+  // A picked task is looked up in all rows, so it stays open (with its new
+  // status) after it is completed and leaves the Open list.
+  const active = (tasksQ.data ?? []).find((t) => rowKey(t) === selectedId) ?? list[0] ?? null;
 
   if (pageLoading && items.length === 0) return <Loading label="Loading cases…" />;
   if (pageError)
@@ -138,7 +140,10 @@ export function ActionsPage() {
               onOpenCase={() =>
                 navigate(`/cases/${encodeURIComponent(active._case.folderKey)}/${encodeURIComponent(active._case.instanceId)}`)
               }
-              onChanged={tasksQ.reload}
+              onChanged={() => {
+                setSelectedId(rowKey(active));
+                tasksQ.reload();
+              }}
             />
           ) : (
             <Card className="flex h-full min-h-[420px] items-center justify-center">

@@ -243,7 +243,7 @@ function FieldEditor({
           type="number"
           step={field.kind === 'integer' ? 1 : 'any'}
           value={value === null || value === undefined ? '' : String(value)}
-          onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+          onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
         />
       );
