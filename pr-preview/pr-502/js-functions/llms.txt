@@ -1961,6 +1961,8 @@ interface RobotContext {
 
 A platform-issued RS256 JWT (`sub_type: robot.user`, ~24h TTL) for the function's service account. Use for Secret Vault pattern — reads assets without requiring the caller to have folder access.
 
+In a long job, read `ctx.robot.accessToken` right before each outbound call. The runtime renews the token before it expires and puts the new one in the property. A value your code assigns to the property stays there for the rest of the run.
+
 **Availability:**
 
 | Context                   | Available?                               |
