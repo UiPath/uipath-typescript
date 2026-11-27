@@ -154,22 +154,26 @@ const bucket = await buckets.getById(<bucketId>, <folderId>);
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
 
 Retrieves a single orchestrator storage bucket by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Bucket name to search for
-- `options?`: `BucketGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                     | Description                                                                                                 |
+| ---------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                 | Bucket name to search for                                                                                   |
+| `options?` | `BucketGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`BucketGetResponse`>
 
 Promise resolving to a single bucket [BucketGetResponse](../BucketGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -180,6 +184,41 @@ await buckets.getByName('MyBucket', { folderKey: '<folderKey>' });
 
 // By folder path
 await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
+```
+
+#### Call Signature
+
+> **getByName**(`bucket`: `BucketResource`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
+
+Retrieves a single storage bucket declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                        |
+| ---------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| `bucket`   | `BucketResource`         | Handle created with `resource.bucket()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `BucketGetByNameOptions` | Optional folder override and query parameters                                      |
+
+##### Returns
+
+`Promise`\<`BucketGetResponse`>
+
+Promise resolving to a single [BucketGetResponse](../BucketGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly bucket = resource.bucket({ name: 'Invoices', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await buckets.getByName(ProjectResources.bucket);
 ```
 
 ### getFileMetaData()

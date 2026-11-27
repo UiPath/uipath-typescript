@@ -15,7 +15,7 @@ npm install @uipath/ui-widgets-pdf-viewer
 ### Peer dependencies
 
 ```
-npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.7.1
 ```
 
 ## Usage
@@ -135,7 +135,7 @@ One `source` prop, four shapes. **The widget selects the adapter from the fields
 | `sdk`           | `UiPath`                               | No\*     | Initialized UiPath SDK instance. \*Required for `bucket` and `entity` sources                                              |
 | `toolbar`       | `PdfViewerToolbarOptions`              | No       | Per-feature toggles: `pagination`, `zoom`, `rotate`, `download` (all default `true`); disable all four to hide the toolbar |
 | `fileName`      | `string`                               | No       | Name shown in the toolbar and used for downloads                                                                           |
-| `maxHeight`     | `number \| string`                     | No       | Max canvas height (default `640`); the canvas scrolls internally                                                           |
+| `maxHeight`     | \`number                               | string\` | No                                                                                                                         |
 | `onLoadSuccess` | `(info: { numPages: number }) => void` | No       | Called when the document loads                                                                                             |
 | `onLoadError`   | `(error: Error) => void`               | No       | Called when fetching or rendering fails                                                                                    |
 

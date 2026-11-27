@@ -1,21 +1,29 @@
-# FunctionContext
+# Handler context
 
-The second argument to every handler. Carries caller identity, the function's own platform identity, path parameters, and request headers.
+The second argument to every handler. An HTTP function's handler receives an `HttpContext`: caller identity, the function's own platform identity, path parameters, and request headers. A job-only function's handler receives a [`JobContext`](#jobcontext). `FunctionContext` is a deprecated alias of `HttpContext`.
 
 ```
-import type { FunctionContext } from "@uipath/coded-functions-js-sdk";
+import type { HttpContext } from "@uipath/coded-functions-js-sdk";
 ```
 
 ## Interface
 
 ```
-interface FunctionContext {
+interface HttpContext {
   user: IdentityContext | null;
   robot: RobotContext | null;
   platform: PlatformContext | null;
   params: Record<string, string>;
   headers: Record<string, string>;
 }
+```
+
+## JobContext
+
+A job-only function's handler receives a `JobContext`: `user`, `robot` and `platform`, without `params` and `headers`.
+
+```
+import type { JobContext } from "@uipath/coded-functions-js-sdk";
 ```
 
 ## user
@@ -62,6 +70,8 @@ interface RobotContext {
 #### `accessToken`
 
 A platform-issued RS256 JWT (`sub_type: robot.user`, ~24h TTL) for the function's service account. Use for Secret Vault pattern — reads assets without requiring the caller to have folder access.
+
+In a long job, read `ctx.robot.accessToken` right before each outbound call. The runtime renews the token before it expires and puts the new one in the property. A value your code assigns to the property stays there for the rest of the run.
 
 **Availability:**
 
@@ -140,19 +150,19 @@ const auth = ctx.headers["authorization"];   // "Bearer eyJ..."
 const type = ctx.headers["content-type"];
 ```
 
-## Importing FunctionContext for helper functions
+## Typing helper functions
 
-`FunctionContext` is exported from the SDK. Import it explicitly when you split handler logic into typed helper functions:
+Import the context type when you split handler logic into typed helper functions. Type the helper's `ctx` as `JobContext` when it reads only `user`, `robot` or `platform`, so HTTP and job-only handlers can both pass their context to it. Use `HttpContext` when it reads `params` or `headers`.
 
 ```
-import type { FunctionContext } from "@uipath/coded-functions-js-sdk";
+import type { JobContext } from "@uipath/coded-functions-js-sdk";
 
 interface MyInput {
   id: string;
 }
 
 // The same interface declares the contract (input: defineSchema<MyInput>()) and types the helper.
-async function processItem(input: MyInput, ctx: FunctionContext) {
+async function processItem(input: MyInput, ctx: JobContext) {
   const userId = ctx.user?.sub ?? "anonymous";
   // ...
 }
@@ -163,10 +173,16 @@ Without the explicit import, the only alternative is `ctx: any`, which loses all
 ## Usage example
 
 ```
+interface ExampleOutput {
+  userId: string;
+  resourceId: string;
+}
+
 export default defineFunction({
   name: "example",
   method: "POST",
   path: "/example/:id",
+  output: defineSchema<ExampleOutput>(),
   handler: async (input, ctx) => {
     // Identity
     const userId = ctx.user?.sub ?? "anonymous";

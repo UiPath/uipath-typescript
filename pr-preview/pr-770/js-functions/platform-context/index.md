@@ -1,8 +1,8 @@
 # Platform Context
 
-Every function handler receives a [`FunctionContext`](../api/function-context/) as its second argument. This page explains what the platform injects and what you must forward yourself.
+An HTTP function's handler receives an [`HttpContext`](../api/function-context/) as its second argument; a job-only function's handler receives a [`JobContext`](../api/function-context/#jobcontext), which has every field below except `params` and `headers`. This page explains what the platform injects and what you must forward yourself.
 
-## FunctionContext at a glance
+## The context at a glance
 
 ```
 handler: async (input, ctx) => {
@@ -75,7 +75,7 @@ handler: async (input, ctx) => {
 }
 ```
 
-Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. `ctx.platform` is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available; `folderKey` alone can be `null` (folderless invocation). See [FunctionContext — platform](../api/function-context/#platform) for the full contract.
+Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. `ctx.platform` is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available; `folderKey` alone can be `null` (folderless invocation). See [Handler context, platform](../api/function-context/#platform) for the full contract.
 
 **Local dev fallback** — no handler runs locally, so `serve` reads these environment variables instead. They are consulted only when the request carries no `X-UiPath-*` platform headers at all: once any of them is present, the headers are the sole source, so the coordinates can never be stitched together out of a header and a local env value.
 

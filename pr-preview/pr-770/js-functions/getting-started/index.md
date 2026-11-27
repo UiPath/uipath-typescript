@@ -13,7 +13,7 @@ uip tools install --package-name @uipath/functions-tool
 ## 1. Create a project
 
 ```
-uip functions new my-functions -l ts
+uip functions new my-functions -l ts --kind http
 cd my-functions
 ```
 
@@ -29,6 +29,7 @@ Options:
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `-l, --language <lang>` | `ts` (default) or `js` for this guide; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
 | `--empty`               | Skip the hello world function (JS/TS only)                                                                           |
+| `--kind <job\|http>`    | `job` (default) scaffolds `hello` as a job function, `http` as an HTTP endpoint                                      |
 
 The generated project structure:
 
@@ -107,7 +108,7 @@ UIPATH_TENANT_ID=<tenant-UUID>
 
 Note
 
-`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [FunctionContext — platform](../api/function-context/#platform).
+`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [Handler context, platform](../api/function-context/#platform).
 
 ## 3. Pack
 
@@ -150,7 +151,7 @@ Diffs local files against the Studio Web project and uploads only what changed. 
 ## Full workflow
 
 ```
-uip functions new my-functions -l ts && cd my-functions
+uip functions new my-functions -l ts --kind http && cd my-functions
 uip functions serve                    # develop
 uip functions pack
 uip login

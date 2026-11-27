@@ -184,9 +184,9 @@ Only where everyone signs in through SSO
 
 Users who sign in with a UiPath account do not exist in the organization's identity provider and will be rejected by it.
 
-Needs the organization id
+Organization name or id
 
-This uses the organization id, which the platform and `uipath.json` supply for you. If you instead pass configuration directly to the constructor, set `orgName` to the organization id, otherwise `enforceSso` is ignored and a warning is logged.
+`orgName` can be either the organization name or the organization id.
 
 ## Secret-based Authentication
 
@@ -393,6 +393,25 @@ useEffect(() => {
 }, []);
 ```
 
+### Using the token in your own requests
+
+For requests your app makes outside the SDK, get the token from `sdk.getValidToken()`. It resolves with an access token that is valid right now and renews it first when needed, exactly as the SDK does for its own calls:
+
+```
+const token = await sdk.getValidToken();
+const { baseUrl, orgName, tenantName } = sdk.config;
+
+const response = await fetch(`${baseUrl}/${orgName}/${tenantName}/<servicePath>`, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+```
+
+Call it before each request instead of keeping the result. It answers from memory until a renewal is due, and calls made at the same time share one renewal. `sdk.getToken()` only reads the token the SDK holds and never renews it, so a token read from it can expire while your app still holds it.
+
+The SDK renews the tokens of its own OAuth sign-in. A token you passed as `secret` is returned as it is: the SDK does not know when it expires and cannot renew it.
+
+`getValidToken()` rejects with an `AuthenticationError` when it cannot return a token, for example before sign-in or when the renewal failed. A renewal can fail for a temporary reason such as a network error, so retry before calling `sdk.initialize()` to sign in again.
+
 ### Available Auth Methods
 
 - `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
@@ -403,6 +422,8 @@ useEffect(() => {
 - `sdk.getToken()` - Get the logged-in user's access token
 - `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
+- `sdk.getValidToken()` - Get an access token that is valid right now, renewing it first when needed. Use it for requests your app makes outside the SDK
+- `sdk.setDebugContext()` - Attach a parent job key to the jobs the app starts so Orchestrator links them to it and, when that parent is a debug run, routes them as debug sub-jobs. Studio Web debug sessions and Action Center debug tasks hand the key to the SDK themselves; call this only when another host runs the app inside a job
 
 ## Quick Test Script
 
@@ -575,7 +596,10 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets                           | `getAll()`                 | ✅ Yes                 |
 | Buckets                           | `getFiles()`               | ✅ Yes                 |
 | Buckets                           | `getFileMetaData()`        | ❌ No                  |
+| Folders                           | `getAll()`                 | ✅ Yes                 |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
+| Ontologies                        | `getAll()`                 | ✅ Yes                 |
+| Orchestrator Users                | `getAll()`                 | ✅ Yes                 |
 | Users                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAssignments()`         | ✅ Yes                 |
@@ -602,6 +626,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
 | Feedback                          | `getCategories()`          | ✅ Yes                 |
 | Governance                        | `getPolicyTraces()`        | ✅ Yes                 |
+| Decisions                         | `getAll()`                 | ✅ Yes                 |
+| Decisions                         | `query()`                  | ❌ No                  |
 
 # Helper Methods
 
@@ -959,12 +985,15 @@ You must call it once before rendering any widget from this package, and host th
 
 ## Data sources
 
-The widget needs a taxonomy, an extraction result and a document DOM. There are two mutually exclusive ways to give it those:
+The widget needs a taxonomy, an extraction result and a document DOM. There are three mutually exclusive ways to give it those:
 
-| Mode              | Pass                         | Who fetches                                                   | Who writes back                                 |
-| ----------------- | ---------------------------- | ------------------------------------------------------------- | ----------------------------------------------- |
-| **Self-fetching** | `sdk` + `data`               | The widget, from the bucket paths on `ContentValidationData`  | The widget, to `ValidatedExtractionResultsPath` |
-| **Pre-fetched**   | `artifacts` (+ `documentId`) | You — hand it a `DuDocumentArtifacts` object you already hold | You, from the request the widget emits          |
+| Mode                   | Pass                         | Who fetches                                                   | Who writes back                                       |
+| ---------------------- | ---------------------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| **Self-fetching**      | `sdk` + `data`               | The widget, from the bucket paths on `ContentValidationData`  | The widget, to `ValidatedExtractionResultsPath`       |
+| **Self-fetching, IXP** | `sdk` + `processedDocument`  | The widget, through the Flow run that produced the document   | The widget, as a review recorded against the Flow run |
+| **Pre-fetched**        | `artifacts` (+ `documentId`) | You — hand it a `DuDocumentArtifacts` object you already hold | You, from the request the widget emits                |
+
+If both `data` and `processedDocument` are set, `data` wins.
 
 **The outputs do not change with the mode.** `onSubmit`, `onSaveAsDraft` and `onReportException` fire for every user action either way, and always carry the request the web component produced. The only difference is a second argument: when the widget persisted the data itself, it passes the outcome too.
 
@@ -993,11 +1022,15 @@ The two modes can be mixed: pass `artifacts` **and** `sdk` + `data` to skip the 
 
 `DuDocumentArtifacts`
 
-`{ taxonomy, extractionResult, predictedExtractionResult?, dom, text, customizationInfo, original }` — `original` is the base64-encoded document the viewer renders.
+`{ taxonomy, extractionResult, predictedExtractionResult?, dom, text, customizationInfo, original }` — `original` is the base64-encoded document the viewer renders. In `DuDocumentArtifacts`, `taxonomy` and `extractionResult` are UiPath DU contracts. `ValidationStation` also takes `IxpDocumentArtifacts`, the same shape with all three in the IXP representation (an `IXPTaxonomy` JSON Schema, an `IXPReviewedExtraction` — an `IXPExtraction` plus optional `confirmations` — and an optional `IXPExtraction` prediction). So do the `CompactFieldsForm`, `CompactTableEditor` and `DocumentViewer` subcomponents; `CompactBusinessRules` and `CompactDocTypeField` take `DuDocumentArtifacts` only.
 
 ### Comparing against the prediction
 
-`predictedExtractionResult` is the model's prediction — the extraction output nobody edited — as opposed to `extractionResult`, the result the user reviews. Self-fetching fills it from `AutomaticExtractionResultsPath`; in pre-fetched mode it is optional, and a hand-built `DuDocumentArtifacts` without it is still valid.
+`predictedExtractionResult` is the model's prediction — the extraction output nobody edited — as opposed to `extractionResult`, the result the user reviews. Self-fetching fills it from `AutomaticExtractionResultsPath`; in pre-fetched mode it is optional, and a hand-built `DuDocumentArtifacts` without it is still valid. Supply it in the same representation as `extractionResult`: an `IXPExtraction` on `IxpDocumentArtifacts`. A Flow `ProcessedDocument` carries no prediction, so self-fetching one leaves it unset.
+
+Change it together with `extractionResult`
+
+Once the element has paired a prediction with the loaded values, assigning a different `predictedExtractionResult` (or `null`) on its own reloads the last `extractionResult` it was fed and drops unsaved edits. With `EnablePredictionDiff` on, the element also inserts predicted rows and values the result lacks, as unconfirmed values the user confirms or deletes.
 
 By itself it changes nothing visible. It drives the `EnablePredictionDiff` customization flag (compact mode, on `ValidationStation`, `CompactFieldsForm` and `CompactTableEditor`): where the prediction differs from the current values, the element shows the predicted value with a button that takes it over. Like every customization flag, it lives under `FeatureCustomization` in `customizationInfo` — typed by the exported `ICustomizationInfoDTO` / `IFeatureCustomization`:
 
@@ -1070,25 +1103,78 @@ The widget always offers **Save as draft**, so leaving `onSaveAsDraft` unwired m
 
 The request payloads are exported too — `IVsSaveValidatedDataRequest`, `IVsSaveValidatedDataAsDraftRequest` and `IVsSaveExceptionReportRequest` — so handlers declared outside JSX can name their parameter.
 
+### IXP (`ProcessedDocument`)
+
+A Flow IDP node emits a `ProcessedDocument` rather than a `ContentValidationData`. It carries the taxonomy (an `IXPTaxonomy`) and the result (an `IXPExtraction`) inline, plus `metadata` naming the run that produced it — `traceId`, `spanId` and `folderKey`. The document, its DOM and its OCR text are read through that run's trace.
+
+```
+<ValidationStation
+  sdk={sdk}
+  processedDocument={task.data}
+  onSubmit={(request, result) => completeTask(result?.processedDocument)}
+/>
+```
+
+- **Loading.** The document opens on the result last saved against the producing span (a draft), else on the payload's `result`. A draft reopens with the values the reviewer had confirmed. `documentId` defaults to `metadata.traceId`.
+- **Saving.** Submit and draft record the review against the producing span; report-as-exception records a rejection with the reason. `onSubmit`, `onSaveAsDraft` and `onReportException` receive the outcome as their second argument. `request.validatedData` is an `IXPExtraction` on submit, and an `IXPReviewedExtraction` — the same plus the reviewer's `confirmations` — on a draft.
+- **Record format.** A review is stored as the `ProcessedDocument` the widget was given, with its `result` replaced by the validated one and `metadata.hitl.draft` set — `true` for a draft, `false` for a submit. This is the shape the Angular Validation Station uses, so either reopens a review the other saved. A record in any other shape — including the `{ draft, extraction }` envelope both used before — is ignored on load, and the document opens on the payload's `result`.
+- **Completing the task is yours.** The downstream Flow node reads the validated document from the task completion. A submit's `result.processedDocument` is that document — the same one the record holds, a `ValidatedProcessedDocument` — so complete the task with it, verbatim, whatever `result.success` says: a failed record write must not block the review. `toValidatedProcessedDocument(processedDocument, validatedData, draft)` builds it when you persist yourself.
+- **Subcomponents.** `CompactFieldsForm`, `CompactTableEditor` and `DocumentViewer` take `processedDocument` or `IxpDocumentArtifacts` too, and `CompactFieldsForm` saves a Flow document as `ValidationStation` does. `CompactBusinessRules` and `CompactDocTypeField` are Document Understanding-only. See the [subcomponents guide](https://github.com/UiPath/uipath-ui-widgets/blob/develop/packages/validation-station/docs/validation-station-subcomponents.md#ixp-documents).
+- **OAuth scopes.** The `sdk`'s token needs `Traces.Api` (the run's spans, and the review record) and `OR.Buckets.Read` (the document, DOM and OCR text, via ECS). A coded action app completing the task also needs `OR.Tasks`. A missing scope surfaces as a 401/403 in the load or save error.
+- **Hosting.** The artifacts are downloaded in the browser from pre-signed ECS storage URLs, so the host's origin must be in the ECS storage account's CORS rules. Coded apps (`https://{org}.{env}.uipath.host`) are.
+
+The widget does this through exported functions, so a host that fetches up front runs exactly the same code:
+
+| Export                                                              | Use                                                                                             |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `fetchProcessedDocumentArtifacts(sdk, processedDocument)`           | Fetch the `IxpDocumentArtifacts` — what the widget fetches given `processedDocument`            |
+| `useProcessedDocumentArtifacts(sdk, processedDocument)`             | The same fetch as a hook, for when the fetch belongs to a component's lifecycle                 |
+| `submitProcessedDocument(sdk, processedDocument, request)`          | Record a submitted review; its result carries the `processedDocument` to complete the task with |
+| `saveProcessedDocumentAsDraft(sdk, processedDocument, request)`     | Record a draft — the one the next load opens on                                                 |
+| `reportProcessedDocumentException(sdk, processedDocument, request)` | Record a rejection with the reviewer's reason. Replaces a saved draft                           |
+
+```
+const artifacts = await fetchProcessedDocumentArtifacts(sdk, processedDocument);
+
+<ValidationStation
+  artifacts={artifacts}
+  onSubmit={async (request) => {
+    const result = await submitProcessedDocument(
+      sdk,
+      processedDocument,
+      request,
+    );
+    // Undefined only for a payload the station could not have reviewed.
+    if (result.processedDocument) completeTask(result.processedDocument);
+  }}
+  onSaveAsDraft={(request) =>
+    saveProcessedDocumentAsDraft(sdk, processedDocument, request)
+  }
+/>;
+```
+
+The save functions are stateless: each one edits the span's newest review record, or creates it when there is none, so the widget and a host saving outside it always land on the same record.
+
 ## Props
 
-| Prop                             | Type                                           | Required | Default   | Description                                                                                                                                                                                                                                                            |
-| -------------------------------- | ---------------------------------------------- | -------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sdk`                            | `UiPath`                                       | No\*     | —         | UiPath SDK instance for authentication and API calls. Required for self-fetching / persistence                                                                                                                                                                         |
-| `data`                           | `ContentValidationData`                        | No\*     | —         | Document data containing the bucket paths, document ID, and the folder they live in — `FolderId` or `FolderKey`, whichever the producing activity set. Required for self-fetching / persistence                                                                        |
-| `artifacts`                      | `DuDocumentArtifacts`                          | No\*     | —         | Pre-fetched document artifacts. When supplied, no bucket fetch is performed. \*Either `artifacts` or `sdk` + `data` must be provided                                                                                                                                   |
-| `documentId`                     | `string`                                       | No       | —         | Document ID forwarded to the web component. Falls back to `data.DocumentId` — pass it in pre-fetched mode, where there is no `data`                                                                                                                                    |
-| `theme`                          | `'light' \| 'dark' \| 'light-hc' \| 'dark-hc'` | No       | `'light'` | Visual theme                                                                                                                                                                                                                                                           |
-| `language`                       | `ValidationStationLanguage`                    | No       | `English` | UI language (see [the enum](#language-enum))                                                                                                                                                                                                                           |
-| `isReadonly`                     | `boolean`                                      | No       | `false`   | When `true`, renders in read-only mode                                                                                                                                                                                                                                 |
-| `persistent`                     | `boolean`                                      | No       | `false`   | Render the persistent element variant, which survives portal/DOM detachment (e.g. tab switches)                                                                                                                                                                        |
-| `options`                        | `IValidationStationOptions`                    | No       | —         | Fine-grained UI feature flags, passed through to the element as given                                                                                                                                                                                                  |
-| `save={{ validate: false }}`     | `{ validate: boolean }`                        | No       | —         | Trigger **save as draft**                                                                                                                                                                                                                                              |
-| `save={{ validate: true }}`      | `{ validate: boolean }`                        | No       | —         | Trigger **submit** — runs validation first, then saves                                                                                                                                                                                                                 |
-| `discardChanges`                 | `{ value: boolean }`                           | No       | —         | Trigger a discard-changes operation. Call `setDiscardChanges({ value: true })` (or `false` — the boolean is ignored) every time you want it to fire. Each call creates a brand-new object even if the content looks identical, and that is what the widget watches for |
-| `setFieldValueByPath`            | `SetFieldValueByPath`                          | No       | —         | Set a field value addressed by a path of `{ fieldName, valueIndex }` segments                                                                                                                                                                                          |
-| `selectAndFocusFieldValueByPath` | `SelectAndFocusFieldValueByPath`               | No       | —         | Select and focus a field value addressed by a path; focuses the document reference if any                                                                                                                                                                              |
-| `deleteFieldValueByPath`         | `DeleteFieldValueByPath`                       | No       | —         | Delete a field value addressed by a path                                                                                                                                                                                                                               |
+| Prop                             | Type                             | Required               | Default   | Description                                                                                                                                                                                                                                                            |
+| -------------------------------- | -------------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sdk`                            | `UiPath`                         | No\*                   | —         | UiPath SDK instance for authentication and API calls. Required for self-fetching / persistence                                                                                                                                                                         |
+| `data`                           | `ContentValidationData`          | No\*                   | —         | Document data containing the bucket paths, document ID, and the folder they live in — `FolderId` or `FolderKey`, whichever the producing activity set. Required for self-fetching / persistence                                                                        |
+| `processedDocument`              | `ProcessedDocument`              | No\*                   | —         | A Flow IDP node's output. With `sdk`, the widget fetches its artifacts and records reviews through the producing run — see [IXP documents](#ixp-documents-processeddocument). Ignored when `data` is set                                                               |
+| `artifacts`                      | \`DuDocumentArtifacts            | IxpDocumentArtifacts\` | No\*      | —                                                                                                                                                                                                                                                                      |
+| `documentId`                     | `string`                         | No                     | —         | Document ID forwarded to the web component. Falls back to `data.DocumentId`, else `processedDocument.metadata.traceId` — pass it in pre-fetched mode                                                                                                                   |
+| `theme`                          | `DuTheme`                        | No                     | `'light'` | Visual theme: `'light'`, `'dark'`, `'light-hc'`, `'dark-hc'`, or the Apollo Modern `'future-light'` / `'future-dark'`                                                                                                                                                  |
+| `language`                       | `ValidationStationLanguage`      | No                     | `English` | UI language (see [the enum](#language-enum))                                                                                                                                                                                                                           |
+| `isReadonly`                     | `boolean`                        | No                     | `false`   | When `true`, renders in read-only mode                                                                                                                                                                                                                                 |
+| `persistent`                     | `boolean`                        | No                     | `false`   | Render the persistent element variant, which survives portal/DOM detachment (e.g. tab switches)                                                                                                                                                                        |
+| `options`                        | `IValidationStationOptions`      | No                     | —         | Fine-grained UI feature flags, passed through to the element as given                                                                                                                                                                                                  |
+| `save={{ validate: false }}`     | `{ validate: boolean }`          | No                     | —         | Trigger **save as draft**                                                                                                                                                                                                                                              |
+| `save={{ validate: true }}`      | `{ validate: boolean }`          | No                     | —         | Trigger **submit** — runs validation first, then saves                                                                                                                                                                                                                 |
+| `discardChanges`                 | `{ value: boolean }`             | No                     | —         | Trigger a discard-changes operation. Call `setDiscardChanges({ value: true })` (or `false` — the boolean is ignored) every time you want it to fire. Each call creates a brand-new object even if the content looks identical, and that is what the widget watches for |
+| `setFieldValueByPath`            | `SetFieldValueByPath`            | No                     | —         | Set a field value addressed by a path of `{ fieldName, valueIndex }` segments                                                                                                                                                                                          |
+| `selectAndFocusFieldValueByPath` | `SelectAndFocusFieldValueByPath` | No                     | —         | Select and focus a field value addressed by a path; focuses the document reference if any                                                                                                                                                                              |
+| `deleteFieldValueByPath`         | `DeleteFieldValueByPath`         | No                     | —         | Delete a field value addressed by a path                                                                                                                                                                                                                               |
 
 The three save callbacks (`onSubmit`, `onSaveAsDraft`, `onReportException`) are documented [below](#reacting-to-save-draft-and-exception-flows); the state callbacks in [Reading the document state](#reading-the-document-state).
 
@@ -1096,11 +1182,11 @@ The three save callbacks (`onSubmit`, `onSaveAsDraft`, `onReportException`) are 
 
 The widget surfaces three user-initiated flows and reports each through exactly one callback, whichever mode it is in. Every callback receives the raw request; `result` is filled in only for the flows the widget persisted itself.
 
-| Callback            | User action             | Signature                    | What the widget does                                                                                                                                               | What the host does                                                                                                                       |
-| ------------------- | ----------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `onSubmit`          | **Submit**              | `(request, result?) => void` | With `sdk` + `data`: `processExtractedData`, then uploads to `ValidatedExtractionResultsPath`, and passes the outcome as `result`. Without: emits the request only | React to `result`, or — when it is absent — persist the request yourself (`submitValidatedData` does exactly what the widget would have) |
-| `onSaveAsDraft`     | **Save as draft**       | `(request, result?) => void` | With `sdk` + `data`: uploads `validatedData` straight to the bucket (no `processExtractedData`). Without: emits the request only                                   | Same as above; the host-side equivalent is `saveValidatedDataAsDraft`                                                                    |
-| `onReportException` | **Report as exception** | `(request) => void`          | Nothing — the widget never persists exceptions, in either mode. The reason is at `request.exceptionReport.Reason`                                                  | Required if you want the report persisted — call `OrchestratorDuModule.submitExceptionReport(...)` yourself                              |
+| Callback            | User action             | Signature                    | What the widget does                                                                                                                                                                   | What the host does                                                                                                                       |
+| ------------------- | ----------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `onSubmit`          | **Submit**              | `(request, result?) => void` | With `sdk` + `data`: `processExtractedData`, then uploads to `ValidatedExtractionResultsPath`, and passes the outcome as `result`. Without: emits the request only                     | React to `result`, or — when it is absent — persist the request yourself (`submitValidatedData` does exactly what the widget would have) |
+| `onSaveAsDraft`     | **Save as draft**       | `(request, result?) => void` | With `sdk` + `data`: uploads `validatedData` straight to the bucket (no `processExtractedData`). Without: emits the request only                                                       | Same as above; the host-side equivalent is `saveValidatedDataAsDraft`                                                                    |
+| `onReportException` | **Report as exception** | `(request, result?) => void` | With `sdk` + `processedDocument`: records the rejection against the Flow run and passes the outcome as `result`. Otherwise nothing — the reason is at `request.exceptionReport.Reason` | For any other source, persist it yourself — call `OrchestratorDuModule.submitExceptionReport(...)`                                       |
 
 Submit and draft hand you a `SaveValidatedDataResult` (`{ success, error? }`) — the host owns all UI feedback (toast, retry, etc.); the widget does not surface failures itself. The exception callback hands you `documentId` and `reason` strings ready to forward to the SDK.
 
@@ -1154,29 +1240,29 @@ function App({ sdk, data, task }) {
 
 Failures are silent if you skip the callbacks
 
-All three callbacks are optional, but the widget surfaces no errors on its own. `onReportException` is the only place the report goes — without it, the user's **Report as exception** click is a no-op.
+All three callbacks are optional, but the widget surfaces no errors on its own. Outside a `processedDocument`, `onReportException` is the only place the report goes — without it, the user's **Report as exception** click is a no-op.
 
 ## Reading the document state
 
 These callbacks report the rest of the element's `IValidationStationStandaloneWcEventMap`; the three save flows are above.
 
-| Prop                                     | Fires when                                                                            |
-| ---------------------------------------- | ------------------------------------------------------------------------------------- |
-| `onExtractionResultChanged`              | Any change to the extraction result — needs `options={{ emitDtoStateChanges: true }}` |
-| `onLoaded`                               | The element finished loading                                                          |
-| `onDirtyChange`                          | Unsaved changes appear or are cleared                                                 |
-| `onIsValidChange`                        | Validity flips (`true` = no Must rule broken, no invalid values)                      |
-| `onDocumentTypeChanged`                  | The user picks another document type                                                  |
-| `onFieldValueSelected`                   | The user selects a field value                                                        |
-| `onFieldValueChanged`                    | The user edits a field value                                                          |
-| `onBusinessRulesEvaluated`               | Validation errors and business rules are re-evaluated                                 |
-| `onSaveResult`                           | A `save` command completes                                                            |
-| `onSetFieldValueByPathResult`            | A `setFieldValueByPath` command completes                                             |
-| `onSelectAndFocusFieldValueByPathResult` | A `selectAndFocusFieldValueByPath` command completes                                  |
-| `onDeleteFieldValueByPathResult`         | A `deleteFieldValueByPath` command completes                                          |
-| `onFieldsPanelWidthChanged`              | The fields panel is resized (width in px)                                             |
-| `onFieldsPanelSideChanged`               | The panel moves to the other side of the viewer                                       |
-| `onWcMessage`                            | The element publishes a message on its bus (`ui-du-vs-wc-message`) — see below        |
+| Prop                                     | Fires when                                                                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onExtractionResultChanged`              | Any change to the extraction result — needs `options={{ emitDtoStateChanges: true }}`. An IXP document reports an `IXPReviewedExtraction`, with its `confirmations` |
+| `onLoaded`                               | The element finished loading                                                                                                                                        |
+| `onDirtyChange`                          | Unsaved changes appear or are cleared                                                                                                                               |
+| `onIsValidChange`                        | Validity flips (`true` = no Must rule broken, no invalid values)                                                                                                    |
+| `onDocumentTypeChanged`                  | The user picks another document type                                                                                                                                |
+| `onFieldValueSelected`                   | The user selects a field value                                                                                                                                      |
+| `onFieldValueChanged`                    | The user edits a field value                                                                                                                                        |
+| `onBusinessRulesEvaluated`               | Validation errors and business rules are re-evaluated                                                                                                               |
+| `onSaveResult`                           | A `save` command completes                                                                                                                                          |
+| `onSetFieldValueByPathResult`            | A `setFieldValueByPath` command completes                                                                                                                           |
+| `onSelectAndFocusFieldValueByPathResult` | A `selectAndFocusFieldValueByPath` command completes                                                                                                                |
+| `onDeleteFieldValueByPathResult`         | A `deleteFieldValueByPath` command completes                                                                                                                        |
+| `onFieldsPanelWidthChanged`              | The fields panel is resized (width in px)                                                                                                                           |
+| `onFieldsPanelSideChanged`               | The panel moves to the other side of the viewer                                                                                                                     |
+| `onWcMessage`                            | The element publishes a message on its bus (`ui-du-vs-wc-message`) — see below                                                                                      |
 
 Commands need a loaded document
 
@@ -1206,6 +1292,23 @@ ui-du-validation-station-standalone-wc-element::part(indicator-overlay) {
 ```
 
 `message.instanceId` tells elements apart when several report to one handler. `CompactFieldsForm`, `CompactTableEditor` and `CompactBusinessRules` take `onWcMessage` too.
+
+### Opening a field in your taxonomy editor
+
+An annotation host — one that sets `options={{ intendedUse: "document-annotation" }}` — gets an *Edit instructions* link on each prediction-diff warning. Clicking it publishes `taxonomy-field-focus-request` on the same bus, naming the field group or table (`fieldId`) and its `documentTypeId`:
+
+```
+<ValidationStation
+  artifacts={artifacts}
+  options={{ intendedUse: "document-annotation" }}
+  onWcMessage={(message) => {
+    if (message.type === "taxonomy-field-focus-request")
+      openTaxonomyField(message.documentTypeId, message.fieldId);
+  }}
+/>
+```
+
+`ValidationStation` and `CompactFieldsForm` publish it; the table editor does not. Since `IVsWcMessage` gained this member, an exhaustive `switch` over `message.type` needs a new case.
 
 ## Language enum
 
@@ -1246,7 +1349,17 @@ import type {
   ValidationStationProps,
   ValidationStationWcConfig,
   DuArtifactsSource,
+  ValidationStationArtifactsSource,
   DuDocumentArtifacts,
+  IxpDocumentArtifacts,
+  ValidationStationArtifacts,
+  IXPTaxonomy,
+  IXPExtraction,
+  IXPReviewedExtraction,
+  ProcessedDocument,
+  ValidatedProcessedDocument,
+  DuTheme,
+  ValidationStationIntendedUse,
   IValidationStationOptions,
   FieldFilterOptions,
   DocumentViewerOptions,
@@ -1254,6 +1367,7 @@ import type {
   IFeatureCustomization,
   IVsWcMessage,
   IVsIndicatorOverlayContext,
+  IVsTaxonomyFieldFocusRequestMessage,
   IVsSaveValidatedDataRequest,
   IVsSaveValidatedDataAsDraftRequest,
   IVsSaveExceptionReportRequest,
@@ -1263,6 +1377,7 @@ import type {
   DeleteFieldValueByPath,
   ValidationStationEventProps,
   VsStateEventProps,
+  VsAnyRepresentationStateEventProps,
   VsSaveResultEventProps,
   IFieldValueDetailsDto,
   EvaluatedBusinessRulesForFieldValueDto,
@@ -1443,7 +1558,7 @@ package.json
     "prebuild": "npm run stage-du-wc"
   },
   "devDependencies": {
-    "@uipath/du-validation-station-wc": "1.0.0-rc.1"
+    "@uipath/du-validation-station-wc": "1.0.0-rc.6"
   }
 }
 ```
@@ -1470,9 +1585,48 @@ A UiPath-hosted deployment of the web component is built with the full font set,
 - **CSP.** Serving from your own origin needs no more than `script-src 'self'`. A separate origin must be added to `script-src` and `style-src`, and note that the loader offers no Subresource Integrity hook — self-hosting avoids that exposure entirely.
 - **Version skew.** The URL decides which web component version actually runs, and it is not checked against the installed `@uipath/du-validation-station-wc`. Keep the hosted copy in step with the version this package's types are built against.
 
-## Web component 1.0.0-rc.2
+## Web component 1.0.0-rc.6
 
-The widgets now render `@uipath/du-validation-station-wc` `1.0.0-rc.2`. Keep the hosted copy in step (see *Version skew* above). No prop of this package was removed or renamed, but the web component changes a few things you will see:
+The widgets now render `@uipath/du-validation-station-wc` `1.0.0-rc.6`. Keep the hosted copy in step (see *Version skew* above). No prop of this package was removed or renamed, but the web component changes a few things you will see.
+
+From rc.6 — read the behaviour changes before upgrading:
+
+- **IXP documents in the subcomponents.** `CompactFieldsForm`, `CompactTableEditor` and `DocumentViewer` take `processedDocument` or `IxpDocumentArtifacts` — see the [subcomponents guide](https://github.com/UiPath/uipath-ui-widgets/blob/develop/packages/validation-station/docs/validation-station-subcomponents.md#ixp-documents). `onExtractionResultChanged` on `CompactFieldsForm` and `CompactTableEditor` is typed for either representation, so a handler typed for `ExtractionResult` alone no longer compiles on either one.
+- **The compact fields form and table editor reject `boundingBoxes`-only IXP citations.** An IXP extraction whose sources cite by `boundingBoxes` alone (no `references`) does not load on these elements, and such a prediction shows no predicted values. Either cites fine in `ValidationStation` and `DocumentViewer`, which have the document.
+- **New compact UI, on by default:** the field filter bar counts confirmed fields, and a filled field or table cell shows a *Replace value* button.
+- **New options:** `options.hideDiscardButton`, and `documentViewerOptions.floatingButtonsOptions.showDownloadButton`.
+- **`fieldValueChanged` now fires for IXP documents.**
+
+From rc.5:
+
+The Flow review record and the task completion changed
+
+This release follows the Angular Validation Station in how a `ProcessedDocument` review is recorded and completed. A review is now stored as the validated `ProcessedDocument` (`metadata.hitl.draft` telling a draft from a submit) instead of `{ draft, extraction }`, and a draft saved in the old envelope no longer reopens — the document opens on the payload's `result`. Complete the task with a submit's `result.processedDocument` rather than `request.validatedData`. See [IXP (`ProcessedDocument`)](#ixp-processeddocument).
+
+- **A value with a validation error can no longer be confirmed**, nor the row, table or field group containing it. `setFieldValueByPath` follows suit: `OperatorConfirmed: true` on such a value fails with `success: false` and applies nothing, and without `OperatorConfirmed` an updated value is confirmed only when valid.
+- **IXP documents keep their confirmations.** `extractionResult` takes an `IXPReviewedExtraction` (`confirmations` are JSON Pointers of confirmed values), `onExtractionResultChanged` now fires for IXP documents, and a draft carries the confirmations, so a saved draft reopens with them. A bare `IXPExtraction` still opens with nothing confirmed.
+- **IXP citations are rewritten on save.** `validatedData` cites every value afresh with `references` in page units plus `pageWidth` / `pageHeight`; `boundingBoxes` is deprecated and written for words only.
+- **`EnablePredictionDiff` inserts missing predicted values**, and changing `predictedExtractionResult` alone resets the element — see [Comparing against the prediction](#comparing-against-the-prediction).
+- **New compact UI, on by default:** a confirm-all checkbox on each field group, clickable line numbers in the table editor, an autocomplete box for set fields, and field filters that reach inside field groups. Field-group rows are now called *instances*.
+- **The value-indicator popover's custom properties are renamed** from `--du-vs-indicator-overlay-*` to `--ui-hover-popover-*` (`padding`, `shadow`, `radius`, `background`). Old names are silently ignored.
+- **New options:** `options.intendedUse` (`'extraction-validation'` or `'document-annotation'`), `documentViewerOptions.hideReferencedFieldsPopover`, and the `FeatureCustomization` flags `DisableKeyboardShortcuts`, `EnableFieldGroupTableView`, `EnableMarkReferenceAsMissing` and `DistinguishUnconfirmedValues`.
+- **New message:** `taxonomy-field-focus-request` on `onWcMessage` — see [Opening a field in your taxonomy editor](#opening-a-field-in-your-taxonomy-editor).
+- **New themes:** `theme` accepts the Apollo Modern `'future-light'` and `'future-dark'`.
+- **`DocumentViewer` is deprecated**, following the web component's own document-viewer element. For a viewer that does not need `instanceId` linking, use `@uipath/ui-widgets-document-viewer`.
+
+From rc.4:
+
+- **IXP predictions.** `IxpDocumentArtifacts` takes an `IXPExtraction` `predictedExtractionResult`, so an IXP document can show the prediction diff.
+- **Single-instance field groups** in IXP taxonomies (a nullable `object`) render as one row; such a taxonomy failed to load before.
+- **New compact UI, on by default:** a *No taxonomy defined* state (text via `options.emptyTaxonomyMessage`), a *Duplicate row* action and column freezing in the table editor, and a **Shift+N** shortcut to the next flagged value.
+
+From rc.3:
+
+- **The IXP representation.** `ValidationStation` takes an IXP document — a Flow `processedDocument`, or `IxpDocumentArtifacts` — see [IXP documents](#ixp-documents-processeddocument).
+- **`HideHighlightRow`** on `FeatureCustomization` (compact mode) hides the *Highlight row* action from each field group row's menu.
+- The compact fields form's expand / collapse-all control is redesigned, and reads *Expand all field groups* / *Collapse all field groups*.
+
+From rc.2:
 
 - **New compact UI, on by default:** a field-filter toolbar (trim or remove it with `options.fieldFilterOptions`), expandable field groups, a line-number column in the table editor, and a *Waiting for input* screen until the document data arrives.
 - **`HideConfidence` now applies in compact mode too**, and is deprecated in favour of `IgnoreConfidence` (either one takes confidence out of the experience). A `customizationInfo` that already sets it will now hide the confidence indicator in compact.
@@ -1702,14 +1856,14 @@ function App() {
 
 ### Props
 
-| Prop              | Type                                           | Required | Description                                                           |
-| ----------------- | ---------------------------------------------- | -------- | --------------------------------------------------------------------- |
-| `sdk`             | `UiPath`                                       | Yes      | UiPath SDK instance. Changing it refetches the list and resets the UI |
-| `locale`          | `Locale`                                       | No       | Passthrough to the inner chat                                         |
-| `theme`           | `"light" \| "dark" \| "light-hc" \| "dark-hc"` | No       | Passthrough to the inner chat                                         |
-| `readOnly`        | `boolean`                                      | No       | Passthrough to the inner chat                                         |
-| `overrideLabels`  | `OverrideLabels`                               | No       | Passthrough to the inner chat                                         |
-| `onAgentSelected` | `(agent: AgentSummary) => void`                | No       | Fired when the user picks an agent (telemetry, routing, etc.)         |
+| Prop              | Type                            | Required | Description                                                           |
+| ----------------- | ------------------------------- | -------- | --------------------------------------------------------------------- |
+| `sdk`             | `UiPath`                        | Yes      | UiPath SDK instance. Changing it refetches the list and resets the UI |
+| `locale`          | `Locale`                        | No       | Passthrough to the inner chat                                         |
+| `theme`           | \`"light"                       | "dark"   | "light-hc"                                                            |
+| `readOnly`        | `boolean`                       | No       | Passthrough to the inner chat                                         |
+| `overrideLabels`  | `OverrideLabels`                | No       | Passthrough to the inner chat                                         |
+| `onAgentSelected` | `(agent: AgentSummary) => void` | No       | Fired when the user picks an agent (telemetry, routing, etc.)         |
 
 ### Behavior
 
@@ -1782,7 +1936,7 @@ npm install @uipath/ui-widgets-datatable
 ### Peer dependencies
 
 ```
-npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.7.1
 ```
 
 ## Usage
@@ -2100,7 +2254,7 @@ npm install @uipath/ui-widgets-pdf-viewer
 ### Peer dependencies
 
 ```
-npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.7.1
 ```
 
 ## Usage
@@ -2220,7 +2374,7 @@ One `source` prop, four shapes. **The widget selects the adapter from the fields
 | `sdk`           | `UiPath`                               | No\*     | Initialized UiPath SDK instance. \*Required for `bucket` and `entity` sources                                              |
 | `toolbar`       | `PdfViewerToolbarOptions`              | No       | Per-feature toggles: `pagination`, `zoom`, `rotate`, `download` (all default `true`); disable all four to hide the toolbar |
 | `fileName`      | `string`                               | No       | Name shown in the toolbar and used for downloads                                                                           |
-| `maxHeight`     | `number \| string`                     | No       | Max canvas height (default `640`); the canvas scrolls internally                                                           |
+| `maxHeight`     | \`number                               | string\` | No                                                                                                                         |
 | `onLoadSuccess` | `(info: { numPages: number }) => void` | No       | Called when the document loads                                                                                             |
 | `onLoadError`   | `(error: Error) => void`               | No       | Called when fetching or rendering fails                                                                                    |
 
@@ -2349,13 +2503,13 @@ function App() {
 
 ### `AuthProvider`
 
-| Prop          | Type                                          | Required | Description                                                                                                |
-| ------------- | --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| `displayName` | `string`                                      | Yes      | Name shown on the provider button — e.g. `"Google"` renders "Continue with Google"                         |
-| `displayIcon` | `ReactNode`                                   | No       | Icon shown next to the provider name. A string is treated as an image URL; anything else renders as-is     |
-| `clientId`    | `string`                                      | Yes      | Client ID for the provider — passed back to `onSignIn` when the button is clicked                          |
-| `onSignIn`    | `(clientId: string) => void \| Promise<void>` | No\*     | Called with the provider's `clientId` when its button is clicked; may be async                             |
-| `oauth`       | `OAuthRedirectConfig`                         | No\*     | Config for the built-in default sign-in (an OIDC authorize redirect), used only when `onSignIn` is omitted |
+| Prop          | Type                         | Required        | Description                                                                                                |
+| ------------- | ---------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------- |
+| `displayName` | `string`                     | Yes             | Name shown on the provider button — e.g. `"Google"` renders "Continue with Google"                         |
+| `displayIcon` | `ReactNode`                  | No              | Icon shown next to the provider name. A string is treated as an image URL; anything else renders as-is     |
+| `clientId`    | `string`                     | Yes             | Client ID for the provider — passed back to `onSignIn` when the button is clicked                          |
+| `onSignIn`    | \`(clientId: string) => void | Promise<void>\` | No\*                                                                                                       |
+| `oauth`       | `OAuthRedirectConfig`        | No\*            | Config for the built-in default sign-in (an OIDC authorize redirect), used only when `onSignIn` is omitted |
 
 \* Provide **`onSignIn`** or **`oauth`** (or both — `onSignIn` wins). With neither, a button click logs a warning and does nothing.
 
@@ -2529,22 +2683,26 @@ await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Sha
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
 
 Retrieves a single asset by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Asset name to search for
-- `options?`: `AssetGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                    | Description                                                                                                 |
+| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                | Asset name to search for                                                                                    |
+| `options?` | `AssetGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`AssetGetResponse`>
 
 Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -2558,6 +2716,41 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
 
 // With expand
 await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
+```
+
+#### Call Signature
+
+> **getByName**(`asset`: `AssetResource`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
+
+Retrieves a single asset declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                    | Description                                                                       |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `asset`    | `AssetResource`         | Handle created with `resource.asset()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `AssetGetByNameOptions` | Optional folder override and query parameters (`expand`, `select`)                |
+
+##### Returns
+
+`Promise`\<`AssetGetResponse`>
+
+Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly apiKey = resource.asset({ name: 'ApiKey', folderPath: 'Shared/Finance', type: 'text' });
+}
+
+// anywhere in the project
+await assets.getByName(ProjectResources.apiKey);
 ```
 
 ### updateValue()
@@ -2766,24 +2959,28 @@ console.log(job.robot?.name, job.machine?.name);
 
 ### getOutput()
 
+#### Call Signature
+
 > **getOutput**(`jobKey`: `string`, `folderId`: `number`): `Promise`\<`null` | `Record`\<`string`, `unknown`>>
 
 Gets the output of a completed job.
 
 Retrieves the job's output arguments, handling both inline output (stored directly on the job as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for large outputs). Returns the parsed JSON output or `null` if the job has no output.
 
-#### Parameters
+##### Parameters
 
-- `jobKey`: `string` — The unique key (GUID) of the job to retrieve output from
-- `folderId`: `number` — The folder ID where the job resides
+| Parameter  | Type     | Description                                              |
+| ---------- | -------- | -------------------------------------------------------- |
+| `jobKey`   | `string` | The unique key (GUID) of the job to retrieve output from |
+| `folderId` | `number` | The folder ID where the job resides                      |
 
-#### Returns
+##### Returns
 
 `Promise`\<`null` | `Record`\<`string`, `unknown`>>
 
 Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
 
-#### Examples
+##### Examples
 
 ```
 // Get output from a completed job
@@ -2802,6 +2999,30 @@ const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
 if (completedJob) {
   const output = await completedJob.getOutput();
 }
+```
+
+#### Call Signature
+
+> **getOutput**(`jobKey`: `string`): `Promise`\<`null` | `Record`\<`string`, `unknown`>>
+
+Gets the output of a job started by a public coded app. No folder is needed in public mode.
+
+##### Parameters
+
+| Parameter | Type     | Description                                              |
+| --------- | -------- | -------------------------------------------------------- |
+| `jobKey`  | `string` | The unique key (GUID) of the job to retrieve output from |
+
+##### Returns
+
+`Promise`\<`null` | `Record`\<`string`, `unknown`>>
+
+Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
+
+##### Example
+
+```
+const output = await jobs.getOutput(<jobKey>);
 ```
 
 ### linkAttachment()
@@ -3035,22 +3256,26 @@ const process = await processes.getById(<processId>, <folderId>);
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
 
 Retrieves a single process by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Process name to search for
-- `options?`: `ProcessGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                      | Description                                                                                                 |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                  | Process name to search for                                                                                  |
+| `options?` | `ProcessGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`ProcessGetResponse`>
 
 Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -3064,6 +3289,41 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
 
 // With expand
 await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: 'entryPoints' });
+```
+
+#### Call Signature
+
+> **getByName**(`process`: `ProcessResource`, `options?`: `ProcessGetByNameOptions`): `Promise`\<`ProcessGetResponse`>
+
+Retrieves a single process declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                      | Description                                                                         |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| `process`  | `ProcessResource`         | Handle created with `resource.process()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `ProcessGetByNameOptions` | Optional folder override and query parameters                                       |
+
+##### Returns
+
+`Promise`\<`ProcessGetResponse`>
+
+Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly nightly = resource.process({ name: 'Nightly Sync', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await processes.getByName(ProjectResources.nightly);
 ```
 
 ### start()
@@ -3133,6 +3393,8 @@ Completes a transaction: reports the processing outcome of a queue item
 Marks the item `Successful` or `Failed`, and can persist output data alongside the result. On failure, `processingError` is optional — without it the item is marked `Failed` with no error details; the error `type` decides retry behavior (an `ApplicationException` failure is retried per the queue's retry settings, a `BusinessException` is not).
 
 Applies to items with an active transaction. Changing the outcome of an item that already reached a terminal status is rejected.
+
+Folder scoping works like the other methods: `folderId` / `folderKey` / `folderPath`, else the SDK's configured folder. When the item came from `startTransaction`, pass `{ folderId: item.folderId }` — that's the resolved folder the item lives in after any override redirect, so no re-derivation is needed at the call site.
 
 #### Parameters
 
@@ -3353,28 +3615,67 @@ const queue = await queues.getByKey('<queueKey>', { folderId: <folderId> });
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
 
 Gets a single queue by name
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Queue name (exact match)
-- `options?`: `QueueGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+| Parameter  | Type                    | Description                                                                |
+| ---------- | ----------------------- | -------------------------------------------------------------------------- |
+| `name`     | `string`                | Queue name (exact match)                                                   |
+| `options?` | `QueueGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options |
 
-#### Returns
+##### Returns
 
 `Promise`\<`QueueGetWithMethodsResponse`>
 
 Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
 
-#### Example
+##### Example
 
 ```
 const queue = await queues.getByName('<queueName>', { folderId: <folderId> });
 
 // Folder scoping also accepts a folder key or path
 const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' });
+```
+
+#### Call Signature
+
+> **getByName**(`queue`: `QueueResource`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Retrieves a single queue declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                    | Description                                                                       |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `queue`    | `QueueResource`         | Handle created with `resource.queue()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `QueueGetByNameOptions` | Optional folder override and query parameters                                     |
+
+##### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly queue = resource.queue({ name: 'InvoiceReview', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await queues.getByName(ProjectResources.queue);
 ```
 
 ### insertItemByName()
@@ -3386,6 +3687,8 @@ Inserts a new item into a queue by queue name
 Returns the created queue item including its id, status, and the stored payload. Payload keys keep their original casing — the SDK performs no case conversion on them, while method options and response fields still use the SDK's usual camelCase; `Date` values in the payload are serialized to ISO-8601 strings.
 
 The payload must be flat — values are simple scalars (see [QueueItemValue](../../type-aliases/QueueItemValue/)); nested objects and arrays are rejected.
+
+The returned item's `folderId` reflects the folder the SDK actually targeted — after any runtime resource-override redirect on `folderPath`. Pass `{ folderId: item.folderId }` to follow-up calls on the same queue (e.g. `getAllItems`, `startTransaction`) so they scope to the same folder without the caller having to re-derive it. A freshly inserted item has no transaction yet, so `completeTransaction` applies only once a robot has acquired it.
 
 #### Parameters
 
@@ -3433,6 +3736,8 @@ Requires a robot session. Orchestrator allocates the item to the robot that sent
 
 The queue is selected by exactly one of `name` or `id`. The transaction API identifies queues by name, so an `id` selector is first resolved to the queue's name (one extra lookup).
 
+The returned item's `folderId` reflects the folder the SDK actually targeted — after any runtime resource-override redirect on the `{ name }` selector's `folderPath`. Pass `{ folderId: item.folderId }` to `completeTransaction` so the follow-up scopes to the same folder without the caller having to re-derive it.
+
 #### Parameters
 
 - `queue`: `QueueRef` — Queue selector: `{ name: '<queueName>' }` or `{ id: <queueId> }`
@@ -3447,6 +3752,8 @@ Promise resolving to the acquired [QueueItem](../QueueItem/) (in `InProgress` st
 #### Example
 
 ```
+import { QueueTransactionOutcome } from '@uipath/uipath-typescript/queues';
+
 const transaction = await queues.startTransaction({ name: '<queueName>' }, { folderId: <folderId> });
 
 // or select by ID — the SDK first resolves the queue's name (one extra lookup)
@@ -3459,6 +3766,14 @@ if (transaction) {
   // Running under a robot session: the item is now locked to this caller
   console.log(transaction.status);        // 'InProgress'
   console.log(transaction.specificData);  // the item's business payload
+
+  // Complete via the SAME folder the item lives in — `folderId` on the
+  // returned item is the resolved folder after any override redirect.
+  await queues.completeTransaction(
+    transaction.id,
+    QueueTransactionOutcome.Successful,
+    { folderId: transaction.folderId },
+  );
 } else {
   // No item was acquired. This happens when the queue has no eligible
   // items — and always for user/application identities (e.g. a coded app
@@ -3624,22 +3939,26 @@ const bucket = await buckets.getById(<bucketId>, <folderId>);
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
 
 Retrieves a single orchestrator storage bucket by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Bucket name to search for
-- `options?`: `BucketGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                     | Description                                                                                                 |
+| ---------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                 | Bucket name to search for                                                                                   |
+| `options?` | `BucketGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`BucketGetResponse`>
 
 Promise resolving to a single bucket [BucketGetResponse](../BucketGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -3650,6 +3969,41 @@ await buckets.getByName('MyBucket', { folderKey: '<folderKey>' });
 
 // By folder path
 await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
+```
+
+#### Call Signature
+
+> **getByName**(`bucket`: `BucketResource`, `options?`: `BucketGetByNameOptions`): `Promise`\<`BucketGetResponse`>
+
+Retrieves a single storage bucket declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                        |
+| ---------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| `bucket`   | `BucketResource`         | Handle created with `resource.bucket()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `BucketGetByNameOptions` | Optional folder override and query parameters                                      |
+
+##### Returns
+
+`Promise`\<`BucketGetResponse`>
+
+Promise resolving to a single [BucketGetResponse](../BucketGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly bucket = resource.bucket({ name: 'Invoices', folderPath: 'Finance/Shared' });
+}
+
+// anywhere in the project
+await buckets.getByName(ProjectResources.bucket);
 ```
 
 ### getFileMetaData()
@@ -4409,6 +4763,112 @@ const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
 console.log(task.data);
 ```
 
+### getSchema()
+
+> **getSchema**(`taskId`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`null` | `TaskGetSchemaResponse`>
+
+Gets the schema of a task: the fields it holds and the outcomes it can be completed with. Use it to render the task's form in your own UI.
+
+Supported for App tasks and QuickForm tasks. The `type` of the response tells which shape it has:
+
+- `TaskType.App`: `schema` has `inputs` (read-only), `outputs` (filled in by the user), `inOuts` (pre-filled, editable) and `outcomes`. A property's `name` is its key in the task's `data`, and an outcome's `name` is the `action` to pass to `complete()`.
+- `TaskType.QuickForm`: the schema the task was created with, same as `getSchemaByKey()` returns for the task's `taskSchemaKey`. Its `schema` body is returned as it was registered.
+
+An App task's schema is returned only to a caller who can view apps in the task's folder and whose token has the `Apps` or `Apps.Read` scope. Without them, or when the task's app is no longer deployed in that folder, the schema has no fields and no outcomes.
+
+Other task types have no schema here and return null. A Form task's form definition is the `formLayout` returned by `getById()`.
+
+The task's type and keys are looked up automatically (one extra read). When called on a task object returned by the SDK, they are already known, so no lookup happens.
+
+#### Parameters
+
+- `taskId`: `number` — The task to get the schema for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`null` | `TaskGetSchemaResponse`>
+
+Promise resolving to a [TaskGetSchemaResponse](../../type-aliases/TaskGetSchemaResponse/), or null when the task has no schema (task types other than App and QuickForm, or a task whose schema is not available).
+
+#### Examples
+
+```
+const result = await tasks.getSchema(<taskId>, { folderId: <folderId> });
+```
+
+```
+const task = await tasks.getById(<taskId>, {}, <folderId>);
+const result = await task.getSchema();
+```
+
+```
+import { TaskType } from '@uipath/uipath-typescript/tasks';
+
+const task = await tasks.getById(<taskId>, {}, <folderId>);
+const result = await task.getSchema();
+
+if (result?.type === TaskType.App) {
+  // Editable fields of an App task, with their current values
+  const { outputs, inOuts, outcomes } = result.schema;
+  const editable = [...inOuts, ...outputs].map((property) => ({
+    name: property.name,
+    type: property.type,
+    required: property.required,
+    value: task.data?.[property.name],
+  }));
+
+  // Complete with one of the schema's outcomes (the schema has none when the caller cannot read it)
+  if (outcomes.length > 0) {
+    await task.complete({
+      type: TaskType.App,
+      data: { ...task.data, comment: "Looks good" },
+      action: outcomes[0].name,
+    });
+  }
+}
+
+if (result?.type === TaskType.QuickForm) {
+  // The schema body, as registered when the task was created
+  console.log(result.name, result.schema);
+}
+```
+
+### getSchemaByKey()
+
+> **getSchemaByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskSchemaGetResponse`>
+
+Gets the schema a QuickForm task was created with.
+
+The key is the `taskSchemaKey` of a QuickForm task, returned by `getAll()`, `getById()`, `getDataById()` and `getDataByKey()`. The folder is only used to check task view permission; it does not have to be the folder the schema was registered in.
+
+#### Parameters
+
+- `key`: `string` — The schema key (a task's `taskSchemaKey`)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskSchemaGetResponse`>
+
+Promise resolving to the schema as a [TaskSchemaGetResponse](../TaskSchemaGetResponse/)
+
+#### Examples
+
+```
+const schema = await tasks.getSchemaByKey('<taskSchemaKey>', { folderId: <folderId> });
+console.log(schema.name, schema.schema);
+```
+
+```
+// Get the schema of a QuickForm task
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+if (task.taskSchemaKey) {
+  const schema = await tasks.getSchemaByKey(task.taskSchemaKey, { folderId: <folderId> });
+  console.log(schema.name, schema.schema);
+}
+```
+
 ### getUsers()
 
 > **getUsers**\<`T`>(`folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`UserLoginInfo`> : `NonPaginatedResponse`\<`UserLoginInfo`>>
@@ -4855,6 +5315,54 @@ const allEntities = await entities.getAll();
 ```
 
 ## Methods
+
+### clone()
+
+> **clone**(`request`: `EntityCloneRequest`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneJob](#getclonejob).
+
+Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+
+`DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes are required only for `SchemaAndData` mode (which creates the target schema).
+
+#### Parameters
+
+- `request`: `EntityCloneRequest` — Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the [EntityCloneJob](../EntityCloneJob/) descriptor (initial state `Queued`).
+
+#### Example
+
+```
+import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const job = await entities.clone({
+  source: { scopeType: EntityCloneScopeType.Tenant },
+  target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
+  entityIds: ["<rootEntityId>", "<choiceSetId>"],
+  options: { mode: EntityCloneMode.SchemaAndData },
+});
+
+// Poll to a terminal state.
+const terminal = [
+  EntityCloneJobState.Done, EntityCloneJobState.Failed,
+  EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+];
+let status = await entities.getCloneJob(job.jobId);
+while (!terminal.includes(status.state)) {
+  await new Promise((r) => setTimeout(r, 3000));
+  status = await entities.getCloneJob(job.jobId);
+}
+```
 
 ### create()
 
@@ -5364,24 +5872,28 @@ const batchResult = await entity.insertRecords([
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
 Gets entity metadata by entity name with attached operation methods.
 
 Sibling of [getById](#getbyid) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides that resolve resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
 
-#### Parameters
+##### Parameters
 
-- `entityName`: `string` — Name of the entity
-- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+| Parameter    | Type                     | Description                                                                                                           |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `entityName` | `string`                 | Name of the entity                                                                                                    |
+| `options?`   | `EntityGetByNameOptions` | Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**. |
 
-#### Returns
+##### Returns
 
 `Promise`\<`EntityGetResponse`>
 
 Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
-#### Example
+##### Example
 
 ```
 // Get entity metadata by name
@@ -5392,6 +5904,68 @@ const folderEntity = await entities.getByName("Customer", { folderKey: "<folderK
 
 // Call operations directly on the entity
 const records = await entity.getAllRecords();
+```
+
+#### Call Signature
+
+> **getByName**(`entity`: `EntityResource`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+
+Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`   | `EntityResource`         | Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`                                                     |
+| `options?` | `EntityGetByNameOptions` | Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**. |
+
+##### Returns
+
+`Promise`\<`EntityGetResponse`>
+
+Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetResponse/) entity metadata with operation methods
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly customers = resource.entity({ name: 'Customers' });
+}
+
+// anywhere in the project
+const customers = await entities.getByName(ProjectResources.customers);
+```
+
+### getCloneJob()
+
+> **getCloneJob**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Gets the current status of a clone job started by [EntityServiceModel.clone](#clone); poll until `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done` terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+
+#### Parameters
+
+- `jobId`: `string` — The `jobId` returned when the clone job was started.
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
+
+#### Example
+
+```
+import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const status = await entities.getCloneJob("<jobId>");
+if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
 ```
 
 ### getRecordById()
@@ -7758,6 +8332,34 @@ const caseInstances = new CaseInstances(sdk);
 const allInstances = await caseInstances.getAll();
 ```
 
+### Case App routes (experimental)
+
+Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder permissions. Use them to build apps for case workers who hold Case persona grants. Grant users roles inside Maestro Case Instances.
+
+**Requirements**
+
+- `folderKey` on `getAll`, since Case App routes list one folder at a time.
+
+**Enable** by creating the service with `{ useCaseAppRoutes: true }`:
+
+```
+import { CaseInstances } from '@uipath/uipath-typescript/cases';
+
+const caseApp = new CaseInstances(sdk, { useCaseAppRoutes: true });
+const { items } = await caseApp.getAll({ folderKey: '<folderKey>' });
+
+// Bound methods on returned instances keep using Case App routes
+await items[0].close({ comment: 'Resolved' });
+```
+
+**Method behavior with `useCaseAppRoutes: true`**
+
+| Methods                                                                        | Behavior                                             |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `getAll`, `getStages`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes                             |
+| `getById`, `pause`, `resume`, `getVariables`                                   | Throw a `ValidationError` — no Case App route exists |
+| Methods ending in `ForCaseApp`                                                 | Always call the Case App routes, whatever the option |
+
 Note
 
 Methods that rely on the Insights Real-Time Monitoring service (`getSlaSummary`, `getStagesSlaSummary`) may have up to ~1 minute latency before reflecting the latest updates. See [Real-Time Monitoring Overview](https://docs.uipath.com/insights/automation-cloud/latest/user-guide/real-time-monitoring-overview) for details.
@@ -7780,7 +8382,7 @@ Close/Cancel a case instance
 
 `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
-Promise resolving to operation result with instance data
+Promise resolving to operation result with instance data. With Case App routes, a case that has already completed is rejected, and the result reports `isCompleted`.
 
 #### Example
 
@@ -7865,11 +8467,45 @@ const page5 = await caseInstances.getActionTasks(
 );
 ```
 
+### getAdhocTasksForCaseApp()
+
+> **getAdhocTasksForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppAdhocTaskStage`[]>
+
+**`Experimental`**
+
+Gets the ad-hoc tasks the caller can trigger on a running case instance, grouped by stage.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Only stages the caller holds `Cases.RunAdhocTasks` on are returned, so every task listed can be passed to `triggerAdhocTaskForCaseApp`. A caller whose grants cover no ad-hoc task gets an empty array.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppAdhocTaskStage`[]>
+
+Promise resolving to an array of [CaseAppAdhocTaskStage](../CaseAppAdhocTaskStage/)
+
+#### Example
+
+```
+const stages = await caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>');
+stages.forEach(stage => stage.tasks.forEach(task => console.log(stage.stageLabel, task.taskName)));
+```
+
 ### getAll()
 
 > **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`CaseInstanceGetResponse`> : `NonPaginatedResponse`\<`CaseInstanceGetResponse`>>
 
 Get all case instances with optional filtering and pagination
+
+With Case App routes, `folderKey` is required and instances the caller's `Cases.View` grants don't cover are dropped after each page is fetched, so a page can hold fewer items than `pageSize` — or none — while `hasNextPage` is still `true`.
 
 #### Type Parameters
 
@@ -7888,6 +8524,8 @@ Promise resolving to either an array of case instances NonPaginatedResponse or a
 #### Example
 
 ```
+import { CaseInstanceSortBy, CaseInstanceSortOrder, InstanceStatus } from '@uipath/uipath-typescript/cases';
+
 // Get all case instances (non-paginated)
 const instances = await caseInstances.getAll();
 
@@ -7901,6 +8539,14 @@ for (const instance of instances.items) {
 // With filtering
 const filteredInstances = await caseInstances.getAll({
   processKey: 'MyCaseProcess'
+});
+
+// Filter by status and start time, newest first
+const running = await caseInstances.getAll({
+  statuses: [InstanceStatus.RUNNING, InstanceStatus.FAULTED],
+  startedTimeStart: new Date('2026-01-01'),
+  sortBy: CaseInstanceSortBy.StartedTime,
+  order: CaseInstanceSortOrder.Desc
 });
 
 // First page with pagination
@@ -7917,6 +8563,8 @@ if (page1.hasNextPage) {
 > **getById**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseInstanceGetResponse`>
 
 Get a specific case instance by ID
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 
@@ -7942,16 +8590,50 @@ const instance = await caseInstances.getById(
 console.log(`Status: ${instance.latestRunStatus}`);
 ```
 
+### getCaseJsonForCaseApp()
+
+> **getCaseJsonForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`Record`\<`string`, `unknown`>>
+
+**`Experimental`**
+
+Gets the case plan of a case instance — the JSON document the case was designed with.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Returned exactly as stored in the package, so its shape follows the case designer's schema. Requires `Cases.ViewSummary` on the case.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`Record`\<`string`, `unknown`>>
+
+Promise resolving to the case plan as a `Record<string, unknown>`
+
+#### Example
+
+```
+const casePlan = await caseInstances.getCaseJsonForCaseApp('<instanceId>', '<folderKey>');
+```
+
 ### getExecutionHistory()
 
-> **getExecutionHistory**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseInstanceExecutionHistoryResponse`>
+> **getExecutionHistory**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceGetExecutionHistoryOptions`): `Promise`\<`CaseInstanceExecutionHistoryResponse`>
 
 Get execution history for a case instance
+
+With Case App routes the response also carries the case id, the case summary and the details sections configured on the case app.
 
 #### Parameters
 
 - `instanceId`: `string` — The ID of the case instance
 - `folderKey`: `string` — Required folder key
+- `options?`: `CaseInstanceGetExecutionHistoryOptions` — Optional element-type filter
 
 #### Returns
 
@@ -7962,6 +8644,8 @@ Promise resolving to instance execution history [CaseInstanceExecutionHistoryRes
 #### Example
 
 ```
+import { CaseInstanceElementType } from '@uipath/uipath-typescript/cases';
+
 // Get execution history for a case instance
 const history = await caseInstances.getExecutionHistory(
   <instanceId>,
@@ -7974,6 +8658,43 @@ if (history.elementExecutions) {
     console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
   }
 }
+
+// Only human-in-the-loop and agent elements
+const tasks = await caseInstances.getExecutionHistory(<instanceId>, <folderKey>, {
+  elementTypes: [CaseInstanceElementType.Hitl, CaseInstanceElementType.Agent]
+});
+```
+
+### getIncidentsForCaseApp()
+
+> **getIncidentsForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppIncidentGetResponse`[]>
+
+**`Experimental`**
+
+Gets the incidents raised on a case instance, across all of its runs.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.ViewSummary` on the case.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppIncidentGetResponse`[]>
+
+Promise resolving to an array of [CaseAppIncidentGetResponse](../CaseAppIncidentGetResponse/)
+
+#### Example
+
+```
+const incidents = await caseInstances.getIncidentsForCaseApp('<instanceId>', '<folderKey>');
+incidents.forEach(incident => console.log(incident.errorCode, incident.errorMessage));
 ```
 
 ### getSlaSummary()
@@ -8026,6 +8747,38 @@ if (page1.hasNextPage) {
 const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
 ```
 
+### getSlaSummaryForCaseApp()
+
+> **getSlaSummaryForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppGetSlaSummaryResponse`>
+
+**`Experimental`**
+
+Gets the case-level SLA summary of a case instance: its due time, SLA status and escalation state.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.ViewSummary` on the case; a grant on a single stage is not enough.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppGetSlaSummaryResponse`>
+
+Promise resolving to [CaseAppGetSlaSummaryResponse](../CaseAppGetSlaSummaryResponse/)
+
+#### Example
+
+```
+const summary = await caseInstances.getSlaSummaryForCaseApp('<instanceId>', '<folderKey>');
+console.log(summary.slaStatus, summary.slaDueTime);
+```
+
 ### getStages()
 
 > **getStages**(`caseInstanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseGetStageResponse`[]>
@@ -8041,7 +8794,7 @@ Get stages and its associated tasks information for a case instance
 
 `Promise`\<`CaseGetStageResponse`[]>
 
-Promise resolving to an array of case stages with their tasks and status
+Promise resolving to an array of [CaseGetStageResponse](../CaseGetStageResponse/) with each stage's tasks, status, default `sla` and all configured `slaRules`
 
 #### Example
 
@@ -8056,6 +8809,11 @@ const stages = await caseInstances.getStages(
 for (const stage of stages) {
   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
 
+  // Default SLA, e.g. "30 min"
+  if (stage.sla) {
+    console.log(`  SLA: ${stage.sla.length} ${stage.sla.duration}`);
+  }
+
   // Check tasks in the stage
   for (const taskGroup of stage.tasks) {
     for (const task of taskGroup) {
@@ -8063,6 +8821,39 @@ for (const stage of stages) {
     }
   }
 }
+```
+
+### getStagesForCaseApp()
+
+> **getStagesForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppGetStagesResponse`>
+
+**`Experimental`**
+
+Gets each stage of a case instance with its latest status and runtime SLA.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.View`.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppGetStagesResponse`>
+
+Promise resolving to [CaseAppGetStagesResponse](../CaseAppGetStagesResponse/)
+
+#### Example
+
+```
+// First, get case instances with caseInstances.getAll({ folderKey: '<folderKey>' })
+const { stages } = await caseInstances.getStagesForCaseApp('<instanceId>', '<folderKey>');
+stages.forEach(stage => console.log(stage.name, stage.latestStatus, stage.slaStatus));
 ```
 
 ### getStagesSlaSummary()
@@ -8113,6 +8904,8 @@ Get global variables for a case instance
 
 Returns the case instance's elements with their inputs/outputs and the global variables enriched with metadata (name, type, source element) parsed from the case's BPMN definition.
 
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
 #### Parameters
 
 - `instanceId`: `string` — The ID of the case instance to get variables for
@@ -8158,6 +8951,8 @@ const instanceVariables = await instance.getVariables();
 > **pause**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceOperationOptions`): `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Pause a case instance
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 
@@ -8226,6 +9021,8 @@ const result = await instance.reopen({ stageId: stages[0].id });
 
 Resume a case instance
 
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
 #### Parameters
 
 - `instanceId`: `string` — The ID of the instance to resume
@@ -8237,6 +9034,43 @@ Resume a case instance
 `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Promise resolving to operation result with instance data
+
+### selectStageForCaseApp()
+
+> **selectStageForCaseApp**(`instanceId`: `string`, `folderKey`: `string`, `stageName`: `string`, `options?`: `CaseAppSelectStageOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Selects the next stage of a running case instance that is waiting for a user to choose one.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+`stageName` is matched case-sensitively against the case plan's stage labels; an unknown name, or a stage that is not user-selectable, is rejected as not found. Requires `Cases.SelectStage` on the case. Resolves once the selection is sent, not once the case has transitioned.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+- `stageName`: `string` — Label of the stage to select
+- `options?`: `CaseAppSelectStageOptions` — Which waiting stage receives the selection, when several are waiting
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the selection is accepted
+
+#### Examples
+
+```
+await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review');
+```
+
+```
+await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review', { waitingStageId: '<stageId>' });
+```
 
 ### sendMessage()
 
@@ -8288,6 +9122,46 @@ await instance.sendMessage(
   CaseInstanceMessageName.UserAdhocTrigger,
   { itemData: { taskNames: ['Approve Invoice'] } }
 );
+```
+
+### triggerAdhocTaskForCaseApp()
+
+> **triggerAdhocTaskForCaseApp**(`instanceId`: `string`, `folderKey`: `string`, `taskName`: `string`, `options?`: `CaseAppTriggerAdhocTaskOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Triggers one ad-hoc (manually-triggered) task on a running case instance.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+`taskName` is matched case-sensitively against the case plan; an unknown or non-ad-hoc name is rejected as not found. Requires `Cases.RunAdhocTasks` on the stage that owns the task. Resolves once the trigger is accepted, not once the task has run.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+- `taskName`: `string` — Case plan name of the task, as returned by `getAdhocTasksForCaseApp`
+- `options?`: `CaseAppTriggerAdhocTaskOptions` — Optional input handed to the task
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the trigger is accepted
+
+#### Examples
+
+```
+// First, list triggerable tasks with caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>')
+await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents');
+```
+
+```
+await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents', {
+  taskInput: { reason: 'Missing proof of address' },
+});
 ```
 
 Service for managing UiPath Conversational Agents — AI-powered chat interfaces that enable natural language interactions with UiPath automation. Discover agents, create conversations, and stream real-time responses over WebSocket. [UiPath Conversational Agents Guide](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/conversational-agents)
@@ -8483,35 +9357,6 @@ if (isCitationSourceMedia(source)) {
 }
 ```
 
-### getAddConnectionUrl()
-
-> **getAddConnectionUrl**(`item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; }): `Promise`\<`null` | `string`>
-
-Returns the best URL for adding a new connection for a given connector.
-
-Tries to generate a connector-specific auth URL (works when running inside the UiPath platform). If that fails, falls back to the Orchestrator connections page or the connector configuration page.
-
-#### Parameters
-
-- `item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; } — The connector item from [getAvailableConnections](#getavailableconnections)
-- `item.configurationUrl?`: `string` — -
-- `item.connectionsUrl?`: `string` — -
-- `item.connectorKey`: `string` — -
-
-#### Returns
-
-`Promise`\<`null` | `string`>
-
-The URL to open, or `null` if no URL is available
-
-#### Example
-
-```
-const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
-const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
-if (url) window.open(url, '_blank');
-```
-
 ### getAll()
 
 > **getAll**(`folderId?`: `number`): `Promise`\<`AgentGetResponse`[]>
@@ -8620,32 +9465,6 @@ const cleanup = conversationalAgent.onConnectionStatusChanged((status, error) =>
 
 // Later, remove the handler
 cleanup();
-```
-
-### updateConnectionSelections()
-
-> **updateConnectionSelections**(`agentId`: `number`, `folderId`: `number`, `request`: `UpdateConnectionSelectionsRequest`): `Promise`\<`AvailableConnectionsResponse`>
-
-Updates the current user's connection selections for an agent. Only configurable bindings (not admin-fixed) can be updated.
-
-#### Parameters
-
-- `agentId`: `number` — ID of the agent release
-- `folderId`: `number` — ID of the folder containing the agent
-- `request`: `UpdateConnectionSelectionsRequest` — The connection selections to apply
-
-#### Returns
-
-`Promise`\<`AvailableConnectionsResponse`>
-
-Promise resolving to the updated available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
-
-#### Example
-
-```
-const updated = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
-  selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
-});
 ```
 
 Service for creating and managing conversations with UiPath Conversational Agents
@@ -9862,6 +10681,128 @@ const result = await agents.getUnitConsumptionSummary(
 );
 ```
 
+# Integration Service Execution
+
+Functions that run an operation through an Integration Service connection. Integration Service adds the connection's authentication, so the vendor's key or token stays out of your code. Import them from `@uipath/uipath-typescript/connections` and pass a `UiPath` instance as the first argument.
+
+| Function            | Description                                                                      |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `execute()`         | Calls one object of a connector with the given method                            |
+| `executeActivity()` | Runs a connector activity, with body paths, file upload and download, and paging |
+| `executeHttp()`     | Sends one HTTP request to the vendor behind a connection                         |
+
+Preview
+
+These functions are experimental and may change or be removed in future releases.
+
+Each function takes a connection id, or a handle created with `resource.connection()` (see [Resource Declarations](../resources/)). A status the vendor returned does not throw, even a 4xx or 5xx, so check `ok` on the result.
+
+## execute()
+
+Takes a connection, an object name, a method and optional `ExecuteOptions`, and resolves to an `ExecuteResult`.
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { execute } from '@uipath/uipath-typescript/connections';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+
+const result = await execute(sdk, '<connectionId>', 'tickets', 'GET', {
+  queryParams: { status: 'open' },
+});
+
+if (result.ok) {
+  console.log(result.body);
+} else {
+  console.log('Request failed with status', result.status);
+}
+```
+
+## executeActivity()
+
+Takes the same arguments with `ExecuteActivityOptions`, and resolves to an `ExecuteActivityResult`.
+
+```
+import { executeActivity } from '@uipath/uipath-typescript/connections';
+
+const created = await executeActivity(sdk, '<connectionId>', 'issue', 'POST', {
+  body: { 'fields.summary': 'Login fails', 'fields.labels[0]': 'urgent' },
+});
+```
+
+A top-level body key that contains `.` or `[` is a path: the call above sends `{ fields: { summary: 'Login fails', labels: ['urgent'] } }`.
+
+### Paging
+
+Pass `maxRecords` to gather records across pages; `-1` fetches every record. Without it one page is returned, and `page` on the result holds the token of the next one when more records exist.
+
+When a `maxRecords` call stops with records left, `page` is set as well. Its token starts at the next page, so records cut from the last page read are skipped. A call follows at most 1000 pages and stops if the connector repeats a page token.
+
+```
+const tickets = await executeActivity(sdk, '<connectionId>', 'tickets', 'GET', {
+  maxRecords: 200,
+});
+```
+
+### Files
+
+Pass `files` to send the call as a multipart form. A file the vendor returns arrives as a `Uint8Array` in `body`; `fileResponse: true` reads any successful response that way.
+
+```
+import { readFile } from 'node:fs/promises';
+
+const uploaded = await executeActivity(sdk, '<connectionId>', 'files', 'POST', {
+  files: [{ name: 'file', content: await readFile('<path-to-file>'), fileName: 'report.pdf' }],
+  body: { folder: 'reports' },
+});
+```
+
+### Version 4 Connectors
+
+A connector of version 4 or later runs its activities on the version 4 engine. Pass `connectorVersion` and `connectorKey`; the object name is then the activity's script reference. A `resource.connection()` handle supplies the connector key.
+
+```
+const sent = await executeActivity(sdk, '<connectionId>', 'SendMessageToChannel', 'POST', {
+  connectorVersion: '4.0.0',
+  connectorKey: 'uipath-salesforce-slack',
+  body: { channel: '<channelId>', messageToSend: 'Hello' },
+});
+```
+
+Each engine takes its own options, and passing one to the other engine throws a `ValidationError`:
+
+| Engine    | Options                                                                 |
+| --------- | ----------------------------------------------------------------------- |
+| Version 3 | `files`, `bodyPartName`, `urlInputFields`, `fileResponse`, `maxRecords` |
+| Version 4 | `scriptRef`, `headers`                                                  |
+
+## executeHttp()
+
+Takes a connection, a vendor URL, a method and optional `ExecuteHttpOptions`, and resolves to an `ExecuteHttpResult`. Use it for a vendor endpoint the connector has no object for. A path such as `/v2/tickets` is resolved against the connection's base URL.
+
+```
+import { executeHttp } from '@uipath/uipath-typescript/connections';
+
+const result = await executeHttp(sdk, '<connectionId>', '/v2/tickets', 'POST', {
+  headers: { 'X-Request-Source': 'my-app' },
+  queryParams: { notify: 'true' },
+  body: { subject: 'New ticket', priority: 'high' },
+});
+
+if (result.ok) {
+  console.log(result.body);
+} else if (result.isVendorError) {
+  console.log('Vendor returned status', result.status);
+}
+```
+
+`status`, `headers` and `body` on the result are the vendor's. `isVendorError` is `true` when the vendor answered with a non-2xx status, and `false` when the call failed before reaching the vendor.
+
+An object `body` is sent as JSON. For any other format, pass a string (or a `URLSearchParams` for URL-encoded form parameters) and set the matching `Content-Type` header. Bytes, a `Blob` and a `FormData` are refused with a `ValidationError`.
+
+A vendor error status is returned as the result and is not retried, a 429 or 5xx included. `retry` covers only a failure of the Integration Service call that carries the request.
+
 Real-time WebSocket session for two-way communication within a [Conversation](../ConversationServiceModel/).
 
 Send messages and receive agent responses through a nested stream hierarchy. The `SessionStream` is the top-level entry point — events flow down through exchanges, messages, content parts, and tool calls.
@@ -9935,6 +10876,31 @@ Retrieves an exchange by ID
 `undefined` | `ExchangeStream`
 
 The exchange stream, or undefined if not found
+
+### onConversationEnd()
+
+> **onConversationEnd**(`cb`: (`event`: `ConversationEndEvent`) => `void`): () => `void`
+
+Registers a handler for the end of the conversation
+
+Fired when the service permanently ends the conversation, for example when the agent's process finishes. After this the conversation accepts no new input, so disable sending and show a message based on the end reason.
+
+#### Parameters
+
+- `cb`: (`event`: `ConversationEndEvent`) => `void` — Callback receiving the [ConversationEndEvent](../ConversationEndEvent/) with the end reason
+
+#### Returns
+
+Cleanup function to remove the handler
+
+#### Example
+
+```
+session.onConversationEnd((event) => {
+  console.log(`Conversation ended: ${event.reason}`);
+  disableChatInput();
+});
+```
 
 ### onErrorEnd()
 

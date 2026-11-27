@@ -115,22 +115,26 @@ await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Sha
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`name`: `string`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
 
 Retrieves a single asset by name.
 
-#### Parameters
+##### Parameters
 
-- `name`: `string` — Asset name to search for
-- `options?`: `AssetGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+| Parameter  | Type                    | Description                                                                                                 |
+| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`     | `string`                | Asset name to search for                                                                                    |
+| `options?` | `AssetGetByNameOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`AssetGetResponse`>
 
 Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
 
-#### Example
+##### Example
 
 ```
 // By folder ID
@@ -144,6 +148,41 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
 
 // With expand
 await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
+```
+
+#### Call Signature
+
+> **getByName**(`asset`: `AssetResource`, `options?`: `AssetGetByNameOptions`): `Promise`\<`AssetGetResponse`>
+
+Retrieves a single asset declared in `uipath_resources.ts`.
+
+The handle's `folderPath` scopes the lookup. A folder option passed explicitly (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+
+##### Parameters
+
+| Parameter  | Type                    | Description                                                                       |
+| ---------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `asset`    | `AssetResource`         | Handle created with `resource.asset()` from `@uipath/uipath-typescript/resources` |
+| `options?` | `AssetGetByNameOptions` | Optional folder override and query parameters (`expand`, `select`)                |
+
+##### Returns
+
+`Promise`\<`AssetGetResponse`>
+
+Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly apiKey = resource.asset({ name: 'ApiKey', folderPath: 'Shared/Finance', type: 'text' });
+}
+
+// anywhere in the project
+await assets.getByName(ProjectResources.apiKey);
 ```
 
 ### updateValue()

@@ -72,11 +72,11 @@ uip functions push    ←  syncs to Studio Web project
 
 ## Packages
 
-| Package                               | Purpose                                                                      |
-| ------------------------------------- | ---------------------------------------------------------------------------- |
-| `@uipath/coded-functions-js-sdk`      | `defineFunction`, `FunctionError`, `FunctionContext` types, response helpers |
-| `@uipath/functions-tool`              | Functions plugin for the `uip` CLI — `uip functions <cmd>`                   |
-| `@uipath/coded-functions-js-packager` | Shared packager (used internally by the CLI)                                 |
+| Package                               | Purpose                                                                                   |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@uipath/coded-functions-js-sdk`      | `defineFunction`, `FunctionError`, `HttpContext` and `JobContext` types, response helpers |
+| `@uipath/functions-tool`              | Functions plugin for the `uip` CLI — `uip functions <cmd>`                                |
+| `@uipath/coded-functions-js-packager` | Shared packager (used internally by the CLI)                                              |
 
 ## JS Functions vs Python Functions
 

@@ -83,13 +83,13 @@ function App() {
 
 ### `AuthProvider`
 
-| Prop          | Type                                          | Required | Description                                                                                                |
-| ------------- | --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| `displayName` | `string`                                      | Yes      | Name shown on the provider button — e.g. `"Google"` renders "Continue with Google"                         |
-| `displayIcon` | `ReactNode`                                   | No       | Icon shown next to the provider name. A string is treated as an image URL; anything else renders as-is     |
-| `clientId`    | `string`                                      | Yes      | Client ID for the provider — passed back to `onSignIn` when the button is clicked                          |
-| `onSignIn`    | `(clientId: string) => void \| Promise<void>` | No\*     | Called with the provider's `clientId` when its button is clicked; may be async                             |
-| `oauth`       | `OAuthRedirectConfig`                         | No\*     | Config for the built-in default sign-in (an OIDC authorize redirect), used only when `onSignIn` is omitted |
+| Prop          | Type                         | Required        | Description                                                                                                |
+| ------------- | ---------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------- |
+| `displayName` | `string`                     | Yes             | Name shown on the provider button — e.g. `"Google"` renders "Continue with Google"                         |
+| `displayIcon` | `ReactNode`                  | No              | Icon shown next to the provider name. A string is treated as an image URL; anything else renders as-is     |
+| `clientId`    | `string`                     | Yes             | Client ID for the provider — passed back to `onSignIn` when the button is clicked                          |
+| `onSignIn`    | \`(clientId: string) => void | Promise<void>\` | No\*                                                                                                       |
+| `oauth`       | `OAuthRedirectConfig`        | No\*            | Config for the built-in default sign-in (an OIDC authorize redirect), used only when `onSignIn` is omitted |
 
 \* Provide **`onSignIn`** or **`oauth`** (or both — `onSignIn` wins). With neither, a button click logs a warning and does nothing.
 

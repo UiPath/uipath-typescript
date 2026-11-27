@@ -2,13 +2,14 @@
 
 The `@uipath/coded-functions-js-sdk` package exports:
 
-| Export                                                      | Description                                                                             |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [`defineFunction`](define-function/)                        | Declare a function — name, method, path, contract, handler                              |
-| [`defineSchema<T>()`](define-function/#declaring-contracts) | Declare a contract as a TypeScript type — lowered to a JSON Schema at build time        |
-| [`FunctionError`](function-error/)                          | Throw to return a specific HTTP status from a handler                                   |
-| [`FunctionContext`](function-context/)                      | Type for the second handler argument — caller identity, robot identity, params, headers |
-| [Response helpers](response-helpers/)                       | `ok()`, `created()`, `notFound()`, `badRequest()`, etc.                                 |
+| Export                                                      | Description                                                                                           |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [`defineFunction`](define-function/)                        | Declare a function — name, method, path, contract, handler                                            |
+| [`defineSchema<T>()`](define-function/#declaring-contracts) | Declare a contract as a TypeScript type — lowered to a JSON Schema at build time                      |
+| [`FunctionError`](function-error/)                          | Throw to return a specific HTTP status from a handler                                                 |
+| [`HttpContext`](function-context/)                          | Type for an HTTP function's second handler argument: caller identity, robot identity, params, headers |
+| [`JobContext`](function-context/#jobcontext)                | Type for a job-only function's second handler argument: caller identity, robot identity               |
+| [Response helpers](response-helpers/)                       | `ok()`, `created()`, `notFound()`, `badRequest()`, etc.                                               |
 
 The canonical "hello" sample used by every scaffolding surface (`uip functions new`, Studio Web) lives in the extractor package, next to the document builders that derive its deployment documents:
 

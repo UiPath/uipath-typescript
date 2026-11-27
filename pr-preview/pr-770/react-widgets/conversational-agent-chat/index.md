@@ -118,14 +118,14 @@ function App() {
 
 ### Props
 
-| Prop              | Type                                           | Required | Description                                                           |
-| ----------------- | ---------------------------------------------- | -------- | --------------------------------------------------------------------- |
-| `sdk`             | `UiPath`                                       | Yes      | UiPath SDK instance. Changing it refetches the list and resets the UI |
-| `locale`          | `Locale`                                       | No       | Passthrough to the inner chat                                         |
-| `theme`           | `"light" \| "dark" \| "light-hc" \| "dark-hc"` | No       | Passthrough to the inner chat                                         |
-| `readOnly`        | `boolean`                                      | No       | Passthrough to the inner chat                                         |
-| `overrideLabels`  | `OverrideLabels`                               | No       | Passthrough to the inner chat                                         |
-| `onAgentSelected` | `(agent: AgentSummary) => void`                | No       | Fired when the user picks an agent (telemetry, routing, etc.)         |
+| Prop              | Type                            | Required | Description                                                           |
+| ----------------- | ------------------------------- | -------- | --------------------------------------------------------------------- |
+| `sdk`             | `UiPath`                        | Yes      | UiPath SDK instance. Changing it refetches the list and resets the UI |
+| `locale`          | `Locale`                        | No       | Passthrough to the inner chat                                         |
+| `theme`           | \`"light"                       | "dark"   | "light-hc"                                                            |
+| `readOnly`        | `boolean`                       | No       | Passthrough to the inner chat                                         |
+| `overrideLabels`  | `OverrideLabels`                | No       | Passthrough to the inner chat                                         |
+| `onAgentSelected` | `(agent: AgentSummary) => void` | No       | Fired when the user picks an agent (telemetry, routing, etc.)         |
 
 ### Behavior
 

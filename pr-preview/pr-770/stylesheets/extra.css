@@ -25,7 +25,8 @@
         background-color: #182027 !important;
     }
 
-    .md-nav__item--section > .md-nav__link[for] {
+    .md-nav__item--section > .md-nav__link[for],
+    .md-nav__item--section > .md-nav__container > a.md-nav__link {
         color: #182027 !important;
     }
 }
@@ -60,7 +61,8 @@
         background-color: #ffffff !important;
     }
 
-    .md-nav__item--section > .md-nav__link[for] {
+    .md-nav__item--section > .md-nav__link[for],
+    .md-nav__item--section > .md-nav__container > a.md-nav__link {
         color: #ffffff !important;
     }
 }

@@ -13,6 +13,54 @@ const allEntities = await entities.getAll();
 
 ## Methods
 
+### clone()
+
+> **clone**(`request`: `EntityCloneRequest`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneJob](#getclonejob).
+
+Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+
+`DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes are required only for `SchemaAndData` mode (which creates the target schema).
+
+#### Parameters
+
+- `request`: `EntityCloneRequest` — Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the [EntityCloneJob](../EntityCloneJob/) descriptor (initial state `Queued`).
+
+#### Example
+
+```
+import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const job = await entities.clone({
+  source: { scopeType: EntityCloneScopeType.Tenant },
+  target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
+  entityIds: ["<rootEntityId>", "<choiceSetId>"],
+  options: { mode: EntityCloneMode.SchemaAndData },
+});
+
+// Poll to a terminal state.
+const terminal = [
+  EntityCloneJobState.Done, EntityCloneJobState.Failed,
+  EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+];
+let status = await entities.getCloneJob(job.jobId);
+while (!terminal.includes(status.state)) {
+  await new Promise((r) => setTimeout(r, 3000));
+  status = await entities.getCloneJob(job.jobId);
+}
+```
+
 ### create()
 
 > **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
@@ -521,24 +569,28 @@ const batchResult = await entity.insertRecords([
 
 ### getByName()
 
+#### Call Signature
+
 > **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
 Gets entity metadata by entity name with attached operation methods.
 
 Sibling of [getById](#getbyid) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides that resolve resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
 
-#### Parameters
+##### Parameters
 
-- `entityName`: `string` — Name of the entity
-- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
+| Parameter    | Type                     | Description                                                                                                           |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `entityName` | `string`                 | Name of the entity                                                                                                    |
+| `options?`   | `EntityGetByNameOptions` | Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**. |
 
-#### Returns
+##### Returns
 
 `Promise`\<`EntityGetResponse`>
 
 Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
-#### Example
+##### Example
 
 ```
 // Get entity metadata by name
@@ -549,6 +601,68 @@ const folderEntity = await entities.getByName("Customer", { folderKey: "<folderK
 
 // Call operations directly on the entity
 const records = await entity.getAllRecords();
+```
+
+#### Call Signature
+
+> **getByName**(`entity`: `EntityResource`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+
+Retrieves entity metadata for an entity declared in `uipath_resources.ts`.
+
+##### Parameters
+
+| Parameter  | Type                     | Description                                                                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`   | `EntityResource`         | Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`                                                     |
+| `options?` | `EntityGetByNameOptions` | Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**. |
+
+##### Returns
+
+`Promise`\<`EntityGetResponse`>
+
+Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetResponse/) entity metadata with operation methods
+
+##### Example
+
+```
+// uipath_resources.ts
+import { resource } from '@uipath/uipath-typescript/resources';
+
+export class ProjectResources {
+  static readonly customers = resource.entity({ name: 'Customers' });
+}
+
+// anywhere in the project
+const customers = await entities.getByName(ProjectResources.customers);
+```
+
+### getCloneJob()
+
+> **getCloneJob**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Gets the current status of a clone job started by [EntityServiceModel.clone](#clone); poll until `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done` terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+
+#### Parameters
+
+- `jobId`: `string` — The `jobId` returned when the clone job was started.
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
+
+#### Example
+
+```
+import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const status = await entities.getCloneJob("<jobId>");
+if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
 ```
 
 ### getRecordById()

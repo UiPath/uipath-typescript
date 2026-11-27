@@ -72,6 +72,31 @@ Retrieves an exchange by ID
 
 The exchange stream, or undefined if not found
 
+### onConversationEnd()
+
+> **onConversationEnd**(`cb`: (`event`: `ConversationEndEvent`) => `void`): () => `void`
+
+Registers a handler for the end of the conversation
+
+Fired when the service permanently ends the conversation, for example when the agent's process finishes. After this the conversation accepts no new input, so disable sending and show a message based on the end reason.
+
+#### Parameters
+
+- `cb`: (`event`: `ConversationEndEvent`) => `void` — Callback receiving the [ConversationEndEvent](../ConversationEndEvent/) with the end reason
+
+#### Returns
+
+Cleanup function to remove the handler
+
+#### Example
+
+```
+session.onConversationEnd((event) => {
+  console.log(`Conversation ended: ${event.reason}`);
+  disableChatInput();
+});
+```
+
 ### onErrorEnd()
 
 > **onErrorEnd**(`cb`: (`error`: { `errorId`: `string`; } & `ErrorEndEvent`) => `void`): () => `void`
