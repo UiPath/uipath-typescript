@@ -86,7 +86,6 @@ export interface TaskFormBundle {
   data: Record<string, unknown>;
   /** Set when `model` is null. */
   reason?: 'no-schema' | 'empty-schema' | 'unsupported-type' | 'error';
-  error?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -283,12 +282,8 @@ export async function loadTaskForm(sdk: UiPath, task: TaskGetResponse): Promise<
     const model = normalizeQuickFormSchema(result.schema);
     return { model, data, ...(model ? {} : { reason: 'no-schema' as const }) };
   } catch (err) {
-    return {
-      model: null,
-      data: fallbackData,
-      reason: 'error',
-      error: err instanceof Error ? err.message : String(err),
-    };
+    console.warn('loadTaskForm failed:', err);
+    return { model: null, data: fallbackData, reason: 'error' };
   }
 }
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { LOAD_FAILED, reportError } from '@/lib/errors';
 
 export interface AsyncState<T> {
   data: T | null;
@@ -27,7 +28,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): AsyncState<T
         if (alive) setData(res);
       })
       .catch((e: unknown) => {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
+        if (alive) setError(reportError(LOAD_FAILED, e));
       })
       .finally(() => {
         if (alive) setLoading(false);

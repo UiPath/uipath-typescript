@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
+import { UiPath } from '@uipath/uipath-typescript/core';
 import { ENV } from '@/lib/env';
+import { reportError } from '@/lib/errors';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -46,8 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         setIsAuthenticated(sdk.isAuthenticated());
       } catch (err) {
-        console.error('Authentication failed:', err);
-        setError(err instanceof UiPathError ? err.message : 'Authentication failed');
+        setError(reportError('Authentication failed. Check the app configuration and try again.', err));
       } finally {
         setIsLoading(false);
       }
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await sdk.initialize();
     } catch (err) {
-      setError(err instanceof UiPathError ? err.message : 'Login failed');
+      setError(reportError('Sign-in failed. Try again.', err));
     } finally {
       setIsLoading(false);
     }

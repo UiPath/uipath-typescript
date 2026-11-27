@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@uipath/apollo-wind/components/ui/alert
 import { useAuth } from '@/hooks/useAuth';
 import { useAsync } from '@/hooks/useAsync';
 import { buildTaskUrl, getEmbedTaskUrl } from '@/lib/taskUrl';
+import { reportError } from '@/lib/errors';
 import { completeTask, getTaskById, slaStatusOf } from '@/lib/sdk';
 import { buildTaskFields } from '@/lib/taskForm';
 import { buildCompletion, describeTaskType, loadTaskForm, saveTaskDraft } from '@/lib/taskSchema';
@@ -18,6 +19,8 @@ import type { TaskFormOutcome } from '@/lib/taskSchema';
 import { formatDate, humanize, initials, looksLikeMoney, priorityTone, statusTone } from '@/lib/format';
 import type { ActionTask } from '@/lib/types';
 import { TaskForm, ValueView } from '@/components/TaskForm';
+
+const COMPLETE_FAILED = 'Could not complete the task.';
 
 function FieldValue({ value }: { value: unknown }) {
   if (value === null || value === undefined || value === '') return <span className="text-muted-foreground">—</span>;
@@ -110,28 +113,30 @@ export function TaskDetail({
   const fallbackData = (Object.keys((t.data ?? {}) as object).length ? t.data : form.data?.data) ?? {};
   const fallbackFields = buildTaskFields({ ...t, data: fallbackData as Record<string, unknown> });
 
-  const runAction = async (label: string, fn: () => Promise<void>) => {
+  const runAction = async (done: string, failed: string, fn: () => Promise<void>) => {
     setBusy(true);
     setActionError(null);
     setNotice(null);
     try {
       await fn();
-      setNotice(label);
+      setNotice(done);
       full.reload();
       form.reload();
       onChanged?.();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : `${label} failed`);
+      setActionError(reportError(failed, err));
     } finally {
       setBusy(false);
     }
   };
 
   const submit = (outcome: TaskFormOutcome, data: Record<string, unknown>) =>
-    runAction(`Completed with “${outcome.label}”`, () => completeTask(sdk, t, buildCompletion(t, outcome.key, data)));
-  const saveDraft = (data: Record<string, unknown>) => runAction('Draft saved', () => saveTaskDraft(sdk, t, data));
+    runAction(`Completed with “${outcome.label}”`, COMPLETE_FAILED, () =>
+      completeTask(sdk, t, buildCompletion(t, outcome.key, data)),
+    );
+  const saveDraft = (data: Record<string, unknown>) => runAction('Draft saved', 'Could not save the draft.', () => saveTaskDraft(sdk, t, data));
   const completeFree = () =>
-    runAction(`Completed with “${freeAction.trim()}”`, () =>
+    runAction(`Completed with “${freeAction.trim()}”`, COMPLETE_FAILED, () =>
       completeTask(sdk, t, buildCompletion(t, freeAction.trim(), fallbackData as Record<string, unknown>)),
     );
 
@@ -235,7 +240,7 @@ export function TaskDetail({
               {form.data?.reason === 'error' && (
                 <Alert variant="destructive" className="mb-4">
                   <AlertDescription>
-                    Could not load the task schema — showing raw values instead. {form.data.error}
+                    Could not load the task schema — showing raw values instead.
                   </AlertDescription>
                 </Alert>
               )}

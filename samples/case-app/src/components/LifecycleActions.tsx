@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reportError } from '@/lib/errors';
 import { Ban, Loader2, Pause, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@uipath/apollo-wind/components/ui/button';
 import { Label } from '@uipath/apollo-wind/components/ui/label';
@@ -115,7 +116,7 @@ function ActionButton({
         toast.error(`Could not ${action} the case.`);
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : `Could not ${action} the case.`);
+      toast.error(reportError(`Could not ${action} the case.`, e));
     } finally {
       setBusy(false);
     }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PaginationCursor } from '@uipath/uipath-typescript/core';
 import { useAuth } from '@/hooks/useAuth';
+import { reportError } from '@/lib/errors';
 import { listCaseInstancesPage } from '@/lib/sdk';
 import type { CaseInstance } from '@/lib/types';
 
@@ -37,7 +38,7 @@ export function useInstancePages(pageSize = 25, processKey?: string) {
         setHasNext(!!res.hasNextPage && !!res.nextCursor);
         if (res.nextCursor) cursors.current[page + 1] = res.nextCursor;
       } catch (e: unknown) {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
+        if (alive) setError(reportError('Could not load the case instances.', e));
       } finally {
         if (alive) setLoading(false);
       }

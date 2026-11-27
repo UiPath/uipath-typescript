@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { reportError } from '@/lib/errors';
 import { listCaseDefinitions } from '@/lib/sdk';
 import type { CaseDefinition } from '@/lib/types';
 
@@ -77,7 +78,7 @@ export const CasesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           return '';
         });
       } catch (e: unknown) {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
+        if (alive) setError(reportError('Could not load the cases.', e));
       } finally {
         if (alive) setLoading(false);
       }
