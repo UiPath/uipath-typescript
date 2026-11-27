@@ -336,10 +336,14 @@ Creating a validation action and polling its result both go through the [Documen
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `DataFabric.Schema.Read OR.Folders.Read` |
-| `getById()` | `DataFabric.Schema.Read OR.Folders.Read` |
-| `getByName()` | `DataFabric.Schema.Read OR.Folders.Read` |
-| `validateArtifactContent()` | `DataFabric.Schema.Read` |
+| `getAll()` | `Ontology.Definition.Read OR.Folders.Read` |
+| `getById()` | `Ontology.Definition.Read OR.Folders.Read` |
+| `getByName()` | `Ontology.Definition.Read OR.Folders.Read` |
+| `validateArtifactContent()` | `Ontology.Definition.Read` |
+
+/// note
+The ontology scopes are listed under the **Ontology** resource in the external app. `OR.Folders.Read` is what lets the ontology service see which folders you can read: without it `getAll()` returns an empty list and a folder path is not found. Reading an ontology's records or running its read operations needs `Ontology.Data.Read`; the methods above read ontology definitions only and do not need it.
+///
 
 ## Orchestrator Users
 
