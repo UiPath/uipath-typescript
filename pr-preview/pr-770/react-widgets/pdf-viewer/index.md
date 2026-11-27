@@ -39,7 +39,7 @@ function App() {
         tenantName: "your-tenant",
         clientId: "your-client-id",
         redirectUri: "http://localhost:3000/callback",
-        // Bucket sources need `OR.Buckets`; entity sources need
+        // Bucket sources need `OR.Buckets.Read`; entity sources need
         // `DataFabric.Data.Read`. URL and byte sources need no scope.
         scope: "OR.Buckets",
       });

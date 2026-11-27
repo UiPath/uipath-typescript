@@ -4424,6 +4424,7 @@
 <h1 id="multi-file-upload">Multi File Upload<a class="headerlink" href="#multi-file-upload" title="Permanent link">&para;</a></h1>
 <p>Package: <code>@uipath/ui-widgets-multi-file-upload</code></p>
 <p>A React widget for uploading multiple files simultaneously to an <a href="../../api/interfaces/BucketServiceModel/">Orchestrator Storage Bucket</a>.</p>
+<p><img alt="Multi File Upload widget" src="../../assets/react-widgets/multi-file-upload.png" width="407" /></p>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Upload multiple files simultaneously</li>
@@ -4501,11 +4502,12 @@
 <a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a><span class="p">}</span>
 </code></pre></div>
 <div class="admonition tip">
-<p class="admonition-title">Finding the bucket and folder IDs</p>
-<p>List the buckets you can reach with the Buckets service — the cross-folder <code>getAll()</code> response carries the bucket <code>id</code> alongside its <code>folderId</code>. See the <a href="../../api/interfaces/BucketServiceModel/">Bucket service reference</a>:</p>
+<p class="admonition-title">Finding the bucket ID</p>
+<p>List the buckets in your folder and read the <code>id</code> of the one you want. See the <a href="../../api/interfaces/BucketServiceModel/">Bucket service reference</a>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Buckets</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/buckets&quot;</span><span class="p">;</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">buckets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Buckets</span><span class="p">(</span><span class="nx">sdk</span><span class="p">).</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Buckets</span><span class="p">(</span><span class="nx">sdk</span><span class="p">).</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">456</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">bucketId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">items</span><span class="p">.</span><span class="nx">find</span><span class="p">((</span><span class="nx">b</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;MyBucket&quot;</span><span class="p">)</span><span class="o">?</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
 </code></pre></div>
 </div>
 <h2 id="props">Props<a class="headerlink" href="#props" title="Permanent link">&para;</a></h2>

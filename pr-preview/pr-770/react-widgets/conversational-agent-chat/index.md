@@ -70,15 +70,13 @@ The `ConversationalAgents` scope is what makes the real-time WebSocket session w
 
 ## Props
 
-| Prop                     | Type          | Required | Description                                                                                                                                                                                    |
-| ------------------------ | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sdk`                    | `UiPath`      | Yes      | UiPath SDK instance for API communication                                                                                                                                                      |
-| `agentId`                | `number`      | No       | The ID of the conversational agent release. Required unless `existingConversationId` is provided                                                                                               |
-| `folderId`               | `number`      | No       | The folder ID the agent lives in. When omitted, the widget resolves it by listing agents and matching on `agentId` — prefer passing it when known                                              |
-| `existingConversationId` | `string`      | No       | Load an existing conversation by ID instead of creating a new one on the first message                                                                                                         |
-| `inputSchema`            | `InputSchema` | No       | Agent input schema. Takes precedence over the schema derived from the resolved agent; use when the caller has the schema but the agent can't be resolved (e.g. an in-progress draft)           |
-| `isDebugMode`            | `boolean`     | No       | Debug flow: opens an empty conversation up front so inputs are collected in the widget, and submits update the existing conversation instead of creating a new one                             |
-| `externalUserId`         | `string`      | No       | External user identifier sent as `x-uipath-external-user-id` (HTTP header / WebSocket query param). Required when authenticating via an app-scoped external app; omit for standard user tokens |
+| Prop                     | Type     | Required | Description                                                                                                                                                                                    |
+| ------------------------ | -------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sdk`                    | `UiPath` | Yes      | UiPath SDK instance for API communication                                                                                                                                                      |
+| `agentId`                | `number` | No       | The ID of the conversational agent release. Required unless `existingConversationId` is provided                                                                                               |
+| `folderId`               | `number` | No       | The folder ID the agent lives in. When omitted, the widget resolves it by listing agents and matching on `agentId` — prefer passing it when known                                              |
+| `existingConversationId` | `string` | No       | Load an existing conversation by ID instead of creating a new one on the first message                                                                                                         |
+| `externalUserId`         | `string` | No       | External user identifier sent as `x-uipath-external-user-id` (HTTP header / WebSocket query param). Required when authenticating via an app-scoped external app; omit for standard user tokens |
 
 ## Agent picker + chat
 

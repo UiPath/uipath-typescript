@@ -4469,6 +4469,7 @@
 <p>Package: <code>@uipath/ui-widgets-pdf-viewer</code></p>
 <p>A React PDF viewer for UiPath coded apps. Renders PDFs from <strong>Orchestrator Storage Buckets</strong>, <strong>Data Fabric entity attachments</strong>, or plain <strong>URLs / Blobs</strong> — with a prop-toggleable toolbar, selectable text, and built-in loading and error states.</p>
 <p>Built on <a href="https://www.npmjs.com/package/react-pdf">react-pdf</a> (Mozilla pdf.js). The pdf.js worker <strong>ships inside the package</strong> — no CDN, no bundler configuration — so the widget works behind enterprise CSP and firewalls, including coded apps deployed on <code>*.uipath.host</code>. The packaged worker is byte-exact to the <code>pdfjs-dist</code> version the widget pins, so the pdf.js API and the worker can never mismatch regardless of what your dependency tree hoists.</p>
+<p><img alt="PDF Viewer widget" src="../../assets/react-widgets/pdf-viewer.png" width="683" /></p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>npm<span class="w"> </span>install<span class="w"> </span>@uipath/ui-widgets-pdf-viewer
 </code></pre></div>
@@ -4498,7 +4499,7 @@ effect and <code>initialize()</code> is awaited before anything renders — see
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">        </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-tenant&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">        </span><span class="nx">clientId</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-client-id&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">        </span><span class="nx">redirectUri</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:3000/callback&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="c1">// Bucket sources need `OR.Buckets`; entity sources need</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="c1">// Bucket sources need `OR.Buckets.Read`; entity sources need</span>
 <a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="c1">// `DataFabric.Data.Read`. URL and byte sources need no scope.</span>
 <a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;OR.Buckets&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">      </span><span class="p">});</span>

@@ -287,6 +287,7 @@ import {
   type SaveValidatedDataResult,
 } from "@uipath/ui-widgets-validation-station";
 import { OrchestratorDuModule } from "@uipath/uipath-typescript/orchestrator-du-module";
+import { TaskType } from "@uipath/uipath-typescript/tasks";
 
 function App({ sdk, data, task }) {
   // `sdk` + `data` are set, so the widget persisted it and `result` is present.
@@ -295,7 +296,10 @@ function App({ sdk, data, task }) {
       console.warn("Submit failed:", result?.error);
       return;
     }
-    await task.complete({ action: "Completed", type: "DocumentValidation" });
+    await task.complete({
+      action: "Completed",
+      type: TaskType.DocumentValidation,
+    });
   };
 
   const handleSaveAsDraft = (request, result?: SaveValidatedDataResult) => {
