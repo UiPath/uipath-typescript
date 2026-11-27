@@ -2648,6 +2648,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#deploy-with-a-solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy with a solution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#upgrading-deploying-new-version-of-a-coded-app" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4268,6 +4279,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#deploy-with-a-solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deploy with a solution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#upgrading-deploying-new-version-of-a-coded-app" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4817,6 +4839,7 @@ This will create the <code>dist</code> (or build) folder.</p>
 <p><strong>Examples</strong></p>
 <div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp deploy</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp deploy --name MyApp</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp deploy --name my-app --display-name &quot;My App&quot; --path-name my-app</span><span data-ty></span></div>
 
+<p><code>uip codedapp deploy</code> deploys an app on its own. To deploy an app that lives in a solution, from Studio Web or with <code>uip solution</code>, including as a public app, see <a href="#deploy-with-a-solution">Deploy with a solution</a>.</p>
 <hr />
 <h2 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">&para;</a></h2>
 <p>Delete a deployed app from a folder. The published package and deployments in other folders are not affected.</p>
@@ -4975,6 +4998,7 @@ This will create the <code>dist</code> (or build) folder.</p>
 <p><strong>Examples</strong></p>
 <div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt;</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt; --build-dir build</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp push --solution-name &quot;Product Announcements&quot; --project-name &quot;Announcements Portal&quot;</span><span data-ty></span></div>
 
+<p>The first push also adds the resources listed in <code>bindings_v2.json</code> to the solution; <code>--ignore-resources</code> skips that. To deploy the pushed solution, including as a public app, see <a href="#deploy-with-a-solution">Deploy with a solution</a>.</p>
 <p>The first push saves the new project ID to <code>.env</code> as <code>UIPATH_PROJECT_ID</code>, and later pushes use it. <code>--solution-name</code> and <code>--project-name</code> only apply when no project ID is set. If one is set by <code>--project-id</code>, <code>UIPATH_PROJECT_ID</code>, or <code>.env</code>, push fails instead of pushing into that project, so running the same command with these flags a second time fails.</p>
 <hr />
 <h2 id="pull">pull<a class="headerlink" href="#pull" title="Permanent link">&para;</a></h2>
@@ -5044,6 +5068,55 @@ This will create the <code>dist</code> (or build) folder.</p>
 <p><strong>Examples</strong></p>
 <div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp pull --project-id &lt;projectId&gt;</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp pull --project-id &lt;projectId&gt; --target-dir ./my-app --overwrite</span><span data-ty></span></div>
 
+<hr />
+<h2 id="deploy-with-a-solution">Deploy with a solution<a class="headerlink" href="#deploy-with-a-solution" title="Permanent link">&para;</a></h2>
+<p>Deploy a coded app that lives in a solution with the <code>uip solution</code> commands. For the Studio Web steps and the deployment settings, see <a href="../getting-started/#deploy-with-solutions">Deploy with Solutions</a>.</p>
+<p><strong>1. Create a local solution with the app in it</strong> (skip this if you used <code>uip codedapp push</code>):</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty>uip solution init &lt;Solution&gt;<br>cd &lt;Solution&gt;<br>uip codedapp init &lt;App&gt;</span><span class="termynal-comment" data-ty># develop in &lt;App&gt;/source and build into &lt;App&gt;/source/dist</span><span data-ty>uip solution resources refresh        # adds the resources in bindings_v2.json, if any<br></span></div>
+
+<p>To deploy from Studio Web instead of the CLI, upload the solution to the Cloud Workspace with <code>uip solution upload .</code>. The first upload adds it; later uploads overwrite it.</p>
+<p><strong>2. Pack, publish and deploy:</strong></p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty>uip solution pack &lt;solution-folder&gt; ./output --version 1.0.0<br>uip solution publish ./output/&lt;Solution&gt;_1.0.0.zip --wait<br>uip solution deploy config get &quot;&lt;Solution&gt;&quot; --package-version 1.0.0 -d config.json<br>uip solution deploy config set config.json &lt;App&gt; routingName &lt;path-name&gt;<br>uip solution deploy config set config.json &lt;App&gt; externalClientId &quot;&lt;external app id&gt;&quot;<br>uip solution deploy run -n &quot;&lt;Solution&gt;&quot; --package-name &quot;&lt;Solution&gt;&quot; --package-version 1.0.0 \<br>  --folder-name &quot;&lt;Solution&gt;&quot; --parent-folder-path &quot;Shared&quot; --config-file config.json<br></span></div>
+
+<table>
+<thead>
+<tr>
+<th>Config key</th>
+<th>Internal app</th>
+<th>Public app (preview)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>routingName</code></td>
+<td>The path the app is served at</td>
+<td>The path the app is served at</td>
+</tr>
+<tr>
+<td><code>externalClientId</code></td>
+<td>The non-confidential external application users log in with</td>
+<td>A confidential external application</td>
+</tr>
+<tr>
+<td><code>runtimeAuthMode</code></td>
+<td><code>user</code> (default)</td>
+<td><code>application</code></td>
+</tr>
+<tr>
+<td><code>clientSecret</code></td>
+<td>Not used</td>
+<td>The external application's secret</td>
+</tr>
+</tbody>
+</table>
+<p>For a public app, before <code>deploy run</code>, turn on public mode and set the external application's client secret:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Public mode</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>runtimeAuthMode<span class="w"> </span>application
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1"># Client secret of the confidential external application</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>uip<span class="w"> </span>solution<span class="w"> </span>deploy<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>config.json<span class="w"> </span>&lt;App&gt;<span class="w"> </span>clientSecret<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$APP_CLIENT_SECRET</span><span class="s2">&quot;</span><span class="w"> </span>--output-filter<span class="w"> </span>Property
+</code></pre></div>
+<p><code>--output-filter Property</code> keeps the secret out of the command output. Keep <code>config.json</code> out of source control when it holds a secret.</p>
+<p><code>deploy run</code> installs the solution the first time. To upgrade, pack and publish a new version and run <code>deploy run</code> again: it upgrades the deployment in place.</p>
 <hr />
 <h2 id="upgrading-deploying-new-version-of-a-coded-app">Upgrading / Deploying new version of a coded app<a class="headerlink" href="#upgrading-deploying-new-version-of-a-coded-app" title="Permanent link">&para;</a></h2>
 <p>When updating a deployed app, just repeat the build-pack-publish-deploy cycle with a bumped version:</p>

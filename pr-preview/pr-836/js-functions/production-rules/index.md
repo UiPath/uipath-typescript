@@ -93,10 +93,10 @@ ______________________________________________________________________
 
 ## Regenerate the lockfile after any dependency change
 
-The `.nupkg` ships the project's `package-lock.json`, and the production worker installs from it ([Lockfile](../deployment/#lockfile)). A stale lockfile fails the production install with errorCode 4801 on all routes, so `pack` checks that the lock matches `package.json` before it builds.
+The `.nupkg` ships a `package-lock.json` that `pack` writes from your installed `node_modules/`, and your functions run with the versions it pins ([Lockfile](../deployment/#lockfile)). Install after any `package.json` change, so the lock matches it; a lock that misses a declared dependency fails the production install with errorCode 4801 on all routes.
 
 ```
-npm install   # always run this before pack after any package.json change
+npm install
 uip functions pack
 ```
 
