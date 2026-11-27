@@ -23,8 +23,8 @@ The app is scoped to **one** Maestro case (set by `processKey`) and provides:
 | Area | SDK |
 |------|-----|
 | Case definition + analytics | `Cases` (`getAll`, `getTopElementFailedCount`, …) |
-| Instances, stages, tasks, SLA, lifecycle | `CaseInstances` |
-| Variables + incidents | `ProcessInstances` (`getVariables`, `getIncidents`) |
+| Instances, stages, tasks, variables, SLA, lifecycle | `CaseInstances` |
+| Incidents | `ProcessInstances` (`getIncidents`) |
 | Task detail, completion, drafts | `Tasks` (`getById`, `getDataById`, `complete`, `saveData`) |
 
 All SDK calls are wrapped in [`src/lib/sdk.ts`](src/lib/sdk.ts) and typed against the SDK's exported
