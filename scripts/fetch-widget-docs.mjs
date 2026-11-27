@@ -50,6 +50,10 @@
  * Blockquotes and HTML comments both degrade cleanly: npm and GitHub render the
  * first as a quote and drop the second entirely.
  *
+ * A page gets a screenshot when docs/assets/react-widgets/<slug>.png exists. It
+ * is inserted below the intro, ahead of the first `##` section, and is the one
+ * part of a page that npm and GitHub do not show.
+ *
  * Cross-page links must be absolute (https://uipath.github.io/uipath-typescript/...)
  * so they work from an npm page too. They are left as written -- which means a
  * PR preview links to the published site for those, and a relative .md link
@@ -67,6 +71,9 @@ const TARGET = join(DOCS_DIR, 'react-widgets');
 const RETRY_DELAY_MS = 2000;
 const CONFIG = join(process.cwd(), 'mkdocs.yml');
 const SITE_URL = 'https://uipath.github.io/uipath-typescript/';
+// Screenshots are committed here, one `<slug>.png` per widget, rather than
+// fetched: a README image would need an absolute URL to render on npm.
+const SCREENSHOTS = join(DOCS_DIR, 'assets', 'react-widgets');
 
 // Written here rather than fetched: it introduces the collection and the setup
 // every widget shares, which is this site's concern, not any one package's.
@@ -364,6 +371,33 @@ function unescapeTablePipes(lines) {
   );
 }
 
+/**
+ * Puts the widget's screenshot between the intro and the first `##` section,
+ * or at the end of a page that has no sections.
+ */
+function insertScreenshot(lines, { title, screenshot }) {
+  if (!screenshot) return lines;
+  const fenced = fenceMask(lines);
+  const index = lines.findIndex((line, i) => !fenced[i] && line.startsWith('## '));
+  const at = index === -1 ? lines.length : index;
+  const image = `![${title} widget](${screenshot.src}){ width="${screenshot.width}" }`;
+  const before = lines.slice(0, at);
+  if (before.at(-1)?.trim() !== '') before.push('');
+  return [...before, image, '', ...lines.slice(at)];
+}
+
+/**
+ * The committed screenshot for a widget, if there is one. Captures are taken
+ * on a 2x display, so the page shows them at half their pixel width.
+ */
+function screenshotFor(slug) {
+  const file = join(SCREENSHOTS, `${slug}.png`);
+  if (!existsSync(file)) return undefined;
+  // A PNG's width is the big-endian uint32 at byte 16, in the IHDR chunk.
+  const width = Math.round(readFileSync(file).readUInt32BE(16) / 2);
+  return { src: `../assets/react-widgets/${slug}.png`, width };
+}
+
 function trimBlankEdges(lines) {
   const copy = [...lines];
   while (copy.length && copy[0].trim() === '') copy.shift();
@@ -456,7 +490,7 @@ function checkLinks(lines, warn) {
  * before tabs for the same reason: a collapsible inside a tab has to become
  * `???` before the tab indents it.
  */
-function transform(markdown, { slug, title, warn, fail }) {
+function transform(markdown, { slug, title, screenshot, warn, fail }) {
   let lines = markdown.replace(/\r\n/g, '\n').split('\n');
   if (lines.every((line) => line.trim() === '')) {
     fail('README is empty');
@@ -465,6 +499,7 @@ function transform(markdown, { slug, title, warn, fail }) {
   checkLinks(lines, warn);
   lines = localizeSiteLinks(lines, warn);
   lines = rewriteHeading(lines, { slug, title, warn });
+  lines = insertScreenshot(lines, { title, screenshot });
   lines = unescapeTablePipes(lines);
   lines = convertAdmonitions(lines, warn);
   lines = convertDetails(lines, warn, fail);
@@ -570,6 +605,7 @@ async function main() {
         transform(markdown, {
           slug,
           title,
+          screenshot: screenshotFor(slug),
           warn: (m) => warn(slug, m),
           fail: (m) => fail(slug, m),
         }),
@@ -612,6 +648,7 @@ export {
   convertDetails,
   convertTabs,
   fenceMask,
+  insertScreenshot,
   referencedPages,
   rewriteHeading,
   stripIgnored,

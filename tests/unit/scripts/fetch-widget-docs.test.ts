@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 // when executed as main), so we exercise the pure passes here without fetching.
 import {
   fenceMask,
+  insertScreenshot,
   referencedPages,
   rewriteHeading,
   stripIgnored,
@@ -301,6 +302,48 @@ describe('unescapeTablePipes', () => {
   it('leaves prose and fenced code alone', () => {
     const input = ['Use `a \\| b` here.', '```', '| `a \\| b` |', '```'];
     expect(unescapeTablePipes(input)).toEqual(input);
+  });
+});
+
+describe('insertScreenshot', () => {
+  const screenshot = { src: '../assets/react-widgets/pdf-viewer.png', width: 683 };
+  const image = '![PDF Viewer widget](../assets/react-widgets/pdf-viewer.png){ width="683" }';
+
+  it('places the screenshot between the intro and the first section', () => {
+    expect(insertScreenshot(['# PDF Viewer', '', 'Intro.', '', '## Usage', 'body'], { title: 'PDF Viewer', screenshot })).toEqual([
+      '# PDF Viewer',
+      '',
+      'Intro.',
+      '',
+      image,
+      '',
+      '## Usage',
+      'body',
+    ]);
+  });
+
+  it('appends the screenshot to a page with no sections', () => {
+    expect(insertScreenshot(['# PDF Viewer', '', 'Intro.'], { title: 'PDF Viewer', screenshot })).toEqual([
+      '# PDF Viewer',
+      '',
+      'Intro.',
+      '',
+      image,
+      '',
+    ]);
+  });
+
+  it('ignores a section heading inside fenced code', () => {
+    const out = insertScreenshot(['Intro.', '```md', '## Not a section', '```', '', '## Usage'], {
+      title: 'PDF Viewer',
+      screenshot,
+    });
+    expect(out.indexOf(image)).toBe(5);
+  });
+
+  it('leaves the page alone when the widget has no screenshot', () => {
+    const input = ['# PDF Viewer', '', '## Usage'];
+    expect(insertScreenshot(input, { title: 'PDF Viewer', screenshot: undefined })).toEqual(input);
   });
 });
 
