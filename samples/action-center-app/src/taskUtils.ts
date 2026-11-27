@@ -1,0 +1,174 @@
+import {
+  TaskStatus,
+  TaskPriority,
+  TaskType,
+  TaskSlaStatus,
+  TaskAssignmentCriteria,
+} from '@uipath/uipath-typescript/tasks'
+import type {
+  TaskAssignmentOptions,
+  TaskAssignmentResponse,
+  TaskGetResponse,
+} from '@uipath/uipath-typescript/tasks'
+import { UiPathError } from '@uipath/uipath-typescript/core'
+import type { BadgeProps } from '@uipath/apollo-wind/components/ui/badge'
+
+/**
+ * Presentation + mapping helpers for Action Center tasks, kept out of the
+ * components so the logic (badge variants, OData filter assembly, the
+ * `complete()` discriminated-union builder) stays in one testable place.
+ */
+
+export interface Badge {
+  label: string
+  /** Apollo-wind Badge variant. */
+  variant: NonNullable<BadgeProps['variant']>
+}
+
+export function statusBadge(status: TaskStatus): Badge {
+  switch (status) {
+    case TaskStatus.Completed:
+      return { label: 'Completed', variant: 'success' }
+    case TaskStatus.Pending:
+      return { label: 'Pending', variant: 'info' }
+    case TaskStatus.Unassigned:
+      return { label: 'Unassigned', variant: 'secondary' }
+    default:
+      return { label: String(status), variant: 'secondary' }
+  }
+}
+
+export function priorityBadge(priority: TaskPriority): Badge {
+  switch (priority) {
+    case TaskPriority.Critical:
+      return { label: 'Critical', variant: 'error' }
+    case TaskPriority.High:
+      return { label: 'High', variant: 'warning' }
+    case TaskPriority.Medium:
+      return { label: 'Medium', variant: 'info' }
+    case TaskPriority.Low:
+      return { label: 'Low', variant: 'secondary' }
+    default:
+      return { label: String(priority), variant: 'secondary' }
+  }
+}
+
+export function slaBadge(status: TaskSlaStatus | undefined): Badge | null {
+  switch (status) {
+    case TaskSlaStatus.Overdue:
+      return { label: 'Overdue', variant: 'error' }
+    case TaskSlaStatus.OverdueSoon:
+      return { label: 'Due soon', variant: 'warning' }
+    case TaskSlaStatus.OverdueLater:
+      return { label: 'On track', variant: 'info' }
+    case TaskSlaStatus.CompletedInTime:
+      return { label: 'In time', variant: 'success' }
+    default:
+      return null
+  }
+}
+
+export function taskTypeLabel(type: TaskType): string {
+  switch (type) {
+    case TaskType.QuickForm:
+      return 'Quick Form'
+    case TaskType.Form:
+      return 'Form'
+    case TaskType.External:
+      return 'External'
+    case TaskType.App:
+      return 'App'
+    case TaskType.DocumentValidation:
+      return 'Doc validation'
+    case TaskType.DocumentClassification:
+      return 'Doc classification'
+    case TaskType.DataLabeling:
+      return 'Data labeling'
+    default:
+      return String(type)
+  }
+}
+
+export function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString()
+}
+
+export interface TaskFilters {
+  status?: TaskStatus | 'all'
+  priority?: TaskPriority | 'all'
+}
+
+/**
+ * Builds the `filter` string from the active filters, or `undefined` when
+ * none are set. Field names are the ones on the SDK's task objects.
+ */
+export function buildTaskFilter(filters: TaskFilters): string | undefined {
+  const clauses: string[] = []
+  if (filters.status && filters.status !== 'all') clauses.push(`status eq '${filters.status}'`)
+  if (filters.priority && filters.priority !== 'all')
+    clauses.push(`priority eq '${filters.priority}'`)
+  return clauses.length ? clauses.join(' and ') : undefined
+}
+
+/**
+ * "Assigned to group" — the task is distributed across a directory group
+ * (a group `taskAssignmentCriteria`) with no individual `assignedToUser` yet.
+ * `SingleUser` (or unset) is a direct assignment, not a group.
+ */
+export function assignedToGroup(task: TaskGetResponse): boolean {
+  if (task.assignedToUser) return false
+  const criteria = task.taskAssignmentCriteria
+  return criteria != null && criteria !== TaskAssignmentCriteria.SingleUser
+}
+
+/**
+ * Pulls the server-supplied error string out of a thrown error.
+ * Looks at common Orchestrator shapes: `err.message`, `err.body.message`,
+ * `err.response.data.message` (e.g. `{ message, errorCode, traceId }`).
+ */
+export function extractServerMessage(err: unknown): string | null {
+  if (!err) return null
+  if (err instanceof UiPathError && err.message) return err.message
+  const e = err as Record<string, unknown>
+  const candidates = [
+    e.message,
+    (e.body as Record<string, unknown> | undefined)?.message,
+    ((e.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined)?.message,
+  ]
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c.trim()
+  }
+  return null
+}
+
+/**
+ * First distinct error from a failed (re)assign batch + count of additional
+ * issues. "first + N more" is the standard compact pattern for batch errors;
+ * the alert stays short, and the user still knows more failures exist.
+ */
+export function formatAssignmentErrors(
+  data: TaskAssignmentOptions[] | TaskAssignmentResponse[] | unknown,
+): string {
+  if (!Array.isArray(data) || data.length === 0) {
+    return 'The assignment did not complete successfully'
+  }
+  const messages = Array.from(
+    new Set(
+      data
+        .map((item) =>
+          item && typeof item === 'object' && 'errorMessage' in item
+            ? String((item as { errorMessage?: string }).errorMessage ?? '').trim()
+            : '',
+        )
+        .filter((m) => m.length > 0),
+    ),
+  )
+  if (messages.length === 0) {
+    return 'The assignment did not complete successfully'
+  }
+  const [first, ...rest] = messages
+  if (rest.length === 0) return first
+  return `${first} (+${rest.length} other ${rest.length === 1 ? 'issue' : 'issues'})`
+}
