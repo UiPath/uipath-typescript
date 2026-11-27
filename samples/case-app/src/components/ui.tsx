@@ -1,4 +1,4 @@
-// Shared UI primitives for the case-management app, built on @uipath/apollo-wind
+// Shared UI primitives for the case-app sample, built on @uipath/apollo-wind
 // + Apollo Vertex semantic tokens. The export surface (names + props) mirrors
 // what the pages consume, so swapping the custom implementation for apollo-wind
 // is transparent to call sites. `tone` is the app's status vocabulary; it maps

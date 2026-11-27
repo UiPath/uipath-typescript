@@ -30,7 +30,7 @@ function LoginScreen() {
           <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
             <ShieldCheck className="h-6 w-6" />
           </div>
-          <CardTitle>Case Management</CardTitle>
+          <CardTitle>Case App</CardTitle>
           <CardDescription>Live case workspace powered by the UiPath Maestro Cases API.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

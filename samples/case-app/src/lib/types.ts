@@ -1,4 +1,4 @@
-// App types for the case-management sample.
+// App types for the case-app sample.
 //
 // Where the SDK already exports a response type, we alias it (no re-declaration)
 // so the sample stays in lockstep with the SDK's real shapes. Everything else

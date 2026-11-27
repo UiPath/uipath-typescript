@@ -1,6 +1,6 @@
-# Case Management — UiPath Coded Web App
+# Case App — UiPath Coded Web App
 
-A single-case operations workspace for **UiPath Maestro Cases**, built with React + Vite, the
+A sample single-case operations workspace for **UiPath Maestro Cases**, built with React + Vite, the
 [`@uipath/uipath-typescript`](https://www.npmjs.com/package/@uipath/uipath-typescript) SDK, and the
 **Apollo Vertex** design system (`@uipath/apollo-wind`, light/dark theme).
 
@@ -16,7 +16,7 @@ The app is scoped to **one** Maestro case (set by `processKey`) and provides:
 
 ## Preview
 
-![Case Management console showing the case dashboard, a case's stages and history, an Action Center task form, and analytics](./screenshots/preview.gif)
+![Case App sample showing the case dashboard, a case's stages and history, an Action Center task form, and analytics](./screenshots/preview.gif)
 
 ## SDK surface used
 
@@ -95,7 +95,7 @@ npm run dev    # http://localhost:3000
 
 ```bash
 npm run build
-uip codedapp pack dist -n case-management --version 1.0.0
+uip codedapp pack dist -n case-app --version 1.0.0
 uip codedapp publish
-uip codedapp deploy -n case-management --folder-key <FOLDER_GUID>
+uip codedapp deploy -n case-app --folder-key <FOLDER_GUID>
 ```
