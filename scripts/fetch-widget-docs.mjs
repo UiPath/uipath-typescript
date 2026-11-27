@@ -347,6 +347,23 @@ function convertDetails(lines, warn, fail) {
   return out;
 }
 
+/**
+ * `\|` inside a code span in a table row -> `|`.
+ *
+ * GitHub splits table cells on every unescaped pipe, code spans included, so
+ * a union type has to be written `` `number \| string` `` upstream. MkDocs'
+ * tables extension already skips pipes inside backticks and keeps the
+ * backslash, so the page would show `number \| string` verbatim.
+ */
+function unescapeTablePipes(lines) {
+  const fenced = fenceMask(lines);
+  return lines.map((line, i) =>
+    fenced[i] || !line.trimStart().startsWith('|')
+      ? line
+      : line.replace(/(`+)(.+?)\1/g, (_, ticks, code) => `${ticks}${code.replace(/\\\|/g, '|')}${ticks}`),
+  );
+}
+
 function trimBlankEdges(lines) {
   const copy = [...lines];
   while (copy.length && copy[0].trim() === '') copy.shift();
@@ -448,6 +465,7 @@ function transform(markdown, { slug, title, warn, fail }) {
   checkLinks(lines, warn);
   lines = localizeSiteLinks(lines, warn);
   lines = rewriteHeading(lines, { slug, title, warn });
+  lines = unescapeTablePipes(lines);
   lines = convertAdmonitions(lines, warn);
   lines = convertDetails(lines, warn, fail);
   lines = convertTabs(lines, warn, fail);
@@ -598,6 +616,7 @@ export {
   rewriteHeading,
   stripIgnored,
   transform,
+  unescapeTablePipes,
 };
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {

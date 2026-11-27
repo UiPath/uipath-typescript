@@ -7,6 +7,7 @@ import {
   rewriteHeading,
   stripIgnored,
   transform,
+  unescapeTablePipes,
 } from '../../../scripts/fetch-widget-docs.mjs';
 
 const noop = () => {};
@@ -283,6 +284,23 @@ nav:
     expect(() => referencedPages('      - Nested: react-widgets/group/child.md')).toThrow(
       /Widget pages are flat/,
     );
+  });
+});
+
+describe('unescapeTablePipes', () => {
+  it('unescapes pipes inside code spans in table rows', () => {
+    expect(unescapeTablePipes(['| `maxHeight` | `number \\| string` |'])).toEqual([
+      '| `maxHeight` | `number | string` |',
+    ]);
+  });
+
+  it('leaves escaped pipes outside code spans alone', () => {
+    expect(unescapeTablePipes(['| a \\| b | `c` |'])).toEqual(['| a \\| b | `c` |']);
+  });
+
+  it('leaves prose and fenced code alone', () => {
+    const input = ['Use `a \\| b` here.', '```', '| `a \\| b` |', '```'];
+    expect(unescapeTablePipes(input)).toEqual(input);
   });
 });
 
